@@ -8,8 +8,6 @@
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Segoe UI',system-ui,sans-serif; background:#f1f5f9; }
         .hidden { display:none !important; }
-
-        /* Login screen */
         #login-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, #001a33 0%, #003366 100%); padding:20px; }
         .login-card { background:#fff; border-radius:24px; padding:40px 30px; width:100%; max-width:420px; box-shadow:0 20px 50px rgba(0,0,0,0.3); }
         .brand { text-align:center; margin-bottom:30px; }
@@ -24,8 +22,6 @@
         .error-msg.show { display:block; }
         .quick-login { margin-top:20px; text-align:center; }
         .quick-btn { background:none; border:2px solid #003366; color:#003366; padding:8px 16px; border-radius:20px; cursor:pointer; margin:4px; font-size:12px; font-weight:bold; }
-
-        /* Dashboard */
         .header { background:#003366; color:#fff; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:4px solid #ffc107; flex-wrap:wrap; }
         .hero { background:#001a33; padding:20px; text-align:center; color:#fff; }
         #clock { font-size:32px; font-weight:800; color:#ffc107; }
@@ -56,7 +52,6 @@
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
 <div id="login-screen">
     <div class="login-card">
         <div class="brand">
@@ -78,7 +73,6 @@
     </div>
 </div>
 
-<!-- DASHBOARD SCREEN -->
 <div id="dashboard-screen" class="hidden">
     <div class="header">
         <div><b id="schoolNameDisplay">---</b><br><span id="db_status">● INIT</span></div>
@@ -121,7 +115,6 @@
 </div>
 
 <script>
-    // ==================== YOUR SUPABASE PROJECT ====================
     const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
 
@@ -135,14 +128,12 @@
         finance: ['abs','adm','fees']
     };
 
-    // Helper: hash password
     async function hashPassword(pw) {
         const data = new TextEncoder().encode(pw);
         const hash = await crypto.subtle.digest('SHA-256', data);
         return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
     }
 
-    // Safe Supabase fetch (never throws – shows error on page)
     async function safeFetch(table, filter = {}) {
         let url = `${SUPABASE_URL}/rest/v1/${table}?`;
         for (const [k,v] of Object.entries(filter)) url += `${k}=eq.${encodeURIComponent(v)}&`;
@@ -152,9 +143,8 @@
             if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
             return await res.json();
         } catch (e) {
-            console.error(`Fetch error (${table}):`, e);
-            document.getElementById('systemMessage').innerHTML +=
-                `<div class="error-box">⚠️ Failed to load ${table}: ${e.message}</div>`;
+            console.error(e);
+            document.getElementById('systemMessage').innerHTML += `<div class="error-box">⚠️ Failed to load ${table}: ${e.message}</div>`;
             return [];
         }
     }
@@ -166,10 +156,10 @@
                 headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
-            if (!res.ok) throw new Error(`Insert error: ${await res.text()}`);
+            if (!res.ok) throw new Error(await res.text());
         } catch (e) {
             console.error(e);
-            document.getElementById('systemMessage').innerHTML += `<div class="error-box">❌ Save to ${table} failed: ${e.message}</div>`;
+            document.getElementById('systemMessage').innerHTML += `<div class="error-box">❌ Save failed: ${e.message}</div>`;
         }
     }
 
@@ -183,10 +173,10 @@
                 headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
-            if (!res.ok) throw new Error(`Update error: ${await res.text()}`);
+            if (!res.ok) throw new Error(await res.text());
         } catch (e) {
             console.error(e);
-            document.getElementById('systemMessage').innerHTML += `<div class="error-box">❌ Update ${table} failed: ${e.message}</div>`;
+            document.getElementById('systemMessage').innerHTML += `<div class="error-box">❌ Update failed: ${e.message}</div>`;
         }
     }
 
@@ -199,21 +189,18 @@
                 method: 'DELETE',
                 headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
             });
-            if (!res.ok) throw new Error(`Delete error: ${await res.text()}`);
+            if (!res.ok) throw new Error(await res.text());
         } catch (e) {
             console.error(e);
-            document.getElementById('systemMessage').innerHTML += `<div class="error-box">❌ Delete from ${table} failed: ${e.message}</div>`;
+            document.getElementById('systemMessage').innerHTML += `<div class="error-box">❌ Delete failed: ${e.message}</div>`;
         }
     }
 
-    // Auto-heal passwords: always ensure the real hash is in the DB
     async function ensureDemoUsers() {
         const users = await safeFetch('school_users', { sch_id: 'PM001' });
         const realAdminHash = await hashPassword('PM001@admin2024');
         const realTeacherHash = await hashPassword('PM001@teacher2024');
         const realFinanceHash = await hashPassword('PM001@finance2024');
-
-        // If no users, insert them
         if (users.length === 0) {
             await safeInsert('school_users', [
                 { sch_id:'PM001', email:'pm001.admin@eudesacademy', password_hash:realAdminHash, role:'admin', is_active:true },
@@ -222,15 +209,12 @@
             ]);
             return;
         }
-
-        // Fix any user whose hash is not the real one
         for (const u of users) {
             let realHash;
             if (u.email.includes('admin')) realHash = realAdminHash;
             else if (u.email.includes('teacher')) realHash = realTeacherHash;
             else if (u.email.includes('finance')) realHash = realFinanceHash;
             else continue;
-
             if (u.password_hash !== realHash) {
                 await safeUpdate('school_users', { email: u.email }, { password_hash: realHash });
             }
@@ -301,7 +285,6 @@
         reportCards = await safeFetch('report_cards', { sch_id: session.schId });
         attendanceRecords = await safeFetch('attendance', { sch_id: session.schId });
         feePayments = await safeFetch('fee_payments', { sch_id: session.schId });
-
         document.getElementById('db_status').innerHTML = `● LIVE (${students.length} students)`;
         document.getElementById('db_status').style.color = '#2b9348';
         updateUI();
@@ -316,7 +299,6 @@
         document.getElementById('stat_present').innerText = total - absent;
         document.getElementById('stat_absent').innerText = absent;
         document.getElementById('stat_pending').innerText = reportCards.filter(rc => rc.status === 'pending').length;
-
         const activeTab = document.querySelector('.tab.active')?.getAttribute('data-tab') || 'abs';
         switch(activeTab) {
             case 'abs': renderAbsentees(); break;
@@ -345,7 +327,6 @@
         tab.addEventListener('click', () => showTab(tab.getAttribute('data-tab')));
     });
 
-    // ------- RENDER FUNCTIONS -------
     function renderAbsentees() {
         let list = students.filter(s => s.is_absent);
         let html = `<div class="form-group"><label>Class</label><select id="absClassFilter" onchange="renderAbsentees()"><option value="all">All Classes</option>${['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'].map(c=>`<option>${c}</option>`).join('')}</select></div>`;
@@ -570,14 +551,12 @@
     window.printId = (sid)=>{ const s = students.find(st=>st.id===sid); window.open().document.write(`<h3>${session.schoolName}</h3><p>${s.name} - ${s.lin}</p><button onclick="window.print()">Print</button>`); };
     window.notifyParent = (sid, ch)=>{ alert(`Notification sent via ${ch} (demo)`); };
 
-    // Clocks
     setInterval(()=>{
         const t = new Date().toLocaleTimeString('en-US',{timeZone:'Africa/Kampala'});
         document.getElementById('clock').textContent = t;
         document.getElementById('ugTimeLogin').textContent = '🕐 ' + t + ' EAT';
     },1000);
 
-    // Init
     window.addEventListener('DOMContentLoaded', async ()=>{
         const saved = sessionStorage.getItem('eudes_sms_session');
         if(saved) { session = JSON.parse(saved); showDashboard(); }
