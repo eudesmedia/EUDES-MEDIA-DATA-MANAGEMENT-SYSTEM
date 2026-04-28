@@ -8,6 +8,8 @@
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Segoe UI',system-ui,sans-serif; background:#f1f5f9; }
         .hidden { display:none !important; }
+
+        /* Login */
         #login-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, #001a33 0%, #003366 100%); padding:20px; }
         .login-card { background:#fff; border-radius:24px; padding:40px 30px; width:100%; max-width:420px; box-shadow:0 20px 50px rgba(0,0,0,0.3); }
         .brand { text-align:center; margin-bottom:30px; }
@@ -22,6 +24,8 @@
         .error-msg.show { display:block; }
         .quick-login { margin-top:20px; text-align:center; }
         .quick-btn { background:none; border:2px solid #003366; color:#003366; padding:8px 16px; border-radius:20px; cursor:pointer; margin:4px; font-size:12px; font-weight:bold; }
+
+        /* Dashboard */
         .header { background:#003366; color:#fff; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:4px solid #ffc107; flex-wrap:wrap; }
         .hero { background:#001a33; padding:20px; text-align:center; color:#fff; }
         #clock { font-size:32px; font-weight:800; color:#ffc107; }
@@ -52,6 +56,7 @@
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
 <div id="login-screen">
     <div class="login-card">
         <div class="brand">
@@ -73,6 +78,7 @@
     </div>
 </div>
 
+<!-- DASHBOARD SCREEN -->
 <div id="dashboard-screen" class="hidden">
     <div class="header">
         <div><b id="schoolNameDisplay">---</b><br><span id="db_status">● INIT</span></div>
@@ -115,6 +121,7 @@
 </div>
 
 <script>
+    // ==================== YOUR SUPABASE ====================
     const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
 
@@ -128,6 +135,7 @@
         finance: ['abs','adm','fees']
     };
 
+    // Helpers
     async function hashPassword(pw) {
         const data = new TextEncoder().encode(pw);
         const hash = await crypto.subtle.digest('SHA-256', data);
@@ -144,7 +152,7 @@
             return await res.json();
         } catch (e) {
             console.error(e);
-            document.getElementById('systemMessage').innerHTML += `<div class="error-box">⚠️ Failed to load ${table}: ${e.message}</div>`;
+            document.getElementById('systemMessage').innerHTML += `<div class="error-box">⚠️ ${table}: ${e.message}</div>`;
             return [];
         }
     }
@@ -196,6 +204,7 @@
         }
     }
 
+    // Auto-heal users
     async function ensureDemoUsers() {
         const users = await safeFetch('school_users', { sch_id: 'PM001' });
         const realAdminHash = await hashPassword('PM001@admin2024');
@@ -218,6 +227,17 @@
             if (u.password_hash !== realHash) {
                 await safeUpdate('school_users', { email: u.email }, { password_hash: realHash });
             }
+        }
+    }
+
+    // Ensure default subjects exist
+    async function ensureDefaultSubjects() {
+        if (subjects.length === 0) {
+            const defaults = ['English', 'Mathematics', 'Science', 'Social Studies'];
+            for (const name of defaults) {
+                await safeInsert('subjects', [{ sch_id: session.schId, name }]);
+            }
+            subjects = await safeFetch('subjects', { sch_id: session.schId });
         }
     }
 
@@ -258,7 +278,7 @@
         document.getElementById('schoolNameDisplay').textContent = session.schoolName;
         document.getElementById('systemMessage').innerHTML = '';
         setupDashboardTabs();
-        loadAllData();
+        loadAllData().then(() => ensureDefaultSubjects());
     }
 
     function logout() {
@@ -327,6 +347,7 @@
         tab.addEventListener('click', () => showTab(tab.getAttribute('data-tab')));
     });
 
+    // ------- RENDER FUNCTIONS -------
     function renderAbsentees() {
         let list = students.filter(s => s.is_absent);
         let html = `<div class="form-group"><label>Class</label><select id="absClassFilter" onchange="renderAbsentees()"><option value="all">All Classes</option>${['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'].map(c=>`<option>${c}</option>`).join('')}</select></div>`;
@@ -402,7 +423,7 @@
             photo_url: document.getElementById('reg_photo').value,
             total_fees: parseFloat(document.getElementById('reg_fees').value)||0,
             fees_paid: 0, is_absent: false,
-            lin: editingStudentId ? (students.find(s=>s.id===editingStudentId)?.lin) : `${session.schId}-${name.charAt(0)}${Math.floor(Math.random()*9000+1000)}`
+            lin: editingStudentId ? (students.find(s=>s.id===editingStudentId)?.lin) : `PM-${Date.now().toString().slice(-6)}`
         };
         if(editingStudentId) { await safeUpdate('students',{id:editingStudentId}, data); }
         else { await safeInsert('students',[data]); }
@@ -418,9 +439,18 @@
         document.getElementById('photoPreview').innerHTML='📷';
     };
 
+    // ROLL CALL with class filter
     function renderRollCall() {
-        let html = '';
-        students.forEach(s => { html += `<div class="card"><div><b>${s.name}</b><br>${s.class}</div><button class="btn-main" style="background:${s.is_absent?'#d90429':'#2b9348'};width:auto;padding:8px 16px;" onclick="toggleAbsence('${s.id}')">${s.is_absent?'ABSENT':'PRESENT'}</button></div>`; });
+        const classes = [...new Set(students.map(s=>s.class))].sort();
+        let html = `<div class="form-group"><label>Class</label><select id="rollClassFilter" onchange="renderRollCall()"><option value="all">All Classes</option>${classes.map(c=>`<option value="${c}">${c}</option>`).join('')}</select></div>`;
+        const filterClass = document.getElementById('rollClassFilter')?.value || 'all';
+        let list = (filterClass === 'all') ? students : students.filter(s => s.class === filterClass);
+        html += list.map(s => `
+            <div class="card ${s.is_absent ? 'absent-card' : 'present-card'}">
+                <div class="student-photo">${s.name.charAt(0)}</div>
+                <div><b>${s.name}</b><br>${s.class}</div>
+                <button class="btn-main" style="background:${s.is_absent?'#d90429':'#2b9348'};width:auto;padding:8px 16px;" onclick="toggleAbsence('${s.id}')">${s.is_absent?'ABSENT':'PRESENT'}</button>
+            </div>`).join('');
         html += `<button class="btn-main" onclick="saveAttendanceHistory()">Save Today's Record</button>`;
         document.getElementById('view-roll').innerHTML = html;
     }
@@ -430,19 +460,23 @@
     };
     window.saveAttendanceHistory = async () => {
         const today = new Date().toISOString().slice(0,10);
-        for(const s of students) { await safeInsert('attendance',{sch_id:session.schId, student_id:s.id, date:today, status:s.is_absent?'absent':'present'}); }
+        for(const s of students) {
+            await safeInsert('attendance',{sch_id:session.schId, student_id:s.id, date:today, status:s.is_absent?'absent':'present'});
+        }
         alert('Attendance recorded');
     };
 
+    // MARKS with class & student, subjects auto-populate
     function renderMarksPage() {
         const classes = [...new Set(students.map(s=>s.class))];
-        document.getElementById('view-marks').innerHTML = `<div class="form-group"><label>Class</label><select id="marksClassSelect" onchange="loadStudentsForMarks()"><option value="">-- Select --</option>${classes.map(c=>`<option>${c}</option>`).join('')}</select><div id="marksStudentArea"></div></div>`;
+        document.getElementById('view-marks').innerHTML = `<div class="form-group"><label>Class</label><select id="marksClassSelect" onchange="loadStudentsForMarks()"><option value="">-- Select Class --</option>${classes.map(c=>`<option>${c}</option>`).join('')}</select><div id="marksStudentArea"></div></div>`;
     }
     async function loadStudentsForMarks() {
-        const cls = document.getElementById('marksClassSelect').value; if(!cls) return;
+        const cls = document.getElementById('marksClassSelect').value;
+        if(!cls) return;
         const classStudents = students.filter(s=>s.class===cls);
         let yearOpts = ''; for(let y=new Date().getFullYear()-1; y<=new Date().getFullYear()+2; y++) yearOpts += `<option value="${y}">${y}</option>`;
-        document.getElementById('marksStudentArea').innerHTML = `<label>Year</label><select id="marksYearSelect">${yearOpts}</select><label>Term</label><select id="marksTermNumberSelect"><option value="1">T1</option><option value="2">T2</option><option value="3">T3</option></select><label>Exam</label><select id="marksExamSelect"><option>Beginning of Term</option><option>Mid Term</option><option selected>End of Term</option></select><label>Student</label><select id="marksStudentSelect" onchange="loadMarksForStudent()"><option value="">-- Select --</option>${classStudents.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select><div id="marksEntryArea"></div>`;
+        document.getElementById('marksStudentArea').innerHTML = `<label>Year</label><select id="marksYearSelect">${yearOpts}</select><label>Term</label><select id="marksTermNumberSelect"><option value="1">T1</option><option value="2">T2</option><option value="3">T3</option></select><label>Exam</label><select id="marksExamSelect"><option>Beginning of Term</option><option>Mid Term</option><option selected>End of Term</option></select><label>Student</label><select id="marksStudentSelect" onchange="loadMarksForStudent()"><option value="">-- Select Student --</option>${classStudents.map(s=>`<option value="${s.id}">${s.name} (${s.lin})</option>`).join('')}</select><div id="marksEntryArea"></div>`;
     }
     async function loadMarksForStudent() {
         const studentId = document.getElementById('marksStudentSelect').value;
@@ -450,6 +484,8 @@
         const termNum = document.getElementById('marksTermNumberSelect').value;
         const examType = document.getElementById('marksExamSelect').value;
         if(!studentId) return;
+        // Ensure subjects exist
+        await ensureDefaultSubjects();
         const termName = `Term ${termNum} ${year}`;
         let term = terms.find(t=>t.name===termName);
         if(!term) {
@@ -463,7 +499,7 @@
         let html = `<div class="form-group"><h4>Marks for ${students.find(s=>s.id===studentId)?.name} (${examType})</h4>`;
         subjects.forEach(sub => {
             const score = map[sub.id]||'';
-            html += `<div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;"><label style="width:120px;">${sub.name}</label><input type="number" id="mark_${sub.id}" value="${score}" min="0" max="100" onchange="updateGrade('${sub.id}')"><span id="grade_${sub.id}">${score?getGrade(parseFloat(score)):''}</span></div>`;
+            html += `<div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;"><label style="width:120px;">${sub.name}</label><input type="number" id="mark_${sub.id}" value="${score}" min="0" max="100" onchange="updateGrade('${sub.id}')"><span id="grade_${sub.id}" style="font-weight:bold;color:#D4A017;">${score?getGrade(parseFloat(score)):''}</span></div>`;
         });
         html += `<button class="btn-main" onclick="saveMarks('${studentId}','${termId}','${examType}')">Save Marks</button></div>`;
         document.getElementById('marksEntryArea').innerHTML = html;
@@ -481,6 +517,8 @@
                 await safeInsert('marks',[{sch_id:session.schId,student_id:studentId,term_id:termId,subject_id:sub.id,exam_type:examType,score,grade:getGrade(score)}]);
             }
         }
+        // Refresh marksData and update report card
+        marksData = await safeFetch('marks', { sch_id: session.schId });
         const endMarks = marksData.filter(m=>m.student_id===studentId&&m.exam_type==='End of Term');
         const avg = endMarks.length ? endMarks.reduce((a,b)=>a+b.score,0)/endMarks.length : 0;
         const total = endMarks.reduce((a,b)=>a+b.score,0);
@@ -490,19 +528,100 @@
         alert('Marks saved'); loadAllData(); loadMarksForStudent();
     };
 
+    // REPORTS with well-designed printable report
     function renderReportsPage() {
         let html = `<div class="form-group"><h3>Report Cards</h3>`;
+        if (students.length === 0) html += '<p>No students yet.</p>';
         students.forEach(s=>{
             const rc = reportCards.find(r=>r.student_id===s.id);
             const status = rc?rc.status:'pending';
-            html += `<div class="card"><div><b>${s.name}</b><br>Avg: ${rc?rc.average_score:'0'}% | <span class="badge badge-${status}">${status}</span></div><div><button class="btn-sm" onclick="viewReport('${s.id}')">View</button>${session.role==='admin'&&status==='pending'?`<button class="btn-sm" onclick="approveReport('${s.id}')">Approve</button>`:''}${session.role==='admin'&&status==='approved'?`<button class="btn-sm" onclick="releaseReport('${s.id}')">Release</button>`:''}</div></div>`;
+            html += `<div class="card">
+                <div class="student-photo">${s.name.charAt(0)}</div>
+                <div><b>${s.name}</b><br>Avg: ${rc?rc.average_score:'0'}% | <span class="badge badge-${status}">${status}</span></div>
+                <div>
+                    <button class="btn-sm" onclick="printReport('${s.id}')">🖨️ Print</button>
+                    ${session.role==='admin'&&status==='pending'?`<button class="btn-sm" onclick="approveReport('${s.id}')">✅ Approve</button>`:''}
+                    ${session.role==='admin'&&status==='approved'?`<button class="btn-sm" onclick="releaseReport('${s.id}')">📤 Release</button>`:''}
+                </div>
+            </div>`;
         });
         html+=`</div>`; document.getElementById('view-reports').innerHTML = html;
     }
     window.approveReport = async (sid)=>{ const rc = reportCards.find(r=>r.student_id===sid); if(rc){ await safeUpdate('report_cards',{id:rc.id},{status:'approved'}); loadAllData(); }};
     window.releaseReport = async (sid)=>{ const rc = reportCards.find(r=>r.student_id===sid); if(rc){ await safeUpdate('report_cards',{id:rc.id},{status:'released'}); loadAllData(); }};
-    window.viewReport = (sid)=>{ const s = students.find(st=>st.id===sid); window.open().document.write(`<h2>${session.schoolName}</h2><p>${s.name}</p><button onclick="window.print()">Print</button>`); };
 
+    // Well-designed printable report card
+    window.printReport = (sid) => {
+        const s = students.find(st=>st.id===sid);
+        if (!s) return;
+        const rc = reportCards.find(r=>r.student_id===sid);
+        const studentMarks = marksData.filter(m=>m.student_id===sid);
+        const absentDays = attendanceRecords.filter(a=>a.student_id===sid&&a.status==='absent').length;
+        const endMarks = studentMarks.filter(m=>m.exam_type==='End of Term');
+        const avg = endMarks.length ? (endMarks.reduce((a,b)=>a+b.score,0)/endMarks.length).toFixed(1) : 'N/A';
+        const total = endMarks.reduce((a,b)=>a+b.score,0);
+
+        const win = window.open('', '_blank', 'width=900,height=700');
+        win.document.write(`
+            <html><head><title>Report Card - ${s.name}</title>
+            <style>
+                body { font-family:'Segoe UI',sans-serif; padding:30px; color:#333; }
+                .report { max-width:800px; margin:auto; border:2px solid #003366; padding:30px; border-radius:12px; }
+                .header { text-align:center; border-bottom:3px solid #003366; padding-bottom:20px; margin-bottom:25px; }
+                .header h1 { color:#003366; margin:0; font-size:24px; }
+                .header p { margin:5px 0; color:#555; }
+                .student-row { display:flex; gap:25px; margin-bottom:25px; align-items:center; }
+                .student-photo { width:80px; height:80px; border-radius:50%; border:3px solid #003366; display:flex; align-items:center; justify-content:center; font-size:30px; background:#e0e7ff; }
+                .student-details { line-height:1.6; }
+                table { width:100%; border-collapse:collapse; margin-bottom:20px; }
+                th { background:#003366; color:#fff; padding:10px; font-size:14px; }
+                td { border:1px solid #ccc; padding:8px; text-align:center; }
+                .total-row { font-weight:bold; background:#f0f4ff; }
+                .grade { font-weight:bold; color:#D4A017; }
+                .footer { margin-top:25px; display:flex; justify-content:space-between; }
+                .signature { text-align:center; }
+                .stamp { border:1px dashed #003366; padding:5px 15px; border-radius:5px; }
+                @media print { body { padding:0; } .no-print { display:none; } }
+                button { padding:10px 25px; background:#003366; color:#fff; border:none; border-radius:8px; cursor:pointer; }
+            </style></head><body>
+            <div class="report">
+                <div class="header">
+                    <h1>${session.schoolName}</h1>
+                    <p>${session.location || ''} | 📞 ${session.contact || ''}</p>
+                    <p><strong>ACADEMIC REPORT CARD</strong></p>
+                </div>
+                <div class="student-row">
+                    <div class="student-photo">${s.name.charAt(0)}</div>
+                    <div class="student-details">
+                        <p><strong>Name:</strong> ${s.name}</p>
+                        <p><strong>LIN:</strong> ${s.lin}</p>
+                        <p><strong>Class:</strong> ${s.class}</p>
+                        <p><strong>Days Absent:</strong> ${absentDays}</p>
+                    </div>
+                </div>
+                <table>
+                    <tr><th>Subject</th><th>Beginning</th><th>Mid Term</th><th>End of Term</th><th class="grade">Grade</th></tr>
+                    ${subjects.map(sub => {
+                        const beg = studentMarks.find(m=>m.subject_id===sub.id&&m.exam_type==='Beginning of Term');
+                        const mid = studentMarks.find(m=>m.subject_id===sub.id&&m.exam_type==='Mid Term');
+                        const end = studentMarks.find(m=>m.subject_id===sub.id&&m.exam_type==='End of Term');
+                        return `<tr><td>${sub.name}</td><td>${beg?beg.score:'-'}</td><td>${mid?mid.score:'-'}</td><td>${end?end.score:'-'}</td><td class="grade">${end?end.grade:'-'}</td></tr>`;
+                    }).join('')}
+                    <tr class="total-row"><td colspan="4">Total (End of Term)</td><td>${total}</td></tr>
+                    <tr class="total-row"><td colspan="4">Average</td><td>${avg}%</td></tr>
+                </table>
+                <div class="footer">
+                    <div class="signature"><p>____________________</p><p>Class Teacher</p></div>
+                    <div class="signature"><p>____________________</p><p>Head Teacher</p></div>
+                    <div class="stamp"><p>Status: ${rc?rc.status.toUpperCase():'PENDING'}</p></div>
+                </div>
+                <button class="no-print" onclick="window.print()">🖨️ Print / Save as PDF</button>
+            </div></body></html>
+        `);
+        win.document.close();
+    };
+
+    // FEES
     function renderFees() {
         const totalExp = students.reduce((s,st)=>s+st.total_fees,0);
         const totalCol = students.reduce((s,st)=>s+st.fees_paid,0);
@@ -519,44 +638,91 @@
         loadAllData();
     };
 
+    // PROMOTION – automatic
     function renderPromotion() {
-        const classes = [...new Set(students.map(s=>s.class))];
-        document.getElementById('view-promote').innerHTML = `<div class="form-group"><label>From Class</label><select id="promoteFrom">${classes.map(c=>`<option>${c}</option>`).join('')}</select><button class="btn-main" onclick="runPromotion()">Promote Eligible</button></div>`;
+        let html = `<div class="form-group"><h3>Automatic Promotion</h3><p>All students with an End‑of‑Term average ≥ 45% will be promoted.</p><button class="btn-main" onclick="runPromotion()">🚀 Promote All Eligible</button><div id="promotionResult"></div></div>`;
+        document.getElementById('view-promote').innerHTML = html;
     }
     window.runPromotion = async ()=>{
-        const from = document.getElementById('promoteFrom').value;
         const order = ['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'];
-        const idx = order.indexOf(from); if(idx===-1||idx===order.length-1) return;
-        const to = order[idx+1]; let count=0;
-        for(const s of students.filter(s=>s.class===from)){
+        let totalPromoted = 0;
+        let summary = '';
+        for (const s of students) {
+            const currentIdx = order.indexOf(s.class);
+            if (currentIdx === -1 || currentIdx === order.length-1) continue;
             const endMarks = marksData.filter(m=>m.student_id===s.id&&m.exam_type==='End of Term');
-            if(endMarks.length && endMarks.reduce((a,b)=>a+b.score,0)/endMarks.length >=45){
-                await safeUpdate('students',{id:s.id},{class:to}); count++;
+            if (endMarks.length === 0) continue;
+            const avg = endMarks.reduce((a,b)=>a+b.score,0)/endMarks.length;
+            if (avg >= 45) {
+                const newClass = order[currentIdx+1];
+                await safeUpdate('students',{id:s.id},{class:newClass});
+                totalPromoted++;
+                summary += `<div class="card">✅ ${s.name} → ${newClass}</div>`;
             }
         }
-        alert(`${count} students promoted to ${to}`); loadAllData();
+        document.getElementById('promotionResult').innerHTML = totalPromoted
+            ? `<div class="success-box">${totalPromoted} students promoted!</div>${summary}`
+            : '<div class="error-box">No students eligible for promotion. Enter marks first.</div>';
+        loadAllData();
     };
 
+    // SUBJECTS
     function renderSubjects() {
         document.getElementById('view-subjects').innerHTML = `<div class="form-group"><h3>Subjects</h3><input id="newSubject" placeholder="New subject"><button class="btn-main" onclick="addSubject()">Add</button><div>${subjects.map(s=>`<div class="card">${s.name} <button class="btn-sm btn-del" onclick="deleteSubject('${s.id}')">Del</button></div>`).join('')}</div></div>`;
     }
     window.addSubject = async ()=>{ const name = document.getElementById('newSubject').value.trim(); if(name){ await safeInsert('subjects',[{sch_id:session.schId,name}]); loadAllData(); }};
     window.deleteSubject = async (id)=>{ await safeDelete('subjects',{id}); loadAllData(); };
 
+    // ID CARDS – well designed
     function renderIdCards() {
         let html = `<div class="form-group"><h3>Student ID Cards</h3>`;
-        students.forEach(s=>{ const vu = new Date(); vu.setFullYear(vu.getFullYear()+1); html += `<div class="card"><div class="student-photo">${s.name.charAt(0)}</div><div><b>${s.name}</b><br>LIN: ${s.lin} | ${s.class}<br>Valid: ${vu.toISOString().slice(0,10)}</div><button class="btn-sm" onclick="printId('${s.id}')">Print</button></div>`; });
+        students.forEach(s=>{ const vu = new Date(); vu.setFullYear(vu.getFullYear()+1); html += `<div class="card"><div class="student-photo">${s.name.charAt(0)}</div><div><b>${s.name}</b><br>LIN: ${s.lin} | ${s.class}<br>Valid: ${vu.toISOString().slice(0,10)}</div><button class="btn-sm" onclick="printIdCard('${s.id}')">🖨️ Print ID</button></div>`; });
         html+=`</div>`; document.getElementById('view-idcards').innerHTML = html;
     }
-    window.printId = (sid)=>{ const s = students.find(st=>st.id===sid); window.open().document.write(`<h3>${session.schoolName}</h3><p>${s.name} - ${s.lin}</p><button onclick="window.print()">Print</button>`); };
+    window.printIdCard = (sid) => {
+        const s = students.find(st=>st.id===sid);
+        if (!s) return;
+        const vu = new Date(); vu.setFullYear(vu.getFullYear()+1);
+        const win = window.open('', '_blank', 'width=400,height=350');
+        win.document.write(`
+            <html><head><title>ID Card - ${s.name}</title>
+            <style>
+                .id-card { width:85mm; height:54mm; border:2px solid #003366; border-radius:12px; padding:15px; font-family:'Segoe UI',sans-serif; background:#fff; display:flex; flex-direction:column; }
+                .header { background:#003366; color:#fff; text-align:center; padding:8px; margin:-15px -15px 10px -15px; border-radius:10px 10px 0 0; }
+                .body { display:flex; gap:12px; flex:1; }
+                .photo { width:60px; height:60px; border-radius:50%; border:3px solid #D4A017; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:bold; color:#003366; }
+                .info { font-size:11px; line-height:1.4; }
+                .footer { background:#f0f4ff; text-align:center; padding:5px; margin:10px -15px -15px -15px; border-radius:0 0 10px 10px; font-size:9px; }
+                @media print { body { margin:0; } .no-print { display:none; } }
+                button { margin-top:15px; padding:8px 20px; }
+            </style></head><body>
+            <div class="id-card">
+                <div class="header"><strong>${session.schoolName}</strong></div>
+                <div class="body">
+                    <div class="photo">${s.name.charAt(0)}</div>
+                    <div class="info">
+                        <strong>${s.name}</strong><br>
+                        LIN: ${s.lin}<br>
+                        Class: ${s.class}<br>
+                        📞 ${session.contact || 'N/A'}
+                    </div>
+                </div>
+                <div class="footer">Valid until: ${vu.toISOString().slice(0,10)} | EUDES MEDIA</div>
+            </div>
+            <button class="no-print" onclick="window.print()">🖨️ Print ID</button></body></html>
+        `);
+        win.document.close();
+    };
     window.notifyParent = (sid, ch)=>{ alert(`Notification sent via ${ch} (demo)`); };
 
+    // Clocks
     setInterval(()=>{
         const t = new Date().toLocaleTimeString('en-US',{timeZone:'Africa/Kampala'});
         document.getElementById('clock').textContent = t;
         document.getElementById('ugTimeLogin').textContent = '🕐 ' + t + ' EAT';
     },1000);
 
+    // Init
     window.addEventListener('DOMContentLoaded', async ()=>{
         const saved = sessionStorage.getItem('eudes_sms_session');
         if(saved) { session = JSON.parse(saved); showDashboard(); }
