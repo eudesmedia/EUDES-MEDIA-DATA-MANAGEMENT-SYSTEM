@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>EUDES SMS – School Management System | EUDES MEDIA</title>
     <style>
-        /* ========== GLOBAL STYLES ========== */
+        /* ========== GLOBAL ========== */
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Segoe UI',system-ui,sans-serif; background:#f1f5f9; }
         .hidden { display:none !important; }
@@ -91,7 +91,7 @@
             <button class="quick-btn" onclick="quickLogin('pm001.teacher@eudesacademy','PM001@teacher2024')">👨‍🏫 Teacher</button>
             <button class="quick-btn" onclick="quickLogin('pm001.finance@eudesacademy','PM001@finance2024')">💰 Finance</button>
         </div>
-        <div class="ug-time" id="ugandaTime">🕐 Loading Uganda time...</div>
+        <div class="ug-time" id="ugandaTimeLogin">🕐 Loading Uganda time...</div>
     </div>
 </div>
 
@@ -138,24 +138,30 @@
 </div>
 
 <script>
-    /* ==================== GLOBALS ==================== */
+    /*************************************************************
+     *  SUPABASE CONFIG
+     *************************************************************/
     const SUPABASE_URL = 'https://kjftrwuucjdnhfwesrup.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtqZnRyd3V1Y2pkbmhmd2VzcnVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3Njc0OTksImV4cCI6MjA4NzM0MzQ5OX0.YAIdcBo2MXs86CrunR2CBM4Uh6RjNbGxIG-E260NfCM';
 
-    let session = null;               // current user session
+    /*************************************************************
+     *  GLOBAL STATE
+     *************************************************************/
+    let session = null;
     let students = [], marksData = [], reportCards = [], subjects = [],
         attendanceRecords = [], terms = [], feePayments = [];
     let editingStudentId = null;
     let SCHOOL_UUID = null;
-    const SCHOOL_SCH_ID = () => session?.schId;
-    const USER_ROLE = () => session?.role;
+
     const ROLE_TABS = {
         admin: ['abs','rec','adm','roll','marks','reports','fees','promote','subjects','idcards'],
         teacher: ['abs','roll','marks'],
         finance: ['abs','adm','fees']
     };
 
-    /* ==================== SUPABASE HELPERS ==================== */
+    /*************************************************************
+     *  SUPABASE HELPERS
+     *************************************************************/
     async function restFetch(table, filter = {}) {
         let url = `${SUPABASE_URL}/rest/v1/${table}?`;
         for (const [key, val] of Object.entries(filter)) url += `${key}=eq.${encodeURIComponent(val)}&`;
@@ -164,6 +170,7 @@
         if (!res.ok) throw new Error(await res.text());
         return await res.json();
     }
+
     async function restInsert(table, body) {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
             method: 'POST',
@@ -173,6 +180,7 @@
         if (!res.ok) throw new Error(await res.text());
         return res;
     }
+
     async function restUpdate(table, filter, body) {
         let url = `${SUPABASE_URL}/rest/v1/${table}?`;
         for (const [key, val] of Object.entries(filter)) url += `${key}=eq.${encodeURIComponent(val)}&`;
@@ -185,6 +193,7 @@
         if (!res.ok) throw new Error(await res.text());
         return res;
     }
+
     async function restDelete(table, filter) {
         let url = `${SUPABASE_URL}/rest/v1/${table}?`;
         for (const [key, val] of Object.entries(filter)) url += `${key}=eq.${encodeURIComponent(val)}&`;
@@ -197,7 +206,9 @@
         return res;
     }
 
-    /* ==================== AUTHENTICATION ==================== */
+    /*************************************************************
+     *  AUTH & SESSION
+     *************************************************************/
     async function hashPassword(pw) {
         const encoder = new TextEncoder();
         const data = encoder.encode(pw);
@@ -220,737 +231,37 @@
                 ]);
             } else {
                 for (const u of users) {
-                    if (u.email.includes('admin')) await restUpdate('school_users', {email:u.email}, {password_hash:adminHash});
-                    if (u.email.includes('teacher')) await restUpdate('school_users', {email:u.email}, {password_hash:teacherHash});
-                    if (u.email.includes('finance')) await restUpdate('school_users', {email:u.email}, {password_hash:financeHash});
+                    if (u.email.includes('admin')) await restUpdate('school_users', { email: u.email }, { password_hash: adminHash });
+                    if (u.email.includes('teacher')) await restUpdate('school_users', { email: u.email }, { password_hash: teacherHash });
+                    if (u.email.includes('finance')) await restUpdate('school_users', { email: u.email }, { password_hash: financeHash });
                 }
             }
-            console.log('✅ Demo users & hashes ready');
         }
     }
 
     async function login(email, password) {
         const hashed = await hashPassword(password);
-        const users = await restFetch('school_users', { email: email });
-        if (users.length === 0) throw new Error('❌ Invalid email');
-        const user = users[0];
-        if (user.password_hash !== hashed) throw new Error('❌ Wrong password');
-        if (!user.is_active) throw new Error('🚫 Account deactivated');
-        const school = (await restFetch('schools', { sch_id: user.sch_id }))[0];
-        if (!school || !school.is_active) throw new Error('⚠️ School subscription expired');
-        return {
-            userId: user.id,
-            schId: user.sch_id,
-            schoolName: school.school_name,
-            role: user.role,
-            email: user.email,
-            location: school.location,
-            contact: school.contact_numbers,
-            whatsapp: school.whatsapp_number,
-            shortCode: school.short_code
-        };
-    }
-
-    function quickLogin(email, pass) {
-        document.getElementById('email').value = email;
-        document.getElementById('password').value = pass;
-        document.getElementById('loginForm').dispatchEvent(new Event('submit'));
-    }
-
-    /* ==================== SCREEN SWITCHING ==================== */
-    function showLoginScreen() {
-        document.getElementById('login-screen').classList.remove('hidden');
-        document.getElementById('dashboard-screen').classList.add('hidden');
-    }
-    function showDashboard() {
-        document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('dashboard-screen').classList.remove('hidden');
-        document.getElementById('schoolNameDisplay').textContent = session.schoolName;
-        setupDashboardTabs();
-        loadAllData();
-    }
-    function logout() {
-        sessionStorage.removeItem('eudes_sms_session');
-        session = null;
-        showLoginScreen();
-    }
-
-    /* ==================== DASHBOARD LOGIC ==================== */
-    function setupDashboardTabs() {
-        const allowed = ROLE_TABS[session.role] || [];
-        document.querySelectorAll('.tab').forEach(tab => {
-            const tabId = tab.getAttribute('data-tab');
-            tab.style.display = allowed.includes(tabId) ? '' : 'none';
-        });
-        // activate first allowed tab
-        if (allowed.length > 0) showTab(allowed[0]);
-    }
-
-    async function loadAllData() {
-        try {
-            document.getElementById('db_status').innerHTML = '● LOADING...';
-            const schools = await restFetch('schools', { sch_id: session.schId });
-            SCHOOL_UUID = schools[0].id;
-
-            students = await restFetch('students', { sch_id: session.schId });
-            subjects = await restFetch('subjects', { sch_id: session.schId }).catch(()=>[]);
-            terms = await restFetch('terms', { sch_id: session.schId }).catch(()=>[]);
-            marksData = await restFetch('marks', { sch_id: session.schId }).catch(()=>[]);
-            reportCards = await restFetch('report_cards', { sch_id: session.schId }).catch(()=>[]);
-            attendanceRecords = await restFetch('attendance', { sch_id: session.schId }).catch(()=>[]);
-            feePayments = await restFetch('fee_payments', { sch_id: session.schId }).catch(()=>[]);
-
-            document.getElementById('db_status').innerHTML = `● LIVE (${students.length} students)`;
-            document.getElementById('db_status').style.color = '#2b9348';
-            updateUI();
-        } catch(err) {
-            document.getElementById('db_status').innerHTML = '● ERROR';
-            document.getElementById('errorDisplay').innerHTML = err.message;
-            document.getElementById('errorDisplay').classList.remove('hidden');
-        }
-    }
-
-    function getGrade(score) {
-        if (score>=90) return 'D1'; if (score>=80) return 'D2'; if (score>=70) return 'C3';
-        if (score>=60) return 'C4'; if (score>=50) return 'C5'; if (score>=40) return 'C6';
-        if (score>=35) return 'P7'; if (score>=30) return 'P8'; return 'F9';
-    }
-    function formatCurrency(amt) {
-        return new Intl.NumberFormat('en-UG', { style: 'currency', currency: 'UGX' }).format(amt||0);
-    }
-
-    function updateUI() {
-        const total = students.length, absent = students.filter(s=>s.is_absent).length;
-        document.getElementById('stat_total').innerText = total;
-        document.getElementById('stat_present').innerText = total - absent;
-        document.getElementById('stat_absent').innerText = absent;
-        document.getElementById('stat_pending').innerText = reportCards.filter(rc=>rc.status==='pending').length;
-
-        const active = document.querySelector('.tab.active')?.getAttribute('data-tab')||'abs';
-        switch(active) {
-            case 'abs': renderAbsentees(); break;
-            case 'rec': renderRecords(); break;
-            case 'adm': renderAdmission(); break;
-            case 'roll': renderRollCall(); break;
-            case 'marks': renderMarksPage(); break;
-            case 'reports': renderReportsPage(); break;
-            case 'fees': renderFees(); break;
-            case 'promote': renderPromotion(); break;
-            case 'subjects': renderSubjects(); break;
-            case 'idcards': renderIdCards(); break;
-        }
-    }
-
-    function showTab(tabId) {
-        document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
-        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-        const view = document.getElementById(`view-${tabId}`);
-        if (view) view.classList.remove('hidden');
-        const tab = document.querySelector(`.tab[data-tab="${tabId}"]`);
-        if (tab) tab.classList.add('active');
-        updateUI();
-    }
-
-    document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('click', ()=> showTab(tab.getAttribute('data-tab')));
-    });
-
-    // ---------- VIEW RENDERERS (abbreviated for space; the FULL versions from the previous answer are included) ----------
-    // For the complete code, I'll include the entire render functions. Let me paste them all.
-
-    function renderAbsentees() {
-        let list = students.filter(s=>s.is_absent);
-        let html = `<div class="form-group"><label>Class</label><select id="absClassFilter" onchange="renderAbsentees()"><option value="all">All Classes</option>${['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'].map(c=>`<option value="${c}">${c}</option>`).join('')}</select></div>`;
-        const filterClass = document.getElementById('absClassFilter')?.value||'all';
-        if (filterClass!=='all') list = list.filter(s=>s.class===filterClass);
-        html += list.map(s=>`<div class="card absent-card"><div class="student-photo">${s.name.charAt(0)}</div><div><b>${s.name}</b><br>${s.class} | ${s.parent_contact||'-'}</div><button class="btn-sm" onclick="notifyParent('${s.id}','whatsapp')">📱 WhatsApp</button><button class="btn-sm" onclick="notifyParent('${s.id}','email')">📧 Email</button></div>`).join('');
-        if(list.length===0) html+='<div class="card">No absent pupils.</div>';
-        document.getElementById('view-abs').innerHTML = html;
-    }
-
-    function renderRecords() {
-        let search = document.getElementById('searchRecords')?.value?.toLowerCase()||'';
-        let filtered = students.filter(s=>s.name.toLowerCase().includes(search)||(s.lin&&s.lin.toLowerCase().includes(search)));
-        let html = `<input id="searchRecords" placeholder="Search by name or LIN..." oninput="renderRecords()" style="width:100%;margin-bottom:15px;padding:12px;">`;
-        html += filtered.map(s=>`<div class="card ${s.is_absent?'absent-card':''}"><div class="student-photo">${s.name.charAt(0)}</div><div><b>${s.name}</b><br>LIN: ${s.lin||'Pending'} | ${s.class}</div><div><button class="btn-sm" onclick="editStudent('${s.id}')" ${session.role!=='admin'?'disabled':''}>Edit</button><button class="btn-sm btn-del" onclick="deleteStudent('${s.id}')" ${session.role!=='admin'?'disabled':''}>Delete</button></div></div>`).join('');
-        document.getElementById('view-rec').innerHTML = html;
-    }
-    window.editStudent = (id)=>{
-        const s = students.find(x=>x.id==id);
-        if(!s) return;
-        editingStudentId = id;
-        document.getElementById('reg_name').value = s.name;
-        document.getElementById('reg_class').value = s.class;
-        document.getElementById('reg_contact').value = s.parent_contact||'';
-        document.getElementById('reg_photo').value = s.photo_url||'';
-        document.getElementById('reg_location').value = s.location||'';
-        document.getElementById('reg_health').value = s.health_status||'';
-        document.getElementById('reg_fees').value = s.total_fees;
-        document.getElementById('form_title').innerText = 'Edit Student';
-        document.getElementById('saveBtn').innerText = 'UPDATE';
-        document.getElementById('cancelBtn').classList.remove('hidden');
-        showTab('adm');
-    };
-    window.deleteStudent = async (id)=>{
-        if(confirm('Delete permanently?')) { await restDelete('students',{id}); loadAllData(); }
-    };
-
-    function renderAdmission() {
-        document.getElementById('view-adm').innerHTML = `
-            <div class="form-group">
-                <h3 id="form_title">Admission</h3>
-                <div class="photo-preview" id="photoPreview" style="width:100px;height:100px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;margin-bottom:10px;">📷</div>
-                <input type="file" accept="image/*" capture="environment" onchange="handlePhotoUpload(event)">
-                <label>Photo URL (or upload)</label><input id="reg_photo">
-                <label>Full Name</label><input id="reg_name">
-                <label>Class</label><select id="reg_class">${['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'].map(c=>`<option>${c}</option>`).join('')}</select>
-                <label>Parent Contact</label><input id="reg_contact">
-                <label>Location</label><input id="reg_location">
-                <label>Health Status</label><input id="reg_health">
-                <label>Total Fees (UGX)</label><input id="reg_fees" type="number" value="0">
-                <button class="btn-main" id="saveBtn" onclick="saveStudent()">SAVE</button>
-                <button class="btn-main hidden" id="cancelBtn" onclick="cancelEdit()">CANCEL</button>
-            </div>`;
-        if(editingStudentId){
-            const s = students.find(st=>st.id==editingStudentId);
-            if(s){
-                document.getElementById('reg_name').value = s.name;
-                document.getElementById('reg_class').value = s.class;
-                document.getElementById('reg_contact').value = s.parent_contact||'';
-                document.getElementById('reg_photo').value = s.photo_url||'';
-                document.getElementById('reg_location').value = s.location||'';
-                document.getElementById('reg_health').value = s.health_status||'';
-                document.getElementById('reg_fees').value = s.total_fees;
-                document.getElementById('form_title').innerText = 'Edit Student';
-                document.getElementById('saveBtn').innerText = 'UPDATE';
-                document.getElementById('cancelBtn').classList.remove('hidden');
-            }
-        }
-    }
-    function handlePhotoUpload(e) {
-        const file = e.target.files[0];
-        if(file){
-            const reader = new FileReader();
-            reader.onload = ev => {
-                document.getElementById('reg_photo').value = ev.target.result;
-                document.getElementById('photoPreview').innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
-            };
-            reader.readAsDataURL(file);
-        }
-    }
-    window.saveStudent = async () => {
-        const name = document.getElementById('reg_name').value.trim();
-        if(!name) return alert('Name required');
-        const data = {
-            sch_id: session.schId,
-            name,
-            class: document.getElementById('reg_class').value,
-            parent_contact: document.getElementById('reg_contact').value,
-            photo_url: document.getElementById('reg_photo').value,
-            location: document.getElementById('reg_location').value,
-            health_status: document.getElementById('reg_health').value,
-            total_fees: parseFloat(document.getElementById('reg_fees').value)||0,
-            fees_paid: 0,
-            is_absent: false,
-            lin: editingStudentId ? (students.find(s=>s.id==editingStudentId)?.lin) : `${session.schId}-${name.charAt(0)}${Math.floor(Math.random()*9000+1000)}`
-        };
-        if(editingStudentId){
-            await restUpdate('students',{id:editingStudentId}, data);
-        } else {
-            await restInsert('students',[data]);
-        }
-        cancelEdit();
-        loadAllData();
-        showTab('rec');
-    };
-    window.cancelEdit = () => {
-        editingStudentId = null;
-        document.getElementById('form_title').innerText = 'Admission';
-        document.getElementById('saveBtn').innerText = 'SAVE';
-        document.getElementById('cancelBtn').classList.add('hidden');
-        ['reg_name','reg_photo','reg_contact','reg_location','reg_health'].forEach(id=>document.getElementById(id).value='');
-        document.getElementById('reg_fees').value='0';
-        document.getElementById('photoPreview').innerHTML='📷';
-    };
-
-    function renderRollCall() {
-        let html = '';
-        students.forEach(s=>{
-            html += `<div class="card"><div><b>${s.name}</b><br>${s.class}</div>
-                     <button class="btn-main" style="background:${s.is_absent?'#d90429':'#2b9348'};width:auto;padding:8px 16px;" onclick="toggleAbsence('${s.id}')">${s.is_absent?'ABSENT':'PRESENT'}</button></div>`;
-        });
-        html += `<button class="btn-main" onclick="saveAttendanceHistory()">Save Today's Record</button>`;
-        document.getElementById('view-roll').innerHTML = html;
-    }
-    window.toggleAbsence = async (id) => {
-        const s = students.find(x=>x.id==id);
-        if(s){ await restUpdate('students',{id},{is_absent:!s.is_absent}); loadAllData(); }
-    };
-    window.saveAttendanceHistory = async () => {
-        const today = new Date().toISOString().slice(0,10);
-        for(const s of students){
-            await restInsert('attendance',{sch_id:session.schId, student_id:s.id, date:today, status:s.is_absent?'absent':'present'});
-        }
-        alert('Attendance recorded');
-    };
-
-    function renderMarksPage() {
-        const classes = [...new Set(students.map(s=>s.class))];
-        document.getElementById('view-marks').innerHTML = `
-            <div class="form-group">
-                <label>Select Class</label>
-                <select id="marksClassSelect" onchange="loadStudentsForMarks()"><option value="">-- Choose Class --</option>${classes.map(c=>`<option>${c}</option>`).join('')}</select>
-                <div id="marksStudentArea"></div>
-            </div>`;
-    }
-    async function loadStudentsForMarks() {
-        const cls = document.getElementById('marksClassSelect').value;
-        if(!cls) return;
-        const classStudents = students.filter(s=>s.class===cls);
-        let yearOptions = '';
-        for(let y=new Date().getFullYear()-1; y<=new Date().getFullYear()+2; y++) yearOptions += `<option value="${y}">${y}</option>`;
-        document.getElementById('marksStudentArea').innerHTML = `
-            <label>Year</label><select id="marksYearSelect">${yearOptions}</select>
-            <label>Term</label><select id="marksTermNumberSelect"><option value="1">Term 1</option><option value="2">Term 2</option><option value="3">Term 3</option></select>
-            <label>Exam Type</label><select id="marksExamSelect"><option>Beginning of Term</option><option>Mid Term</option><option selected>End of Term</option></select>
-            <label>Student</label><select id="marksStudentSelect" onchange="loadMarksForStudent()"><option value="">-- Choose Student --</option>${classStudents.map(s=>`<option value="${s.id}">${s.name} (${s.lin})</option>`).join('')}</select>
-            <div id="marksEntryArea"></div>`;
-    }
-    async function loadMarksForStudent() {
-        const studentId = document.getElementById('marksStudentSelect').value;
-        const year = document.getElementById('marksYearSelect').value;
-        const termNumber = document.getElementById('marksTermNumberSelect').value;
-        const examType = document.getElementById('marksExamSelect').value;
-        if(!studentId||!year) return;
-        const termName = `Term ${termNumber} ${year}`;
-        let term = terms.find(t=>t.name===termName);
-        if(!term){
-            await restInsert('terms',[{sch_id:session.schId, name:termName, year:parseInt(year), term_number:parseInt(termNumber), start_date:`${year}-01-01`, end_date:`${year}-12-31`, is_active:true}]);
-            terms = await restFetch('terms',{sch_id:session.schId});
-            term = terms.find(t=>t.name===termName);
-        }
-        const termId = term.id;
-        const existingMarks = marksData.filter(m=>m.student_id==studentId&&m.term_id===termId&&m.exam_type===examType);
-        const map = {}; existingMarks.forEach(m=>map[m.subject_id]=m.score);
-        let html = `<div class="form-group"><h4>Marks for ${students.find(s=>s.id==studentId)?.name} (${examType})</h4>`;
-        subjects.forEach(sub=>{
-            const score = map[sub.id]||'';
-            html += `<div class="subject-row"><label>${sub.name}</label><input type="number" id="mark_${sub.id}" value="${score}" min="0" max="100" onchange="updateSingleGrade('${sub.id}')"><span id="grade_${sub.id}">${score?getGrade(parseFloat(score)):''}</span></div>`;
-        });
-        html += `<button class="btn-main" onclick="saveAllMarksForStudent('${studentId}','${termId}','${examType}')">Save All Marks</button></div>`;
-        document.getElementById('marksEntryArea').innerHTML = html;
-    }
-    window.updateSingleGrade = (subId)=>{
-        const score = parseFloat(document.getElementById(`mark_${subId}`).value);
-        document.getElementById(`grade_${subId}`).innerHTML = isNaN(score)?'':getGrade(score);
-    };
-    window.saveAllMarksForStudent = async (studentId, termId, examType)=>{
-        for(const sub of subjects){
-            const el = document.getElementById(`mark_${sub.id}`);
-            if(el&&el.value!==''){
-                const score = parseFloat(el.value);
-                await restDelete('marks',{student_id:studentId,term_id:termId,subject_id:sub.id,exam_type:examType});
-                await restInsert('marks',[{sch_id:session.schId,student_id:studentId,term_id:termId,subject_id:sub.id,exam_type:examType,score,grade:getGrade(score)}]);
-            }
-        }
-        const endMarks = marksData.filter(m=>m.student_id===studentId&&m.exam_type==='End of Term');
-        const avg = endMarks.length ? endMarks.reduce((a,b)=>a+b.score,0)/endMarks.length : 0;
-        const total = endMarks.reduce((a,b)=>a+b.score,0);
-        const rc = reportCards.find(r=>r.student_id===studentId&&r.term_id===termId);
-        if(rc) await restUpdate('report_cards',{id:rc.id},{total_score:total,average_score:avg,status:'pending'});
-        else await restInsert('report_cards',[{sch_id:session.schId,student_id:studentId,term_id:termId,total_score:total,average_score:avg,status:'pending'}]);
-        alert('Marks saved');
-        await loadAllData();
-        await loadMarksForStudent();
-    };
-
-    function renderReportsPage() {
-        let html = `<div class="form-group"><h3>Report Cards</h3>`;
-        students.forEach(s=>{
-            const rc = reportCards.find(r=>r.student_id===s.id);
-            const status = rc?rc.status:'pending';
-            html += `<div class="card"><div><b>${s.name}</b><br>Avg: ${rc?rc.average_score:'0'}% | <span class="badge badge-${status}">${status}</span></div><div><button class="btn-sm" onclick="viewReportCard('${s.id}')">View/Print</button>${session.role==='admin'&&status==='pending'?`<button class="btn-sm" onclick="approveReport('${s.id}')">Approve</button>`:''}${session.role==='admin'&&status==='approved'?`<button class="btn-sm" onclick="releaseReport('${s.id}')">Release</button>`:''}</div></div>`;
-        });
-        html += `</div>`;
-        document.getElementById('view-reports').innerHTML = html;
-    }
-    window.approveReport = async (sid)=>{ const rc = reportCards.find(r=>r.student_id===sid); if(rc){ await restUpdate('report_cards',{id:rc.id},{status:'approved'}); loadAllData(); }};
-    window.releaseReport = async (sid)=>{ const rc = reportCards.find(r=>r.student_id===sid); if(rc){ await restUpdate('report_cards',{id:rc.id},{status:'released'}); loadAllData(); }};
-    window.viewReportCard = (sid)=>{
-        const s = students.find(st=>st.id==sid);
-        const win = window.open();
-        win.document.write(`<h2>${session.schoolName}</h2><p>${s.name}</p><button onclick="window.print()">Print</button>`);
-    };
-
-    function renderFees() {
-        const totalExp = students.reduce((sum,s)=>sum+(s.total_fees||0),0);
-        const totalCol = students.reduce((sum,s)=>sum+(s.fees_paid||0),0);
-        document.getElementById('view-fees').innerHTML = `
-            <div class="form-group"><h3>Financial Summary</h3><p>Expected: ${formatCurrency(totalExp)}</p><p>Collected: ${formatCurrency(totalCol)}</p><p>Outstanding: ${formatCurrency(totalExp-totalCol)}</p></div>
-            <div class="form-group"><h3>Record Payment</h3>
-                <label>Student</label><select id="feeStudent">${students.map(s=>`<option value="${s.id}">${s.name} (Debt: ${formatCurrency(s.total_fees-s.fees_paid)})</option>`).join('')}</select>
-                <label>Amount</label><input id="feeAmount" type="number">
-                <label>Method</label><select id="feeMethod"><option>cash</option><option>mobile_money</option><option>bank_transfer</option></select>
-                <button class="btn-main" onclick="recordPayment()">Record Payment</button>
-            </div>
-            <div class="form-group"><h3>Payment History</h3><div id="paymentHistory">${feePayments.slice().reverse().map(p=>`<div class="card">${formatCurrency(p.amount)} - ${p.payment_method}</div>`).join('')}</div></div>`;
-    }
-    window.recordPayment = async ()=>{
-        const studentId = document.getElementById('feeStudent').value;
-        const amount = parseFloat(document.getElementById('feeAmount').value);
-        const method = document.getElementById('feeMethod').value;
-        if(!studentId||!amount) return alert('Select student and amount');
-        await restInsert('fee_payments',[{sch_id:session.schId,student_id:studentId,amount,payment_method:method,receipt_number:`RCP-${Date.now()}`}]);
-        const s = students.find(st=>st.id===studentId);
-        await restUpdate('students',{id:studentId},{fees_paid:(s.fees_paid||0)+amount});
-        loadAllData();
-    };
-
-    function renderPromotion() {
-        const classes = [...new Set(students.map(s=>s.class))];
-        document.getElementById('view-promote').innerHTML = `
-            <div class="form-group">
-                <label>From Class</label><select id="promoteFrom">${classes.map(c=>`<option>${c}</option>`).join('')}</select>
-                <button class="btn-main" onclick="runPromotion()">Promote Eligible</button>
-            </div>`;
-    }
-    window.runPromotion = async ()=>{
-        const from = document.getElementById('promoteFrom').value;
-        const order = ['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'];
-        const idx = order.indexOf(from);
-        if(idx===-1||idx===order.length-1) return alert('Cannot promote');
-        const to = order[idx+1];
-        let count = 0;
-        for(const s of students.filter(s=>s.class===from)){
-            const endMarks = marksData.filter(m=>m.student_id===s.id&&m.exam_type==='End of Term');
-            const avg = endMarks.length ? endMarks.reduce((a,b)=>a+b.score,0)/endMarks.length : 0;
-            if(avg>=45){ await restUpdate('students',{id:s.id},{class:to}); count++; }
-        }
-        alert(`${count} students promoted to ${to}`);
-        loadAllData();
-    };
-
-    function renderSubjects() {
-        document.getElementById('view-subjects').innerHTML = `
-            <div class="form-group"><h3>Subjects</h3>
-                <input id="newSubject" placeholder="New subject name"><button class="btn-main" onclick="addSubject()">Add</button>
-                <div>${subjects.map(s=>`<div class="card">${s.name} <button class="btn-sm btn-del" onclick="deleteSubject('${s.id}')">Del</button></div>`).join('')}</div>
-            </div>`;
-    }
-    window.addSubject = async ()=>{
-        const name = document.getElementById('newSubject').value.trim();
-        if(!name) return;
-        await restInsert('subjects',[{sch_id:session.schId,name}]);
-        loadAllData();
-    };
-    window.deleteSubject = async (id)=>{ await restDelete('subjects',{id}); loadAllData(); };
-
-    function renderIdCards() {
-        let html = `<div class="form-group"><h3>Student ID Cards</h3>`;
-        students.forEach(s=>{
-            const vu = new Date(); vu.setFullYear(vu.getFullYear()+1);
-            html += `<div class="card"><div class="student-photo">${s.name.charAt(0)}</div><div><b>${s.name}</b><br>LIN: ${s.lin} | ${s.class}<br>Valid: ${vu.toISOString().slice(0,10)}</div><button class="btn-sm" onclick="printIdCard('${s.id}')">Print</button></div>`;
-        });
-        html += `</div>`;
-        document.getElementById('view-idcards').innerHTML = html;
-    }
-    window.printIdCard = (sid)=>{
-        const s = students.find(st=>st.id==sid);
-        const win = window.open();
-        win.document.write(`<h3>${session.schoolName}</h3><p>${s.name} - ${s.lin}</p><button onclick="window.print()">Print</button>`);
-    };
-
-    window.notifyParent = (sid, channel)=>{
-        const s = students.find(st=>st.id===sid);
-        if(!s) return;
-        if(channel==='whatsapp'&&s.parent_whatsapp){ console.log(`📱 WhatsApp to ${s.parent_whatsapp}`); alert('WhatsApp notification sent (demo)'); }
-        else if(channel==='email'&&s.parent_email){ console.log(`📧 Email to ${s.parent_email}`); alert('Email notification sent (demo)'); }
-        else alert('No contact info');
-    };
-
-    /* ==================== CLOCK ==================== */
-    setInterval(()=>{
-        document.getElementById('clock').innerHTML = new Date().toLocaleTimeString('en-US',{timeZone:'Africa/Kampala'});
-        document.getElementById('ugandaTime').innerHTML = '🕐 ' + new Date().toLocaleTimeString('en-US',{timeZone:'Africa/Kampala'}) + ' EAT';
-    },1000);
-
-    /* ==================== INITIALIZATION ==================== */
-    window.addEventListener('DOMContentLoaded', async ()=>{
-        // check for existing session
-        const saved = sessionStorage.getItem('eudes_sms_session');
-        if(saved){
-            session = JSON.parse(saved);
-            showDashboard();
-        } else {
-            showLoginScreen();
-            await ensureDemoUsers();
-        }
-
-        // login form
-        document.getElementById('loginForm').addEventListener('submit', async (e)=>{
-            e.preventDefault();
-            const email = document.getElementById('email').value.trim().toLowerCase();
-            const password = document.getElementById('password').value;
-            const errDiv = document.getElementById('loginError');
-            errDiv.classList.remove('show');
-            errDiv.textContent = '';
-            if(!email||!password){ errDiv.textContent='⚠️ Fill all fields'; errDiv.classList.add('show'); return; }
-            document.getElementById('loginBtn').disabled = true;
-            document.getElementById('loginBtn').textContent = '⏳ Logging in...';
-            try{
-                session = await login(email, password);
-                sessionStorage.setItem('eudes_sms_session', JSON.stringify(session));
-                showDashboard();
-            } catch<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>EUDES SMS – School Management System | EUDES MEDIA</title>
-    <style>
-        /* ========== GLOBAL STYLES ========== */
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Segoe UI',system-ui,sans-serif; background:#f1f5f9; }
-        .hidden { display:none !important; }
-
-        /* ========== LOGIN SCREEN ========== */
-        #login-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, #001a33 0%, #003366 100%); padding:20px; }
-        .login-card { background:#fff; border-radius:24px; padding:40px 30px; width:100%; max-width:420px; box-shadow:0 20px 50px rgba(0,0,0,0.3); }
-        .brand { text-align:center; margin-bottom:30px; }
-        .brand h1 { color:#003366; font-size:28px; margin:0; }
-        .brand small { color:#D4A017; font-weight:600; text-transform:uppercase; letter-spacing:1px; }
-        .form-group { margin-bottom:18px; }
-        .form-group label { font-size:11px; font-weight:900; color:#003366; display:block; margin-bottom:4px; text-transform:uppercase; }
-        .form-group input { width:100%; padding:14px; border:2px solid #e2e8f0; border-radius:12px; font-size:14px; transition:0.3s; }
-        .form-group input:focus { outline:none; border-color:#D4A017; }
-        .btn { width:100%; padding:16px; background:#003366; color:#fff; border:none; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer; margin-top:10px; }
-        .btn:hover { background:#002244; }
-        .btn:disabled { opacity:0.7; }
-        .error-msg { background:#ffebee; color:#c62828; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
-        .error-msg.show { display:block; }
-        .quick-login { margin-top:20px; text-align:center; }
-        .quick-btn { background:none; border:2px solid #003366; color:#003366; padding:8px 16px; border-radius:20px; cursor:pointer; margin:4px; font-size:12px; font-weight:bold; }
-        .quick-btn:hover { background:#003366; color:#fff; }
-        .ug-time { text-align:center; margin-top:20px; color:#64748b; font-size:13px; }
-
-        /* ========== DASHBOARD SCREEN ========== */
-        .header { background:#003366; color:#fff; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:4px solid #ffc107; flex-wrap:wrap; gap:10px; }
-        .hero { background:#001a33; padding:20px; text-align:center; color:#fff; }
-        #clock { font-size:32px; font-weight:800; color:#ffc107; }
-        .dashboard { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; padding:20px; margin-top:-40px; }
-        .stat-card { background:#fff; border-radius:20px; padding:15px 5px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.1); border-top:5px solid #003366; }
-        .stat-val { font-size:22px; font-weight:900; display:block; }
-        .nav-tabs { display:flex; background:#003366; overflow-x:auto; }
-        .tab { flex:1; text-align:center; padding:14px 5px; font-size:12px; font-weight:bold; color:rgba(255,255,255,0.5); cursor:pointer; text-transform:uppercase; }
-        .tab.active { color:#ffc107; border-bottom:3px solid #ffc107; background:rgba(0,0,0,0.2); }
-        .container { padding:15px; max-width:1200px; margin:0 auto; }
-        .card { background:#fff; border-radius:20px; padding:18px; margin-bottom:15px; box-shadow:0 3px 10px rgba(0,0,0,0.05); border-left:6px solid #003366; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-        .student-photo { width:55px; height:55px; border-radius:50%; background:#eee; border:2px solid #003366; display:flex; align-items:center; justify-content:center; font-size:24px; }
-        .absent-card { border-left-color:#d90429; }
-        .form-group { background:#fff; border-radius:20px; padding:20px; border-top:5px solid #003366; margin-bottom:20px; }
-        label { font-size:11px; font-weight:900; color:#003366; display:block; margin-top:10px; text-transform:uppercase; }
-        input,select,textarea { width:100%; padding:12px; border:2px solid #edf2f7; border-radius:12px; margin-bottom:15px; font-size:14px; }
-        .btn-main { width:100%; background:#003366; color:#fff; padding:14px; border:none; border-radius:15px; font-weight:bold; cursor:pointer; margin-top:8px; }
-        .btn-sm { padding:8px 16px; font-size:12px; background:#ffc107; border:none; border-radius:20px; cursor:pointer; margin:5px; }
-        .btn-del { background:#d90429 !important; color:#fff; }
-        .btn-add { background:#2b9348 !important; color:#fff; }
-        .badge { padding:4px 10px; border-radius:20px; font-size:11px; font-weight:bold; }
-        .badge-pending { background:#ffc107; color:#000; }
-        .badge-approved { background:#2b9348; color:#fff; }
-        .badge-released { background:#003366; color:#fff; }
-        footer { text-align:center; padding:30px; font-size:10px; color:#aaa; }
-        .error-box { background:#ffebee; color:#c62828; padding:15px; border-radius:12px; margin-bottom:20px; }
-        @media print { .no-print { display:none; } @page { size:portrait; margin:1.5cm; } }
-        .subject-row { display:flex; gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap; }
-        .subject-row label { width:150px; margin:0; text-transform:none; }
-        .subject-row input { width:100px; margin:0; }
-        .subject-row span { width:50px; }
-    </style>
-</head>
-<body>
-
-<!-- ==================== LOGIN SCREEN ==================== -->
-<div id="login-screen">
-    <div class="login-card">
-        <div class="brand">
-            <h1>🎓 EUDES SMS</h1>
-            <small>School Management System</small>
-        </div>
-        <div class="error-msg" id="loginError"></div>
-        <form id="loginForm" autocomplete="off">
-            <div class="form-group">
-                <label>📧 School Email</label>
-                <input type="text" id="email" placeholder="e.g., pm001.admin@eudesacademy" required>
-            </div>
-            <div class="form-group">
-                <label>🔑 Password</label>
-                <input type="password" id="password" placeholder="Enter passcode" required>
-            </div>
-            <button type="submit" class="btn" id="loginBtn">🚀 LOGIN</button>
-        </form>
-        <div class="quick-login">
-            <small style="color:#64748b;">Quick Demo:</small><br>
-            <button class="quick-btn" onclick="quickLogin('pm001.admin@eudesacademy','PM001@admin2024')">👑 Admin</button>
-            <button class="quick-btn" onclick="quickLogin('pm001.teacher@eudesacademy','PM001@teacher2024')">👨‍🏫 Teacher</button>
-            <button class="quick-btn" onclick="quickLogin('pm001.finance@eudesacademy','PM001@finance2024')">💰 Finance</button>
-        </div>
-        <div class="ug-time" id="ugandaTime">🕐 Loading Uganda time...</div>
-    </div>
-</div>
-
-<!-- ==================== DASHBOARD SCREEN ==================== -->
-<div id="dashboard-screen" class="hidden">
-    <div class="header">
-        <div><b id="schoolNameDisplay">PROGRESSIVE MOTHER'S</b><br><span id="db_status">● LOADING...</span></div>
-        <button onclick="loadAllData()" style="background:#2b9348; color:white; border:none; padding:6px 12px; border-radius:8px;">⟳ REFRESH</button>
-        <button onclick="logout()" style="background:#d90429; color:white; border:none; padding:6px 12px; border-radius:8px;">🚪 LOGOUT</button>
-    </div>
-    <div class="hero"><div id="clock">--:--:--</div><div>EUDES MEDIA SCHOOL SYSTEM – UGANDA</div></div>
-    <div class="dashboard">
-        <div class="stat-card"><span class="stat-val" id="stat_total">0</span><small>TOTAL STUDENTS</small></div>
-        <div class="stat-card"><span class="stat-val" id="stat_present" style="color:#2b9348">0</span><small>PRESENT</small></div>
-        <div class="stat-card"><span class="stat-val" id="stat_absent" style="color:#d90429">0</span><small>ABSENT</small></div>
-        <div class="stat-card"><span class="stat-val" id="stat_pending" style="color:#ffc107">0</span><small>PENDING REP</small></div>
-    </div>
-    <div class="nav-tabs">
-        <div class="tab active" data-tab="abs">Absentees</div>
-        <div class="tab" data-tab="rec">Records</div>
-        <div class="tab" data-tab="adm">Admission</div>
-        <div class="tab" data-tab="roll">Roll‑Call</div>
-        <div class="tab" data-tab="marks">Marks</div>
-        <div class="tab" data-tab="reports">Reports</div>
-        <div class="tab" data-tab="fees">Fees</div>
-        <div class="tab" data-tab="promote">Promote</div>
-        <div class="tab" data-tab="subjects">Subjects</div>
-        <div class="tab" data-tab="idcards">ID Cards</div>
-    </div>
-    <div class="container">
-        <div id="errorDisplay" class="error-box hidden"></div>
-        <div id="view-abs" class="view">Loading absentees...</div>
-        <div id="view-rec" class="view hidden">Loading records...</div>
-        <div id="view-adm" class="view hidden">Loading admission...</div>
-        <div id="view-roll" class="view hidden">Loading roll call...</div>
-        <div id="view-marks" class="view hidden">Loading marks...</div>
-        <div id="view-reports" class="view hidden">Loading reports...</div>
-        <div id="view-fees" class="view hidden">Loading fees...</div>
-        <div id="view-promote" class="view hidden">Loading promotion...</div>
-        <div id="view-subjects" class="view hidden">Loading subjects...</div>
-        <div id="view-idcards" class="view hidden">Loading ID cards...</div>
-    </div>
-    <footer>EUDES MEDIA | SUPPORT: 0762992440 / 0200930932 | WhatsApp: 0762992440</footer>
-</div>
-
-<script>
-    /* ==================== GLOBALS ==================== */
-    const SUPABASE_URL = 'https://kjftrwuucjdnhfwesrup.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtqZnRyd3V1Y2pkbmhmd2VzcnVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3Njc0OTksImV4cCI6MjA4NzM0MzQ5OX0.YAIdcBo2MXs86CrunR2CBM4Uh6RjNbGxIG-E260NfCM';
-
-    let session = null;               // current user session
-    let students = [], marksData = [], reportCards = [], subjects = [],
-        attendanceRecords = [], terms = [], feePayments = [];
-    let editingStudentId = null;
-    let SCHOOL_UUID = null;
-    const SCHOOL_SCH_ID = () => session?.schId;
-    const USER_ROLE = () => session?.role;
-    const ROLE_TABS = {
-        admin: ['abs','rec','adm','roll','marks','reports','fees','promote','subjects','idcards'],
-        teacher: ['abs','roll','marks'],
-        finance: ['abs','adm','fees']
-    };
-
-    /* ==================== SUPABASE HELPERS ==================== */
-    async function restFetch(table, filter = {}) {
-        let url = `${SUPABASE_URL}/rest/v1/${table}?`;
-        for (const [key, val] of Object.entries(filter)) url += `${key}=eq.${encodeURIComponent(val)}&`;
-        if (url.endsWith('&')) url = url.slice(0, -1);
-        const res = await fetch(url, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } });
-        if (!res.ok) throw new Error(await res.text());
-        return await res.json();
-    }
-    async function restInsert(table, body) {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
-            method: 'POST',
-            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-        if (!res.ok) throw new Error(await res.text());
-        return res;
-    }
-    async function restUpdate(table, filter, body) {
-        let url = `${SUPABASE_URL}/rest/v1/${table}?`;
-        for (const [key, val] of Object.entries(filter)) url += `${key}=eq.${encodeURIComponent(val)}&`;
-        if (url.endsWith('&')) url = url.slice(0, -1);
-        const res = await fetch(url, {
-            method: 'PATCH',
-            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-        if (!res.ok) throw new Error(await res.text());
-        return res;
-    }
-    async function restDelete(table, filter) {
-        let url = `${SUPABASE_URL}/rest/v1/${table}?`;
-        for (const [key, val] of Object.entries(filter)) url += `${key}=eq.${encodeURIComponent(val)}&`;
-        if (url.endsWith('&')) url = url.slice(0, -1);
-        const res = await fetch(url, {
-            method: 'DELETE',
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/school_users?email=eq.${encodeURIComponent(email)}&select=*,schools!inner(*)`, {
             headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
         });
-        if (!res.ok) throw new Error(await res.text());
-        return res;
-    }
-
-    /* ==================== AUTHENTICATION ==================== */
-    async function hashPassword(pw) {
-        const encoder = new TextEncoder();
-        const data = encoder.encode(pw);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-
-    async function ensureDemoUsers() {
-        const users = await restFetch('school_users', { sch_id: 'PM001' });
-        if (users.length === 0 || users[0].password_hash.startsWith('PLACEHOLDER')) {
-            const adminHash = await hashPassword('PM001@admin2024');
-            const teacherHash = await hashPassword('PM001@teacher2024');
-            const financeHash = await hashPassword('PM001@finance2024');
-            if (users.length === 0) {
-                await restInsert('school_users', [
-                    { sch_id:'PM001', email:'pm001.admin@eudesacademy', password_hash:adminHash, role:'admin', is_active:true },
-                    { sch_id:'PM001', email:'pm001.teacher@eudesacademy', password_hash:teacherHash, role:'teacher', is_active:true },
-                    { sch_id:'PM001', email:'pm001.finance@eudesacademy', password_hash:financeHash, role:'finance', is_active:true }
-                ]);
-            } else {
-                for (const u of users) {
-                    if (u.email.includes('admin')) await restUpdate('school_users', {email:u.email}, {password_hash:adminHash});
-                    if (u.email.includes('teacher')) await restUpdate('school_users', {email:u.email}, {password_hash:teacherHash});
-                    if (u.email.includes('finance')) await restUpdate('school_users', {email:u.email}, {password_hash:financeHash});
-                }
-            }
-            console.log('✅ Demo users & hashes ready');
-        }
-    }
-
-    async function login(email, password) {
-        const hashed = await hashPassword(password);
-        const users = await restFetch('school_users', { email: email });
+        if (!res.ok) throw new Error('Network error');
+        const users = await res.json();
         if (users.length === 0) throw new Error('❌ Invalid email');
         const user = users[0];
         if (user.password_hash !== hashed) throw new Error('❌ Wrong password');
         if (!user.is_active) throw new Error('🚫 Account deactivated');
-        const school = (await restFetch('schools', { sch_id: user.sch_id }))[0];
-        if (!school || !school.is_active) throw new Error('⚠️ School subscription expired');
+        if (!user.schools || !user.schools.is_active) throw new Error('⚠️ School subscription expired');
+
         return {
             userId: user.id,
             schId: user.sch_id,
-            schoolName: school.school_name,
+            schoolName: user.schools.school_name,
             role: user.role,
             email: user.email,
-            location: school.location,
-            contact: school.contact_numbers,
-            whatsapp: school.whatsapp_number,
-            shortCode: school.short_code
+            location: user.schools.location,
+            contact: user.schools.contact_numbers,
+            whatsapp: user.schools.whatsapp_number,
+            shortCode: user.schools.short_code
         };
     }
 
@@ -960,11 +271,11 @@
         document.getElementById('loginForm').dispatchEvent(new Event('submit'));
     }
 
-    /* ==================== SCREEN SWITCHING ==================== */
     function showLoginScreen() {
         document.getElementById('login-screen').classList.remove('hidden');
         document.getElementById('dashboard-screen').classList.add('hidden');
     }
+
     function showDashboard() {
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('dashboard-screen').classList.remove('hidden');
@@ -972,20 +283,22 @@
         setupDashboardTabs();
         loadAllData();
     }
+
     function logout() {
         sessionStorage.removeItem('eudes_sms_session');
         session = null;
         showLoginScreen();
     }
 
-    /* ==================== DASHBOARD LOGIC ==================== */
+    /*************************************************************
+     *  DASHBOARD LOGIC
+     *************************************************************/
     function setupDashboardTabs() {
         const allowed = ROLE_TABS[session.role] || [];
         document.querySelectorAll('.tab').forEach(tab => {
             const tabId = tab.getAttribute('data-tab');
             tab.style.display = allowed.includes(tabId) ? '' : 'none';
         });
-        // activate first allowed tab
         if (allowed.length > 0) showTab(allowed[0]);
     }
 
@@ -993,20 +306,21 @@
         try {
             document.getElementById('db_status').innerHTML = '● LOADING...';
             const schools = await restFetch('schools', { sch_id: session.schId });
+            if (schools.length === 0) throw new Error('School not found');
             SCHOOL_UUID = schools[0].id;
 
             students = await restFetch('students', { sch_id: session.schId });
-            subjects = await restFetch('subjects', { sch_id: session.schId }).catch(()=>[]);
-            terms = await restFetch('terms', { sch_id: session.schId }).catch(()=>[]);
-            marksData = await restFetch('marks', { sch_id: session.schId }).catch(()=>[]);
-            reportCards = await restFetch('report_cards', { sch_id: session.schId }).catch(()=>[]);
-            attendanceRecords = await restFetch('attendance', { sch_id: session.schId }).catch(()=>[]);
-            feePayments = await restFetch('fee_payments', { sch_id: session.schId }).catch(()=>[]);
+            subjects = await restFetch('subjects', { sch_id: session.schId }).catch(() => []);
+            terms = await restFetch('terms', { sch_id: session.schId }).catch(() => []);
+            marksData = await restFetch('marks', { sch_id: session.schId }).catch(() => []);
+            reportCards = await restFetch('report_cards', { sch_id: session.schId }).catch(() => []);
+            attendanceRecords = await restFetch('attendance', { sch_id: session.schId }).catch(() => []);
+            feePayments = await restFetch('fee_payments', { sch_id: session.schId }).catch(() => []);
 
             document.getElementById('db_status').innerHTML = `● LIVE (${students.length} students)`;
             document.getElementById('db_status').style.color = '#2b9348';
             updateUI();
-        } catch(err) {
+        } catch (err) {
             document.getElementById('db_status').innerHTML = '● ERROR';
             document.getElementById('errorDisplay').innerHTML = err.message;
             document.getElementById('errorDisplay').classList.remove('hidden');
@@ -1014,23 +328,31 @@
     }
 
     function getGrade(score) {
-        if (score>=90) return 'D1'; if (score>=80) return 'D2'; if (score>=70) return 'C3';
-        if (score>=60) return 'C4'; if (score>=50) return 'C5'; if (score>=40) return 'C6';
-        if (score>=35) return 'P7'; if (score>=30) return 'P8'; return 'F9';
+        if (score >= 90) return 'D1';
+        if (score >= 80) return 'D2';
+        if (score >= 70) return 'C3';
+        if (score >= 60) return 'C4';
+        if (score >= 50) return 'C5';
+        if (score >= 40) return 'C6';
+        if (score >= 35) return 'P7';
+        if (score >= 30) return 'P8';
+        return 'F9';
     }
+
     function formatCurrency(amt) {
-        return new Intl.NumberFormat('en-UG', { style: 'currency', currency: 'UGX' }).format(amt||0);
+        return new Intl.NumberFormat('en-UG', { style: 'currency', currency: 'UGX' }).format(amt || 0);
     }
 
     function updateUI() {
-        const total = students.length, absent = students.filter(s=>s.is_absent).length;
+        const total = students.length;
+        const absent = students.filter(s => s.is_absent).length;
         document.getElementById('stat_total').innerText = total;
         document.getElementById('stat_present').innerText = total - absent;
         document.getElementById('stat_absent').innerText = absent;
-        document.getElementById('stat_pending').innerText = reportCards.filter(rc=>rc.status==='pending').length;
+        document.getElementById('stat_pending').innerText = reportCards.filter(rc => rc.status === 'pending').length;
 
-        const active = document.querySelector('.tab.active')?.getAttribute('data-tab')||'abs';
-        switch(active) {
+        const activeTab = document.querySelector('.tab.active')?.getAttribute('data-tab') || 'abs';
+        switch (activeTab) {
             case 'abs': renderAbsentees(); break;
             case 'rec': renderRecords(); break;
             case 'adm': renderAdmission(); break;
@@ -1045,57 +367,77 @@
     }
 
     function showTab(tabId) {
-        document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
-        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-        const view = document.getElementById(`view-${tabId}`);
-        if (view) view.classList.remove('hidden');
-        const tab = document.querySelector(`.tab[data-tab="${tabId}"]`);
-        if (tab) tab.classList.add('active');
+        document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        const viewEl = document.getElementById(`view-${tabId}`);
+        if (viewEl) viewEl.classList.remove('hidden');
+        const tabEl = document.querySelector(`.tab[data-tab="${tabId}"]`);
+        if (tabEl) tabEl.classList.add('active');
         updateUI();
     }
 
     document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('click', ()=> showTab(tab.getAttribute('data-tab')));
+        tab.addEventListener('click', () => showTab(tab.getAttribute('data-tab')));
     });
 
-    // ---------- VIEW RENDERERS (abbreviated for space; the FULL versions from the previous answer are included) ----------
-    // For the complete code, I'll include the entire render functions. Let me paste them all.
-
+    // ---------- VIEW RENDERERS ----------
     function renderAbsentees() {
-        let list = students.filter(s=>s.is_absent);
-        let html = `<div class="form-group"><label>Class</label><select id="absClassFilter" onchange="renderAbsentees()"><option value="all">All Classes</option>${['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'].map(c=>`<option value="${c}">${c}</option>`).join('')}</select></div>`;
-        const filterClass = document.getElementById('absClassFilter')?.value||'all';
-        if (filterClass!=='all') list = list.filter(s=>s.class===filterClass);
-        html += list.map(s=>`<div class="card absent-card"><div class="student-photo">${s.name.charAt(0)}</div><div><b>${s.name}</b><br>${s.class} | ${s.parent_contact||'-'}</div><button class="btn-sm" onclick="notifyParent('${s.id}','whatsapp')">📱 WhatsApp</button><button class="btn-sm" onclick="notifyParent('${s.id}','email')">📧 Email</button></div>`).join('');
-        if(list.length===0) html+='<div class="card">No absent pupils.</div>';
+        let list = students.filter(s => s.is_absent);
+        let html = `<div class="form-group"><label>Class</label><select id="absClassFilter" onchange="renderAbsentees()">
+            <option value="all">All Classes</option>
+            ${['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'].map(c => `<option value="${c}">${c}</option>`).join('')}
+        </select></div>`;
+        const filterClass = document.getElementById('absClassFilter')?.value || 'all';
+        if (filterClass !== 'all') list = list.filter(s => s.class === filterClass);
+        html += list.map(s => `
+            <div class="card absent-card">
+                <div class="student-photo">${s.name.charAt(0)}</div>
+                <div><b>${s.name}</b><br>${s.class} | ${s.parent_contact || '-'}</div>
+                <button class="btn-sm" onclick="notifyParent('${s.id}', 'whatsapp')">📱 WhatsApp</button>
+                <button class="btn-sm" onclick="notifyParent('${s.id}', 'email')">📧 Email</button>
+            </div>`).join('');
+        if (list.length === 0) html += '<div class="card">No absent pupils.</div>';
         document.getElementById('view-abs').innerHTML = html;
     }
 
     function renderRecords() {
-        let search = document.getElementById('searchRecords')?.value?.toLowerCase()||'';
-        let filtered = students.filter(s=>s.name.toLowerCase().includes(search)||(s.lin&&s.lin.toLowerCase().includes(search)));
-        let html = `<input id="searchRecords" placeholder="Search by name or LIN..." oninput="renderRecords()" style="width:100%;margin-bottom:15px;padding:12px;">`;
-        html += filtered.map(s=>`<div class="card ${s.is_absent?'absent-card':''}"><div class="student-photo">${s.name.charAt(0)}</div><div><b>${s.name}</b><br>LIN: ${s.lin||'Pending'} | ${s.class}</div><div><button class="btn-sm" onclick="editStudent('${s.id}')" ${session.role!=='admin'?'disabled':''}>Edit</button><button class="btn-sm btn-del" onclick="deleteStudent('${s.id}')" ${session.role!=='admin'?'disabled':''}>Delete</button></div></div>`).join('');
+        let search = document.getElementById('searchRecords')?.value?.toLowerCase() || '';
+        let filtered = students.filter(s => s.name.toLowerCase().includes(search) || (s.lin && s.lin.toLowerCase().includes(search)));
+        let html = `<input id="searchRecords" placeholder="Search by name or LIN..." oninput="renderRecords()" style="width:100%; margin-bottom:15px; padding:12px;">`;
+        html += filtered.map(s => `
+            <div class="card ${s.is_absent ? 'absent-card' : ''}">
+                <div class="student-photo">${s.name.charAt(0)}</div>
+                <div><b>${s.name}</b><br>LIN: ${s.lin || 'Pending'} | ${s.class}</div>
+                <div>
+                    <button class="btn-sm" onclick="editStudent('${s.id}')" ${session.role !== 'admin' ? 'disabled' : ''}>Edit</button>
+                    <button class="btn-sm btn-del" onclick="deleteStudent('${s.id}')" ${session.role !== 'admin' ? 'disabled' : ''}>Delete</button>
+                </div>
+            </div>`).join('');
         document.getElementById('view-rec').innerHTML = html;
     }
-    window.editStudent = (id)=>{
-        const s = students.find(x=>x.id==id);
-        if(!s) return;
+
+    window.editStudent = (id) => {
+        let s = students.find(x => x.id == id);
+        if (!s) return;
         editingStudentId = id;
         document.getElementById('reg_name').value = s.name;
         document.getElementById('reg_class').value = s.class;
-        document.getElementById('reg_contact').value = s.parent_contact||'';
-        document.getElementById('reg_photo').value = s.photo_url||'';
-        document.getElementById('reg_location').value = s.location||'';
-        document.getElementById('reg_health').value = s.health_status||'';
+        document.getElementById('reg_contact').value = s.parent_contact || '';
+        document.getElementById('reg_photo').value = s.photo_url || '';
+        document.getElementById('reg_location').value = s.location || '';
+        document.getElementById('reg_health').value = s.health_status || '';
         document.getElementById('reg_fees').value = s.total_fees;
         document.getElementById('form_title').innerText = 'Edit Student';
         document.getElementById('saveBtn').innerText = 'UPDATE';
         document.getElementById('cancelBtn').classList.remove('hidden');
         showTab('adm');
     };
-    window.deleteStudent = async (id)=>{
-        if(confirm('Delete permanently?')) { await restDelete('students',{id}); loadAllData(); }
+
+    window.deleteStudent = async (id) => {
+        if (confirm('Delete permanently?')) {
+            await restDelete('students', { id });
+            loadAllData();
+        }
     };
 
     function renderAdmission() {
@@ -1106,7 +448,7 @@
                 <input type="file" accept="image/*" capture="environment" onchange="handlePhotoUpload(event)">
                 <label>Photo URL (or upload)</label><input id="reg_photo">
                 <label>Full Name</label><input id="reg_name">
-                <label>Class</label><select id="reg_class">${['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'].map(c=>`<option>${c}</option>`).join('')}</select>
+                <label>Class</label><select id="reg_class">${['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'].map(c => `<option>${c}</option>`).join('')}</select>
                 <label>Parent Contact</label><input id="reg_contact">
                 <label>Location</label><input id="reg_location">
                 <label>Health Status</label><input id="reg_health">
@@ -1114,15 +456,15 @@
                 <button class="btn-main" id="saveBtn" onclick="saveStudent()">SAVE</button>
                 <button class="btn-main hidden" id="cancelBtn" onclick="cancelEdit()">CANCEL</button>
             </div>`;
-        if(editingStudentId){
-            const s = students.find(st=>st.id==editingStudentId);
-            if(s){
+        if (editingStudentId) {
+            const s = students.find(st => st.id == editingStudentId);
+            if (s) {
                 document.getElementById('reg_name').value = s.name;
                 document.getElementById('reg_class').value = s.class;
-                document.getElementById('reg_contact').value = s.parent_contact||'';
-                document.getElementById('reg_photo').value = s.photo_url||'';
-                document.getElementById('reg_location').value = s.location||'';
-                document.getElementById('reg_health').value = s.health_status||'';
+                document.getElementById('reg_contact').value = s.parent_contact || '';
+                document.getElementById('reg_photo').value = s.photo_url || '';
+                document.getElementById('reg_location').value = s.location || '';
+                document.getElementById('reg_health').value = s.health_status || '';
                 document.getElementById('reg_fees').value = s.total_fees;
                 document.getElementById('form_title').innerText = 'Edit Student';
                 document.getElementById('saveBtn').innerText = 'UPDATE';
@@ -1130,9 +472,10 @@
             }
         }
     }
+
     function handlePhotoUpload(e) {
         const file = e.target.files[0];
-        if(file){
+        if (file) {
             const reader = new FileReader();
             reader.onload = ev => {
                 document.getElementById('reg_photo').value = ev.target.result;
@@ -1141,9 +484,10 @@
             reader.readAsDataURL(file);
         }
     }
+
     window.saveStudent = async () => {
         const name = document.getElementById('reg_name').value.trim();
-        if(!name) return alert('Name required');
+        if (!name) return alert('Name required');
         const data = {
             sch_id: session.schId,
             name,
@@ -1152,116 +496,172 @@
             photo_url: document.getElementById('reg_photo').value,
             location: document.getElementById('reg_location').value,
             health_status: document.getElementById('reg_health').value,
-            total_fees: parseFloat(document.getElementById('reg_fees').value)||0,
+            total_fees: parseFloat(document.getElementById('reg_fees').value) || 0,
             fees_paid: 0,
             is_absent: false,
-            lin: editingStudentId ? (students.find(s=>s.id==editingStudentId)?.lin) : `${session.schId}-${name.charAt(0)}${Math.floor(Math.random()*9000+1000)}`
+            lin: editingStudentId ? (students.find(s => s.id == editingStudentId)?.lin) : `${session.schId}-${name.charAt(0)}${Math.floor(Math.random() * 9000 + 1000)}`
         };
-        if(editingStudentId){
-            await restUpdate('students',{id:editingStudentId}, data);
+        if (editingStudentId) {
+            await restUpdate('students', { id: editingStudentId }, data);
         } else {
-            await restInsert('students',[data]);
+            await restInsert('students', [data]);
         }
         cancelEdit();
         loadAllData();
         showTab('rec');
     };
+
     window.cancelEdit = () => {
         editingStudentId = null;
         document.getElementById('form_title').innerText = 'Admission';
         document.getElementById('saveBtn').innerText = 'SAVE';
         document.getElementById('cancelBtn').classList.add('hidden');
-        ['reg_name','reg_photo','reg_contact','reg_location','reg_health'].forEach(id=>document.getElementById(id).value='');
-        document.getElementById('reg_fees').value='0';
-        document.getElementById('photoPreview').innerHTML='📷';
+        ['reg_name','reg_photo','reg_contact','reg_location','reg_health'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('reg_fees').value = '0';
+        document.getElementById('photoPreview').innerHTML = '📷';
     };
 
     function renderRollCall() {
         let html = '';
-        students.forEach(s=>{
+        students.forEach(s => {
             html += `<div class="card"><div><b>${s.name}</b><br>${s.class}</div>
-                     <button class="btn-main" style="background:${s.is_absent?'#d90429':'#2b9348'};width:auto;padding:8px 16px;" onclick="toggleAbsence('${s.id}')">${s.is_absent?'ABSENT':'PRESENT'}</button></div>`;
+                     <button class="btn-main" style="background:${s.is_absent ? '#d90429' : '#2b9348'};width:auto;padding:8px 16px;" onclick="toggleAbsence('${s.id}')">${s.is_absent ? 'ABSENT' : 'PRESENT'}</button></div>`;
         });
         html += `<button class="btn-main" onclick="saveAttendanceHistory()">Save Today's Record</button>`;
         document.getElementById('view-roll').innerHTML = html;
     }
+
     window.toggleAbsence = async (id) => {
-        const s = students.find(x=>x.id==id);
-        if(s){ await restUpdate('students',{id},{is_absent:!s.is_absent}); loadAllData(); }
+        const s = students.find(x => x.id == id);
+        if (s) {
+            await restUpdate('students', { id }, { is_absent: !s.is_absent });
+            loadAllData();
+        }
     };
+
     window.saveAttendanceHistory = async () => {
-        const today = new Date().toISOString().slice(0,10);
-        for(const s of students){
-            await restInsert('attendance',{sch_id:session.schId, student_id:s.id, date:today, status:s.is_absent?'absent':'present'});
+        const today = new Date().toISOString().slice(0, 10);
+        for (const s of students) {
+            await restInsert('attendance', { sch_id: session.schId, student_id: s.id, date: today, status: s.is_absent ? 'absent' : 'present' });
         }
         alert('Attendance recorded');
     };
 
     function renderMarksPage() {
-        const classes = [...new Set(students.map(s=>s.class))];
-        document.getElementById('view-marks').innerHTML = `
+        const classes = [...new Set(students.map(s => s.class))];
+        let html = `
             <div class="form-group">
                 <label>Select Class</label>
-                <select id="marksClassSelect" onchange="loadStudentsForMarks()"><option value="">-- Choose Class --</option>${classes.map(c=>`<option>${c}</option>`).join('')}</select>
+                <select id="marksClassSelect" onchange="loadStudentsForMarks()">
+                    <option value="">-- Choose Class --</option>
+                    ${classes.map(c => `<option>${c}</option>`).join('')}
+                </select>
                 <div id="marksStudentArea"></div>
             </div>`;
+        document.getElementById('view-marks').innerHTML = html;
     }
+
     async function loadStudentsForMarks() {
         const cls = document.getElementById('marksClassSelect').value;
-        if(!cls) return;
-        const classStudents = students.filter(s=>s.class===cls);
+        if (!cls) return;
+        const classStudents = students.filter(s => s.class === cls);
         let yearOptions = '';
-        for(let y=new Date().getFullYear()-1; y<=new Date().getFullYear()+2; y++) yearOptions += `<option value="${y}">${y}</option>`;
-        document.getElementById('marksStudentArea').innerHTML = `
+        for (let y = new Date().getFullYear() - 1; y <= new Date().getFullYear() + 2; y++) yearOptions += `<option value="${y}">${y}</option>`;
+        let html = `
             <label>Year</label><select id="marksYearSelect">${yearOptions}</select>
-            <label>Term</label><select id="marksTermNumberSelect"><option value="1">Term 1</option><option value="2">Term 2</option><option value="3">Term 3</option></select>
-            <label>Exam Type</label><select id="marksExamSelect"><option>Beginning of Term</option><option>Mid Term</option><option selected>End of Term</option></select>
-            <label>Student</label><select id="marksStudentSelect" onchange="loadMarksForStudent()"><option value="">-- Choose Student --</option>${classStudents.map(s=>`<option value="${s.id}">${s.name} (${s.lin})</option>`).join('')}</select>
+            <label>Term Number</label><select id="marksTermNumberSelect">
+                <option value="1">Term 1</option><option value="2">Term 2</option><option value="3">Term 3</option></select>
+            <label>Exam Type</label><select id="marksExamSelect">
+                <option>Beginning of Term</option><option>Mid Term</option><option selected>End of Term</option></select>
+            <label>Student</label>
+            <select id="marksStudentSelect" onchange="loadMarksForStudent()">
+                <option value="">-- Choose Student --</option>
+                ${classStudents.map(s => `<option value="${s.id}">${s.name} (${s.lin})</option>`).join('')}
+            </select>
             <div id="marksEntryArea"></div>`;
+        document.getElementById('marksStudentArea').innerHTML = html;
     }
+
     async function loadMarksForStudent() {
         const studentId = document.getElementById('marksStudentSelect').value;
         const year = document.getElementById('marksYearSelect').value;
         const termNumber = document.getElementById('marksTermNumberSelect').value;
         const examType = document.getElementById('marksExamSelect').value;
-        if(!studentId||!year) return;
+        if (!studentId || !year) return;
+
         const termName = `Term ${termNumber} ${year}`;
-        let term = terms.find(t=>t.name===termName);
-        if(!term){
-            await restInsert('terms',[{sch_id:session.schId, name:termName, year:parseInt(year), term_number:parseInt(termNumber), start_date:`${year}-01-01`, end_date:`${year}-12-31`, is_active:true}]);
-            terms = await restFetch('terms',{sch_id:session.schId});
-            term = terms.find(t=>t.name===termName);
+        let term = terms.find(t => t.name === termName);
+        if (!term) {
+            await restInsert('terms', [{
+                sch_id: session.schId,
+                name: termName,
+                year: parseInt(year),
+                term_number: parseInt(termNumber),
+                start_date: `${year}-01-01`,
+                end_date: `${year}-12-31`,
+                is_active: true
+            }]);
+            terms = await restFetch('terms', { sch_id: session.schId });
+            term = terms.find(t => t.name === termName);
         }
         const termId = term.id;
-        const existingMarks = marksData.filter(m=>m.student_id==studentId&&m.term_id===termId&&m.exam_type===examType);
-        const map = {}; existingMarks.forEach(m=>map[m.subject_id]=m.score);
-        let html = `<div class="form-group"><h4>Marks for ${students.find(s=>s.id==studentId)?.name} (${examType})</h4>`;
-        subjects.forEach(sub=>{
-            const score = map[sub.id]||'';
-            html += `<div class="subject-row"><label>${sub.name}</label><input type="number" id="mark_${sub.id}" value="${score}" min="0" max="100" onchange="updateSingleGrade('${sub.id}')"><span id="grade_${sub.id}">${score?getGrade(parseFloat(score)):''}</span></div>`;
+
+        const existingMarks = marksData.filter(m => m.student_id == studentId && m.term_id === termId && m.exam_type === examType);
+        const map = {};
+        existingMarks.forEach(m => map[m.subject_id] = m.score);
+
+        let html = `<div class="form-group"><h4>Marks for ${students.find(s => s.id == studentId)?.name} (${examType})</h4>`;
+        subjects.forEach(sub => {
+            const score = map[sub.id] || '';
+            html += `
+                <div class="subject-row">
+                    <label>${sub.name}</label>
+                    <input type="number" id="mark_${sub.id}" value="${score}" min="0" max="100" onchange="updateSingleGrade('${sub.id}')">
+                    <span id="grade_${sub.id}">${score ? getGrade(parseFloat(score)) : ''}</span>
+                </div>`;
         });
-        html += `<button class="btn-main" onclick="saveAllMarksForStudent('${studentId}','${termId}','${examType}')">Save All Marks</button></div>`;
+        html += `<button class="btn-main" onclick="saveAllMarksForStudent('${studentId}', '${termId}', '${examType}')">Save All Marks</button></div>`;
         document.getElementById('marksEntryArea').innerHTML = html;
     }
-    window.updateSingleGrade = (subId)=>{
+
+    window.updateSingleGrade = (subId) => {
         const score = parseFloat(document.getElementById(`mark_${subId}`).value);
-        document.getElementById(`grade_${subId}`).innerHTML = isNaN(score)?'':getGrade(score);
+        document.getElementById(`grade_${subId}`).innerHTML = isNaN(score) ? '' : getGrade(score);
     };
-    window.saveAllMarksForStudent = async (studentId, termId, examType)=>{
-        for(const sub of subjects){
+
+    window.saveAllMarksForStudent = async (studentId, termId, examType) => {
+        for (const sub of subjects) {
             const el = document.getElementById(`mark_${sub.id}`);
-            if(el&&el.value!==''){
+            if (el && el.value !== '') {
                 const score = parseFloat(el.value);
-                await restDelete('marks',{student_id:studentId,term_id:termId,subject_id:sub.id,exam_type:examType});
-                await restInsert('marks',[{sch_id:session.schId,student_id:studentId,term_id:termId,subject_id:sub.id,exam_type:examType,score,grade:getGrade(score)}]);
+                await restDelete('marks', { student_id: studentId, term_id: termId, subject_id: sub.id, exam_type: examType });
+                await restInsert('marks', [{
+                    sch_id: session.schId,
+                    student_id: studentId,
+                    term_id: termId,
+                    subject_id: sub.id,
+                    exam_type: examType,
+                    score,
+                    grade: getGrade(score)
+                }]);
             }
         }
-        const endMarks = marksData.filter(m=>m.student_id===studentId&&m.exam_type==='End of Term');
-        const avg = endMarks.length ? endMarks.reduce((a,b)=>a+b.score,0)/endMarks.length : 0;
-        const total = endMarks.reduce((a,b)=>a+b.score,0);
-        const rc = reportCards.find(r=>r.student_id===studentId&&r.term_id===termId);
-        if(rc) await restUpdate('report_cards',{id:rc.id},{total_score:total,average_score:avg,status:'pending'});
-        else await restInsert('report_cards',[{sch_id:session.schId,student_id:studentId,term_id:termId,total_score:total,average_score:avg,status:'pending'}]);
+        const endMarks = marksData.filter(m => m.student_id === studentId && m.exam_type === 'End of Term');
+        const avg = endMarks.length ? endMarks.reduce((a, b) => a + b.score, 0) / endMarks.length : 0;
+        const total = endMarks.reduce((a, b) => a + b.score, 0);
+        const rc = reportCards.find(r => r.student_id === studentId && r.term_id === termId);
+        if (rc) {
+            await restUpdate('report_cards', { id: rc.id }, { total_score: total, average_score: avg, status: 'pending' });
+        } else {
+            await restInsert('report_cards', [{
+                sch_id: session.schId,
+                student_id: studentId,
+                term_id: termId,
+                total_score: total,
+                average_score: avg,
+                status: 'pending'
+            }]);
+        }
         alert('Marks saved');
         await loadAllData();
         await loadMarksForStudent();
@@ -1269,65 +669,97 @@
 
     function renderReportsPage() {
         let html = `<div class="form-group"><h3>Report Cards</h3>`;
-        students.forEach(s=>{
-            const rc = reportCards.find(r=>r.student_id===s.id);
-            const status = rc?rc.status:'pending';
-            html += `<div class="card"><div><b>${s.name}</b><br>Avg: ${rc?rc.average_score:'0'}% | <span class="badge badge-${status}">${status}</span></div><div><button class="btn-sm" onclick="viewReportCard('${s.id}')">View/Print</button>${session.role==='admin'&&status==='pending'?`<button class="btn-sm" onclick="approveReport('${s.id}')">Approve</button>`:''}${session.role==='admin'&&status==='approved'?`<button class="btn-sm" onclick="releaseReport('${s.id}')">Release</button>`:''}</div></div>`;
+        students.forEach(s => {
+            const rc = reportCards.find(r => r.student_id === s.id);
+            const status = rc ? rc.status : 'pending';
+            const avg = rc ? rc.average_score : 0;
+            html += `<div class="card">
+                <div><b>${s.name}</b><br>Avg: ${avg}% | Status: <span class="badge badge-${status}">${status}</span></div>
+                <div>
+                    <button class="btn-sm" onclick="viewReportCard('${s.id}')">View/Print</button>
+                    ${session.role === 'admin' && status === 'pending' ? `<button class="btn-sm" onclick="approveReport('${s.id}')">Approve</button>` : ''}
+                    ${session.role === 'admin' && status === 'approved' ? `<button class="btn-sm" onclick="releaseReport('${s.id}')">Release</button>` : ''}
+                </div>
+            </div>`;
         });
         html += `</div>`;
         document.getElementById('view-reports').innerHTML = html;
     }
-    window.approveReport = async (sid)=>{ const rc = reportCards.find(r=>r.student_id===sid); if(rc){ await restUpdate('report_cards',{id:rc.id},{status:'approved'}); loadAllData(); }};
-    window.releaseReport = async (sid)=>{ const rc = reportCards.find(r=>r.student_id===sid); if(rc){ await restUpdate('report_cards',{id:rc.id},{status:'released'}); loadAllData(); }};
-    window.viewReportCard = (sid)=>{
-        const s = students.find(st=>st.id==sid);
+
+    window.approveReport = async (sid) => {
+        const rc = reportCards.find(r => r.student_id === sid);
+        if (rc) { await restUpdate('report_cards', { id: rc.id }, { status: 'approved' }); loadAllData(); }
+    };
+    window.releaseReport = async (sid) => {
+        const rc = reportCards.find(r => r.student_id === sid);
+        if (rc) { await restUpdate('report_cards', { id: rc.id }, { status: 'released' }); loadAllData(); }
+    };
+    window.viewReportCard = (sid) => {
+        const s = students.find(st => st.id == sid);
         const win = window.open();
         win.document.write(`<h2>${session.schoolName}</h2><p>${s.name}</p><button onclick="window.print()">Print</button>`);
     };
 
     function renderFees() {
-        const totalExp = students.reduce((sum,s)=>sum+(s.total_fees||0),0);
-        const totalCol = students.reduce((sum,s)=>sum+(s.fees_paid||0),0);
+        const totalExp = students.reduce((sum, s) => sum + (s.total_fees || 0), 0);
+        const totalCol = students.reduce((sum, s) => sum + (s.fees_paid || 0), 0);
         document.getElementById('view-fees').innerHTML = `
-            <div class="form-group"><h3>Financial Summary</h3><p>Expected: ${formatCurrency(totalExp)}</p><p>Collected: ${formatCurrency(totalCol)}</p><p>Outstanding: ${formatCurrency(totalExp-totalCol)}</p></div>
+            <div class="form-group"><h3>Financial Summary</h3>
+                <p>Expected: ${formatCurrency(totalExp)}</p>
+                <p>Collected: ${formatCurrency(totalCol)}</p>
+                <p>Outstanding: ${formatCurrency(totalExp - totalCol)}</p>
+            </div>
             <div class="form-group"><h3>Record Payment</h3>
-                <label>Student</label><select id="feeStudent">${students.map(s=>`<option value="${s.id}">${s.name} (Debt: ${formatCurrency(s.total_fees-s.fees_paid)})</option>`).join('')}</select>
+                <label>Student</label><select id="feeStudent">${students.map(s => `<option value="${s.id}">${s.name} (Debt: ${formatCurrency(s.total_fees - s.fees_paid)})</option>`).join('')}</select>
                 <label>Amount</label><input id="feeAmount" type="number">
                 <label>Method</label><select id="feeMethod"><option>cash</option><option>mobile_money</option><option>bank_transfer</option></select>
                 <button class="btn-main" onclick="recordPayment()">Record Payment</button>
             </div>
-            <div class="form-group"><h3>Payment History</h3><div id="paymentHistory">${feePayments.slice().reverse().map(p=>`<div class="card">${formatCurrency(p.amount)} - ${p.payment_method}</div>`).join('')}</div></div>`;
+            <div class="form-group"><h3>Payment History</h3>
+                <div id="paymentHistory">${feePayments.slice().reverse().map(p => `<div class="card">${formatCurrency(p.amount)} - ${p.payment_method}</div>`).join('')}</div>
+            </div>`;
     }
-    window.recordPayment = async ()=>{
+
+    window.recordPayment = async () => {
         const studentId = document.getElementById('feeStudent').value;
         const amount = parseFloat(document.getElementById('feeAmount').value);
         const method = document.getElementById('feeMethod').value;
-        if(!studentId||!amount) return alert('Select student and amount');
-        await restInsert('fee_payments',[{sch_id:session.schId,student_id:studentId,amount,payment_method:method,receipt_number:`RCP-${Date.now()}`}]);
-        const s = students.find(st=>st.id===studentId);
-        await restUpdate('students',{id:studentId},{fees_paid:(s.fees_paid||0)+amount});
+        if (!studentId || !amount) return alert('Select student and amount');
+        await restInsert('fee_payments', [{
+            sch_id: session.schId,
+            student_id: studentId,
+            amount,
+            payment_method: method,
+            receipt_number: `RCP-${Date.now()}`
+        }]);
+        const s = students.find(st => st.id === studentId);
+        await restUpdate('students', { id: studentId }, { fees_paid: (s.fees_paid || 0) + amount });
         loadAllData();
     };
 
     function renderPromotion() {
-        const classes = [...new Set(students.map(s=>s.class))];
+        const classes = [...new Set(students.map(s => s.class))];
         document.getElementById('view-promote').innerHTML = `
             <div class="form-group">
-                <label>From Class</label><select id="promoteFrom">${classes.map(c=>`<option>${c}</option>`).join('')}</select>
+                <label>From Class</label><select id="promoteFrom">${classes.map(c => `<option>${c}</option>`).join('')}</select>
                 <button class="btn-main" onclick="runPromotion()">Promote Eligible</button>
             </div>`;
     }
-    window.runPromotion = async ()=>{
+
+    window.runPromotion = async () => {
         const from = document.getElementById('promoteFrom').value;
-        const order = ['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'];
+        const order = ['Baby', 'Middle', 'Top', 'P.1', 'P.2', 'P.3', 'P.4', 'P.5', 'P.6', 'P.7'];
         const idx = order.indexOf(from);
-        if(idx===-1||idx===order.length-1) return alert('Cannot promote');
-        const to = order[idx+1];
+        if (idx === -1 || idx === order.length - 1) return alert('Cannot promote');
+        const to = order[idx + 1];
         let count = 0;
-        for(const s of students.filter(s=>s.class===from)){
-            const endMarks = marksData.filter(m=>m.student_id===s.id&&m.exam_type==='End of Term');
-            const avg = endMarks.length ? endMarks.reduce((a,b)=>a+b.score,0)/endMarks.length : 0;
-            if(avg>=45){ await restUpdate('students',{id:s.id},{class:to}); count++; }
+        for (const s of students.filter(s => s.class === from)) {
+            const endMarks = marksData.filter(m => m.student_id === s.id && m.exam_type === 'End of Term');
+            const avg = endMarks.length ? endMarks.reduce((a, b) => a + b.score, 0) / endMarks.length : 0;
+            if (avg >= 45) {
+                await restUpdate('students', { id: s.id }, { class: to });
+                count++;
+            }
         }
         alert(`${count} students promoted to ${to}`);
         loadAllData();
@@ -1337,51 +769,77 @@
         document.getElementById('view-subjects').innerHTML = `
             <div class="form-group"><h3>Subjects</h3>
                 <input id="newSubject" placeholder="New subject name"><button class="btn-main" onclick="addSubject()">Add</button>
-                <div>${subjects.map(s=>`<div class="card">${s.name} <button class="btn-sm btn-del" onclick="deleteSubject('${s.id}')">Del</button></div>`).join('')}</div>
+                <div>${subjects.map(s => `<div class="card">${s.name} <button class="btn-sm btn-del" onclick="deleteSubject('${s.id}')">Del</button></div>`).join('')}</div>
             </div>`;
     }
-    window.addSubject = async ()=>{
+
+    window.addSubject = async () => {
         const name = document.getElementById('newSubject').value.trim();
-        if(!name) return;
-        await restInsert('subjects',[{sch_id:session.schId,name}]);
+        if (!name) return;
+        await restInsert('subjects', [{ sch_id: session.schId, name }]);
         loadAllData();
     };
-    window.deleteSubject = async (id)=>{ await restDelete('subjects',{id}); loadAllData(); };
+
+    window.deleteSubject = async (id) => {
+        await restDelete('subjects', { id });
+        loadAllData();
+    };
 
     function renderIdCards() {
         let html = `<div class="form-group"><h3>Student ID Cards</h3>`;
-        students.forEach(s=>{
-            const vu = new Date(); vu.setFullYear(vu.getFullYear()+1);
-            html += `<div class="card"><div class="student-photo">${s.name.charAt(0)}</div><div><b>${s.name}</b><br>LIN: ${s.lin} | ${s.class}<br>Valid: ${vu.toISOString().slice(0,10)}</div><button class="btn-sm" onclick="printIdCard('${s.id}')">Print</button></div>`;
+        students.forEach(s => {
+            const vu = new Date(); vu.setFullYear(vu.getFullYear() + 1);
+            html += `<div class="card">
+                <div class="student-photo">${s.name.charAt(0)}</div>
+                <div><b>${s.name}</b><br>LIN: ${s.lin} | ${s.class}<br>Valid: ${vu.toISOString().slice(0, 10)}</div>
+                <button class="btn-sm" onclick="printIdCard('${s.id}')">Print</button>
+            </div>`;
         });
         html += `</div>`;
         document.getElementById('view-idcards').innerHTML = html;
     }
-    window.printIdCard = (sid)=>{
-        const s = students.find(st=>st.id==sid);
+
+    window.printIdCard = (sid) => {
+        const s = students.find(st => st.id == sid);
         const win = window.open();
         win.document.write(`<h3>${session.schoolName}</h3><p>${s.name} - ${s.lin}</p><button onclick="window.print()">Print</button>`);
     };
 
-    window.notifyParent = (sid, channel)=>{
-        const s = students.find(st=>st.id===sid);
-        if(!s) return;
-        if(channel==='whatsapp'&&s.parent_whatsapp){ console.log(`📱 WhatsApp to ${s.parent_whatsapp}`); alert('WhatsApp notification sent (demo)'); }
-        else if(channel==='email'&&s.parent_email){ console.log(`📧 Email to ${s.parent_email}`); alert('Email notification sent (demo)'); }
-        else alert('No contact info');
+    window.notifyParent = (sid, channel) => {
+        const s = students.find(st => st.id === sid);
+        if (!s) return;
+        if (channel === 'whatsapp' && s.parent_whatsapp) {
+            console.log(`📱 WhatsApp to ${s.parent_whatsapp}`);
+            alert('WhatsApp notification sent (demo)');
+        } else if (channel === 'email' && s.parent_email) {
+            console.log(`📧 Email to ${s.parent_email}`);
+            alert('Email notification sent (demo)');
+        } else {
+            alert('No contact info available');
+        }
     };
 
-    /* ==================== CLOCK ==================== */
-    setInterval(()=>{
-        document.getElementById('clock').innerHTML = new Date().toLocaleTimeString('en-US',{timeZone:'Africa/Kampala'});
-        document.getElementById('ugandaTime').innerHTML = '🕐 ' + new Date().toLocaleTimeString('en-US',{timeZone:'Africa/Kampala'}) + ' EAT';
-    },1000);
+    /*************************************************************
+     *  CLOCKS
+     *************************************************************/
+    function updateClocks() {
+        const now = new Date();
+        const ugTime = new Date(now.toLocaleString('en-US', { timeZone: 'Africa/Kampala' }));
+        const timeStr = ugTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Africa/Kampala' });
+        document.getElementById('clock').innerHTML = timeStr;
+        document.getElementById('ugandaTimeLogin').innerHTML = '🕐 ' + timeStr + ' EAT';
+    }
 
-    /* ==================== INITIALIZATION ==================== */
-    window.addEventListener('DOMContentLoaded', async ()=>{
-        // check for existing session
+    setInterval(updateClocks, 1000);
+    updateClocks();
+
+    /*************************************************************
+     *  INITIALIZATION
+     *************************************************************/
+    window.addEventListener('DOMContentLoaded', async () => {
+        // Restore session if exists
         const saved = sessionStorage.getItem('eudes_sms_session');
-        if(saved){
+        if (saved) {
             session = JSON.parse(saved);
             showDashboard();
         } else {
@@ -1389,36 +847,34 @@
             await ensureDemoUsers();
         }
 
-        // login form
-        document.getElementById('loginForm').addEventListener('submit', async (e)=>{
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value.trim().toLowerCase();
             const password = document.getElementById('password').value;
             const errDiv = document.getElementById('loginError');
             errDiv.classList.remove('show');
             errDiv.textContent = '';
-            if(!email||!password){ errDiv.textContent='⚠️ Fill all fields'; errDiv.classList.add('show'); return; }
-            document.getElementById('loginBtn').disabled = true;
-            document.getElementById('loginBtn').textContent = '⏳ Logging in...';
-            try{
+
+            if (!email || !password) {
+                errDiv.textContent = '⚠️ Fill all fields';
+                errDiv.classList.add('show');
+                return;
+            }
+
+            const loginBtn = document.getElementById('loginBtn');
+            loginBtn.disabled = true;
+            loginBtn.textContent = '⏳ Logging in...';
+
+            try {
                 session = await login(email, password);
                 sessionStorage.setItem('eudes_sms_session', JSON.stringify(session));
                 showDashboard();
-            } catch(err){
+            } catch (err) {
                 errDiv.textContent = err.message;
                 errDiv.classList.add('show');
-                document.getElementById('loginBtn').disabled = false;
-                document.getElementById('loginBtn').textContent = '🚀 LOGIN';
-            }
-        });
-    });
-</script>
-</body>
-</html>(err){
-                errDiv.textContent = err.message;
-                errDiv.classList.add('show');
-                document.getElementById('loginBtn').disabled = false;
-                document.getElementById('loginBtn').textContent = '🚀 LOGIN';
+                loginBtn.disabled = false;
+                loginBtn.textContent = '🚀 LOGIN';
             }
         });
     });
