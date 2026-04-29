@@ -8,7 +8,7 @@
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Segoe UI',system-ui,sans-serif; background:#f1f5f9; }
         .hidden { display:none !important; }
-        /* ---------- Login ---------- */
+        /* Login */
         #login-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, #001a33 0%, #003366 100%); padding:20px; }
         .login-card { background:#fff; border-radius:24px; padding:40px 30px; width:100%; max-width:460px; box-shadow:0 20px 50px rgba(0,0,0,0.3); }
         .brand { text-align:center; margin-bottom:30px; }
@@ -23,7 +23,7 @@
         .error-msg.show { display:block; }
         .quick-login { margin-top:20px; text-align:center; }
         .quick-btn { background:none; border:2px solid #003366; color:#003366; padding:8px 16px; border-radius:20px; cursor:pointer; margin:4px; font-size:12px; font-weight:bold; }
-        /* ---------- Dashboard ---------- */
+        /* Dashboard */
         .header { background:#003366; color:#fff; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:4px solid #ffc107; flex-wrap:wrap; }
         .hero { background:#001a33; padding:20px; text-align:center; color:#fff; }
         #clock { font-size:32px; font-weight:800; color:#ffc107; }
@@ -57,7 +57,7 @@
 </head>
 <body>
 
-<!-- ==================== LOGIN ==================== -->
+<!-- ==================== LOGIN SCREEN ==================== -->
 <div id="login-screen">
     <div class="login-card">
         <div class="brand">
@@ -173,7 +173,7 @@
         return res.json();
     }
 
-    // ---- Deduplication helper (always run after fetching subjects) ----
+    // Deduplicate helper (used after fetching subjects)
     function deduplicateSubjects(subArray) {
         const seen = new Set();
         return subArray.filter(sub => {
@@ -191,7 +191,6 @@
         if (parts.length) url += '?' + parts.join('&');
         try {
             const result = await supabaseFetch(url);
-            // If fetching subjects, deduplicate
             if (table === 'subjects' && Array.isArray(result)) {
                 return deduplicateSubjects(result);
             }
@@ -366,9 +365,76 @@
         document.getElementById('login-screen').classList.remove('hidden');
     }
 
-    // ==================== PARENT PORTAL (unchanged) ====================
-    window.parentViewReport = async () => { /* ... same as previous ... */ };
-    window.parentViewFees = async () => { /* ... same as previous ... */ };
+    // ==================== PARENT PORTAL ====================
+    window.parentViewReport = async () => {
+        const name = document.getElementById('parentName').value.trim();
+        const lin = document.getElementById('parentLIN').value.trim();
+        const errDiv = document.getElementById('parentError');
+        errDiv.classList.remove('show'); errDiv.textContent = '';
+        if (!name || !lin) { errDiv.textContent = '⚠️ Enter both name and LIN'; errDiv.classList.add('show'); return; }
+        try {
+            const students = await supabaseFetch(`students?lin=eq.${encodeURIComponent(lin)}&name=ilike.${encodeURIComponent(`%${name}%`)}&select=*,report_cards!inner(*)`);
+            const released = students.filter(s => s.report_cards && s.report_cards.status === 'released');
+            if (released.length === 0) throw new Error('No released report found');
+            printReportPublic(released[0]);
+        } catch (e) { errDiv.textContent = e.message; errDiv.classList.add('show'); }
+    };
+
+    window.parentViewFees = async () => {
+        const name = document.getElementById('parentName').value.trim();
+        const lin = document.getElementById('parentLIN').value.trim();
+        const errDiv = document.getElementById('parentError');
+        errDiv.classList.remove('show'); errDiv.textContent = '';
+        if (!name || !lin) { errDiv.textContent = '⚠️ Enter both name and LIN'; errDiv.classList.add('show'); return; }
+        try {
+            const students = await supabaseFetch(`students?lin=eq.${encodeURIComponent(lin)}&name=ilike.${encodeURIComponent(`%${name}%`)}&select=*`);
+            if (students.length === 0) throw new Error('No student found');
+            const payments = await supabaseFetch(`fee_payments?student_id=eq.${students[0].id}&order=payment_date.desc&limit=5`);
+            printFeesPublic(students[0], payments);
+        } catch (e) { errDiv.textContent = e.message; errDiv.classList.add('show'); }
+    };
+
+    function printFeesPublic(student, payments) {
+        const totalFees = student.total_fees || 0, paid = student.fees_paid || 0, debt = totalFees - paid;
+        const win = window.open('', '_blank', 'width=500,height=500');
+        win.document.write(`<html><head><title>Fee Statement - ${student.name}</title>
+            <style> body { font-family:'Segoe UI',sans-serif; padding:30px; } .container { max-width:600px; margin:auto; border:2px solid #003366; border-radius:12px; padding:25px; } h2 { color:#003366; text-align:center; } .row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee; } .total { font-weight:bold; } table { width:100%; border-collapse:collapse; margin-top:20px; } th { background:#003366; color:#fff; padding:8px; } td { border:1px solid #ccc; padding:8px; text-align:center; } .debt { color:#d90429; font-weight:bold; } button { margin-top:20px; padding:10px 25px; background:#003366; color:#fff; border:none; border-radius:8px; cursor:pointer; } @media print { body { padding:0; } button { display:none; } } </style></head><body>
+            <div class="container">
+                <h2>Fee Statement</h2>
+                <p><strong>Student:</strong> ${student.name} (${student.lin})</p>
+                <p><strong>Class:</strong> ${student.class}</p>
+                <div class="row"><span>Total Expected:</span><span>UGX ${totalFees.toLocaleString()}</span></div>
+                <div class="row"><span>Total Paid:</span><span>UGX ${paid.toLocaleString()}</span></div>
+                <div class="row total"><span>Outstanding Debt:</span><span class="debt">UGX ${debt.toLocaleString()}</span></div>
+                <h3>Recent Payments</h3>
+                <table><tr><th>Date</th><th>Amount</th><th>Method</th></tr>
+                ${payments.map(p => `<tr><td>${new Date(p.payment_date).toLocaleDateString('en-UG')}</td><td>UGX ${p.amount.toLocaleString()}</td><td>${p.payment_method}</td></tr>`).join('')}
+                ${payments.length === 0 ? '<tr><td colspan="3">No payments</td></tr>' : ''}</table>
+                <button onclick="window.print()">🖨️ Print Statement</button>
+            </div></body></html>`);
+        win.document.close();
+    }
+
+    function printReportPublic(student) {
+        const rc = student.report_cards;
+        const win = window.open('', '_blank', 'width=900,height=700');
+        win.document.write(`<html><head><title>Report Card - ${student.name}</title>
+            <style> body { font-family:'Segoe UI',sans-serif; padding:30px; } .report { max-width:800px; margin:auto; border:2px solid #003366; padding:30px; border-radius:12px; } .header { text-align:center; border-bottom:3px solid #003366; padding-bottom:20px; margin-bottom:25px; } .header h1 { color:#003366; } .details { display:flex; gap:20px; margin-bottom:20px; } table { width:100%; border-collapse:collapse; margin-bottom:20px; } th { background:#003366; color:#fff; padding:10px; } td { border:1px solid #ccc; padding:8px; text-align:center; } .grade { font-weight:bold; color:#D4A017; } @media print { body { padding:0; } } button { padding:10px 25px; background:#003366; color:#fff; border:none; border-radius:8px; cursor:pointer; } </style></head><body>
+            <div class="report">
+                <div class="header"><h1>Student Report Card</h1><p>${student.school_name || ''}</p></div>
+                <div class="details">
+                    <div><strong>Name:</strong> ${student.name}</div>
+                    <div><strong>LIN:</strong> ${student.lin}</div>
+                    <div><strong>Class:</strong> ${student.class}</div>
+                </div>
+                <table><tr><th>Subject</th><th>Score</th><th>Grade</th></tr>
+                ${(student.marks || []).map(m => `<tr><td>${m.subject_name}</td><td>${m.score}</td><td class="grade">${m.grade}</td></tr>`).join('')}
+                </table>
+                <p>Average: ${rc.average_score}% | Status: ${rc.status.toUpperCase()}</p>
+                <button onclick="window.print()">🖨️ Print</button>
+            </div></body></html>`);
+        win.document.close();
+    }
 
     // ==================== SCHOOL DASHBOARD ====================
     const ROLE_TABS = {
@@ -401,7 +467,7 @@
                 safeFetch('fee_payments', { sch_id: session.schId })
             ]);
             students = s;
-            subjects = sub;   // already deduplicated by safeFetch
+            subjects = sub;   // deduplicated by safeFetch
             terms = t;
             marksData = m;
             reportCards = rc;
@@ -414,7 +480,7 @@
             showMessage(e.message, 'error');
         }
 
-        await ensureDefaultSubjects();   // now safe against duplicates
+        await ensureDefaultSubjects();
         document.getElementById('db_status').innerHTML = `● LIVE (${students.length} students)`;
         document.getElementById('db_status').style.color = '#2b9348';
         updateUI();
@@ -428,11 +494,10 @@
                 try {
                     await safeInsert('subjects', [{ sch_id: session.schId, name }]);
                 } catch (e) {
-                    // Ignore UNIQUE violation (race condition)
+                    // ignore unique violation
                 }
             }
         }
-        // Reload subjects (deduplicated) after potential inserts
         subjects = await safeFetch('subjects', { sch_id: session.schId });
     }
 
@@ -440,16 +505,506 @@
     function getDivision(avg) { if (avg>=80) return 'Division I'; if (avg>=70) return 'Division II'; if (avg>=60) return 'Division III'; if (avg>=50) return 'Division IV'; if (avg>=35) return 'Division U (Pass)'; return 'Fail'; }
     function formatCurrency(amt) { return 'UGX ' + new Intl.NumberFormat('en-UG').format(amt||0); }
 
-    function updateUI() { /* ... same as previous, calls all view renderers ... */ }
-    function showTab(tabId) { /* ... same ... */ }
+    function updateUI() {
+        const total = students.length, absent = students.filter(s => s.is_absent).length;
+        document.getElementById('stat_total').innerText = total;
+        document.getElementById('stat_present').innerText = total - absent;
+        document.getElementById('stat_absent').innerText = absent;
+        document.getElementById('stat_pending').innerText = reportCards.filter(r => r.status === 'pending').length;
+        const active = document.querySelector('#schoolTabs .tab.active')?.dataset.tab || 'abs';
+        switch(active) {
+            case 'abs': renderAbsentees(); break;
+            case 'rec': renderRecords(); break;
+            case 'adm': renderAdmission(); break;
+            case 'roll': renderRollCall(); break;
+            case 'marks': renderMarksPage(); break;
+            case 'reports': renderReportsPage(); break;
+            case 'fees': renderFees(); break;
+            case 'promote': renderPromotion(); break;
+            case 'subjects': renderSubjects(); break;
+            case 'idcards': renderIdCards(); break;
+            case 'broadcast': renderBroadcast(); break;
+        }
+    }
+
+    function showTab(tabId) {
+        document.querySelectorAll('#school-dashboard .view').forEach(v => v.classList.add('hidden'));
+        document.querySelectorAll('#schoolTabs .tab').forEach(t => t.classList.remove('active'));
+        const view = document.getElementById(`view-${tabId}`);
+        if (view) view.classList.remove('hidden');
+        document.querySelector(`#schoolTabs .tab[data-tab="${tabId}"]`)?.classList.add('active');
+        updateUI();
+    }
 
     // ---------- SHORT LIN GENERATION ----------
-    async function generateShortLIN() { /* ... same ... */ }
-    async function isLINUnique(lin) { /* ... same ... */ }
+    async function generateShortLIN() {
+        if (!currentSchoolData) return 'UNKNOWN';
+        const schoolName = currentSchoolData.school_name || 'XX';
+        const numericId = currentSchoolData.school_numeric_id || 0;
+        const nameLetters = schoolName.replace(/[^a-zA-Z]/g, '').substring(0, 2).toUpperCase();
+        const randomChars = Math.random().toString(36).substring(2, 5).toUpperCase();
+        return `${nameLetters}${numericId}${randomChars}`;
+    }
 
-    // All view renderers (Absentees, Records, Admission, Roll Call, Marks, Reports, Fees, Promotion, Subjects, ID Cards, Broadcast)
-    // are identical to the previous fast version, just using the deduplicated subjects array.
-    // ... (omitted for brevity, but fully present in the actual file) ...
+    async function isLINUnique(lin) {
+        if (!lin) return false;
+        const existing = await supabaseFetch(`students?lin=eq.${encodeURIComponent(lin)}&select=lin`);
+        return existing.length === 0;
+    }
+
+    // ==================== VIEW RENDERERS ====================
+    function renderAbsentees() {
+        const list = students.filter(s => s.is_absent);
+        const classes = [...new Set(students.map(s => s.class))];
+        let html = `<div class="form-group"><label>Class</label><select id="absClassFilter" onchange="renderAbsentees()"><option value="all">All</option>${classes.map(c => `<option>${c}</option>`).join('')}</select></div>`;
+        const filtered = document.getElementById('absClassFilter')?.value !== 'all' ? list.filter(s => s.class === document.getElementById('absClassFilter')?.value) : list;
+        html += filtered.map(s => `<div class="card absent-card"><div class="student-photo">${s.photo_url ? `<img src="${s.photo_url}">` : s.name.charAt(0)}</div><div><b>${s.name}</b><br>${s.class} | ${s.parent_contact||'-'}</div><button class="btn-sm" onclick="notifyParent('${s.id}','whatsapp')">📱</button><button class="btn-sm" onclick="notifyParent('${s.id}','email')">📧</button></div>`).join('') || '<div class="card">No absent pupils.</div>';
+        document.getElementById('view-abs').innerHTML = html;
+    }
+
+    function renderRecords() {
+        const searchTerm = document.getElementById('searchRecords')?.value?.toLowerCase() || '';
+        const filtered = students.filter(s => s.name.toLowerCase().includes(searchTerm) || (s.lin && s.lin.toLowerCase().includes(searchTerm)) || s.class.toLowerCase().includes(searchTerm));
+        let html = `<div class="form-group">
+            <input id="searchRecords" placeholder="🔍 Search by name, LIN, or class" oninput="renderRecords()" style="margin-bottom:15px;">
+            <button class="btn-sm" onclick="exportStudentsCSV()" style="background:#2b9348; color:#fff;">📥 Export CSV</button>
+            <button class="btn-sm" onclick="document.getElementById('csvFileInput').click()">📤 Upload CSV</button>
+            <input type="file" id="csvFileInput" accept=".csv" style="display:none" onchange="handleCSVUpload(event)">
+        </div>`;
+        html += filtered.map(s => `<div class="card"><div class="student-photo">${s.photo_url ? `<img src="${s.photo_url}">` : s.name.charAt(0)}</div><div><b>${s.name}</b><br>LIN: ${s.lin||'—'} | Class: ${s.class} | Age: ${s.age||'—'}<br>Gender: ${s.gender||'—'} | Location: ${s.location||'—'}<br>Parent: ${s.parent_name||'—'} (${s.parent_contact||'—'})</div><div>${session.role==='admin' ? `<button class="btn-sm" onclick="editStudent('${s.id}')">Edit</button><button class="btn-sm btn-del" onclick="deleteStudent('${s.id}')">Del</button>` : ''}</div></div>`).join('');
+        document.getElementById('view-rec').innerHTML = html || '<div class="card">No students found.</div>';
+    }
+
+    window.editStudent = (id) => {
+        const s = students.find(x => x.id === id); if (!s) return;
+        editingStudentId = id;
+        document.getElementById('reg_name').value = s.name || '';
+        document.getElementById('reg_class').value = s.class || '';
+        document.getElementById('reg_age').value = s.age || '';
+        document.getElementById('reg_gender').value = s.gender || 'Male';
+        document.getElementById('reg_contact').value = s.parent_contact || '';
+        document.getElementById('reg_whatsapp').value = s.parent_whatsapp || '';
+        document.getElementById('reg_email').value = s.parent_email || '';
+        document.getElementById('reg_location').value = s.location || '';
+        document.getElementById('reg_photo').value = s.photo_url || '';
+        document.getElementById('reg_fees').value = s.total_fees || 0;
+        document.getElementById('form_title').innerText = 'Edit Student';
+        document.getElementById('saveBtn').innerText = 'UPDATE';
+        document.getElementById('cancelBtn').classList.remove('hidden');
+        showTab('adm');
+    };
+
+    window.deleteStudent = async (id) => { if (confirm('Delete permanently?')) { await safeDelete('students', { id }); loadAllData(); } };
+
+    function renderAdmission() {
+        const classes = ['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'];
+        document.getElementById('view-adm').innerHTML = `
+            <div class="form-group">
+                <h3 id="form_title">Admission</h3>
+                <div class="photo-preview" id="photoPreview" style="width:100px;height:100px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;margin-bottom:10px;">📷</div>
+                <input type="file" accept="image/*" onchange="handlePhotoUpload(event)">
+                <label>Photo URL</label><input id="reg_photo">
+                <label>Full Name *</label><input id="reg_name" required>
+                <label>Age</label><input id="reg_age" type="number">
+                <label>Gender</label><select id="reg_gender"><option>Male</option><option>Female</option></select>
+                <label>Class</label><select id="reg_class">${classes.map(c => `<option>${c}</option>`).join('')}</select>
+                <label>Location</label><input id="reg_location">
+                <label>Parent Name</label><input id="reg_parent_name">
+                <label>Parent Contact</label><input id="reg_contact">
+                <label>Parent WhatsApp</label><input id="reg_whatsapp">
+                <label>Parent Email</label><input id="reg_email">
+                <label>Total Fees (UGX)</label><input id="reg_fees" type="number" value="0">
+                <button class="btn-main" id="saveBtn" onclick="saveStudent()">SAVE</button>
+                <button class="btn-main hidden" id="cancelBtn" onclick="cancelEdit()">CANCEL</button>
+            </div>`;
+        if (editingStudentId) {
+            const s = students.find(st => st.id === editingStudentId);
+            if (s) {
+                document.getElementById('reg_name').value = s.name || '';
+                document.getElementById('reg_class').value = s.class || '';
+                document.getElementById('reg_age').value = s.age || '';
+                document.getElementById('reg_gender').value = s.gender || 'Male';
+                document.getElementById('reg_contact').value = s.parent_contact || '';
+                document.getElementById('reg_whatsapp').value = s.parent_whatsapp || '';
+                document.getElementById('reg_email').value = s.parent_email || '';
+                document.getElementById('reg_location').value = s.location || '';
+                document.getElementById('reg_photo').value = s.photo_url || '';
+                document.getElementById('reg_fees').value = s.total_fees || 0;
+                document.getElementById('form_title').innerText = 'Edit Student';
+                document.getElementById('saveBtn').innerText = 'UPDATE';
+                document.getElementById('cancelBtn').classList.remove('hidden');
+            }
+        }
+    }
+
+    function handlePhotoUpload(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = ev => {
+                document.getElementById('reg_photo').value = ev.target.result;
+                document.getElementById('photoPreview').innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    window.saveStudent = async () => {
+        const name = document.getElementById('reg_name').value.trim();
+        if (!name) return alert('Name required');
+        const data = {
+            sch_id: session.schId, name,
+            class: document.getElementById('reg_class').value,
+            age: parseInt(document.getElementById('reg_age').value) || null,
+            gender: document.getElementById('reg_gender').value,
+            location: document.getElementById('reg_location').value || session.schoolLocation,
+            parent_name: document.getElementById('reg_parent_name').value || '',
+            parent_contact: document.getElementById('reg_contact').value || '',
+            parent_whatsapp: document.getElementById('reg_whatsapp').value || '',
+            parent_email: document.getElementById('reg_email').value || '',
+            photo_url: document.getElementById('reg_photo').value || '',
+            total_fees: parseFloat(document.getElementById('reg_fees').value) || 0,
+            fees_paid: editingStudentId ? (students.find(s => s.id === editingStudentId)?.fees_paid || 0) : 0,
+            is_absent: false
+        };
+
+        if (!editingStudentId) {
+            const dup = students.filter(s => s.name.toLowerCase() === name.toLowerCase() && s.class === data.class && s.parent_contact === data.parent_contact);
+            if (dup.length > 0) { alert('⚠️ A student with the same name, class, and parent contact already exists.'); return; }
+            let lin = '', unique = false, attempts = 0;
+            while (!unique && attempts < 20) { lin = await generateShortLIN(); unique = await isLINUnique(lin); attempts++; }
+            if (!unique) { alert('Could not generate unique LIN. Please try again.'); return; }
+            data.lin = lin;
+        } else {
+            data.lin = students.find(s => s.id === editingStudentId)?.lin;
+            if (editingStudentId) data.fees_paid = students.find(s => s.id === editingStudentId)?.fees_paid || 0;
+        }
+
+        if (editingStudentId) { await safeUpdate('students', { id: editingStudentId }, data); }
+        else { await safeInsert('students', [data]); }
+        cancelEdit(); loadAllData(); showTab('rec');
+    };
+
+    window.cancelEdit = () => {
+        editingStudentId = null;
+        document.getElementById('form_title').innerText = 'Admission';
+        document.getElementById('saveBtn').innerText = 'SAVE';
+        document.getElementById('cancelBtn').classList.add('hidden');
+        ['reg_name','reg_photo','reg_contact','reg_whatsapp','reg_email','reg_location','reg_parent_name','reg_age'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        document.getElementById('reg_fees').value = '0';
+        document.getElementById('photoPreview').innerHTML = '📷';
+    };
+
+    // Roll Call
+    function renderRollCall() {
+        const classes = [...new Set(students.map(s => s.class))];
+        let html = `<div class="form-group"><label>Class</label><select id="rollClassFilter" onchange="renderRollCall()"><option value="all">All Classes</option>${classes.map(c => `<option value="${c}">${c}</option>`).join('')}</select></div>`;
+        const filterClass = document.getElementById('rollClassFilter')?.value || 'all';
+        let list = (filterClass === 'all') ? students : students.filter(s => s.class === filterClass);
+        html += list.map(s => `<div class="card ${s.is_absent ? 'absent-card' : 'present-card'}"><div class="student-photo">${s.photo_url ? `<img src="${s.photo_url}">` : s.name.charAt(0)}</div><div><b>${s.name}</b><br>${s.class}</div><button class="btn-main" style="background:${s.is_absent?'#d90429':'#2b9348'};width:auto;padding:8px 16px;" onclick="toggleAbsence('${s.id}')">${s.is_absent?'ABSENT':'PRESENT'}</button></div>`).join('');
+        html += `<button class="btn-main" onclick="saveAttendanceHistory()">Save Today's Record</button>`;
+        document.getElementById('view-roll').innerHTML = html;
+    }
+
+    window.toggleAbsence = async (id) => {
+        const s = students.find(x => x.id === id);
+        if (s) {
+            s.is_absent = !s.is_absent;
+            updateUI();
+            try { await safeUpdate('students', { id }, { is_absent: s.is_absent }); } catch (e) { s.is_absent = !s.is_absent; updateUI(); showMessage('Failed to update attendance', 'error'); }
+        }
+    };
+
+    window.saveAttendanceHistory = async () => {
+        const today = new Date().toISOString().slice(0,10);
+        for (const s of students) { await safeInsert('attendance', { sch_id: session.schId, student_id: s.id, date: today, status: s.is_absent ? 'absent' : 'present' }); }
+        alert('Attendance recorded');
+    };
+
+    // Marks
+    function renderMarksPage() {
+        const classes = [...new Set(students.map(s => s.class))];
+        document.getElementById('view-marks').innerHTML = `<div class="form-group"><label>Class</label><select id="marksClassSelect" onchange="loadStudentsForMarks()"><option value="">-- Select Class --</option>${classes.map(c => `<option>${c}</option>`).join('')}</select><div id="marksStudentArea"></div></div>`;
+    }
+
+    async function loadStudentsForMarks() {
+        const cls = document.getElementById('marksClassSelect').value; if (!cls) return;
+        const classStudents = students.filter(s => s.class === cls);
+        let yearOpts = ''; for(let y=new Date().getFullYear()-1; y<=new Date().getFullYear()+2; y++) yearOpts += `<option value="${y}">${y}</option>`;
+        document.getElementById('marksStudentArea').innerHTML = `<label>Year</label><select id="marksYearSelect">${yearOpts}</select><label>Term</label><select id="marksTermNumberSelect"><option value="1">T1</option><option value="2">T2</option><option value="3">T3</option></select><label>Exam</label><select id="marksExamSelect"><option>Beginning of Term</option><option>Mid Term</option><option selected>End of Term</option></select><label>Student</label><select id="marksStudentSelect" onchange="loadMarksForStudent()"><option value="">-- Select Student --</option>${classStudents.map(s => `<option value="${s.id}">${s.name} (${s.lin})</option>`).join('')}</select><div id="marksEntryArea"></div>`;
+    }
+
+    async function loadMarksForStudent() {
+        const studentId = document.getElementById('marksStudentSelect').value;
+        const year = document.getElementById('marksYearSelect').value;
+        const termNum = document.getElementById('marksTermNumberSelect').value;
+        const examType = document.getElementById('marksExamSelect').value;
+        if (!studentId) return;
+
+        const termName = `Term ${termNum} ${year}`;
+        let term = terms.find(t => t.name === termName);
+        if (!term) {
+            await safeInsert('terms', [{ sch_id: session.schId, name: termName, year: parseInt(year), term_number: parseInt(termNum), start_date: `${year}-01-01`, end_date: `${year}-12-31`, is_active: true }]);
+            terms = await safeFetch('terms', { sch_id: session.schId });
+            term = terms.find(t => t.name === termName);
+        }
+        const termId = term?.id;
+        const existing = marksData.filter(m => m.student_id === studentId && m.term_id === termId && m.exam_type === examType);
+        const map = {}; existing.forEach(m => map[m.subject_id] = m.score);
+
+        let html = `<div class="form-group"><h4>Marks for ${students.find(s => s.id === studentId)?.name} (${examType})</h4>`;
+        subjects.forEach(sub => {
+            const score = map[sub.id] || '';
+            html += `<div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;"><label style="width:120px;">${sub.name}</label><input type="number" id="mark_${sub.id}" value="${score}" min="0" max="100" onchange="updateGrade('${sub.id}')"><span id="grade_${sub.id}" style="font-weight:bold;color:#D4A017;">${score ? getGrade(parseFloat(score)) : ''}</span></div>`;
+        });
+        html += `<button class="btn-main" onclick="saveMarksFast('${studentId}','${termId}','${examType}')">Save Marks</button></div>`;
+        document.getElementById('marksEntryArea').innerHTML = html;
+    }
+
+    window.updateGrade = (subId) => {
+        const score = parseFloat(document.getElementById(`mark_${subId}`).value);
+        document.getElementById(`grade_${subId}`).textContent = isNaN(score) ? '' : getGrade(score);
+    };
+
+    window.saveMarksFast = async (studentId, termId, examType) => {
+        for (const sub of subjects) {
+            const el = document.getElementById(`mark_${sub.id}`);
+            if (el && el.value !== '') {
+                const score = parseFloat(el.value);
+                await safeDelete('marks', { student_id: studentId, term_id: termId, subject_id: sub.id, exam_type: examType });
+                await safeInsert('marks', [{ sch_id: session.schId, student_id: studentId, term_id: termId, subject_id: sub.id, exam_type: examType, score, grade: getGrade(score) }]);
+            }
+        }
+        marksData = await safeFetch('marks', { sch_id: session.schId });
+        const endMarks = marksData.filter(m => m.student_id === studentId && m.exam_type === 'End of Term');
+        const avg = endMarks.length ? (endMarks.reduce((a,b) => a + b.score, 0) / endMarks.length).toFixed(1) : 0;
+        const total = endMarks.reduce((a,b) => a + b.score, 0);
+        const rc = reportCards.find(r => r.student_id === studentId && r.term_id === termId);
+        if (rc) {
+            rc.average_score = avg; rc.total_score = total; rc.status = 'pending';
+            await safeUpdate('report_cards', { id: rc.id }, { total_score: total, average_score: avg, status: 'pending' });
+        } else {
+            const newRC = { sch_id: session.schId, student_id: studentId, term_id: termId, total_score: total, average_score: avg, status: 'pending' };
+            await safeInsert('report_cards', [newRC]);
+            reportCards.push(newRC);
+        }
+        updateUI();
+        loadMarksForStudent();
+    };
+
+    // Reports with Uganda division
+    function renderReportsPage() {
+        let html = `<div class="form-group"><h3>Report Cards</h3>`;
+        students.forEach(s => {
+            const rc = reportCards.find(r => r.student_id === s.id);
+            const status = rc ? rc.status : 'pending';
+            const avg = rc ? parseFloat(rc.average_score) : 0;
+            const division = rc ? getDivision(avg) : '';
+            html += `<div class="card"><div class="student-photo">${s.photo_url ? `<img src="${s.photo_url}">` : s.name.charAt(0)}</div><div><b>${s.name}</b><br>Avg: ${avg}% | Division: <strong>${division}</strong> | <span class="badge badge-${status}">${status}</span></div><div><button class="btn-sm" onclick="printReport('${s.id}')">🖨️ Print</button>${session.role==='admin' && status==='pending' ? `<button class="btn-sm" onclick="approveReport('${s.id}')">✅ Approve</button>` : ''}${session.role==='admin' && status==='approved' ? `<button class="btn-sm" onclick="releaseReport('${s.id}')">📤 Release</button>` : ''}</div></div>`;
+        });
+        html += `</div>`; document.getElementById('view-reports').innerHTML = html;
+    }
+
+    window.printReport = (sid) => {
+        const s = students.find(st => st.id === sid); if (!s) return;
+        const rc = reportCards.find(r => r.student_id === sid);
+        const studentMarks = marksData.filter(m => m.student_id === sid);
+        const absent = attendanceRecords.filter(a => a.student_id === sid && a.status === 'absent').length;
+        const avg = rc ? parseFloat(rc.average_score) : 0;
+        const division = getDivision(avg);
+        const win = window.open('', '_blank', 'width=900,height=700');
+        win.document.write(`<html><head><title>Report Card</title><style> body{font-family:'Segoe UI',sans-serif;padding:30px;} .rpt{max-width:800px;margin:auto;border:2px solid #003366;padding:30px;border-radius:12px;} .hdr{text-align:center;border-bottom:3px solid #003366;padding-bottom:20px;margin-bottom:25px;} .hdr h1{color:#003366;} table{width:100%;border-collapse:collapse;margin-bottom:20px;} th{background:#003366;color:#fff;padding:10px;} td{border:1px solid #ccc;padding:8px;text-align:center;} .grd{font-weight:bold;color:#D4A017;} @media print{body{padding:0;}} button{padding:10px 25px;background:#003366;color:#fff;border:none;border-radius:8px;cursor:pointer;} </style></head><body><div class="rpt"><div class="hdr"><h1>${session.schoolName}</h1><p>${session.schoolLocation} | ${session.schoolContact}</p><p><b>ACADEMIC REPORT CARD</b></p></div><div style="display:flex;gap:20px;margin-bottom:20px;"><div class="student-photo" style="width:80px;height:80px;">${s.photo_url ? `<img src="${s.photo_url}" style="width:100%;height:100%;object-fit:cover;">` : s.name.charAt(0)}</div><div><p><b>Name:</b> ${s.name}</p><p><b>LIN:</b> ${s.lin}</p><p><b>Class:</b> ${s.class}</p><p><b>Days Absent:</b> ${absent}</p></div></div><table><tr><th>Subject</th><th>Beginning</th><th>Mid Term</th><th>End of Term</th><th>Grade</th></tr>${subjects.map(sub => { const beg = studentMarks.find(m => m.subject_id === sub.id && m.exam_type === 'Beginning of Term'); const mid = studentMarks.find(m => m.subject_id === sub.id && m.exam_type === 'Mid Term'); const end = studentMarks.find(m => m.subject_id === sub.id && m.exam_type === 'End of Term'); return `<tr><td>${sub.name}</td><td>${beg ? beg.score : '-'}</td><td>${mid ? mid.score : '-'}</td><td>${end ? end.score : '-'}</td><td class="grd">${end ? end.grade : '-'}</td></tr>`; }).join('')}<tr style="font-weight:bold;"><td colspan="4">Average</td><td>${rc ? rc.average_score + '%' : 'N/A'}</td></tr><tr style="font-weight:bold; background:#f0f4ff;"><td colspan="4">Division</td><td>${division}</td></tr></table><p>Status: ${rc ? rc.status.toUpperCase() : 'PENDING'}</p><button onclick="window.print()">🖨️ Print</button></div></body></html>`);
+        win.document.close();
+    };
+
+    window.approveReport = async (sid) => {
+        const rc = reportCards.find(r => r.student_id === sid);
+        if (rc) { rc.status = 'approved'; updateUI(); try { await safeUpdate('report_cards', { id: rc.id }, { status: 'approved' }); notifyParent(sid, 'whatsapp', 'Report approved.'); } catch (e) { rc.status = 'pending'; updateUI(); showMessage('Failed to approve', 'error'); } }
+    };
+
+    window.releaseReport = async (sid) => {
+        const rc = reportCards.find(r => r.student_id === sid);
+        if (rc) { rc.status = 'released'; updateUI(); try { await safeUpdate('report_cards', { id: rc.id }, { status: 'released' }); notifyParent(sid, 'whatsapp', 'Report released.'); } catch (e) { rc.status = 'approved'; updateUI(); showMessage('Failed to release', 'error'); } }
+    };
+
+    // Fees
+    function renderFees() {
+        const totalExp = students.reduce((sum, s) => sum + (s.total_fees || 0), 0);
+        const totalCol = students.reduce((sum, s) => sum + (s.fees_paid || 0), 0);
+        document.getElementById('view-fees').innerHTML = `<div class="form-group"><h3>Financial Summary</h3><p>Expected: ${formatCurrency(totalExp)}</p><p>Collected: ${formatCurrency(totalCol)}</p><p>Outstanding: ${formatCurrency(totalExp - totalCol)}</p></div><div class="form-group"><h3>Record Payment</h3><label>Student</label><select id="feeStudent">${students.map(s => `<option value="${s.id}">${s.name} (Debt: ${formatCurrency(s.total_fees - s.fees_paid)})</option>`).join('')}</select><label>Amount</label><input id="feeAmount" type="number"><label>Method</label><select id="feeMethod"><option>cash</option><option>mobile_money</option><option>bank_transfer</option></select><button class="btn-main" onclick="recordPayment()">Record</button></div><div class="form-group"><h3>Payment History</h3><div id="paymentHistory">${feePayments.slice().reverse().map(p => `<div class="card">${formatCurrency(p.amount)} - ${p.payment_method}</div>`).join('')}</div></div>`;
+    }
+
+    window.recordPayment = async () => {
+        const studentId = document.getElementById('feeStudent').value;
+        const amount = parseFloat(document.getElementById('feeAmount').value);
+        const method = document.getElementById('feeMethod').value;
+        if (!studentId || !amount) return alert('Select student and enter amount');
+        await safeInsert('fee_payments', [{ sch_id: session.schId, student_id: studentId, amount, payment_method: method, receipt_number: `RCP-${Date.now()}` }]);
+        const s = students.find(st => st.id === studentId);
+        s.fees_paid = (s.fees_paid || 0) + amount;
+        feePayments = await safeFetch('fee_payments', { sch_id: session.schId });
+        updateUI();
+    };
+
+    // Promotion, Subjects, etc.
+    function renderPromotion() {
+        document.getElementById('view-promote').innerHTML = `<div class="form-group"><h3>Automatic Promotion</h3><p>Promotes students with End‑of‑Term average ≥ 45%.</p><button class="btn-main" onclick="runPromotion()">🚀 Promote All Eligible</button><div id="promotionResult"></div></div>`;
+    }
+
+    window.runPromotion = async () => {
+        const order = ['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'];
+        let promoted = 0, summary = '';
+        for (const s of students) {
+            const idx = order.indexOf(s.class);
+            if (idx === -1 || idx === order.length - 1) continue;
+            const endMarks = marksData.filter(m => m.student_id === s.id && m.exam_type === 'End of Term');
+            if (!endMarks.length) continue;
+            const avg = endMarks.reduce((a,b) => a + b.score, 0) / endMarks.length;
+            if (avg >= 45) {
+                const newClass = order[idx + 1];
+                await safeUpdate('students', { id: s.id }, { class: newClass });
+                promoted++;
+                summary += `<div class="card">✅ ${s.name} → ${newClass}</div>`;
+            }
+        }
+        document.getElementById('promotionResult').innerHTML = promoted ? `<div class="success-box">${promoted} students promoted!</div>${summary}` : '<div class="error-box">No students eligible.</div>';
+        updateUI();
+    };
+
+    function renderSubjects() {
+        document.getElementById('view-subjects').innerHTML = `<div class="form-group"><h3>Subjects</h3><input id="newSubject" placeholder="New subject"><button class="btn-main" onclick="addSubject()">Add</button><div>${subjects.map(s => `<div class="card">${s.name} <button class="btn-sm btn-del" onclick="deleteSubject('${s.id}')">Del</button></div>`).join('')}</div></div>`;
+    }
+    window.addSubject = async () => {
+        const name = document.getElementById('newSubject').value.trim();
+        if (!name) return;
+        try {
+            await safeInsert('subjects', [{ sch_id: session.schId, name }]);
+            subjects = await safeFetch('subjects', { sch_id: session.schId });
+            updateUI();
+        } catch (e) { showMessage(e.message, 'error'); }
+    };
+    window.deleteSubject = async (id) => {
+        await safeDelete('subjects', { id });
+        subjects = subjects.filter(s => s.id !== id);
+        updateUI();
+    };
+
+    function renderIdCards() {
+        let html = `<div class="form-group"><h3>Student ID Cards</h3>`;
+        students.forEach(s => {
+            const vu = new Date(); vu.setFullYear(vu.getFullYear() + 1);
+            html += `<div class="card"><div class="student-photo">${s.photo_url ? `<img src="${s.photo_url}">` : s.name.charAt(0)}</div><div><b>${s.name}</b><br>LIN: ${s.lin} | ${s.class}<br>Valid: ${vu.toISOString().slice(0,10)}</div><button class="btn-sm" onclick="printIdCard('${s.id}')">🖨️ Print</button></div>`;
+        });
+        html += `</div>`; document.getElementById('view-idcards').innerHTML = html;
+    }
+
+    window.printIdCard = (sid) => {
+        const s = students.find(st => st.id === sid); if (!s) return;
+        const vu = new Date(); vu.setFullYear(vu.getFullYear() + 1);
+        const win = window.open('', '_blank', 'width=400,height=350');
+        win.document.write(`<html><head><title>ID Card</title><style>.id-card{width:85mm;height:54mm;border:2px solid #003366;border-radius:12px;padding:15px;font-family:'Segoe UI',sans-serif;background:#fff;}.header{background:#003366;color:#fff;text-align:center;padding:8px;margin:-15px -15px 10px -15px;border-radius:10px 10px 0 0;font-weight:700;}.body{display:flex;gap:12px;}.photo{width:60px;height:60px;border-radius:50%;border:3px solid #D4A017;display:flex;align-items:center;justify-content:center;font-size:24px;color:#003366;}.info{font-size:11px;line-height:1.4;}.footer{background:#f0f4ff;text-align:center;padding:5px;margin:10px -15px -15px -15px;border-radius:0 0 10px 10px;font-size:9px;}@media print{body{margin:0;}}button{margin-top:15px;padding:8px 20px;}</style></head><body><div class="id-card"><div class="header"><strong>${session.schoolName}</strong></div><div class="body"><div class="photo">${s.photo_url ? `<img src="${s.photo_url}" style="width:100%;height:100%;object-fit:cover;">` : s.name.charAt(0)}</div><div class="info"><strong>${s.name}</strong><br>LIN: ${s.lin}<br>Class: ${s.class}<br>📞 ${session.schoolContact}</div></div><div class="footer">Valid until: ${vu.toISOString().slice(0,10)} | EUDES MEDIA</div></div><button onclick="window.print()">🖨️ Print ID</button></body></html>`);
+        win.document.close();
+    };
+
+    function renderBroadcast() {
+        let html = `<div class="form-group"><h3>📢 Broadcast Message</h3>
+            <label>Target Audience</label>
+            <select id="broadcastTarget" onchange="document.getElementById('broadcastClassDiv').classList.toggle('hidden', this.value!=='class')">
+                <option value="all">All Parents</option>
+                <option value="debtors">Fee Debtors</option>
+                <option value="absent">Absent Students' Parents</option>
+                <option value="class">Specific Class</option>
+            </select>
+            <div id="broadcastClassDiv" class="hidden"><label>Class</label><select id="broadcastClass">${[...new Set(students.map(s=>s.class))].map(c=>`<option>${c}</option>`).join('')}</select></div>
+            <label>Message</label><textarea id="broadcastMessage" rows="4"></textarea>
+            <button class="btn-main" onclick="sendBroadcast()">📤 Send Message</button>
+            <div id="broadcastLog"></div>
+        </div>`;
+        document.getElementById('view-broadcast').innerHTML = html;
+    }
+
+    window.sendBroadcast = async () => {
+        const target = document.getElementById('broadcastTarget').value;
+        const message = document.getElementById('broadcastMessage').value.trim();
+        if (!message) return alert('Enter a message');
+        let recipients = [];
+        if (target === 'all') recipients = students;
+        else if (target === 'debtors') recipients = students.filter(s => s.total_fees > s.fees_paid);
+        else if (target === 'absent') recipients = students.filter(s => s.is_absent);
+        else if (target === 'class') {
+            const cls = document.getElementById('broadcastClass').value;
+            recipients = students.filter(s => s.class === cls);
+        }
+        for (const s of recipients) {
+            await safeInsert('notifications', [{ sch_id: session.schId, student_id: s.id, type: 'general', channel: 'whatsapp', message, recipient: s.parent_whatsapp || s.parent_contact }]);
+            if (s.parent_whatsapp) window.open(`https://wa.me/${s.parent_whatsapp}?text=${encodeURIComponent(message)}`, '_blank');
+        }
+        document.getElementById('broadcastLog').innerHTML = `<div class="success-box">Message queued for ${recipients.length} parents.</div>`;
+    };
+
+    window.notifyParent = (sid, channel, customMsg = null) => {
+        const s = students.find(st => st.id === sid);
+        if (!s) return;
+        const msg = customMsg || `Dear parent, your child ${s.name} was absent today. - ${session.schoolName}`;
+        if (channel === 'whatsapp' && s.parent_whatsapp) {
+            window.open(`https://wa.me/${s.parent_whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
+            safeInsert('notifications', [{ sch_id: session.schId, student_id: s.id, type: 'absence', channel: 'whatsapp', message: msg, recipient: s.parent_whatsapp }]);
+        } else if (channel === 'email' && s.parent_email) {
+            window.location.href = `mailto:${s.parent_email}?subject=School%20Alert&body=${encodeURIComponent(msg)}`;
+            safeInsert('notifications', [{ sch_id: session.schId, student_id: s.id, type: 'absence', channel: 'email', message: msg, recipient: s.parent_email }]);
+        }
+    };
+
+    window.exportStudentsCSV = () => {
+        if (!students.length) return alert('No data');
+        const headers = ['name','class','age','gender','lin','location','parent_name','parent_contact','parent_whatsapp','parent_email','total_fees','fees_paid','is_absent'];
+        let csv = headers.join(',') + '\n';
+        students.forEach(s => {
+            csv += headers.map(h => {
+                let val = s[h] === undefined ? '' : s[h];
+                if (typeof val === 'string') val = `"${val.replace(/"/g,'""')}"`;
+                return val;
+            }).join(',') + '\n';
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `${session.schoolName}_students.csv`; a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    window.handleCSVUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            const lines = ev.target.result.split('\n').filter(l => l.trim());
+            if (lines.length < 2) return alert('Empty file');
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g,''));
+            if (!headers.includes('name') || !headers.includes('class')) return alert('CSV must have "name" and "class" columns');
+            const toInsert = [];
+            for (let i = 1; i < lines.length; i++) {
+                const obj = {};
+                const currentLine = lines[i].split(',').map(c => c.trim().replace(/"/g,''));
+                headers.forEach((h, idx) => { obj[h] = currentLine[idx] || ''; });
+                obj.sch_id = session.schId;
+                obj.total_fees = parseFloat(obj.total_fees) || 0;
+                obj.fees_paid = parseFloat(obj.fees_paid) || 0;
+                obj.is_absent = obj.is_absent?.toLowerCase() === 'true';
+                if (!obj.lin) { obj.lin = `${session.schId}-${Math.random().toString(36).substr(2,6).toUpperCase()}`; }
+                const dup = students.filter(s => s.name.toLowerCase() === obj.name.toLowerCase() && s.class === obj.class && s.parent_contact === obj.parent_contact);
+                if (dup.length === 0) toInsert.push(obj);
+            }
+            if (toInsert.length) {
+                await safeInsert('students', toInsert);
+                loadAllData();
+                alert(`Imported ${toInsert.length} students.`);
+            } else {
+                alert('No new students imported (duplicates skipped).');
+            }
+        };
+        reader.readAsText(file);
+    };
 
     // ==================== CLOCK & INIT ====================
     setInterval(() => {
