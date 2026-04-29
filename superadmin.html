@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EUDES MEDIA DATA MANAGEMENT SYSTEM – Control Centre</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Segoe UI',system-ui,sans-serif; background:#f1f5f9; }
+        .hidden { display:none !important; }
+        /* Login */
+        #login-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, #001a33 0%, #003366 100%); padding:20px; }
+        .login-card { background:#fff; border-radius:24px; padding:40px 30px; width:100%; max-width:420px; box-shadow:0 20px 50px rgba(0,0,0,0.3); }
+        .brand { text-align:center; margin-bottom:30px; }
+        .brand h1 { color:#003366; font-size:24px; }
+        .brand small { color:#D4A017; font-weight:600; text-transform:uppercase; letter-spacing:1px; }
+        .form-group { margin-bottom:18px; }
+        .form-group label { font-size:11px; font-weight:900; color:#003366; display:block; margin-bottom:4px; text-transform:uppercase; }
+        .form-group input, .form-group textarea, .form-group select { width:100%; padding:14px; border:2px solid #e2e8f0; border-radius:12px; font-size:14px; }
+        .btn { width:100%; padding:16px; background:#003366; color:#fff; border:none; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer; margin-top:10px; }
+        .btn:disabled { opacity:0.7; }
+        .error-msg { background:#ffebee; color:#c62828; padding:12px; border-radius:10px; margin-bottom:16px; display:none; }
+        .error-msg.show { display:block; }
+        .header { background:#003366; color:#fff; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:4px solid #ffc107; flex-wrap:wrap; }
+        .container { padding:20px; max-width:1000px; margin:0 auto; }
+        .dashboard-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:15px; margin-bottom:25px; }
+        .stat-card { background:#fff; border-radius:15px; padding:18px; border-left:5px solid #003366; }
+        .stat-card h3 { color:#003366; font-size:14px; }
+        .stat-card .value { font-size:28px; font-weight:800; color:#D4A017; }
+        .card { background:#fff; border-radius:20px; padding:18px; margin-bottom:15px; border-left:6px solid #003366; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+        .card.editing { border-left-color:#D4A017; background:#fffbf0; }
+        .form-group { background:#fff; border-radius:20px; padding:20px; border-top:5px solid #003366; margin-bottom:20px; }
+        label { font-size:11px; font-weight:900; color:#003366; display:block; margin-top:10px; text-transform:uppercase; }
+        input, textarea, select { width:100%; padding:12px; border:2px solid #edf2f7; border-radius:12px; margin-bottom:15px; font-size:14px; }
+        .btn-main { width:100%; background:#003366; color:#fff; padding:14px; border:none; border-radius:15px; font-weight:bold; cursor:pointer; margin-top:8px; }
+        .btn-sm { padding:8px 16px; font-size:12px; background:#ffc107; border:none; border-radius:20px; cursor:pointer; margin:5px; }
+        .btn-del { background:#d90429 !important; color:#fff; }
+        .btn-save { background:#2b9348 !important; color:#fff; }
+        .error-box { background:#ffebee; color:#c62828; padding:15px; border-radius:12px; margin-bottom:20px; }
+        .success-box { background:#e8f5e9; color:#2e7d32; padding:15px; border-radius:12px; margin-bottom:20px; }
+        .whatsapp-btn { background:#25D366; color:#fff; border:none; border-radius:8px; padding:6px 12px; cursor:pointer; font-size:12px; text-decoration:none; display:inline-block; margin:5px; }
+        .email-btn { background:#0072c6; color:#fff; border:none; border-radius:8px; padding:6px 12px; cursor:pointer; font-size:12px; text-decoration:none; display:inline-block; margin:5px; }
+        .edit-form { display:flex; flex-direction:column; gap:8px; width:100%; }
+        .expiry-warning { color:#d90429; font-weight:bold; }
+        .message-box { background:#fff; border-radius:12px; padding:15px; margin-bottom:10px; border-left:4px solid #003366; }
+        .message-box.unread { border-left-color:#D4A017; background:#fffdf0; }
+        .message-box .meta { font-size:11px; color:#666; }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+    <div class="login-card">
+        <div class="brand">
+            <h1>🎓 EUDES MEDIA</h1>
+            <small>Data Management Control Centre</small>
+        </div>
+        <div class="error-msg" id="loginError"></div>
+        <form id="loginForm" autocomplete="off">
+            <div class="form-group"><label>📧 Email</label><input type="text" id="email" placeholder="master@eudesmedia.com"></div>
+            <div class="form-group"><label>🔑 Password</label><input type="password" id="password" placeholder="Master@2024"></div>
+            <button type="submit" class="btn" id="loginBtn">🚀 LOGIN</button>
+        </form>
+    </div>
+</div>
+
+<!-- MASTER DASHBOARD -->
+<div id="master-dashboard" class="hidden">
+    <div class="header">
+        <div><b>EUDES MEDIA Master Control</b></div>
+        <button onclick="logout()" style="background:#d90429; color:white; border:none; padding:6px 12px; border-radius:8px;">🚪 LOGOUT</button>
+    </div>
+    <div class="container">
+        <div id="masterMessage"></div>
+
+        <!-- Dashboard Stats -->
+        <div class="dashboard-grid" id="dashboardStats">
+            <div class="stat-card"><h3>Total Schools</h3><div class="value" id="statTotalSchools">0</div></div>
+            <div class="stat-card"><h3>Active Schools</h3><div class="value" id="statActiveSchools">0</div></div>
+            <div class="stat-card"><h3>Expiring Soon</h3><div class="value" id="statExpiringSoon">0</div></div>
+            <div class="stat-card"><h3>Total Students</h3><div class="value" id="statTotalStudents">0</div></div>
+        </div>
+
+        <!-- Register New School -->
+        <div class="form-group">
+            <h3>🏫 Register New School</h3>
+            <label>School Name</label><input id="newSchName" placeholder="e.g., Progressive Junior School">
+            <label>Location</label><input id="newSchLocation" placeholder="e.g., Kampala">
+            <label>Contact Numbers</label><input id="newSchContact" placeholder="077xxxxxxx, 0200xxxxxx">
+            <label>WhatsApp Number (256xxxxxxxxx)</label><input id="newSchWhatsapp" placeholder="256762992440">
+            <label>School Email</label><input id="newSchEmail" placeholder="school@email.com">
+            <label>Subscription Expiry Date</label><input id="newSchExpiry" type="date">
+            <button class="btn-main" id="regBtn" onclick="registerSchool()">💾 Register & Send Credentials</button>
+        </div>
+
+        <!-- Registered Schools -->
+        <div class="form-group">
+            <h3>📋 Registered Schools</h3>
+            <div id="schoolList">Loading...</div>
+            <button class="btn-main" style="background:#d90429; margin-top:10px;" onclick="deactivateAllSchools()">⛔ Deactivate All Schools</button>
+        </div>
+
+        <!-- Broadcast to Schools (WhatsApp) -->
+        <div class="form-group">
+            <h3>📢 Broadcast to Schools (WhatsApp)</h3>
+            <label>Target</label>
+            <select id="broadcastTarget" onchange="document.getElementById('selectedSchoolsDiv').classList.toggle('hidden', this.value!=='selected')">
+                <option value="all">All Schools</option>
+                <option value="selected">Selected Schools</option>
+            </select>
+            <div id="selectedSchoolsDiv" class="hidden">
+                <label>Select Schools (hold Ctrl/Cmd to select multiple)</label>
+                <select id="selectedSchools" multiple style="height:120px;"></select>
+            </div>
+            <label>Message</label>
+            <textarea id="broadcastMessage" rows="3" placeholder="Type a message for WhatsApp..."></textarea>
+            <button class="btn-main" onclick="sendWhatsAppBroadcast()">📤 Send via WhatsApp</button>
+        </div>
+
+        <!-- Internal Messaging -->
+        <div class="form-group">
+            <h3>📨 Messages</h3>
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <button class="btn-sm" onclick="showInbox()" id="btnInbox" style="background:#003366; color:#fff;">📥 Inbox</button>
+                <button class="btn-sm" onclick="showCompose()" id="btnCompose">✉️ Compose</button>
+            </div>
+            <!-- Inbox -->
+            <div id="inboxView"></div>
+            <!-- Compose Form -->
+            <div id="composeView" class="hidden">
+                <label>To (User Email)</label>
+                <input type="text" id="msgReceiver" placeholder="e.g., pjs.a@eudesacademy">
+                <label>Message</label>
+                <textarea id="msgBody" rows="3"></textarea>
+                <button class="btn-main" onclick="sendInternalMessage()">📤 Send Message</button>
+            </div>
+        </div>
+
+        <!-- Support -->
+        <div class="form-group" style="text-align:center;">
+            <p>📞 Support: <strong>0794423143</strong></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ==================== SUPABASE ====================
+    const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
+
+    let session = null;
+
+    // ==================== HELPERS ====================
+    async function hashPassword(pw) {
+        const data = new TextEncoder().encode(pw);
+        const hash = await crypto.subtle.digest('SHA-256', data);
+        return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+    }
+
+    async function supabaseFetch(path, options = {}) {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
+            ...options
+        });
+        if (!res.ok) throw new Error(await res.text());
+        if (res.status === 204 || res.headers.get('content-length') === '0') return null;
+        return res.json();
+    }
+
+    // ==================== SUPER ADMIN LOGIN ====================
+    const SUPER_EMAIL = 'master@eudesmedia.com', SUPER_PASS = 'Master@2024';
+
+    function login(email, password) {
+        if (email !== SUPER_EMAIL || password !== SUPER_PASS) throw new Error('Invalid super admin credentials');
+        return { role:'master' };
+    }
+
+    function logout() {
+        sessionStorage.removeItem('eudes_master_session');
+        session = null;
+        document.getElementById('master-dashboard').classList.add('hidden');
+        document.getElementById('login-screen').classList.remove('hidden');
+    }
+
+    // ==================== UNIQUE PREFIX GENERATOR (based on school name) ====================
+    async function generateUniquePrefix(schoolName) {
+        let base = schoolName.replace(/[^a-zA-Z]/g, '').substring(0, 3).toLowerCase();
+        if (base.length < 2) base = (schoolName.replace(/[^a-zA-Z]/g, '').toLowerCase() + 'sc').substring(0, 3);
+        const schools = await supabaseFetch('schools?select=short_code');
+        const existingPrefixes = new Set((schools || []).map(s => s.short_code));
+        let prefix = base;
+        let counter = 2;
+        while (existingPrefixes.has(prefix)) {
+            prefix = base + counter;
+            counter++;
+        }
+        return prefix;
+    }
+
+    // ==================== REGISTER SCHOOL ====================
+    async function registerSchool() {
+        const btn = document.getElementById('regBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ Registering...';
+
+        const name = document.getElementById('newSchName').value.trim();
+        const loc = document.getElementById('newSchLocation').value.trim();
+        const contact = document.getElementById('newSchContact').value.trim();
+        const whatsapp = document.getElementById('newSchWhatsapp').value.trim();
+        const email = document.getElementById('newSchEmail').value.trim();
+        const expiry = document.getElementById('newSchExpiry').value;
+
+        if (!name) { alert('School name required'); btn.disabled = false; btn.textContent = '💾 Register & Send Credentials'; return; }
+
+        try {
+            const shortCode = await generateUniquePrefix(name);
+            const schools = await supabaseFetch('schools?select=sch_id');
+            const nextNum = (schools?.length || 0) + 1;
+            const newId = `SCH${String(nextNum).padStart(3, '0')}`;
+
+            await supabaseFetch('schools', {
+                method: 'POST',
+                body: JSON.stringify({
+                    sch_id: newId, school_name: name, short_code: shortCode,
+                    email_domain: '@eudesacademy', location: loc,
+                    contact_numbers: contact, whatsapp_number: whatsapp,
+                    school_email: email, is_active: true,
+                    subscription_expiry: expiry || null,
+                    school_numeric_id: nextNum
+                })
+            });
+
+            const adminEmail = `${shortCode}.a@eudesacademy`;
+            const teacherEmail = `${shortCode}.t@eudesacademy`;
+            const financeEmail = `${shortCode}.f@eudesacademy`;
+            const adminPass = `${shortCode}Adm!`;
+            const teacherPass = `${shortCode}Tea!`;
+            const financePass = `${shortCode}Fin!`;
+
+            await supabaseFetch('school_users', {
+                method: 'POST',
+                body: JSON.stringify([
+                    { sch_id: newId, email: adminEmail, password_hash: await hashPassword(adminPass), role:'admin', is_active: true },
+                    { sch_id: newId, email: teacherEmail, password_hash: await hashPassword(teacherPass), role:'teacher', is_active: true },
+                    { sch_id: newId, email: financeEmail, password_hash: await hashPassword(financePass), role:'finance', is_active: true }
+                ])
+            });
+
+            const msg = `
+                ✅ School "${name}" registered!<br>
+                ID: ${newId}<br>
+                Admin: ${adminEmail} / ${adminPass}<br>
+                Teacher: ${teacherEmail} / ${teacherPass}<br>
+                Finance: ${financeEmail} / ${financePass}<br>
+                <a class="whatsapp-btn" href="https://wa.me/${whatsapp}?text=School%20${encodeURIComponent(name)}%20credentials%3A%0AAdmin%3A%20${adminEmail}%20%2F%20${adminPass}%0ATeacher%3A%20${teacherEmail}%20%2F%20${teacherPass}%0AFinance%3A%20${financeEmail}%20%2F%20${financePass}" target="_blank">📱 Send via WhatsApp</a>
+                <a class="email-btn" href="mailto:${email}?subject=School%20Credentials&body=${encodeURIComponent(`School ${name} credentials:\nAdmin: ${adminEmail} / ${adminPass}\nTeacher: ${teacherEmail} / ${teacherPass}\nFinance: ${financeEmail} / ${financePass}`)}" target="_blank">📧 Send via Email</a>
+            `;
+            document.getElementById('masterMessage').innerHTML = `<div class="success-box">${msg}</div>`;
+            loadAllData();
+            ['newSchName','newSchLocation','newSchContact','newSchWhatsapp','newSchEmail','newSchExpiry'].forEach(id => document.getElementById(id).value = '');
+        } catch (e) {
+            document.getElementById('masterMessage').innerHTML = `<div class="error-box">❌ Registration failed: ${e.message}</div>`;
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '💾 Register & Send Credentials';
+        }
+    }
+
+    // ==================== LOAD ALL DATA (Dashboard + School List) ====================
+    async function loadAllData() {
+        try {
+            const schools = await supabaseFetch('schools?order=created_at.desc');
+            if (!schools) return;
+
+            const now = new Date();
+            const soonDate = new Date();
+            soonDate.setDate(soonDate.getDate() + 30); // 30 days
+
+            document.getElementById('statTotalSchools').textContent = schools.length;
+            document.getElementById('statActiveSchools').textContent = schools.filter(s => s.is_active).length;
+            document.getElementById('statExpiringSoon').textContent = schools.filter(s => s.subscription_expiry && new Date(s.subscription_expiry) <= soonDate && s.is_active).length;
+
+            let totalStudents = 0;
+            for (const s of schools) {
+                const count = await supabaseFetch(`students?sch_id=eq.${s.sch_id}&select=count`);
+                if (count?.length) totalStudents += count[0].count;
+            }
+            document.getElementById('statTotalStudents').textContent = totalStudents;
+
+            let html = '';
+            for (const s of schools) {
+                const remainingDays = s.subscription_expiry ? Math.ceil((new Date(s.subscription_expiry) - now) / (1000 * 60 * 60 * 24)) : null;
+                const expiryClass = remainingDays !== null && remainingDays <= 30 ? 'expiry-warning' : '';
+                html += `
+                <div class="card" id="card-${s.sch_id}">
+                    <div id="view-${s.sch_id}">
+                        <div><b>${s.school_name}</b><br>ID: ${s.sch_id} | Prefix: ${s.short_code} | Active: ${s.is_active?'✅':'❌'}<br>Expiry: ${s.subscription_expiry||'Not set'} <span class="${expiryClass}">${remainingDays ? '('+remainingDays+' days left)' : ''}</span></div>
+                        <div>
+                            <button class="btn-sm" onclick="toggleSchool('${s.sch_id}', ${!s.is_active})">${s.is_active?'Deactivate':'Activate'}</button>
+                            <button class="btn-sm" onclick="editSchool('${s.sch_id}')">✏️ Edit</button>
+                            <button class="btn-sm" onclick="showPassword('${s.sch_id}')">👁️ Show Pass</button>
+                            <button class="btn-sm" onclick="resetSchoolPasswords('${s.sch_id}')">🔑 Reset Pass</button>
+                            <button class="btn-sm btn-del" onclick="deleteSchool('${s.sch_id}')">🗑️ Delete</button>
+                        </div>
+                    </div>
+                    <div id="edit-${s.sch_id}" class="hidden edit-form">
+                        <label>School Name</label><input id="editName-${s.sch_id}" value="${s.school_name}">
+                        <label>Location</label><input id="editLoc-${s.sch_id}" value="${s.location||''}">
+                        <label>Contact</label><input id="editContact-${s.sch_id}" value="${s.contact_numbers||''}">
+                        <label>WhatsApp</label><input id="editWhatsapp-${s.sch_id}" value="${s.whatsapp_number||''}">
+                        <label>Email</label><input id="editEmail-${s.sch_id}" value="${s.school_email||''}">
+                        <label>Subscription Expiry</label><input id="editExpiry-${s.sch_id}" type="date" value="${s.subscription_expiry||''}">
+                        <button class="btn-sm btn-save" onclick="saveEdit('${s.sch_id}')">💾 Save</button>
+                        <button class="btn-sm btn-del" onclick="cancelEdit('${s.sch_id}')">Cancel</button>
+                    </div>
+                </div>`;
+            }
+            document.getElementById('schoolList').innerHTML = html || '<p>No schools yet.</p>';
+
+            // Populate selected schools dropdown
+            const select = document.getElementById('selectedSchools');
+            select.innerHTML = schools.map(s => `<option value="${s.sch_id}">${s.school_name} (${s.sch_id})</option>`).join('');
+
+        } catch (e) {
+            document.getElementById('masterMessage').innerHTML = `<div class="error-box">Failed to load data: ${e.message}</div>`;
+        }
+    }
+
+    // ==================== SHOW PASSWORD ====================
+    window.showPassword = async (schId) => {
+        const users = await supabaseFetch(`school_users?sch_id=eq.${schId}&role=eq.admin&select=email`);
+        if (users && users.length > 0) {
+            const schools = await supabaseFetch(`schools?sch_id=eq.${schId}&select=short_code`);
+            const shortCode = schools[0].short_code;
+            alert(`Admin Email: ${users[0].email}\nPassword: ${shortCode}Adm!`);
+        }
+    };
+
+    // ==================== EDIT / SAVE / TOGGLE / DELETE ====================
+    window.editSchool = (schId) => {
+        document.getElementById(`view-${schId}`).classList.add('hidden');
+        document.getElementById(`edit-${schId}`).classList.remove('hidden');
+        document.getElementById(`card-${schId}`).classList.add('editing');
+    };
+    window.cancelEdit = (schId) => {
+        document.getElementById(`view-${schId}`).classList.remove('hidden');
+        document.getElementById(`edit-${schId}`).classList.add('hidden');
+        document.getElementById(`card-${schId}`).classList.remove('editing');
+    };
+    window.saveEdit = async (schId) => {
+        const data = {
+            school_name: document.getElementById(`editName-${schId}`).value,
+            location: document.getElementById(`editLoc-${schId}`).value,
+            contact_numbers: document.getElementById(`editContact-${schId}`).value,
+            whatsapp_number: document.getElementById(`editWhatsapp-${schId}`).value,
+            school_email: document.getElementById(`editEmail-${schId}`).value,
+            subscription_expiry: document.getElementById(`editExpiry-${schId}`).value || null
+        };
+        try {
+            await supabaseFetch(`schools?sch_id=eq.${schId}`, { method:'PATCH', body: JSON.stringify(data) });
+            document.getElementById('masterMessage').innerHTML = '<div class="success-box">✅ School updated.</div>';
+            loadAllData();
+        } catch (e) {
+            document.getElementById('masterMessage').innerHTML = `<div class="error-box">❌ Update failed: ${e.message}</div>`;
+        }
+    };
+    window.toggleSchool = async (schId, newState) => {
+        await supabaseFetch(`schools?sch_id=eq.${schId}`, { method:'PATCH', body: JSON.stringify({ is_active: newState }) });
+        loadAllData();
+    };
+    window.deactivateAllSchools = async () => {
+        if (confirm('Deactivate ALL schools?')) {
+            const schools = await supabaseFetch('schools');
+            for (const s of schools) {
+                await supabaseFetch(`schools?sch_id=eq.${s.sch_id}`, { method:'PATCH', body: JSON.stringify({ is_active: false }) });
+            }
+            loadAllData();
+        }
+    };
+    window.deleteSchool = async (schId) => {
+        if (confirm('Permanently delete this school and all its data?')) {
+            await supabaseFetch(`schools?sch_id=eq.${schId}`, { method:'DELETE' });
+            loadAllData();
+        }
+    };
+    window.resetSchoolPasswords = async (schId) => {
+        const schools = await supabaseFetch(`schools?sch_id=eq.${schId}&select=short_code`);
+        if (schools.length > 0) {
+            const shortCode = schools[0].short_code;
+            const newPass = `${shortCode}Adm!`;
+            const hash = await hashPassword(newPass);
+            await supabaseFetch(`school_users?sch_id=eq.${schId}&role=eq.admin`, { method:'PATCH', body: JSON.stringify({ password_hash: hash }) });
+            alert(`Admin password reset to: ${newPass}`);
+        }
+    };
+
+    // ==================== BROADCAST TO WHATSAPP ====================
+    window.sendWhatsAppBroadcast = async () => {
+        const target = document.getElementById('broadcastTarget').value;
+        const message = document.getElementById('broadcastMessage').value.trim();
+        if (!message) return alert('Type a message.');
+        let schools = [];
+        if (target === 'all') {
+            schools = await supabaseFetch('schools');
+        } else {
+            const selected = Array.from(document.getElementById('selectedSchools').selectedOptions).map(opt => opt.value);
+            for (const id of selected) {
+                const s = await supabaseFetch(`schools?sch_id=eq.${id}&select=*`);
+                if (s?.length) schools.push(s[0]);
+            }
+        }
+        for (const s of schools) {
+            if (s.whatsapp_number) {
+                window.open(`https://wa.me/${s.whatsapp_number}?text=${encodeURIComponent(message)}`, '_blank');
+            }
+        }
+        document.getElementById('masterMessage').innerHTML = `<div class="success-box">📤 WhatsApp message sent to ${schools.length} school(s).</div>`;
+    };
+
+    // ==================== INTERNAL MESSAGING ====================
+    async function showInbox() {
+        document.getElementById('inboxView').classList.remove('hidden');
+        document.getElementById('composeView').classList.add('hidden');
+        document.getElementById('btnInbox').style.background = '#003366';
+        document.getElementById('btnCompose').style.background = '#ffc107';
+
+        const msgs = await supabaseFetch(`messages?receiver_email=eq.${SUPER_EMAIL}&order=created_at.desc`);
+        let html = '';
+        if (!msgs || msgs.length === 0) {
+            html = '<p>No messages.</p>';
+        } else {
+            msgs.forEach(m => {
+                html += `<div class="message-box ${m.read ? '' : 'unread'}">
+                    <div class="meta">From: ${m.sender_email} | ${new Date(m.created_at).toLocaleString()}</div>
+                    <p>${m.message}</p>
+                    <button class="btn-sm" onclick="markAsRead('${m.id}')">✔ Mark Read</button>
+                </div>`;
+            });
+        }
+        document.getElementById('inboxView').innerHTML = html;
+    }
+
+    function showCompose() {
+        document.getElementById('inboxView').classList.add('hidden');
+        document.getElementById('composeView').classList.remove('hidden');
+        document.getElementById('btnInbox').style.background = '#ffc107';
+        document.getElementById('btnCompose').style.background = '#003366';
+    }
+
+    window.sendInternalMessage = async () => {
+        const receiver = document.getElementById('msgReceiver').value.trim();
+        const body = document.getElementById('msgBody').value.trim();
+        if (!receiver || !body) return alert('Fill all fields.');
+        const schools = await supabaseFetch('schools?select=sch_id');
+        let schId = 'MASTER';
+        for (const s of schools) {
+            const users = await supabaseFetch(`school_users?email=eq.${receiver}&select=sch_id`);
+            if (users?.length) { schId = users[0].sch_id; break; }
+        }
+        await supabaseFetch('messages', {
+            method: 'POST',
+            body: JSON.stringify({
+                sender_email: SUPER_EMAIL,
+                receiver_email: receiver,
+                sch_id: schId,
+                message: body,
+                read: false
+            })
+        });
+        document.getElementById('masterMessage').innerHTML = '<div class="success-box">✅ Message sent.</div>';
+        document.getElementById('msgReceiver').value = '';
+        document.getElementById('msgBody').value = '';
+    };
+
+    window.markAsRead = async (id) => {
+        await supabaseFetch(`messages?id=eq.${id}`, { method:'PATCH', body: JSON.stringify({ read: true }) });
+        showInbox();
+    };
+
+    // ==================== INIT ====================
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value.trim().toLowerCase();
+        const password = document.getElementById('password').value;
+        const errDiv = document.getElementById('loginError');
+        errDiv.classList.remove('show'); errDiv.textContent = '';
+
+        try {
+            session = login(email, password);
+            sessionStorage.setItem('eudes_master_session', JSON.stringify(session));
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('master-dashboard').classList.remove('hidden');
+            loadAllData();
+            showInbox();
+        } catch (err) {
+            errDiv.textContent = err.message;
+            errDiv.classList.add('show');
+        }
+    });
+
+    const saved = sessionStorage.getItem('eudes_master_session');
+    if (saved) {
+        session = JSON.parse(saved);
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('master-dashboard').classList.remove('hidden');
+        loadAllData();
+        showInbox();
+    }
+</script>
+</body>
+</html>
