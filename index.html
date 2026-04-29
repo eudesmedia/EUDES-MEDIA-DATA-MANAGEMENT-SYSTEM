@@ -8,7 +8,6 @@
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Segoe UI',system-ui,sans-serif; background:#f1f5f9; }
         .hidden { display:none !important; }
-        /* Login */
         #login-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, #001a33 0%, #003366 100%); padding:20px; }
         .login-card { background:#fff; border-radius:24px; padding:40px 30px; width:100%; max-width:460px; box-shadow:0 20px 50px rgba(0,0,0,0.3); }
         .brand { text-align:center; margin-bottom:30px; }
@@ -23,7 +22,6 @@
         .error-msg.show { display:block; }
         .quick-login { margin-top:20px; text-align:center; }
         .quick-btn { background:none; border:2px solid #003366; color:#003366; padding:8px 16px; border-radius:20px; cursor:pointer; margin:4px; font-size:12px; font-weight:bold; }
-        /* Dashboard */
         .header { background:#003366; color:#fff; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:4px solid #ffc107; flex-wrap:wrap; }
         .hero { background:#001a33; padding:20px; text-align:center; color:#fff; }
         #clock { font-size:32px; font-weight:800; color:#ffc107; }
@@ -146,13 +144,16 @@
 </div>
 
 <script>
+    // ✅ System ready test
+    alert('✅ System ready');
+
     // ==================== SUPABASE ====================
     const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
 
     let session = null;
     let students = [], marksData = [], reportCards = [], subjects = [],
-        attendanceRecords = [], terms = [], feePayments = [];
+        terms = [], feePayments = [];   // ⚡ removed attendanceRecords
     let editingStudentId = null;
     let currentSchoolData = null;
 
@@ -173,7 +174,6 @@
         return res.json();
     }
 
-    // Deduplicate helper (used after fetching subjects)
     function deduplicateSubjects(subArray) {
         const seen = new Set();
         return subArray.filter(sub => {
@@ -191,9 +191,7 @@
         if (parts.length) url += '?' + parts.join('&');
         try {
             const result = await supabaseFetch(url);
-            if (table === 'subjects' && Array.isArray(result)) {
-                return deduplicateSubjects(result);
-            }
+            if (table === 'subjects' && Array.isArray(result)) return deduplicateSubjects(result);
             return result;
         } catch (e) {
             showMessage(e.message, 'error');
@@ -457,28 +455,19 @@
         document.getElementById('systemMessage').innerHTML = '';
 
         try {
-            const [s, sub, t, m, rc, att, fp] = await Promise.all([
+            const [s, sub, t, m, rc, fp] = await Promise.all([
                 safeFetch('students', { sch_id: session.schId }),
                 safeFetch('subjects', { sch_id: session.schId }),
                 safeFetch('terms', { sch_id: session.schId }),
                 safeFetch('marks', { sch_id: session.schId }),
                 safeFetch('report_cards', { sch_id: session.schId }),
-                safeFetch('attendance', { sch_id: session.schId }),
                 safeFetch('fee_payments', { sch_id: session.schId })
             ]);
-            students = s;
-            subjects = sub;   // deduplicated by safeFetch
-            terms = t;
-            marksData = m;
-            reportCards = rc;
-            attendanceRecords = att;
-            feePayments = fp;
+            students = s; subjects = sub; terms = t; marksData = m; reportCards = rc; feePayments = fp;
 
             const schData = await safeFetch('schools', { sch_id: session.schId });
             if (schData.length > 0) currentSchoolData = schData[0];
-        } catch (e) {
-            showMessage(e.message, 'error');
-        }
+        } catch (e) { showMessage(e.message, 'error'); }
 
         await ensureDefaultSubjects();
         document.getElementById('db_status').innerHTML = `● LIVE (${students.length} students)`;
@@ -491,11 +480,7 @@
         for (const name of defaults) {
             const alreadyExists = subjects.some(s => s.name.toLowerCase().trim() === name.toLowerCase());
             if (!alreadyExists) {
-                try {
-                    await safeInsert('subjects', [{ sch_id: session.schId, name }]);
-                } catch (e) {
-                    // ignore unique violation
-                }
+                try { await safeInsert('subjects', [{ sch_id: session.schId, name }]); } catch (e) {}
             }
         }
         subjects = await safeFetch('subjects', { sch_id: session.schId });
@@ -539,9 +524,8 @@
     // ---------- SHORT LIN GENERATION ----------
     async function generateShortLIN() {
         if (!currentSchoolData) return 'UNKNOWN';
-        const schoolName = currentSchoolData.school_name || 'XX';
+        const nameLetters = (currentSchoolData.school_name || 'XX').replace(/[^a-zA-Z]/g, '').substring(0, 2).toUpperCase();
         const numericId = currentSchoolData.school_numeric_id || 0;
-        const nameLetters = schoolName.replace(/[^a-zA-Z]/g, '').substring(0, 2).toUpperCase();
         const randomChars = Math.random().toString(36).substring(2, 5).toUpperCase();
         return `${nameLetters}${numericId}${randomChars}`;
     }
@@ -552,13 +536,13 @@
         return existing.length === 0;
     }
 
-    // ==================== VIEW RENDERERS ====================
+    // ==================== VIEW RENDERERS (PHOTOS REMOVED) ====================
     function renderAbsentees() {
         const list = students.filter(s => s.is_absent);
         const classes = [...new Set(students.map(s => s.class))];
         let html = `<div class="form-group"><label>Class</label><select id="absClassFilter" onchange="renderAbsentees()"><option value="all">All</option>${classes.map(c => `<option>${c}</option>`).join('')}</select></div>`;
         const filtered = document.getElementById('absClassFilter')?.value !== 'all' ? list.filter(s => s.class === document.getElementById('absClassFilter')?.value) : list;
-        html += filtered.map(s => `<div class="card absent-card"><div class="student-photo">${s.photo_url ? `<img src="${s.photo_url}">` : s.name.charAt(0)}</div><div><b>${s.name}</b><br>${s.class} | ${s.parent_contact||'-'}</div><button class="btn-sm" onclick="notifyParent('${s.id}','whatsapp')">📱</button><button class="btn-sm" onclick="notifyParent('${s.id}','email')">📧</button></div>`).join('') || '<div class="card">No absent pupils.</div>';
+        html += filtered.map(s => `<div class="card absent-card"><div class="student-photo">${s.name.charAt(0)}</div><div><b>${s.name}</b><br>${s.class} | ${s.parent_contact||'-'}</div><button class="btn-sm" onclick="notifyParent('${s.id}','whatsapp')">📱</button><button class="btn-sm" onclick="notifyParent('${s.id}','email')">📧</button></div>`).join('') || '<div class="card">No absent pupils.</div>';
         document.getElementById('view-abs').innerHTML = html;
     }
 
@@ -571,7 +555,7 @@
             <button class="btn-sm" onclick="document.getElementById('csvFileInput').click()">📤 Upload CSV</button>
             <input type="file" id="csvFileInput" accept=".csv" style="display:none" onchange="handleCSVUpload(event)">
         </div>`;
-        html += filtered.map(s => `<div class="card"><div class="student-photo">${s.photo_url ? `<img src="${s.photo_url}">` : s.name.charAt(0)}</div><div><b>${s.name}</b><br>LIN: ${s.lin||'—'} | Class: ${s.class} | Age: ${s.age||'—'}<br>Gender: ${s.gender||'—'} | Location: ${s.location||'—'}<br>Parent: ${s.parent_name||'—'} (${s.parent_contact||'—'})</div><div>${session.role==='admin' ? `<button class="btn-sm" onclick="editStudent('${s.id}')">Edit</button><button class="btn-sm btn-del" onclick="deleteStudent('${s.id}')">Del</button>` : ''}</div></div>`).join('');
+        html += filtered.map(s => `<div class="card"><div class="student-photo">${s.name.charAt(0)}</div><div><b>${s.name}</b><br>LIN: ${s.lin||'—'} | Class: ${s.class} | Age: ${s.age||'—'}<br>Gender: ${s.gender||'—'} | Location: ${s.location||'—'}<br>Parent: ${s.parent_name||'—'} (${s.parent_contact||'—'})</div><div>${session.role==='admin' ? `<button class="btn-sm" onclick="editStudent('${s.id}')">Edit</button><button class="btn-sm btn-del" onclick="deleteStudent('${s.id}')">Del</button>` : ''}</div></div>`).join('');
         document.getElementById('view-rec').innerHTML = html || '<div class="card">No students found.</div>';
     }
 
@@ -695,13 +679,13 @@
         document.getElementById('photoPreview').innerHTML = '📷';
     };
 
-    // Roll Call
+    // Roll Call (no photos)
     function renderRollCall() {
         const classes = [...new Set(students.map(s => s.class))];
         let html = `<div class="form-group"><label>Class</label><select id="rollClassFilter" onchange="renderRollCall()"><option value="all">All Classes</option>${classes.map(c => `<option value="${c}">${c}</option>`).join('')}</select></div>`;
         const filterClass = document.getElementById('rollClassFilter')?.value || 'all';
         let list = (filterClass === 'all') ? students : students.filter(s => s.class === filterClass);
-        html += list.map(s => `<div class="card ${s.is_absent ? 'absent-card' : 'present-card'}"><div class="student-photo">${s.photo_url ? `<img src="${s.photo_url}">` : s.name.charAt(0)}</div><div><b>${s.name}</b><br>${s.class}</div><button class="btn-main" style="background:${s.is_absent?'#d90429':'#2b9348'};width:auto;padding:8px 16px;" onclick="toggleAbsence('${s.id}')">${s.is_absent?'ABSENT':'PRESENT'}</button></div>`).join('');
+        html += list.map(s => `<div class="card ${s.is_absent ? 'absent-card' : 'present-card'}"><div class="student-photo">${s.name.charAt(0)}</div><div><b>${s.name}</b><br>${s.class}</div><button class="btn-main" style="background:${s.is_absent?'#d90429':'#2b9348'};width:auto;padding:8px 16px;" onclick="toggleAbsence('${s.id}')">${s.is_absent?'ABSENT':'PRESENT'}</button></div>`).join('');
         html += `<button class="btn-main" onclick="saveAttendanceHistory()">Save Today's Record</button>`;
         document.getElementById('view-roll').innerHTML = html;
     }
@@ -721,7 +705,7 @@
         alert('Attendance recorded');
     };
 
-    // Marks
+    // Marks (subjects only once, fast save)
     function renderMarksPage() {
         const classes = [...new Set(students.map(s => s.class))];
         document.getElementById('view-marks').innerHTML = `<div class="form-group"><label>Class</label><select id="marksClassSelect" onchange="loadStudentsForMarks()"><option value="">-- Select Class --</option>${classes.map(c => `<option>${c}</option>`).join('')}</select><div id="marksStudentArea"></div></div>`;
@@ -792,7 +776,7 @@
         loadMarksForStudent();
     };
 
-    // Reports with Uganda division
+    // Reports (photos removed from card, only in print)
     function renderReportsPage() {
         let html = `<div class="form-group"><h3>Report Cards</h3>`;
         students.forEach(s => {
@@ -800,16 +784,21 @@
             const status = rc ? rc.status : 'pending';
             const avg = rc ? parseFloat(rc.average_score) : 0;
             const division = rc ? getDivision(avg) : '';
-            html += `<div class="card"><div class="student-photo">${s.photo_url ? `<img src="${s.photo_url}">` : s.name.charAt(0)}</div><div><b>${s.name}</b><br>Avg: ${avg}% | Division: <strong>${division}</strong> | <span class="badge badge-${status}">${status}</span></div><div><button class="btn-sm" onclick="printReport('${s.id}')">🖨️ Print</button>${session.role==='admin' && status==='pending' ? `<button class="btn-sm" onclick="approveReport('${s.id}')">✅ Approve</button>` : ''}${session.role==='admin' && status==='approved' ? `<button class="btn-sm" onclick="releaseReport('${s.id}')">📤 Release</button>` : ''}</div></div>`;
+            html += `<div class="card"><div class="student-photo">${s.name.charAt(0)}</div><div><b>${s.name}</b><br>Avg: ${avg}% | Division: <strong>${division}</strong> | <span class="badge badge-${status}">${status}</span></div><div><button class="btn-sm" onclick="printReport('${s.id}')">🖨️ Print</button>${session.role==='admin' && status==='pending' ? `<button class="btn-sm" onclick="approveReport('${s.id}')">✅ Approve</button>` : ''}${session.role==='admin' && status==='approved' ? `<button class="btn-sm" onclick="releaseReport('${s.id}')">📤 Release</button>` : ''}</div></div>`;
         });
         html += `</div>`; document.getElementById('view-reports').innerHTML = html;
     }
 
-    window.printReport = (sid) => {
+    window.printReport = async (sid) => {
         const s = students.find(st => st.id === sid); if (!s) return;
         const rc = reportCards.find(r => r.student_id === sid);
         const studentMarks = marksData.filter(m => m.student_id === sid);
-        const absent = attendanceRecords.filter(a => a.student_id === sid && a.status === 'absent').length;
+        // ⚡ Fetch absent count only when printing
+        let absent = 0;
+        try {
+            const absRes = await supabaseFetch(`attendance?student_id=eq.${sid}&status=eq.absent&select=count`);
+            absent = absRes?.[0]?.count || 0;
+        } catch (e) {}
         const avg = rc ? parseFloat(rc.average_score) : 0;
         const division = getDivision(avg);
         const win = window.open('', '_blank', 'width=900,height=700');
@@ -846,7 +835,7 @@
         updateUI();
     };
 
-    // Promotion, Subjects, etc.
+    // Promotion, Subjects, ID Cards, Broadcast (all included)
     function renderPromotion() {
         document.getElementById('view-promote').innerHTML = `<div class="form-group"><h3>Automatic Promotion</h3><p>Promotes students with End‑of‑Term average ≥ 45%.</p><button class="btn-main" onclick="runPromotion()">🚀 Promote All Eligible</button><div id="promotionResult"></div></div>`;
     }
@@ -877,23 +866,15 @@
     window.addSubject = async () => {
         const name = document.getElementById('newSubject').value.trim();
         if (!name) return;
-        try {
-            await safeInsert('subjects', [{ sch_id: session.schId, name }]);
-            subjects = await safeFetch('subjects', { sch_id: session.schId });
-            updateUI();
-        } catch (e) { showMessage(e.message, 'error'); }
+        try { await safeInsert('subjects', [{ sch_id: session.schId, name }]); subjects = await safeFetch('subjects', { sch_id: session.schId }); updateUI(); } catch (e) { showMessage(e.message, 'error'); }
     };
-    window.deleteSubject = async (id) => {
-        await safeDelete('subjects', { id });
-        subjects = subjects.filter(s => s.id !== id);
-        updateUI();
-    };
+    window.deleteSubject = async (id) => { await safeDelete('subjects', { id }); subjects = subjects.filter(s => s.id !== id); updateUI(); };
 
     function renderIdCards() {
         let html = `<div class="form-group"><h3>Student ID Cards</h3>`;
         students.forEach(s => {
             const vu = new Date(); vu.setFullYear(vu.getFullYear() + 1);
-            html += `<div class="card"><div class="student-photo">${s.photo_url ? `<img src="${s.photo_url}">` : s.name.charAt(0)}</div><div><b>${s.name}</b><br>LIN: ${s.lin} | ${s.class}<br>Valid: ${vu.toISOString().slice(0,10)}</div><button class="btn-sm" onclick="printIdCard('${s.id}')">🖨️ Print</button></div>`;
+            html += `<div class="card"><div class="student-photo">${s.name.charAt(0)}</div><div><b>${s.name}</b><br>LIN: ${s.lin} | ${s.class}<br>Valid: ${vu.toISOString().slice(0,10)}</div><button class="btn-sm" onclick="printIdCard('${s.id}')">🖨️ Print</button></div>`;
         });
         html += `</div>`; document.getElementById('view-idcards').innerHTML = html;
     }
