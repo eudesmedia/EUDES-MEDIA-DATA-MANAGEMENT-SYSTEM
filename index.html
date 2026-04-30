@@ -89,7 +89,7 @@
     </div>
 </div>
 
-<!-- ==================== MASTER DASHBOARD (redirects to superadmin.html) ==================== -->
+<!-- ==================== MASTER DASHBOARD ==================== -->
 <div id="master-dashboard" class="hidden">
     <div class="header">
         <div><b>EUDES MEDIA Master Control</b></div>
@@ -130,7 +130,6 @@
         <div id="view-idcards" class="view hidden"></div>
         <div id="view-broadcast" class="view hidden"></div>
         <div id="view-messages" class="view hidden"></div>
-    </div>
     </div>
     <footer>EUDES MEDIA | SUPPORT: 0794423143</footer>
 </div>
@@ -249,7 +248,6 @@
             if (school.is_active) await safeUpdate('schools', { sch_id: school.sch_id }, { is_active: false });
             throw new Error('School subscription expired');
         }
-        // Log activity
         await safeInsert('activity_log', [{ sch_id: user.sch_id, user_email: user.email, action: 'User logged in' }]).catch(()=>{});
         return {
             userId: user.id, schId: user.sch_id, role: user.role, email: user.email,
@@ -343,9 +341,7 @@
             <div class="report">
                 <div class="header"><h1>Student Report Card</h1><p>${student.school_name || ''}</p></div>
                 <div class="details">
-                    <div><strong>Name:</strong> ${student.name}</div>
-                    <div><strong>LIN:</strong> ${student.lin}</div>
-                    <div><strong>Class:</strong> ${student.class}</div>
+                    <div><strong>Name:</strong> ${student.name}</div><div><strong>LIN:</strong> ${student.lin}</div><div><strong>Class:</strong> ${student.class}</div>
                 </div>
                 <table><tr><th>Subject</th><th>Score</th><th>Grade</th></tr>
                 ${studentMarks.map(m => `<tr><td>${m.subject_name||''}</td><td>${m.score}</td><td class="grade">${m.grade}</td></tr>`).join('')}
@@ -477,7 +473,7 @@
         updateUI();
     }
 
-    // ---------- SHORT LIN GENERATION (2 letters school + 1 student initial + 3 random digits) ----------
+    // ---------- SHORT LIN GENERATION ----------
     async function generateShortLIN(studentName) {
         if (!currentSchoolData) return 'UNKNOWN';
         const schoolLetters = (currentSchoolData.school_name || 'XX').replace(/[^a-zA-Z]/g, '').substring(0, 2).toUpperCase();
@@ -492,7 +488,7 @@
         return existing.length === 0;
     }
 
-    // ==================== ALL VIEW RENDERERS ====================
+    // ==================== VIEW RENDERERS ====================
     function renderAbsentees() {
         const list = students.filter(s => s.is_absent);
         const classes = [...new Set(students.map(s => s.class))];
@@ -502,10 +498,7 @@
             const consecutive = consecutiveAbsentStudents.has(s.id);
             return `<div class="card absent-card ${consecutive ? 'consecutive-absent' : ''}">
                 <div class="student-photo">${s.photo_url ? `<img src="${s.photo_url}">` : s.name.charAt(0)}</div>
-                <div>
-                    <b>${s.name}</b> ${consecutive ? '<span class="warning-icon">⚠️ 2 days</span>' : ''}<br>
-                    ${s.class} | Parent: ${s.parent_contact||'—'}
-                </div>
+                <div><b>${s.name}</b> ${consecutive ? '<span class="warning-icon">⚠️ 2 days</span>' : ''}<br>${s.class} | Parent: ${s.parent_contact||'—'}</div>
                 <button class="btn-sm" onclick="notifyParent('${s.id}','whatsapp')">📱</button>
                 <button class="btn-sm" onclick="notifyParent('${s.id}','email')">📧</button>
             </div>`;
@@ -527,21 +520,10 @@
     }
 
     window.editStudent = (id) => {
-        const s = students.find(x => x.id === id); if (!s) return;
+        editingStudentId = null;
+        const s = students.find(x => x.id === id);
+        if (!s) { alert('Student not found.'); return; }
         editingStudentId = id;
-        document.getElementById('reg_name').value = s.name || '';
-        document.getElementById('reg_class').value = s.class || '';
-        document.getElementById('reg_age').value = s.age || '';
-        document.getElementById('reg_gender').value = s.gender || 'Male';
-        document.getElementById('reg_contact').value = s.parent_contact || '';
-        document.getElementById('reg_whatsapp').value = s.parent_whatsapp || '';
-        document.getElementById('reg_email').value = s.parent_email || '';
-        document.getElementById('reg_location').value = s.location || '';
-        document.getElementById('reg_photo').value = s.photo_url || '';
-        document.getElementById('reg_fees').value = s.total_fees || 0;
-        document.getElementById('form_title').innerText = 'Edit Student';
-        document.getElementById('saveBtn').innerText = 'UPDATE';
-        document.getElementById('cancelBtn').classList.remove('hidden');
         showTab('adm');
     };
 
@@ -584,6 +566,9 @@
                 document.getElementById('form_title').innerText = 'Edit Student';
                 document.getElementById('saveBtn').innerText = 'UPDATE';
                 document.getElementById('cancelBtn').classList.remove('hidden');
+                if (s.photo_url) {
+                    document.getElementById('photoPreview').innerHTML = `<img src="${s.photo_url}" style="width:100%;height:100%;object-fit:cover;">`;
+                }
             }
         }
     }
@@ -675,7 +660,7 @@
         alert('Attendance recorded');
     };
 
-    // Marks (with extended years up to 2070)
+    // Marks (years up to 2070)
     function renderMarksPage() {
         const classes = [...new Set(students.map(s => s.class))];
         document.getElementById('view-marks').innerHTML = `<div class="form-group"><label>Class</label><select id="marksClassSelect" onchange="loadStudentsForMarks()"><option value="">-- Select Class --</option>${classes.map(c => `<option>${c}</option>`).join('')}</select><div id="marksStudentArea"></div></div>`;
@@ -752,10 +737,7 @@
             const status = rc ? rc.status : 'pending';
             const avg = rc ? parseFloat(rc.average_score) : 0;
             const studentMarks = marksData.filter(m => m.student_id === s.id && m.exam_type === 'End of Term');
-            const gradePoints = studentMarks.map(m => {
-                const map = { 'D1':1, 'D2':2, 'C3':3, 'C4':4, 'C5':5, 'C6':6, 'P7':7, 'P8':8, 'F9':9 };
-                return map[m.grade] || 9;
-            });
+            const gradePoints = studentMarks.map(m => ({'D1':1,'D2':2,'C3':3,'C4':4,'C5':5,'C6':6,'P7':7,'P8':8,'F9':9}[m.grade] || 9));
             gradePoints.sort((a,b) => a - b);
             const best8 = gradePoints.slice(0, 8);
             const agg = best8.reduce((a,b) => a + b, 0);
@@ -857,7 +839,7 @@
         win.document.close();
     };
 
-    // Broadcast (school‑side)
+    // Broadcast (school-side)
     function renderBroadcast() {
         let html = `<div class="form-group"><h3>📢 Broadcast Message</h3>
             <label>Target Audience</label>
