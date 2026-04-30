@@ -55,13 +55,11 @@
         .warning-icon { color:#ff0000; font-weight:bold; margin-left:8px; }
         .toast { position:fixed; bottom:20px; right:20px; background:#2b9348; color:#fff; padding:12px 20px; border-radius:8px; z-index:9999; font-weight:bold; animation:slideIn 0.3s ease; }
         @keyframes slideIn { from{transform:translateX(100%);} to{transform:translateX(0);} }
-        /* Modal styles */
         #editModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:999; justify-content:center; align-items:center; }
         #editModal > div { background:#fff; border-radius:20px; padding:30px; max-width:500px; width:90%; max-height:90vh; overflow-y:auto; border-top:5px solid #003366; }
     </style>
 </head>
 <body>
-
 <!-- ==================== LOGIN SCREEN ==================== -->
 <div id="login-screen">
     <div class="login-card">
@@ -260,7 +258,10 @@
 
     // ==================== SUPER ADMIN ====================
     const SUPER_EMAIL = 'master@eudesmedia.com', SUPER_PASS = 'Master@2024';
-    async function masterLogin(email, password) { /* unchanged */ }
+    async function masterLogin(email, password) {
+        if (email !== SUPER_EMAIL || password !== SUPER_PASS) throw new Error('Invalid super admin credentials');
+        return { role:'master', schoolName:'EUDES MEDIA' };
+    }
 
     // ==================== LOGIN ====================
     async function login(email, password) {
@@ -285,14 +286,99 @@
         };
     }
 
-    function quickLogin(email, pass) { document.getElementById('email').value = email; document.getElementById('password').value = pass; document.getElementById('loginForm').dispatchEvent(new Event('submit')); }
-    function logout() { sessionStorage.removeItem('eudes_sms_session'); session = null; document.querySelectorAll('#master-dashboard, #school-dashboard').forEach(el => el.classList.add('hidden')); document.getElementById('login-screen').classList.remove('hidden'); }
+    function quickLogin(email, pass) {
+        document.getElementById('email').value = email;
+        document.getElementById('password').value = pass;
+        document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+    }
+
+    function logout() {
+        sessionStorage.removeItem('eudes_sms_session');
+        session = null;
+        document.querySelectorAll('#master-dashboard, #school-dashboard').forEach(el => el.classList.add('hidden'));
+        document.getElementById('login-screen').classList.remove('hidden');
+    }
 
     // ==================== PARENT PORTAL ====================
-    window.parentViewReport = async () => { /* unchanged */ };
-    window.parentViewFees = async () => { /* unchanged */ };
-    function printFeesPublic(student, payments) { /* unchanged */ }
-    function printReportPublic(student) { /* unchanged */ }
+    window.parentViewReport = async () => {
+        const name = document.getElementById('parentName').value.trim();
+        const lin = document.getElementById('parentLIN').value.trim();
+        const errDiv = document.getElementById('parentError');
+        errDiv.classList.remove('show'); errDiv.textContent = '';
+        if (!name || !lin) { errDiv.textContent = '⚠️ Enter both name and LIN'; errDiv.classList.add('show'); return; }
+        try {
+            const students = await supabaseFetch(`students?lin=eq.${encodeURIComponent(lin)}&name=ilike.${encodeURIComponent(`%${name}%`)}&select=*,report_cards!inner(*)`);
+            const released = students.filter(s => s.report_cards && s.report_cards.status === 'released');
+            if (released.length === 0) throw new Error('No released report found');
+            const student = released[0];
+            const studentMarks = await supabaseFetch(`marks?student_id=eq.${student.id}&select=*`);
+            student.marks = studentMarks || [];
+            printReportPublic(student);
+        } catch (e) { errDiv.textContent = e.message; errDiv.classList.add('show'); }
+    };
+    window.parentViewFees = async () => {
+        const name = document.getElementById('parentName').value.trim();
+        const lin = document.getElementById('parentLIN').value.trim();
+        const errDiv = document.getElementById('parentError');
+        errDiv.classList.remove('show'); errDiv.textContent = '';
+        if (!name || !lin) { errDiv.textContent = '⚠️ Enter both name and LIN'; errDiv.classList.add('show'); return; }
+        try {
+            const students = await supabaseFetch(`students?lin=eq.${encodeURIComponent(lin)}&name=ilike.${encodeURIComponent(`%${name}%`)}&select=*`);
+            if (students.length === 0) throw new Error('No student found');
+            const payments = await supabaseFetch(`fee_payments?student_id=eq.${students[0].id}&order=payment_date.desc&limit=5`);
+            printFeesPublic(students[0], payments);
+        } catch (e) { errDiv.textContent = e.message; errDiv.classList.add('show'); }
+    };
+
+    function printFeesPublic(student, payments) {
+        const totalFees = student.total_fees || 0, paid = student.fees_paid || 0, debt = totalFees - paid;
+        const win = window.open('', '_blank', 'width=500,height=500');
+        win.document.write(`<html><head><title>Fee Statement - ${student.name}</title>
+            <style> body { font-family:'Segoe UI',sans-serif; padding:30px; } .container { max-width:600px; margin:auto; border:2px solid #003366; border-radius:12px; padding:25px; } h2 { color:#003366; text-align:center; } .row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee; } .total { font-weight:bold; } table { width:100%; border-collapse:collapse; margin-top:20px; } th { background:#003366; color:#fff; padding:8px; } td { border:1px solid #ccc; padding:8px; text-align:center; } .debt { color:#d90429; font-weight:bold; } button { margin-top:20px; padding:10px 25px; background:#003366; color:#fff; border:none; border-radius:8px; cursor:pointer; } @media print { body { padding:0; } button { display:none; } } </style></head><body>
+            <div class="container">
+                <h2>Fee Statement</h2>
+                <p><strong>Student:</strong> ${student.name} (${student.lin})</p>
+                <p><strong>Class:</strong> ${student.class}</p>
+                <div class="row"><span>Total Expected:</span><span>UGX ${totalFees.toLocaleString()}</span></div>
+                <div class="row"><span>Total Paid:</span><span>UGX ${paid.toLocaleString()}</span></div>
+                <div class="row total"><span>Outstanding Debt:</span><span class="debt">UGX ${debt.toLocaleString()}</span></div>
+                <h3>Recent Payments</h3>
+                <table><tr><th>Date</th><th>Amount</th><th>Method</th></tr>
+                ${payments.map(p => `<tr><td>${new Date(p.payment_date).toLocaleDateString('en-UG')}</td><td>UGX ${p.amount.toLocaleString()}</td><td>${p.payment_method}</td></tr>`).join('')}
+                ${payments.length === 0 ? '<tr><td colspan="3">No payments</td></tr>' : ''}</table>
+                <button onclick="window.print()">🖨️ Print Statement</button>
+            </div></body></html>`);
+        win.document.close();
+    }
+
+    function printReportPublic(student) {
+        // parent report always shows End‑of‑Term (or whatever is released)
+        const rc = student.report_cards;
+        const studentMarks = student.marks || [];
+        const endMarks = studentMarks.filter(m => m.exam_type === 'End of Term');
+        const gradePoints = endMarks.map(m => {
+            const map = { 'D1':1, 'D2':2, 'C3':3, 'C4':4, 'C5':5, 'C6':6, 'P7':7, 'P8':8, 'F9':9 };
+            return map[m.grade] || 9;
+        });
+        gradePoints.sort((a,b) => a - b);
+        const best8 = gradePoints.slice(0, 8);
+        const agg = best8.reduce((a,b) => a + b, 0);
+        const division = getDivision(agg);
+        const win = window.open('', '_blank', 'width=900,height=700');
+        win.document.write(`<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Report Card</title>
+            <style> body { font-family:'Segoe UI',sans-serif; padding:20px; } .report { max-width:800px; margin:auto; border:2px solid #003366; padding:20px; border-radius:12px; } .header { text-align:center; border-bottom:3px solid #003366; padding-bottom:15px; margin-bottom:20px; } .header h1 { color:#003366; font-size:1.5em; } .details { display:flex; gap:15px; margin-bottom:15px; flex-wrap:wrap; } table { width:100%; border-collapse:collapse; margin-bottom:15px; } th { background:#003366; color:#fff; padding:8px; font-size:0.9em; } td { border:1px solid #ccc; padding:6px; text-align:center; font-size:0.9em; } .grade { font-weight:bold; color:#D4A017; } @media print { body { padding:0; } } @media (max-width:600px) { .report { padding:10px; } .header h1 { font-size:1.2em; } th,td { font-size:0.8em; padding:4px; } } button { margin-top:10px; padding:8px 20px; background:#003366; color:#fff; border:none; border-radius:6px; cursor:pointer; } </style></head><body>
+            <div class="report">
+                <div class="header"><h1>Student Report Card</h1><p>${student.school_name || ''}</p></div>
+                <div class="details"><div><strong>Name:</strong> ${student.name}</div><div><strong>LIN:</strong> ${student.lin}</div><div><strong>Class:</strong> ${student.class}</div></div>
+                <table><tr><th>Subject</th><th>End of Term</th><th>Grade</th></tr>
+                ${endMarks.map(m => `<tr><td>${m.subject_name||''}</td><td>${m.score}</td><td class="grade">${m.grade}</td></tr>`).join('')}
+                </table>
+                <p>Average: ${rc.average_score}% | Status: ${rc.status.toUpperCase()}</p>
+                <p><strong>Aggregate:</strong> ${agg} &nbsp;|&nbsp; <strong>Division:</strong> ${division}</p>
+                <button onclick="window.print()">🖨️ Print</button>
+            </div></body></html>`);
+        win.document.close();
+    }
 
     // ==================== SCHOOL DASHBOARD ====================
     const ROLE_TABS = {
@@ -333,8 +419,34 @@
         updateUI();
     }
 
-    async function ensureDefaultSubjects() { /* unchanged */ }
-    async function checkConsecutiveAbsences() { /* unchanged */ }
+    async function ensureDefaultSubjects() {
+        const defaults = ['English', 'Mathematics', 'Science', 'Social Studies'];
+        for (const name of defaults) {
+            const alreadyExists = subjects.some(s => s.name.toLowerCase().trim() === name.toLowerCase());
+            if (!alreadyExists) {
+                try { await safeInsert('subjects', [{ sch_id: session.schId, name }]); } catch (e) {}
+            }
+        }
+        subjects = await safeFetch('subjects', { sch_id: session.schId });
+    }
+
+    async function checkConsecutiveAbsences() {
+        consecutiveAbsentStudents.clear();
+        try {
+            const today = new Date().toISOString().slice(0,10);
+            const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+            const [todayRec, yestRec] = await Promise.all([
+                supabaseFetch(`attendance?date=eq.${today}&status=eq.absent&select=student_id`),
+                supabaseFetch(`attendance?date=eq.${yesterday}&status=eq.absent&select=student_id`)
+            ]);
+            const todayIds = new Set((todayRec || []).map(r => r.student_id));
+            const yestIds = new Set((yestRec || []).map(r => r.student_id));
+            for (const id of todayIds) { if (yestIds.has(id)) consecutiveAbsentStudents.add(id); }
+            if (consecutiveAbsentStudents.size > 0) {
+                showMessage(`⚠️ ${consecutiveAbsentStudents.size} student(s) absent for two consecutive days!`, 'error');
+            }
+        } catch (e) {}
+    }
 
     function getGrade(score) { if (score>=90) return 'D1'; if (score>=80) return 'D2'; if (score>=70) return 'C3'; if (score>=60) return 'C4'; if (score>=50) return 'C5'; if (score>=40) return 'C6'; if (score>=35) return 'P7'; if (score>=30) return 'P8'; return 'F9'; }
     function getDivision(agg) {
@@ -379,12 +491,50 @@
     }
 
     // ---------- SHORT LIN GENERATION ----------
-    async function generateShortLIN(studentName) { /* unchanged */ }
-    async function isLINUnique(lin) { /* unchanged */ }
+    async function generateShortLIN(studentName) {
+        if (!currentSchoolData) return 'UNKNOWN';
+        const schoolLetters = (currentSchoolData.school_name || 'XX').replace(/[^a-zA-Z]/g, '').substring(0, 2).toUpperCase();
+        const studentInitial = studentName.charAt(0).toUpperCase();
+        const randomDigits = Math.floor(Math.random() * 900 + 100).toString();
+        return `${schoolLetters}${studentInitial}${randomDigits}`;
+    }
+
+    async function isLINUnique(lin) {
+        if (!lin) return false;
+        const existing = await supabaseFetch(`students?lin=eq.${encodeURIComponent(lin)}&select=lin`);
+        return existing.length === 0;
+    }
 
     // ==================== VIEW RENDERERS ====================
-    function renderAbsentees() { /* unchanged */ }
-    function renderRecords() { /* unchanged */ }
+    function renderAbsentees() {
+        const list = students.filter(s => s.is_absent);
+        const classes = [...new Set(students.map(s => s.class))];
+        let html = `<div class="form-group"><label>Class</label><select id="absClassFilter" onchange="renderAbsentees()"><option value="all">All</option>${classes.map(c => `<option>${c}</option>`).join('')}</select></div>`;
+        const filtered = document.getElementById('absClassFilter')?.value !== 'all' ? list.filter(s => s.class === document.getElementById('absClassFilter')?.value) : list;
+        html += filtered.map(s => {
+            const consecutive = consecutiveAbsentStudents.has(s.id);
+            return `<div class="card absent-card ${consecutive ? 'consecutive-absent' : ''}">
+                <div class="student-photo">${s.photo_url ? `<img src="${s.photo_url}">` : s.name.charAt(0)}</div>
+                <div><b>${s.name}</b> ${consecutive ? '<span class="warning-icon">⚠️ 2 days</span>' : ''}<br>${s.class} | Parent: ${s.parent_contact||'—'}</div>
+                <button class="btn-sm" onclick="notifyParent('${s.id}','whatsapp')">📱</button>
+                <button class="btn-sm" onclick="notifyParent('${s.id}','email')">📧</button>
+            </div>`;
+        }).join('') || '<div class="card">No absent pupils.</div>';
+        document.getElementById('view-abs').innerHTML = html;
+    }
+
+    function renderRecords() {
+        const searchTerm = document.getElementById('searchRecords')?.value?.toLowerCase() || '';
+        const filtered = students.filter(s => s.name.toLowerCase().includes(searchTerm) || (s.lin && s.lin.toLowerCase().includes(searchTerm)) || s.class.toLowerCase().includes(searchTerm));
+        let html = `<div class="form-group">
+            <input id="searchRecords" placeholder="🔍 Search by name, LIN, or class" oninput="renderRecords()" style="margin-bottom:15px;">
+            <button class="btn-sm" onclick="exportStudentsCSV()" style="background:#2b9348; color:#fff;">📥 Export CSV</button>
+            <button class="btn-sm" onclick="document.getElementById('csvFileInput').click()">📤 Upload CSV</button>
+            <input type="file" id="csvFileInput" accept=".csv" style="display:none" onchange="handleCSVUpload(event)">
+        </div>`;
+        html += filtered.map(s => `<div class="card"><div class="student-photo">${s.photo_url ? `<img src="${s.photo_url}">` : s.name.charAt(0)}</div><div><b>${s.name}</b><br>LIN: ${s.lin||'—'} | Class: ${s.class} | Age: ${s.age||'—'}<br>Gender: ${s.gender||'—'} | Location: ${s.location||'—'}<br>Parent: ${s.parent_name||'—'} (${s.parent_contact||'—'})</div><div>${session.role==='admin' ? `<button class="btn-sm" onclick="editStudent('${s.id}')">Edit</button><button class="btn-sm btn-del" onclick="deleteStudent('${s.id}')">Del</button>` : ''}</div></div>`).join('');
+        document.getElementById('view-rec').innerHTML = html || '<div class="card">No students found.</div>';
+    }
 
     window.editStudent = (id) => {
         const s = students.find(x => x.id === id);
@@ -410,8 +560,43 @@
     };
 
     window.closeEditModal = () => { document.getElementById('editModal').style.display = 'none'; };
-    window.handleEditPhotoUpload = (e) => { /* unchanged */ };
-    window.saveEditFromModal = async () => { /* unchanged */ };
+    window.handleEditPhotoUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = ev => {
+                document.getElementById('edit_photo').value = ev.target.result;
+                document.getElementById('editPhotoPreview').innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+    window.saveEditFromModal = async () => {
+        const id = document.getElementById('editModal').getAttribute('data-editing-id');
+        if (!id) return;
+        const name = document.getElementById('edit_name').value.trim();
+        if (!name) return alert('Name required');
+        const data = {
+            sch_id: session.schId, name,
+            class: document.getElementById('edit_class').value,
+            age: parseInt(document.getElementById('edit_age').value) || null,
+            gender: document.getElementById('edit_gender').value,
+            location: document.getElementById('edit_location').value || session.schoolLocation,
+            parent_name: document.getElementById('edit_parent_name').value || '',
+            parent_contact: document.getElementById('edit_contact').value || '',
+            parent_whatsapp: document.getElementById('edit_whatsapp').value || '',
+            parent_email: document.getElementById('edit_email').value || '',
+            photo_url: document.getElementById('edit_photo').value || '',
+            total_fees: parseFloat(document.getElementById('edit_fees').value) || 0,
+            fees_paid: students.find(s => s.id === id)?.fees_paid || 0,
+            is_absent: students.find(s => s.id === id)?.is_absent || false
+        };
+        await safeUpdate('students', { id }, data);
+        closeEditModal();
+        loadAllData();
+        showToast('✅ Student updated!');
+    };
+
     window.deleteStudent = async (id) => { if (confirm('Delete permanently?')) { await safeDelete('students', { id }); loadAllData(); } };
 
     function renderAdmission() {
@@ -437,7 +622,17 @@
             </div>`;
     }
 
-    function handlePhotoUpload(e) { /* unchanged */ }
+    function handlePhotoUpload(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = ev => {
+                document.getElementById('reg_photo').value = ev.target.result;
+                document.getElementById('photoPreview').innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
 
     window.saveStudent = async () => {
         const name = document.getElementById('reg_name').value.trim();
@@ -473,10 +668,31 @@
         showTab('rec');
     };
 
-    // Roll Call (unchanged)
-    function renderRollCall() { /* unchanged */ }
-    window.toggleAbsence = async (id) => { /* unchanged */ };
-    window.saveAttendanceHistory = async () => { /* unchanged */ };
+    // Roll Call
+    function renderRollCall() {
+        const classes = [...new Set(students.map(s => s.class))];
+        let html = `<div class="form-group"><label>Class</label><select id="rollClassFilter" onchange="renderRollCall()"><option value="all">All Classes</option>${classes.map(c => `<option value="${c}">${c}</option>`).join('')}</select></div>`;
+        const filterClass = document.getElementById('rollClassFilter')?.value || 'all';
+        let list = (filterClass === 'all') ? students : students.filter(s => s.class === filterClass);
+        html += list.map(s => `<div class="card ${s.is_absent ? 'absent-card' : 'present-card'}"><div class="student-photo">${s.photo_url ? `<img src="${s.photo_url}">` : s.name.charAt(0)}</div><div><b>${s.name}</b><br>${s.class}</div><button class="btn-main" style="background:${s.is_absent?'#d90429':'#2b9348'};width:auto;padding:8px 16px;" onclick="toggleAbsence('${s.id}')">${s.is_absent?'ABSENT':'PRESENT'}</button></div>`).join('');
+        html += `<button class="btn-main" onclick="saveAttendanceHistory()">Save Today's Record</button>`;
+        document.getElementById('view-roll').innerHTML = html;
+    }
+
+    window.toggleAbsence = async (id) => {
+        const s = students.find(x => x.id === id);
+        if (s) {
+            s.is_absent = !s.is_absent;
+            updateUI();
+            try { await safeUpdate('students', { id }, { is_absent: s.is_absent }); } catch (e) { s.is_absent = !s.is_absent; updateUI(); showMessage('Failed to update attendance', 'error'); }
+        }
+    };
+
+    window.saveAttendanceHistory = async () => {
+        const today = new Date().toISOString().slice(0,10);
+        for (const s of students) { await safeInsert('attendance', { sch_id: session.schId, student_id: s.id, date: today, status: s.is_absent ? 'absent' : 'present' }); }
+        alert('Attendance recorded');
+    };
 
     // Marks
     function renderMarksPage() {
@@ -492,7 +708,6 @@
         document.getElementById('marksStudentArea').innerHTML = `<label>Year</label><select id="marksYearSelect">${yearOpts}</select><label>Term</label><select id="marksTermNumberSelect"><option value="1">T1</option><option value="2">T2</option><option value="3">T3</option></select><label>Exam</label><select id="marksExamSelect"><option>Beginning of Term</option><option>Mid Term</option><option selected>End of Term</option></select><label>Student</label><select id="marksStudentSelect" onchange="loadMarksForStudent()"><option value="">-- Select Student --</option>${classStudents.map(s => `<option value="${s.id}">${s.name} (${s.lin})</option>`).join('')}</select><div id="marksEntryArea"></div>`;
     }
 
-    // FIXED loadMarksForStudent (term UUID issue resolved)
     async function loadMarksForStudent() {
         const studentId = document.getElementById('marksStudentSelect').value;
         const year = document.getElementById('marksYearSelect').value;
@@ -508,10 +723,7 @@
             term = terms.find(t => t.name === termName);
         }
         const termId = term?.id;
-        if (!termId) {
-            alert('Failed to create/find the selected term. Please try again.');
-            return;
-        }
+        if (!termId) { alert('Failed to create/find the selected term.'); return; }
 
         const existing = marksData.filter(m => m.student_id === studentId && m.term_id === termId && m.exam_type === examType);
         const map = {}; existing.forEach(m => { map[m.subject_id] = m.score; });
@@ -530,12 +742,8 @@
         document.getElementById(`grade_${subId}`).textContent = isNaN(score) ? '' : getGrade(score);
     };
 
-    // FIXED saveMarksFast (aggregate, division, avoid UUID error)
     window.saveMarksFast = async (studentId, termId, examType) => {
-        if (!studentId || !termId) {
-            alert('Missing student or term. Please reload the page and try again.');
-            return;
-        }
+        if (!studentId || !termId) { alert('Missing student or term.'); return; }
         for (const sub of subjects) {
             const el = document.getElementById(`mark_${sub.id}`);
             if (el && el.value !== '') {
@@ -546,10 +754,7 @@
         }
         marksData = await safeFetch('marks', { sch_id: session.schId });
         const endMarks = marksData.filter(m => m.student_id === studentId && m.term_id === termId && m.exam_type === 'End of Term');
-        const gradePoints = endMarks.map(m => {
-            const map = { 'D1':1, 'D2':2, 'C3':3, 'C4':4, 'C5':5, 'C6':6, 'P7':7, 'P8':8, 'F9':9 };
-            return map[m.grade] || 9;
-        });
+        const gradePoints = endMarks.map(m => ({'D1':1,'D2':2,'C3':3,'C4':4,'C5':5,'C6':6,'P7':7,'P8':8,'F9':9}[m.grade] || 9));
         gradePoints.sort((a,b) => a - b);
         const best8 = gradePoints.slice(0, 8);
         const agg = best8.reduce((a,b) => a + b, 0);
@@ -569,7 +774,7 @@
         loadMarksForStudent();
     };
 
-    // Reports (shows exam type, previous results for End‑of‑Term, aggregate, division)
+    // Reports – with exam type selector
     function renderReportsPage() {
         let html = `<div class="form-group"><h3>Report Cards</h3>`;
         students.forEach(s => {
@@ -582,31 +787,71 @@
             const best8 = gradePoints.slice(0, 8);
             const agg = best8.reduce((a,b) => a + b, 0);
             const division = getDivision(agg);
-            html += `<div class="card"><div class="student-photo">${s.photo_url ? `<img src="${s.photo_url}">` : s.name.charAt(0)}</div><div><b>${s.name}</b><br>Avg: ${avg}% | Agg: ${agg} | <strong>${division}</strong> | <span class="badge badge-${status}">${status}</span></div><div><button class="btn-sm" onclick="printReport('${s.id}')">🖨️ Print</button>${session.role==='admin' && status==='pending' ? `<button class="btn-sm" onclick="approveReport('${s.id}')">✅ Approve</button>` : ''}${session.role==='admin' && status==='approved' ? `<button class="btn-sm" onclick="releaseReport('${s.id}')">📤 Release</button>` : ''}</div></div>`;
+            // Determine available exam types for this student
+            const availableExams = [...new Set(marksData.filter(m => m.student_id === s.id).map(m => m.exam_type))];
+            html += `<div class="card">
+                <div class="student-photo">${s.photo_url ? `<img src="${s.photo_url}">` : s.name.charAt(0)}</div>
+                <div><b>${s.name}</b><br>Avg: ${avg}% | Agg: ${agg} | <strong>${division}</strong> | <span class="badge badge-${status}">${status}</span></div>
+                <div>
+                    <select id="examSelect_${s.id}" style="width:auto; margin-bottom:5px;">
+                        ${availableExams.map(ex => `<option value="${ex}">${ex}</option>`).join('')}
+                    </select>
+                    <button class="btn-sm" onclick="printReport('${s.id}', document.getElementById('examSelect_${s.id}').value)">🖨️ Print</button>
+                    ${session.role==='admin' && status==='pending' ? `<button class="btn-sm" onclick="approveReport('${s.id}')">✅ Approve</button>` : ''}
+                    ${session.role==='admin' && status==='approved' ? `<button class="btn-sm" onclick="releaseReport('${s.id}')">📤 Release</button>` : ''}
+                </div>
+            </div>`;
         });
         html += `</div>`; document.getElementById('view-reports').innerHTML = html;
     }
 
-    window.printReport = async (sid) => {
+    window.printReport = async (sid, examType) => {
         const s = students.find(st => st.id === sid); if (!s) return;
         const rc = reportCards.find(r => r.student_id === sid);
         const allStudentMarks = marksData.filter(m => m.student_id === sid);
         let absent = 0;
         try { const absRes = await supabaseFetch(`attendance?student_id=eq.${sid}&status=eq.absent&select=count`); absent = absRes?.[0]?.count || 0; } catch (e) {}
-        const mainExam = allStudentMarks.find(m => m.exam_type === 'End of Term')?.exam_type || 'End of Term';
+        const mainExam = examType || 'End of Term';
         const endMarks = allStudentMarks.filter(m => m.exam_type === 'End of Term');
         const gradePoints = endMarks.map(m => ({'D1':1,'D2':2,'C3':3,'C4':4,'C5':5,'C6':6,'P7':7,'P8':8,'F9':9}[m.grade] || 9));
         gradePoints.sort((a,b) => a - b);
         const best8 = gradePoints.slice(0, 8);
         const agg = best8.reduce((a,b) => a + b, 0);
         const division = getDivision(agg);
+        const avg = rc ? parseFloat(rc.average_score) : 0;
+
+        let tableHtml = '';
+        if (mainExam === 'Beginning of Term') {
+            tableHtml = `<tr><th>Subject</th><th>Beginning</th><th>Grade</th></tr>
+                ${subjects.map(sub => {
+                    const beg = allStudentMarks.find(m => m.subject_id === sub.id && m.exam_type === 'Beginning of Term');
+                    return `<tr><td>${sub.name}</td><td>${beg ? beg.score : '-'}</td><td class="grd">${beg ? beg.grade : '-'}</td></tr>`;
+                }).join('')}
+                <tr style="font-weight:bold;"><td colspan="2">Average</td><td>${avg}%</td></tr>`;
+        } else if (mainExam === 'Mid Term') {
+            tableHtml = `<tr><th>Subject</th><th>Beginning</th><th>Mid Term</th><th>Grade</th></tr>
+                ${subjects.map(sub => {
+                    const beg = allStudentMarks.find(m => m.subject_id === sub.id && m.exam_type === 'Beginning of Term');
+                    const mid = allStudentMarks.find(m => m.subject_id === sub.id && m.exam_type === 'Mid Term');
+                    return `<tr><td>${sub.name}</td><td>${beg ? beg.score : '-'}</td><td>${mid ? mid.score : '-'}</td><td class="grd">${mid ? mid.grade : '-'}</td></tr>`;
+                }).join('')}
+                <tr style="font-weight:bold;"><td colspan="3">Average</td><td>${avg}%</td></tr>`;
+        } else { // End of Term (or any other)
+            tableHtml = `<tr><th>Subject</th><th>Beginning</th><th>Mid Term</th><th>End of Term</th><th>Grade</th></tr>
+                ${subjects.map(sub => {
+                    const beg = allStudentMarks.find(m => m.subject_id === sub.id && m.exam_type === 'Beginning of Term');
+                    const mid = allStudentMarks.find(m => m.subject_id === sub.id && m.exam_type === 'Mid Term');
+                    const end = allStudentMarks.find(m => m.subject_id === sub.id && m.exam_type === 'End of Term');
+                    return `<tr><td>${sub.name}</td><td>${beg ? beg.score : '-'}</td><td>${mid ? mid.score : '-'}</td><td>${end ? end.score : '-'}</td><td class="grd">${end ? end.grade : '-'}</td></tr>`;
+                }).join('')}
+                <tr style="font-weight:bold;"><td colspan="4">Average</td><td>${avg}%</td></tr>
+                <tr style="font-weight:bold; background:#f0f4ff;"><td colspan="4">Aggregate</td><td>${agg}</td></tr>
+                <tr style="font-weight:bold; background:#e0e7ff;"><td colspan="4">Division</td><td>${division}</td></tr>`;
+        }
+
         const win = window.open('', '_blank', 'width=900,height=700');
         win.document.write(`<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Report Card</title>
-            <style> body { font-family:'Segoe UI',sans-serif; padding:20px; } .rpt { max-width:800px; margin:auto; border:2px solid #003366; padding:20px; border-radius:12px; } .hdr { text-align:center; border-bottom:3px solid #003366; padding-bottom:15px; margin-bottom:20px; } .hdr h1 { color:#003366; font-size:1.5em; } table { width:100%; border-collapse:collapse; margin-bottom:15px; } th { background:#003366; color:#fff; padding:8px; font-size:0.9em; } td { border:1px solid #ccc; padding:6px; text-align:center; font-size:0.9em; } .grd { font-weight:bold; color:#D4A017; } @media print { body { padding:0; } } @media (max-width:600px) { .rpt { padding:10px; } .hdr h1 { font-size:1.2em; } th,td { font-size:0.8em; padding:4px; } } button { margin-top:10px; padding:8px 20px; background:#003366; color:#fff; border:none; border-radius:6px; cursor:pointer; } </style></head><body><div class="rpt"><div class="hdr"><h1>${session.schoolName}</h1><p>${session.schoolLocation} | ${session.schoolContact}</p><p><b>ACADEMIC REPORT CARD</b> – ${mainExam}</p></div><div style="display:flex; gap:15px; margin-bottom:15px; flex-wrap:wrap;"><div class="student-photo" style="width:80px;height:80px;">${s.photo_url ? `<img src="${s.photo_url}" style="width:100%;height:100%;object-fit:cover;">` : s.name.charAt(0)}</div><div><p><b>Name:</b> ${s.name}</p><p><b>LIN:</b> ${s.lin}</p><p><b>Class:</b> ${s.class}</p><p><b>Days Absent:</b> ${absent}</p></div></div><table><tr><th>Subject</th>${mainExam === 'End of Term' ? '<th>Beginning</th><th>Mid Term</th>' : ''}<th>${mainExam}</th><th>Grade</th></tr>
-            ${subjects.map(sub => { const endMark = allStudentMarks.find(m => m.subject_id === sub.id && m.exam_type === mainExam) || {}; const begMark = allStudentMarks.find(m => m.subject_id === sub.id && m.exam_type === 'Beginning of Term'); const midMark = allStudentMarks.find(m => m.subject_id === sub.id && m.exam_type === 'Mid Term'); return `<tr><td>${sub.name}</td>${mainExam === 'End of Term' ? `<td>${begMark ? begMark.score : '-'}</td><td>${midMark ? midMark.score : '-'}</td>` : ''}<td>${endMark.score || '-'}</td><td class="grd">${endMark.grade || '-'}</td></tr>`; }).join('')}
-            <tr style="font-weight:bold;"><td colspan="${mainExam === 'End of Term' ? 4 : 2}">Average</td><td>${rc ? rc.average_score + '%' : 'N/A'}</td></tr>
-            <tr style="font-weight:bold; background:#f0f4ff;"><td colspan="${mainExam === 'End of Term' ? 4 : 2}">Aggregate</td><td>${agg}</td></tr>
-            <tr style="font-weight:bold; background:#e0e7ff;"><td colspan="${mainExam === 'End of Term' ? 4 : 2}">Division</td><td>${division}</td></tr></table><p>Status: ${rc ? rc.status.toUpperCase() : 'PENDING'}</p><button onclick="window.print()">🖨️ Print</button></div></body></html>`);
+            <style> body { font-family:'Segoe UI',sans-serif; padding:20px; } .rpt { max-width:800px; margin:auto; border:2px solid #003366; padding:20px; border-radius:12px; } .hdr { text-align:center; border-bottom:3px solid #003366; padding-bottom:15px; margin-bottom:20px; } .hdr h1 { color:#003366; font-size:1.5em; } table { width:100%; border-collapse:collapse; margin-bottom:15px; } th { background:#003366; color:#fff; padding:8px; font-size:0.9em; } td { border:1px solid #ccc; padding:6px; text-align:center; font-size:0.9em; } .grd { font-weight:bold; color:#D4A017; } @media print { body { padding:0; } } @media (max-width:600px) { .rpt { padding:10px; } .hdr h1 { font-size:1.2em; } th,td { font-size:0.8em; padding:4px; } } button { margin-top:10px; padding:8px 20px; background:#003366; color:#fff; border:none; border-radius:6px; cursor:pointer; } </style></head><body><div class="rpt"><div class="hdr"><h1>${session.schoolName}</h1><p>${session.schoolLocation} | ${session.schoolContact}</p><p><b>ACADEMIC REPORT CARD</b> – ${mainExam}</p></div><div style="display:flex; gap:15px; margin-bottom:15px; flex-wrap:wrap;"><div class="student-photo" style="width:80px;height:80px;">${s.photo_url ? `<img src="${s.photo_url}" style="width:100%;height:100%;object-fit:cover;">` : s.name.charAt(0)}</div><div><p><b>Name:</b> ${s.name}</p><p><b>LIN:</b> ${s.lin}</p><p><b>Class:</b> ${s.class}</p><p><b>Days Absent:</b> ${absent}</p></div></div><table>${tableHtml}</table><p>Status: ${rc ? rc.status.toUpperCase() : 'PENDING'}</p><button onclick="window.print()">🖨️ Print</button></div></body></html>`);
         win.document.close();
     };
 
@@ -614,9 +859,12 @@
         const rc = reportCards.find(r => r.student_id === sid);
         if (rc) { rc.status = 'approved'; updateUI(); try { await safeUpdate('report_cards', { id: rc.id }, { status: 'approved' }); const s = students.find(st => st.id === sid); if (s) { const msg = `Dear Parent, ${s.name} of ${s.class}, LIN ${s.lin}, report has been approved. Kindly check the school app or visit the school to see your child's performance. Thank you.`; notifyParent(sid, 'whatsapp', msg); } } catch(e) { rc.status = 'pending'; updateUI(); showMessage('Failed to approve', 'error'); } }
     };
-    window.releaseReport = async (sid) => { /* unchanged */ };
+    window.releaseReport = async (sid) => {
+        const rc = reportCards.find(r => r.student_id === sid);
+        if (rc) { rc.status = 'released'; updateUI(); try { await safeUpdate('report_cards', { id: rc.id }, { status: 'released' }); } catch(e) { rc.status = 'approved'; updateUI(); showMessage('Failed to release', 'error'); } }
+    };
 
-    // Fees (with auto debt calculation and payment date display)
+    // Fees
     function renderFees() {
         const totalExp = students.reduce((sum, s) => sum + (s.total_fees || 0), 0);
         const totalCol = students.reduce((sum, s) => sum + (s.fees_paid || 0), 0);
