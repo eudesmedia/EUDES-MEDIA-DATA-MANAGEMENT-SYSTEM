@@ -1,45 +1,68 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EUDES MEDIA DIAGNOSTIC</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>EUDES MEDIA - DIRECT LINK</title>
     <style>
         body { font-family: sans-serif; background: #003366; color: white; text-align: center; padding: 50px; }
-        .card { background: white; color: #333; padding: 30px; border-radius: 10px; display: inline-block; width: 350px; }
-        #status { font-weight: bold; padding: 15px; margin: 10px; border: 1px solid #ccc; background: #eee; }
-        .btn { background: #003366; color: white; padding: 15px; width: 100%; border: none; border-radius: 5px; cursor: pointer; }
+        .card { background: white; color: #333; padding: 30px; border-radius: 10px; display: inline-block; width: 350px; border-top: 5px solid #003366; }
+        .btn { background: #003366; color: white; padding: 15px; width: 100%; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        #status { margin: 15px 0; font-weight: bold; color: #666; }
     </style>
 </head>
 <body>
     <div class="card">
         <h1>EUDES MEDIA</h1>
-        <div id="status">Testing Connection...</div>
-        <button class="btn" onclick="runTest()">CLICK TO REGISTER</button>
-        <p id="msg" style="margin-top:15px; font-size:12px; color:red;"></p>
+        <p>Direct Database Portal</p>
+        <div id="status">Ready to Connect</div>
+        
+        <input type="text" id="stuName" placeholder="Enter Student Name" style="width: 90%; padding: 10px; margin-bottom: 10px;">
+        <button class="btn" onclick="saveData()">SAVE STUDENT NOW</button>
+        
+        <p id="feedback" style="margin-top:15px; font-size:13px;"></p>
     </div>
 
     <script>
-        const S_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
-        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
-        const supabase = window.supabase.createClient(S_URL, S_KEY);
+        async function saveData() {
+            const name = document.getElementById('stuName').value;
+            const feedback = document.getElementById('feedback');
+            const status = document.getElementById('status');
+            
+            if (!name) { alert("Please enter a name"); return; }
 
-        async function runTest() {
-            const name = prompt("Enter Student Name:");
-            if(!name) return;
-            
-            document.getElementById('status').innerText = "Trying to save...";
-            
+            status.innerText = "Connecting...";
+            feedback.innerText = "";
+
+            // We are talking directly to the database "door" without any fancy tools
             try {
-                const { error } = await supabase.from('students').insert([{ name: name, lin: "TEST-"+Math.floor(Math.random()*999) }]);
-                if (error) {
-                    document.getElementById('msg').innerText = "ERROR: " + error.message;
-                    alert("Database said: " + error.message);
+                const response = await fetch('https://qtvkasgnrftajqrrcgsg.supabase.co/rest/v1/students', {
+                    method: 'POST',
+                    headers: {
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg',
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg',
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({ 
+                        name: name, 
+                        lin: "LIN-" + Math.floor(Math.random()*9999) 
+                    })
+                });
+
+                if (response.ok) {
+                    status.innerText = "✅ SAVED!";
+                    feedback.style.color = "green";
+                    feedback.innerText = "Success: " + name + " added to database.";
+                    document.getElementById('stuName').value = "";
                 } else {
-                    document.getElementById('status').innerText = "✅ SAVED SUCCESSFULLY!";
-                    alert("IT WORKS! Student saved.");
+                    const errData = await response.json();
+                    status.innerText = "❌ FAILED";
+                    feedback.style.color = "red";
+                    feedback.innerText = "Error: " + errData.message;
                 }
             } catch (e) {
-                alert("CRASH: " + e.message);
+                status.innerText = "❌ NETWORK BLOCKED";
+                feedback.style.color = "red";
+                feedback.innerText = "Your internet is blocking the connection to Supabase.";
             }
         }
     </script>
