@@ -2,124 +2,99 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>EUDES MEDIA | School Portal</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>EUDES MEDIA | EMERGENCY ACCESS</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        :root { --primary: #003366; --gold: #D4A017; }
-        body { font-family: sans-serif; background: #f0f4f8; margin: 0; padding: 20px; color: #333; }
-        .login-box { max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .dashboard { display: none; max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 15px; }
+        body { font-family: sans-serif; background: #003366; color: white; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; color: #333; padding: 25px; border-radius: 15px; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
-        th { background: var(--primary); color: white; }
+        th { background: #003366; color: white; }
+        .btn { background: #003366; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        #status-light { height: 10px; width: 10px; border-radius: 50%; display: inline-block; background: red; }
     </style>
 </head>
 <body>
 
-<div id="loginPage">
-    <div class="login-box">
-        <h1 style="color:var(--primary)">EUDES MEDIA</h1>
-        <p>Login to School Portal</p>
-        <input type="text" id="email" placeholder="Email" value="admin@kampalaacademy.com">
-        <input type="password" id="password" placeholder="Password" value="school123">
-        <button class="btn" onclick="handleLogin()">LOGIN NOW</button>
-        <p id="errMsg" style="color:red; font-size:12px; margin-top:10px;"></p>
+<div class="container">
+    <div class="header">
+        <h1>EUDES MEDIA <span id="status-light"></span></h1>
+        <button class="btn" onclick="addStudent()">+ ADD STUDENT</button>
     </div>
-</div>
 
-<div id="dashboardPage" class="dashboard">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2 style="color:var(--primary)">School Management</h2>
-        <button onclick="location.reload()" style="background:red; color:white; border:none; padding:5px 10px; border-radius:5px;">Logout</button>
-    </div>
-    <hr>
-    <button class="btn" style="width:auto; margin-bottom:10px;" onclick="addStudent()">+ Register Student</button>
-    <table>
+    <div id="loading-msg" style="padding: 20px; text-align: center;">Connecting to database...</div>
+
+    <table id="mainTable" style="display:none;">
         <thead>
-            <tr><th>LIN</th><th>Name</th><th>Class</th><th>Debt</th><th>Action</th></tr>
+            <tr>
+                <th>LIN</th>
+                <th>STUDENT NAME</th>
+                <th>CLASS</th>
+                <th>DEBT (UGX)</th>
+            </tr>
         </thead>
         <tbody id="studentList"></tbody>
     </table>
+    
+    <p style="font-size: 11px; margin-top: 20px; color: #999; text-align: center;">Support: +256762992440</p>
 </div>
 
 <script>
+    // These are your specific keys
     const S_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
-    const supabase = window.supabase.createClient(S_URL, S_KEY);
+    
+    let supabase;
 
-    async function handleLogin() {
-        const email = document.getElementById('email').value;
-        const pass = document.getElementById('password').value;
-        const err = document.getElementById('errMsg');
-
-        err.innerText = "Checking...";
-
+    window.onload = async function() {
         try {
-            // Check for Super Admin Bypass First
-            if(email === 'superadmin@eudes.com' && pass === 'SuperAdmin123') {
-                showDashboard();
+            // Check if library loaded
+            if (typeof window.supabase === 'undefined') {
+                document.getElementById('loading-msg').innerHTML = "❌ Library Blocked by Browser. Try a different Wi-Fi or turn off VPN.";
                 return;
             }
 
-            // Check Database
-            const { data, error } = await supabase
-                .from('school_admins')
-                .select('*')
-                .eq('email', email)
-                .eq('password', pass)
-                .maybeSingle();
-
-            if (error) {
-                err.innerText = "Database Error: " + error.message;
-            } else if (data) {
-                showDashboard();
-            } else {
-                err.innerText = "Wrong Email or Password.";
-            }
+            supabase = window.supabase.createClient(S_URL, S_KEY);
+            document.getElementById('status-light').style.background = "green";
+            loadData();
         } catch (e) {
-            err.innerText = "System Error: " + e.message;
+            document.getElementById('loading-msg').innerText = "Connection Error: " + e.message;
         }
-    }
+    };
 
-    function showDashboard() {
-        document.getElementById('loginPage').style.display = 'none';
-        document.getElementById('dashboardPage').style.display = 'block';
-        loadStudents();
-    }
+    async function loadData() {
+        const { data, error } = await supabase.from('students').select('*').order('name');
+        
+        if (error) {
+            document.getElementById('loading-msg').innerText = "DB Error: " + error.message;
+            return;
+        }
 
-    async function loadStudents() {
-        const { data } = await supabase.from('students').select('*').order('name', {ascending: true});
-        const list = document.getElementById('studentList');
-        list.innerHTML = data.map(s => `
+        document.getElementById('loading-msg').style.display = "none";
+        document.getElementById('mainTable').style.display = "table";
+        
+        const tbody = document.getElementById('studentList');
+        tbody.innerHTML = data.map(s => `
             <tr>
                 <td>${s.lin}</td>
                 <td><b>${s.name.toUpperCase()}</b></td>
                 <td>${s.class || 'N/A'}</td>
-                <td style="color:red">${((s.total_fees || 0) - (s.fees_paid || 0)).toLocaleString()} UGX</td>
-                <td><button onclick="pay('${s.id}', ${s.fees_paid})">Pay</button></td>
+                <td style="color:red">${((s.total_fees || 0) - (s.fees_paid || 0)).toLocaleString()}</td>
             </tr>
         `).join('');
     }
 
     async function addStudent() {
-        const name = prompt("Name:");
-        if(!name) return;
-        await supabase.from('students').insert([{ 
-            name: name, 
-            lin: "LIN-"+Math.floor(1000+Math.random()*9000),
+        const n = prompt("Name:");
+        if(!n) return;
+        const { error } = await supabase.from('students').insert([{
+            name: n,
+            lin: "LIN-" + Math.floor(1000 + Math.random() * 8999),
             total_fees: 350000,
             fees_paid: 0
         }]);
-        loadStudents();
-    }
-
-    async function pay(id, current) {
-        const amt = prompt("Amount paid:");
-        if(!amt) return;
-        await supabase.from('students').update({ fees_paid: current + parseInt(amt) }).eq('id', id);
-        loadStudents();
+        if(!error) loadData();
     }
 </script>
 </body>
