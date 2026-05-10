@@ -3,90 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EUDES MEDIA SYSTEM</title>
+    <title>EUDES MEDIA SCHOOL SYSTEM</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #003366; color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .card { background: white; color: #333; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; width: 90%; max-width: 500px; }
-        h1 { color: #003366; margin-bottom: 10px; }
-        #status { padding: 15px; margin: 20px 0; border-radius: 10px; font-weight: bold; background: #f0f0f0; }
-        .btn { background: #003366; color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; transition: 0.3s; }
-        .btn:hover { background: #0052a3; }
-        .footer { margin-top: 20px; font-size: 12px; color: #666; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #003366; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: white; color: #333; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; width: 400px; }
+        h1 { color: #003366; margin: 0 0 10px 0; }
+        #status-box { padding: 15px; margin: 20px 0; border-radius: 8px; font-weight: bold; background: #f0f0f0; border: 1px solid #ccc; }
+        .btn { background: #003366; color: white; border: none; padding: 15px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
+        .btn:hover { background: #00509e; }
+        .contact { margin-top: 20px; font-size: 13px; color: #666; }
     </style>
 </head>
 <body>
 
-<div class="card">
+<div class="container">
     <h1>EUDES MEDIA</h1>
     <p>School Data Management</p>
     
-    <div id="status">Connecting to Database...</div>
+    <div id="status-box">Connecting to Database...</div>
     
-    <button class="btn" onclick="addStudent()">+ REGISTER NEW STUDENT</button>
+    <button class="btn" id="regButton" onclick="register()">+ REGISTER NEW STUDENT</button>
 
-    <div id="result" style="margin-top:20px; font-weight:bold; color:green;"></div>
-
-    <div class="footer">
-        Support: +256762992440
-    </div>
+    <div class="contact">Support: +256762992440</div>
 </div>
 
 <script>
-    // --- DATABASE CONFIGURATION ---
-    const S_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
-    const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
-    
-    // Create the connection
-    const supabase = window.supabase.createClient(S_URL, S_KEY);
+    // 1. Database Credentials
+    const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
 
-    // --- TEST CONNECTION ON LOAD ---
+    // 2. Initialize Supabase
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 3. Test Connection Immediately
     window.onload = async function() {
-        const statusDiv = document.getElementById('status');
+        const box = document.getElementById('status-box');
         try {
-            const { data, error } = await supabase.from('students').select('count');
-            if (error) {
-                statusDiv.style.color = "red";
-                statusDiv.innerHTML = "❌ Connection Error: " + error.message;
-            } else {
-                statusDiv.style.color = "green";
-                statusDiv.innerHTML = "✅ Database Connected";
-            }
+            const { data, error } = await supabase.from('students').select('count', { count: 'exact', head: true });
+            if (error) throw error;
+            box.style.color = "green";
+            box.innerText = "✅ SYSTEM ONLINE";
         } catch (err) {
-            statusDiv.style.color = "red";
-            statusDiv.innerHTML = "❌ Network Error: Library not loading";
+            box.style.color = "red";
+            box.innerText = "❌ CONNECTION ERROR";
+            console.error(err);
         }
     };
 
-    // --- ADD STUDENT FUNCTION ---
-    async function addStudent() {
-        const name = prompt("Enter Student Full Name:");
-        if (!name) return; // Exit if user clicks cancel
+    // 4. The Registration Function
+    async function register() {
+        const name = prompt("Student Full Name:");
+        if (!name) return;
 
-        const resDiv = document.getElementById('result');
-        resDiv.style.color = "orange";
-        resDiv.innerText = "Saving to database...";
+        const box = document.getElementById('status-box');
+        box.innerText = "Saving data...";
 
         try {
-            const { data, error } = await supabase
-                .from('students')
-                .insert([{ 
+            const { error } = await supabase.from('students').insert([
+                { 
                     name: name, 
                     lin: "LIN-" + Math.floor(1000 + Math.random() * 9000),
-                    health_status: 'Normal' 
-                }]);
+                    health_status: 'Normal'
+                }
+            ]);
 
-            if (error) {
-                alert("Database Error: " + error.message);
-                resDiv.style.color = "red";
-                resDiv.innerText = "Failed to save.";
-            } else {
-                alert("Success! " + name + " has been registered.");
-                resDiv.style.color = "green";
-                resDiv.innerText = "Last Saved: " + name;
-            }
+            if (error) throw error;
+
+            alert("SUCCESS! " + name + " has been added to the database.");
+            box.innerText = "✅ SYSTEM ONLINE";
         } catch (err) {
-            alert("Critical Error: " + err.message);
+            alert("ERROR: Could not save student. Make sure you ran the SQL 'Disable RLS' command.");
+            console.error(err);
+            box.innerText = "❌ SAVE FAILED";
         }
     }
 </script>
