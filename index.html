@@ -2,80 +2,80 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EUDES MEDIA SCHOOL SYSTEM</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #003366; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: white; color: #333; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; width: 400px; }
-        h1 { color: #003366; margin: 0 0 10px 0; }
-        #status-box { padding: 15px; margin: 20px 0; border-radius: 8px; font-weight: bold; background: #f0f0f0; border: 1px solid #ccc; }
-        .btn { background: #003366; color: white; border: none; padding: 15px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
-        .btn:hover { background: #00509e; }
-        .contact { margin-top: 20px; font-size: 13px; color: #666; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #003366; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; color: #333; padding: 40px; border-radius: 15px; text-align: center; width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { color: #003366; margin: 0; }
+        .status { padding: 15px; margin: 20px 0; border-radius: 8px; font-weight: bold; background: #eee; border: 1px solid #ccc; }
+        .btn { background: #003366; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 16px; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="card" id="mainCard">
     <h1>EUDES MEDIA</h1>
-    <p>School Data Management</p>
+    <p>Data Management Portal</p>
     
-    <div id="status-box">Connecting to Database...</div>
+    <div id="status" class="status">🔌 Starting Engine...</div>
     
-    <button class="btn" id="regButton" onclick="register()">+ REGISTER NEW STUDENT</button>
+    <button class="btn" id="regBtn" onclick="register()" disabled>+ REGISTER STUDENT</button>
 
-    <div class="contact">Support: +256762992440</div>
+    <p style="font-size: 11px; margin-top: 20px; color: #888;">Support: +256762992440</p>
 </div>
 
 <script>
-    // 1. Database Credentials
-    const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
+    const S_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
+    const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
+    
+    let supabase;
 
-    // 2. Initialize Supabase
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    window.onload = function() {
+        const stat = document.getElementById('status');
+        const btn = document.getElementById('regBtn');
 
-    // 3. Test Connection Immediately
-    window.onload = async function() {
-        const box = document.getElementById('status-box');
         try {
-            const { data, error } = await supabase.from('students').select('count', { count: 'exact', head: true });
-            if (error) throw error;
-            box.style.color = "green";
-            box.innerText = "✅ SYSTEM ONLINE";
+            // Check if library exists
+            if (typeof window.supabase === 'undefined') {
+                throw new Error("Library not loaded. Check Internet.");
+            }
+
+            supabase = window.supabase.createClient(S_URL, S_KEY);
+            stat.innerHTML = "✅ SYSTEM ONLINE";
+            stat.style.color = "green";
+            btn.disabled = false; // Enable button
+            console.log("Supabase initialized successfully.");
+
         } catch (err) {
-            box.style.color = "red";
-            box.innerText = "❌ CONNECTION ERROR";
-            console.error(err);
+            stat.innerHTML = "❌ SYSTEM OFFLINE";
+            stat.style.background = "#fee2e2";
+            stat.style.color = "red";
+            alert("SYSTEM ERROR: " + err.message);
         }
     };
 
-    // 4. The Registration Function
     async function register() {
         const name = prompt("Student Full Name:");
         if (!name) return;
 
-        const box = document.getElementById('status-box');
-        box.innerText = "Saving data...";
+        const stat = document.getElementById('status');
+        stat.innerText = "⏳ Saving...";
 
         try {
             const { error } = await supabase.from('students').insert([
-                { 
-                    name: name, 
-                    lin: "LIN-" + Math.floor(1000 + Math.random() * 9000),
-                    health_status: 'Normal'
-                }
+                { name: name, lin: "LIN-" + Math.floor(1000 + Math.random() * 8999) }
             ]);
 
             if (error) throw error;
 
-            alert("SUCCESS! " + name + " has been added to the database.");
-            box.innerText = "✅ SYSTEM ONLINE";
-        } catch (err) {
-            alert("ERROR: Could not save student. Make sure you ran the SQL 'Disable RLS' command.");
-            console.error(err);
-            box.innerText = "❌ SAVE FAILED";
+            alert("SUCCESS! " + name + " saved.");
+            stat.innerText = "✅ SYSTEM ONLINE";
+
+        } catch (e) {
+            alert("SAVE FAILED: " + e.message);
+            stat.innerText = "❌ ERROR";
         }
     }
 </script>
