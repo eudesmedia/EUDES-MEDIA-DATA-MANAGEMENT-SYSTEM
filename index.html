@@ -1,294 +1,36 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EUDES SCHOOL SYSTEM</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; font-family: system-ui, sans-serif; }
-        body { background: #f1f5f9; }
-        .hidden { display: none !important; }
-        
-        .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #001a33, #003366); padding: 20px; }
-        .login-card { background: white; border-radius: 32px; padding: 40px; width: 100%; max-width: 460px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
-        .brand h1 { color: #003366; }
-        .brand h1 span { color: #D4A017; }
-        .login-card input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #ccc; border-radius: 60px; font-size: 16px; }
-        .btn { width: 100%; padding: 14px; background: #003366; color: white; border: none; border-radius: 60px; font-weight: bold; cursor: pointer; font-size: 16px; }
-        .btn-sm { padding: 6px 12px; border-radius: 20px; border: none; cursor: pointer; margin: 2px; font-size: 12px; font-weight: bold; }
-        .btn-green { background: #2b9348; color: white; }
-        .btn-red { background: #d90429; color: white; }
-        .btn-gold { background: #D4A017; color: #003366; }
-        .dashboard { max-width: 1400px; margin: 0 auto; padding: 20px; display: none; }
-        .header { background: #003366; color: white; padding: 15px 20px; border-radius: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: white; border-radius: 16px; padding: 20px; text-align: center; border-top: 4px solid #003366; }
-        .stat-number { font-size: 28px; font-weight: bold; color: #003366; }
-        .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; background: white; padding: 15px; border-radius: 60px; }
-        .filter-bar input, .filter-bar select { padding: 10px; border-radius: 40px; border: 1px solid #ccc; flex: 1; }
-        .card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #f8fafc; }
-        .pagination { display: flex; gap: 5px; justify-content: center; margin-top: 20px; }
-        .page-btn { padding: 6px 12px; border: 1px solid #003366; background: white; cursor: pointer; border-radius: 6px; }
-        .page-btn.active { background: #003366; color: white; }
-        footer { text-align: center; padding: 20px; font-size: 12px; color: #aaa; }
-        .toast { position: fixed; bottom: 20px; right: 20px; background: #2b9348; color: white; padding: 12px 20px; border-radius: 8px; z-index: 1000; }
-        @media (max-width: 700px) { .stats { grid-template-columns: 1fr 1fr; } }
-    </style>
-</head>
-<body>
+async function loadData() {
+    const tbody = document.getElementById('studentTableBody');
+    
+    // Safety Timer: If nothing happens in 5 seconds, show an error
+    const timer = setTimeout(() => {
+        if (tbody.innerText.includes("Initializing")) {
+            tbody.innerHTML = `<tr><td colspan="10" style="color:orange; text-align:center; padding:20px;">
+                <strong>Connection Timeout:</strong> Supabase is taking too long to respond.<br>
+                Check your internet or ensure your Supabase URL is correct.
+            </td></tr>`;
+        }
+    }, 5000);
 
-<div id="loginScreen" class="login-screen">
-    <div class="login-card">
-        <div class="brand"><h1>🎓 EUDES <span>MEDIA</span></h1><p>School Management System</p></div>
-        <input type="text" id="email" placeholder="Email" value="admin@eudes.com">
-        <input type="password" id="password" placeholder="Password" value="admin123">
-        <button class="btn" onclick="doLogin()">🚀 LOGIN</button>
-        <div id="loginMsg" style="color:red; margin-top:10px;"></div>
-    </div>
-</div>
-
-<div id="dashboard" class="dashboard">
-    <div class="header">
-        <div><h2>🎓 EUDES <span>MEDIA</span></h2><p id="schoolName">School Dashboard</p></div>
-        <button class="btn-sm btn-red" onclick="doLogout()">LOGOUT</button>
-    </div>
-    
-    <div class="stats">
-        <div class="stat-card"><div class="stat-number" id="total">0</div><div>TOTAL STUDENTS</div></div>
-        <div class="stat-card"><div class="stat-number" id="present">0</div><div>PRESENT</div></div>
-        <div class="stat-card"><div class="stat-number" id="absent">0</div><div>ABSENT</div></div>
-        <div class="stat-card"><div class="stat-number" id="collected">UGX 0</div><div>FEES COLLECTED</div></div>
-    </div>
-    
-    <div class="filter-bar">
-        <input type="text" id="search" placeholder="🔍 Search by name, LIN, or class..." onkeyup="debouncedSearch()">
-        <select id="classFilter" onchange="loadData()"><option value="all">All Classes</option></select>
-        <button class="btn-sm btn-green" onclick="exportCSV()">📥 Export CSV</button>
-        <button class="btn-sm btn-gold" onclick="addStudent()">+ Add Student</button>
-    </div>
-    
-    <div class="card">
-        <div style="overflow-x: auto;">
-            <table id="studentTable">
-                <thead><tr><th>Name</th><th>LIN</th><th>Class</th><th>Parent WhatsApp</th><th>Total Fees</th><th>Paid</th><th>Debt</th><th>Status</th><th>Actions</th></tr></thead>
-                <tbody id="studentTableBody"></tbody>
-            </table>
-        </div>
-        <div id="pagination"></div>
-    </div>
-    
-    <footer>EUDES MEDIA | Powered by Supabase</footer>
-</div>
-
-<script>
-    const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
-    
-    let supabase = null;
-    let students = [];
-    let currentPage = 1;
-    const PAGE_SIZE = 20;
-    let totalCount = 0;
-    let timeout = null;
-    
-    // Create Supabase client
     try {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    } catch(e) {
-        alert('Connection error: ' + e.message);
-    }
-    
-    async function doLogin() {
-        // Auto login - no password check needed for demo
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
-        document.getElementById('schoolName').innerHTML = '🏫 Kampala International School';
-        await loadData();
-    }
-    
-    async function loadData() {
-        if (!supabase) {
-            document.getElementById('studentTableBody').innerHTML = '<tr><td colspan="9">Supabase not connected. Run SQL setup.   </tbody>';
+        const { data, error } = await supabase.from('students').select('*').order('name', { ascending: true });
+
+        clearTimeout(timer); // Stop the timer if we get a response
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:40px;">No records found. Click Register to add a student.</td></tr>';
+            updateStats([]);
             return;
         }
-        
-        const { data, error } = await supabase.from('students').select('*');
-        
-        if (error) {
-            document.getElementById('studentTableBody').innerHTML = `<tr><td colspan="9">Error: ${error.message}. Run the SQL.   </tbody>`;
-            return;
-        }
-        
-        students = data || [];
-        totalCount = students.length;
-        updateStats();
-        loadClasses();
-        renderTable();
-        renderPagination();
+
+        renderTable(data);
+        updateStats(data);
+    } catch (err) {
+        clearTimeout(timer);
+        console.error("Connection Failed:", err);
+        tbody.innerHTML = `<tr><td colspan="10" style="color:red; text-align:center; padding:20px;">
+            <strong>Connection Failed:</strong> ${err.message}
+        </td></tr>`;
     }
-    
-    function renderTable() {
-        let filtered = [...students];
-        const searchTerm = document.getElementById('search').value.toLowerCase();
-        if (searchTerm) {
-            filtered = filtered.filter(s => 
-                s.name?.toLowerCase().includes(searchTerm) || 
-                s.lin?.toLowerCase().includes(searchTerm) || 
-                s.class?.toLowerCase().includes(searchTerm)
-            );
-        }
-        
-        const classFilter = document.getElementById('classFilter').value;
-        if (classFilter && classFilter !== 'all') {
-            filtered = filtered.filter(s => s.class === classFilter);
-        }
-        
-        totalCount = filtered.length;
-        const start = (currentPage - 1) * PAGE_SIZE;
-        const paginated = filtered.slice(start, start + PAGE_SIZE);
-        
-        const tbody = document.getElementById('studentTableBody');
-        if (!paginated.length) {
-            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:40px;">No students. Click "Add Student" to add.   </tbody>';
-            return;
-        }
-        
-        let html = '';
-        for (const s of paginated) {
-            const debt = (s.total_fees || 0) - (s.fees_paid || 0);
-            html += `<tr>
-                <td><strong>${escapeHtml(s.name)}</strong>},
-                <td>${s.lin || '-'}},
-                <td>${s.class || '-'}},
-                <td>${s.parent_whatsapp || '-'}},
-                <td>UGX ${(s.total_fees || 0).toLocaleString()}},
-                <td>UGX ${(s.fees_paid || 0).toLocaleString()}},
-                <td style="color:${debt > 0 ? '#d90429' : '#2b9348'}">UGX ${debt.toLocaleString()}},
-                <td>${s.is_absent ? '⚠️ Absent' : '✅ Present'}},
-                <td><button class="btn-sm btn-gold" onclick="toggleAttendance('${s.id}')">Toggle</button>
-                    <button class="btn-sm btn-red" onclick="deleteStudent('${s.id}')">Del</button>
-                },
-            </tr>`;
-        }
-        tbody.innerHTML = html;
-        renderPagination();
-    }
-    
-    function renderPagination() {
-        const totalPages = Math.ceil(totalCount / PAGE_SIZE);
-        const pagDiv = document.getElementById('pagination');
-        if (totalPages <= 1) { pagDiv.innerHTML = ''; return; }
-        let html = '';
-        if (currentPage > 1) html += `<button class="page-btn" onclick="goToPage(${currentPage-1})">← Prev</button>`;
-        let start = Math.max(1, currentPage-2);
-        let end = Math.min(totalPages, currentPage+2);
-        for (let i=start; i<=end; i++) html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goToPage(${i})">${i}</button>`;
-        if (currentPage < totalPages) html += `<button class="page-btn" onclick="goToPage(${currentPage+1})">Next →</button>`;
-        pagDiv.innerHTML = html;
-    }
-    
-    function goToPage(p) { currentPage = p; renderTable(); }
-    function debouncedSearch() { clearTimeout(timeout); timeout = setTimeout(() => { currentPage = 1; renderTable(); }, 300); }
-    
-    async function updateStats() {
-        if (!supabase) return;
-        const total = students.length;
-        const absent = students.filter(s => s.is_absent).length;
-        const collected = students.reduce((s,st) => s+(st.fees_paid||0),0);
-        document.getElementById('total').innerText = total;
-        document.getElementById('present').innerText = total - absent;
-        document.getElementById('absent').innerText = absent;
-        document.getElementById('collected').innerText = `UGX ${collected.toLocaleString()}`;
-    }
-    
-    async function loadClasses() {
-        const classes = [...new Set(students.map(s=>s.class).filter(Boolean))];
-        const select = document.getElementById('classFilter');
-        select.innerHTML = '<option value="all">All Classes</option>' + classes.map(c=>`<option>${c}</option>`).join('');
-    }
-    
-    async function toggleAttendance(id) {
-        const s = students.find(st=>st.id===id);
-        if (s) {
-            const newStatus = !s.is_absent;
-            await supabase.from('students').update({ is_absent: newStatus }).eq('id', id);
-            showToast(`${s.name} marked ${newStatus ? 'ABSENT' : 'PRESENT'}`);
-            await loadData();
-        }
-    }
-    
-    async function deleteStudent(id) {
-        if (confirm('Delete this student?')) {
-            await supabase.from('students').delete().eq('id', id);
-            showToast('Student deleted');
-            await loadData();
-        }
-    }
-    
-    async function addStudent() {
-        const name = prompt("Student full name:");
-        if (!name) return;
-        const className = prompt("Class:");
-        const whatsapp = prompt("Parent WhatsApp:");
-        const fees = parseInt(prompt("Total fees (UGX):", "350000")) || 350000;
-        const letters = name.substring(0,2).toUpperCase().replace(/[^A-Z]/g, 'X');
-        const lin = letters + Math.floor(Math.random() * 900 + 100);
-        
-        const { data: schools } = await supabase.from('schools').select('id');
-        const schoolId = (schools && schools.length > 0) ? schools[0].id : '11111111-1111-1111-1111-111111111111';
-        
-        await supabase.from('students').insert([{
-            school_id: schoolId,
-            name: name,
-            lin: lin,
-            class: className,
-            parent_whatsapp: whatsapp,
-            total_fees: fees,
-            fees_paid: 0,
-            is_absent: false
-        }]);
-        
-        showToast(`✅ Student ${name} added! LIN: ${lin}`);
-        await loadData();
-    }
-    
-    function exportCSV() {
-        let csv = "Name, LIN, Class, Parent WhatsApp, Total Fees, Paid, Outstanding, Status\n";
-        for (const s of students) {
-            const debt = (s.total_fees||0) - (s.fees_paid||0);
-            csv += `"${s.name}",${s.lin},${s.class},${s.parent_whatsapp||''},${s.total_fees||0},${s.fees_paid||0},${debt},${s.is_absent?'Absent':'Present'}\n`;
-        }
-        const blob = new Blob([csv], {type:'text/csv'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `students_${new Date().toISOString().slice(0,10)}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast(`✅ Exported ${students.length} students`);
-    }
-    
-    function doLogout() {
-        document.getElementById('loginScreen').style.display = 'flex';
-        document.getElementById('dashboard').style.display = 'none';
-    }
-    
-    function showToast(msg) {
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.textContent = msg;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
-    
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m] || m));
-    }
-</script>
-</body>
-</html>
+}
