@@ -1,25 +1,30 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>EUDES MEDIA SYSTEM</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; background: white; color: #003366; padding: 40px; text-align: center; }
-        .container { max-width: 800px; margin: auto; border: 2px solid #003366; padding: 20px; border-radius: 10px; }
-        .btn { padding: 15px 30px; background: #003366; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 10px; }
+        body { font-family: sans-serif; background: #f0f4f8; padding: 20px; color: #003366; }
+        .box { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .header { background: #003366; color: white; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 12px; }
-        #status { font-weight: bold; margin: 20px; padding: 10px; }
+        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+        .btn { padding: 10px 20px; background: #003366; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .error-msg { background: #fee2e2; color: #b91c1c; padding: 15px; border-radius: 5px; margin-bottom: 15px; display: none; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>EUDES MEDIA SYSTEM</h1>
-    <div id="status" style="background: #eee;">Checking Connection...</div>
+<div class="box">
+    <div id="errorBox" class="error-msg"></div>
     
-    <button class="btn" onclick="testConnection()">1. TEST CONNECTION</button>
-    <button class="btn" onclick="register()">2. REGISTER STUDENT</button>
+    <div class="header">
+        <h1>EUDES MEDIA SCHOOL SYSTEM</h1>
+        <p>Contact: +256762992440</p>
+    </div>
+
+    <button class="btn" onclick="addStudent()">+ REGISTER NEW STUDENT</button>
 
     <table>
         <thead>
@@ -27,10 +32,12 @@
                 <th>LIN</th>
                 <th>NAME</th>
                 <th>CLASS</th>
+                <th>DEBT (UGX)</th>
+                <th>STATUS</th>
             </tr>
         </thead>
-        <tbody id="list">
-            <tr><td colspan="3">No data loaded.</td></tr>
+        <tbody id="tableBody">
+            <tr><td colspan="5" style="text-align:center; padding:50px;">Initializing connection to database...</td></tr>
         </tbody>
     </table>
 </div>
@@ -40,46 +47,63 @@
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
     const supabase = window.supabase.createClient(S_URL, S_KEY);
 
-    // Function to see if Supabase is even talking to us
-    async function testConnection() {
-        const stat = document.getElementById('status');
-        stat.innerText = "Testing...";
-        try {
-            const { data, error } = await supabase.from('students').select('count');
-            if (error) {
-                stat.innerText = "❌ ERROR: " + error.message;
-                stat.style.color = "red";
-            } else {
-                stat.innerText = "✅ CONNECTED TO SUPABASE!";
-                stat.style.color = "green";
-                load();
+    window.onload = loadData;
+
+    async function loadData() {
+        const body = document.getElementById('tableBody');
+        const err = document.getElementById('errorBox');
+
+        // FORCE TIMEOUT: If no response in 5 seconds, explain why.
+        const timer = setTimeout(() => {
+            if (body.innerText.includes("Initializing")) {
+                err.style.display = "block";
+                err.innerHTML = "<strong>Connection Error:</strong> The database is not responding. Please ensure you ran the 'DISABLE ROW LEVEL SECURITY' SQL command in Supabase.";
+                body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:red;">Database Timeout. Check SQL settings.</td></tr>';
             }
+        }, 5000);
+
+        try {
+            const { data, error } = await supabase.from('students').select('*').order('name');
+            
+            clearTimeout(timer);
+
+            if (error) {
+                err.style.display = "block";
+                err.innerHTML = "<strong>Database Error:</strong> " + error.message;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px;">Connection Active. No students found.</td></tr>';
+                return;
+            }
+
+            body.innerHTML = data.map(s => `
+                <tr>
+                    <td>${s.lin || '-'}</td>
+                    <td><strong>${s.name}</strong></td>
+                    <td>${s.class || '-'}</td>
+                    <td style="color:red;">${((s.total_fees || 0) - (s.fees_paid || 0)).toLocaleString()}</td>
+                    <td>${s.is_absent ? 'ABSENT' : 'PRESENT'}</td>
+                </tr>`).join('');
+
         } catch (e) {
-            stat.innerText = "❌ CRITICAL ERROR: " + e.message;
+            clearTimeout(timer);
+            err.style.display = "block";
+            err.innerHTML = "<strong>System Error:</strong> " + e.message;
         }
     }
 
-    async function load() {
-        const { data } = await supabase.from('students').select('*');
-        const list = document.getElementById('list');
-        if (data && data.length > 0) {
-            list.innerHTML = data.map(s => `<tr><td>${s.lin}</td><td>${s.name}</td><td>${s.class}</td></tr>`).join('');
-        } else {
-            list.innerHTML = '<tr><td colspan="3">Connected, but no students found.</td></tr>';
-        }
-    }
-
-    async function register() {
-        const name = prompt("Name:");
+    async function addStudent() {
+        const name = prompt("Student Name:");
+        if (!name) return;
         const cls = prompt("Class:");
-        const lin = "LIN-" + Math.floor(Math.random()*9000);
-        
-        const { error } = await supabase.from('students').insert([{ name, class: cls, lin }]);
-        if (error) alert("Error saving: " + error.message);
-        else { alert("Saved!"); testConnection(); }
-    }
+        const lin = "LIN-" + Math.floor(1000 + Math.random() * 9000);
 
-    window.onload = testConnection;
+        const { error } = await supabase.from('students').insert([{ name, class: cls, lin }]);
+        if (error) alert("Error: " + error.message);
+        else loadData();
+    }
 </script>
 </body>
 </html>
