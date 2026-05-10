@@ -1,103 +1,47 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>EUDES MEDIA SYSTEM</title>
+    <title>EUDES MEDIA DIAGNOSTIC</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Segoe UI', Arial; background: #003366; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: white; color: #333; padding: 30px; border-radius: 15px; width: 380px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .status-box { padding: 15px; margin: 20px 0; border-radius: 8px; font-weight: bold; font-size: 14px; background: #eee; border: 1px solid #ccc; min-height: 40px; }
-        .btn { background: #003366; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 16px; }
-        .btn:disabled { background: #ccc; cursor: not-allowed; }
-        .log { font-size: 10px; color: #888; text-align: left; margin-top: 10px; height: 50px; overflow-y: auto; border-top: 1px solid #eee; padding-top: 5px; }
+        body { font-family: sans-serif; background: #003366; color: white; text-align: center; padding: 50px; }
+        .card { background: white; color: #333; padding: 30px; border-radius: 10px; display: inline-block; width: 350px; }
+        #status { font-weight: bold; padding: 15px; margin: 10px; border: 1px solid #ccc; background: #eee; }
+        .btn { background: #003366; color: white; padding: 15px; width: 100%; border: none; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
+    <div class="card">
+        <h1>EUDES MEDIA</h1>
+        <div id="status">Testing Connection...</div>
+        <button class="btn" onclick="runTest()">CLICK TO REGISTER</button>
+        <p id="msg" style="margin-top:15px; font-size:12px; color:red;"></p>
+    </div>
 
-<div class="card">
-    <h1 style="color:#003366; margin:0;">EUDES MEDIA</h1>
-    <p style="margin:5px 0; color:#666;">Data Management Portal</p>
-    
-    <div id="status" class="status-box">⏳ Loading System...</div>
-    
-    <button class="btn" id="regBtn" onclick="register()" disabled>+ REGISTER STUDENT</button>
+    <script>
+        const S_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
+        const supabase = window.supabase.createClient(S_URL, S_KEY);
 
-    <div class="log" id="debugLog">System log starting...</div>
-    <p style="font-size: 11px; margin-top: 15px; color: #999;">Support: +256762992440</p>
-</div>
-
-<script>
-    const log = (msg) => {
-        const d = document.getElementById('debugLog');
-        d.innerHTML += "<br>> " + msg;
-        console.log(msg);
-    };
-
-    const S_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
-    const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
-    
-    let supabase;
-
-    window.onload = async function() {
-        const stat = document.getElementById('status');
-        const btn = document.getElementById('regBtn');
-        
-        log("Checking for library...");
-        if (typeof window.supabase === 'undefined') {
-            log("FAIL: Library missing.");
-            stat.innerHTML = "❌ SYSTEM OFFLINE<br><small>Library failed to load</small>";
-            stat.style.color = "red";
-            return;
-        }
-
-        log("Library found. Connecting...");
-        try {
-            supabase = window.supabase.createClient(S_URL, S_KEY);
+        async function runTest() {
+            const name = prompt("Enter Student Name:");
+            if(!name) return;
             
-            // Direct test call
-            const { data, error } = await supabase.from('students').select('count', { count: 'exact', head: true });
+            document.getElementById('status').innerText = "Trying to save...";
             
-            if (error) {
-                log("DB Error: " + error.message);
-                stat.innerHTML = "❌ DATABASE ERROR<br><small>" + error.message + "</small>";
-                stat.style.color = "red";
-            } else {
-                log("SUCCESS: Connection live.");
-                stat.innerHTML = "✅ SYSTEM ONLINE";
-                stat.style.color = "green";
-                btn.disabled = false;
+            try {
+                const { error } = await supabase.from('students').insert([{ name: name, lin: "TEST-"+Math.floor(Math.random()*999) }]);
+                if (error) {
+                    document.getElementById('msg').innerText = "ERROR: " + error.message;
+                    alert("Database said: " + error.message);
+                } else {
+                    document.getElementById('status').innerText = "✅ SAVED SUCCESSFULLY!";
+                    alert("IT WORKS! Student saved.");
+                }
+            } catch (e) {
+                alert("CRASH: " + e.message);
             }
-        } catch (err) {
-            log("CRASH: " + err.message);
-            stat.innerHTML = "❌ CRITICAL ERROR";
-            stat.style.color = "red";
         }
-    };
-
-    async function register() {
-        const name = prompt("Student Full Name:");
-        if (!name) return;
-
-        log("Attempting save for: " + name);
-        try {
-            const { error } = await supabase.from('students').insert([
-                { name: name, lin: "LIN-" + Math.floor(1000 + Math.random() * 8999) }
-            ]);
-
-            if (error) {
-                log("Save Error: " + error.message);
-                alert("Save Failed: " + error.message);
-            } else {
-                log("Save Success!");
-                alert("SUCCESS: " + name + " is registered!");
-            }
-        } catch (e) {
-            log("Action Crash: " + e.message);
-            alert("Crash: " + e.message);
-        }
-    }
-</script>
-
+    </script>
 </body>
 </html>
