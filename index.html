@@ -2,93 +2,46 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EUDES MEDIA | Pro School Management</title>
+    <title>EUDES MEDIA | School Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --primary: #003366; --gold: #D4A017; --danger: #d90429; --success: #2b9348; }
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; }
-        body { background: #0f172a; color: #f8fafc; padding: 20px; min-height: 100vh; }
-        
-        /* Login Styles */
-        .login-card { max-width: 400px; margin: 80px auto; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 40px; text-align: center; }
-        .login-card h1 span { color: var(--gold); }
-        .login-card input { width: 100%; padding: 12px 20px; margin: 10px 0; border: 1px solid #334155; border-radius: 12px; background: #1e293b; color: white; }
-        
-        /* Dashboard Styles */
-        .header { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: #1e293b; border-radius: 20px; padding: 20px; border-left: 5px solid var(--gold); }
-        .stat-number { font-size: 24px; font-weight: bold; color: var(--gold); }
-        
-        /* Table Styles */
-        .card { background: #1e293b; border-radius: 20px; padding: 20px; overflow-x: auto; border: 1px solid rgba(255,255,255,0.05); }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th { text-align: left; padding: 15px; color: #94a3b8; border-bottom: 1px solid #334155; font-size: 13px; text-transform: uppercase; }
-        td { padding: 15px; border-bottom: 1px solid #334155; font-size: 14px; }
-        
-        /* Button Styles */
-        .btn { padding: 10px 20px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-primary { background: var(--gold); color: #000; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-outline { background: transparent; border: 1px solid #334155; color: white; }
-        .btn:hover { opacity: 0.8; transform: translateY(-2px); }
-        
-        .toast { position: fixed; bottom: 20px; right: 20px; background: var(--success); color: white; padding: 15px 25px; border-radius: 12px; z-index: 100; animation: slideIn 0.3s; }
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        :root { --primary: #003366; --gold: #D4A017; }
+        body { font-family: sans-serif; background: #f0f4f8; margin: 0; padding: 20px; color: #333; }
+        .login-box { max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .dashboard { display: none; max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+        th { background: var(--primary); color: white; }
     </style>
 </head>
 <body>
 
-<div id="loginContainer">
-    <div class="login-card">
-        <h1>🎓 EUDES <span>MEDIA</span></h1>
-        <p style="color:#94a3b8; margin-bottom: 20px;">School Management Portal</p>
-        <input type="text" id="email" placeholder="Admin Email" value="admin@kampalaacademy.com">
+<div id="loginPage">
+    <div class="login-box">
+        <h1 style="color:var(--primary)">EUDES MEDIA</h1>
+        <p>Login to School Portal</p>
+        <input type="text" id="email" placeholder="Email" value="admin@kampalaacademy.com">
         <input type="password" id="password" placeholder="Password" value="school123">
-        <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="login()">LOGIN</button>
-        <div id="loginError" style="color:var(--danger); margin-top:15px; font-size:13px;"></div>
+        <button class="btn" onclick="handleLogin()">LOGIN NOW</button>
+        <p id="errMsg" style="color:red; font-size:12px; margin-top:10px;"></p>
     </div>
 </div>
 
-<div id="dashboard" style="display:none;">
-    <div class="header">
-        <div>
-            <h2 id="schoolName">EUDES MEDIA</h2>
-            <p id="adminTag" style="font-size:12px; color:var(--gold);">Super Admin Access</p>
-        </div>
-        <button class="btn btn-danger" onclick="logout()">LOGOUT</button>
+<div id="dashboardPage" class="dashboard">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2 style="color:var(--primary)">School Management</h2>
+        <button onclick="location.reload()" style="background:red; color:white; border:none; padding:5px 10px; border-radius:5px;">Logout</button>
     </div>
-
-    <div class="stats">
-        <div class="stat-card"><div class="stat-number" id="totalCount">0</div><div>Total Students</div></div>
-        <div class="stat-card"><div class="stat-number" id="totalCollected">UGX 0</div><div>Fees Collected</div></div>
-        <div class="stat-card"><div class="stat-number" id="totalDebt" style="color:var(--danger);">UGX 0</div><div>Outstanding</div></div>
-    </div>
-
-    <div style="display:flex; gap:10px; margin-bottom:20px;">
-        <input type="text" id="search" placeholder="Search students..." onkeyup="filterData()" style="flex:1; padding:12px; border-radius:12px; border:none; background:#1e293b; color:white;">
-        <button class="btn btn-primary" onclick="addStudent()">+ Register Student</button>
-        <button class="btn btn-outline" onclick="exportData()">Export CSV</button>
-    </div>
-
-    <div class="card">
-        <table>
-            <thead>
-                <tr>
-                    <th>LIN</th>
-                    <th>Full Name</th>
-                    <th>Class</th>
-                    <th>WhatsApp</th>
-                    <th>Fees Paid</th>
-                    <th>Debt</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="studentBody"></tbody>
-        </table>
-    </div>
+    <hr>
+    <button class="btn" style="width:auto; margin-bottom:10px;" onclick="addStudent()">+ Register Student</button>
+    <table>
+        <thead>
+            <tr><th>LIN</th><th>Name</th><th>Class</th><th>Debt</th><th>Action</th></tr>
+        </thead>
+        <tbody id="studentList"></tbody>
+    </table>
 </div>
 
 <script>
@@ -96,121 +49,77 @@
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
     const supabase = window.supabase.createClient(S_URL, S_KEY);
 
-    let allStudents = [];
-    let currentSchoolId = null;
-
-    async function login() {
+    async function handleLogin() {
         const email = document.getElementById('email').value;
         const pass = document.getElementById('password').value;
-        const err = document.getElementById('loginError');
+        const err = document.getElementById('errMsg');
 
-        // Super Admin bypass
-        if(email === 'superadmin@eudes.com' && pass === 'SuperAdmin123') {
-            showDashboard('Super Admin', null);
-            return;
+        err.innerText = "Checking...";
+
+        try {
+            // Check for Super Admin Bypass First
+            if(email === 'superadmin@eudes.com' && pass === 'SuperAdmin123') {
+                showDashboard();
+                return;
+            }
+
+            // Check Database
+            const { data, error } = await supabase
+                .from('school_admins')
+                .select('*')
+                .eq('email', email)
+                .eq('password', pass)
+                .maybeSingle();
+
+            if (error) {
+                err.innerText = "Database Error: " + error.message;
+            } else if (data) {
+                showDashboard();
+            } else {
+                err.innerText = "Wrong Email or Password.";
+            }
+        } catch (e) {
+            err.innerText = "System Error: " + e.message;
         }
-
-        const { data, error } = await supabase.from('school_admins').select('*, schools(*)').eq('email', email).eq('password', pass).single();
-        
-        if (data) {
-            currentSchoolId = data.school_id;
-            showDashboard(data.schools.name, data.school_id);
-        } else {
-            err.innerText = "Invalid credentials. Please check your email/password.";
-        }
     }
 
-    function showDashboard(name, schoolId) {
-        document.getElementById('loginContainer').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
-        document.getElementById('schoolName').innerText = name;
-        loadData(schoolId);
+    function showDashboard() {
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('dashboardPage').style.display = 'block';
+        loadStudents();
     }
 
-    async function loadData(schoolId) {
-        let query = supabase.from('students').select('*');
-        if(schoolId) query = query.eq('school_id', schoolId);
-        
-        const { data } = await query.order('name', { ascending: true });
-        allStudents = data || [];
-        renderTable(allStudents);
-        updateStats();
-    }
-
-    function renderTable(list) {
-        const body = document.getElementById('studentBody');
-        body.innerHTML = list.map(s => {
-            const debt = (s.total_fees || 0) - (s.fees_paid || 0);
-            return `
-                <tr>
-                    <td><code style="color:var(--gold)">${s.lin}</code></td>
-                    <td><b>${s.name.toUpperCase()}</b></td>
-                    <td>${s.class || 'N/A'}</td>
-                    <td>${s.parent_whatsapp || '-'}</td>
-                    <td>${(s.fees_paid || 0).toLocaleString()}</td>
-                    <td style="color:${debt > 0 ? 'var(--danger)' : 'var(--success)'}">${debt.toLocaleString()}</td>
-                    <td><span style="font-size:10px; background:#334155; padding:4px 8px; border-radius:4px;">${s.is_absent ? 'ABSENT' : 'PRESENT'}</span></td>
-                    <td>
-                        <button class="btn btn-outline" style="padding:4px 8px;" onclick="updateFees('${s.id}', ${s.fees_paid})">Pay</button>
-                        <button class="btn btn-danger" style="padding:4px 8px;" onclick="deleteStudent('${s.id}')">Del</button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    }
-
-    function updateStats() {
-        const collected = allStudents.reduce((sum, s) => sum + (s.fees_paid || 0), 0);
-        const debt = allStudents.reduce((sum, s) => sum + ((s.total_fees || 0) - (s.fees_paid || 0)), 0);
-        document.getElementById('totalCount').innerText = allStudents.length;
-        document.getElementById('totalCollected').innerText = `UGX ${collected.toLocaleString()}`;
-        document.getElementById('totalDebt').innerText = `UGX ${debt.toLocaleString()}`;
+    async function loadStudents() {
+        const { data } = await supabase.from('students').select('*').order('name', {ascending: true});
+        const list = document.getElementById('studentList');
+        list.innerHTML = data.map(s => `
+            <tr>
+                <td>${s.lin}</td>
+                <td><b>${s.name.toUpperCase()}</b></td>
+                <td>${s.class || 'N/A'}</td>
+                <td style="color:red">${((s.total_fees || 0) - (s.fees_paid || 0)).toLocaleString()} UGX</td>
+                <td><button onclick="pay('${s.id}', ${s.fees_paid})">Pay</button></td>
+            </tr>
+        `).join('');
     }
 
     async function addStudent() {
-        const name = prompt("Student Name:");
+        const name = prompt("Name:");
         if(!name) return;
-        const cls = prompt("Class:");
-        const fees = prompt("Total Fees (UGX):", "350000");
-
-        const { error } = await supabase.from('students').insert([{
-            name, class: cls, total_fees: parseInt(fees), fees_paid: 0,
-            school_id: currentSchoolId,
-            lin: name.substring(0,2).toUpperCase() + Math.floor(1000 + Math.random() * 8999)
+        await supabase.from('students').insert([{ 
+            name: name, 
+            lin: "LIN-"+Math.floor(1000+Math.random()*9000),
+            total_fees: 350000,
+            fees_paid: 0
         }]);
-
-        if(!error) { showToast("Student Added!"); loadData(currentSchoolId); }
+        loadStudents();
     }
 
-    async function updateFees(id, current) {
-        const amount = prompt("Enter amount paid (UGX):");
-        if(!amount) return;
-        await supabase.from('students').update({ fees_paid: current + parseInt(amount) }).eq('id', id);
-        showToast("Payment Recorded");
-        loadData(currentSchoolId);
-    }
-
-    async function deleteStudent(id) {
-        if(confirm("Delete this student permanently?")) {
-            await supabase.from('students').delete().eq('id', id);
-            loadData(currentSchoolId);
-        }
-    }
-
-    function filterData() {
-        const val = document.getElementById('search').value.toLowerCase();
-        const filtered = allStudents.filter(s => s.name.toLowerCase().includes(val) || s.lin.toLowerCase().includes(val));
-        renderTable(filtered);
-    }
-
-    function logout() { location.reload(); }
-
-    function showToast(m) {
-        const t = document.createElement('div');
-        t.className = 'toast';
-        t.innerText = m;
-        document.body.appendChild(t);
-        setTimeout(() => t.remove(), 3000);
+    async function pay(id, current) {
+        const amt = prompt("Amount paid:");
+        if(!amt) return;
+        await supabase.from('students').update({ fees_paid: current + parseInt(amt) }).eq('id', id);
+        loadStudents();
     }
 </script>
 </body>
