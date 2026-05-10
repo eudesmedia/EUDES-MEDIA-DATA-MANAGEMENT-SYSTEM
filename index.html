@@ -59,7 +59,7 @@
         .btn { padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-primary { background: #003366; color: white; }
         .btn-primary:hover { background: #004a8c; }
-        .btn-action { padding: 6px 12px; font-size: 12px; }
+        .btn-action { padding: 6px 12px; font-size: 12px; margin-right: 5px; }
         .btn-danger { background: #e53e3e; color: white; }
 
         /* Table Design */
@@ -79,60 +79,56 @@
 <body>
 
 <div class="container">
-    <!-- Header -->
     <div class="header">
         <div>
             <h1>EUDES MEDIA SCHOOL SYSTEM</h1>
             <p>Institutional Management Dashboard | +256762992440</p>
         </div>
-        <button class="btn" style="background: white; color: #003366;" onclick="location.reload()">Refresh Data</button>
+        <button class="btn" style="background: white; color: #003366;" onclick="loadData()">Refresh List</button>
     </div>
 
-    <!-- Summary Stats -->
     <div class="stats-grid">
-        <div class="stat-card"><h3>Total Enrolled</h3><div class="stat-value" id="statTotal">0</div></div>
-        <div class="stat-card"><h3>Currently Present</h3><div class="stat-value" id="statPresent" style="color: #2b6cb0;">0</div></div>
-        <div class="stat-card"><h3>Unpaid Fees</h3><div class="stat-value" id="statDebt" style="color: #c53030;">0</div></div>
+        <div class="stat-card"><h3>Students</h3><div class="stat-value" id="statTotal">0</div></div>
+        <div class="stat-card"><h3>Present</h3><div class="stat-value" id="statPresent" style="color: #2b6cb0;">0</div></div>
+        <div class="stat-card"><h3>Total Debt</h3><div class="stat-value" id="statDebt" style="color: #c53030;">0</div></div>
     </div>
 
-    <!-- Controls -->
     <div class="toolbar">
-        <input type="text" id="search" class="search-box" placeholder="🔍 Search by Name, LIN, or Location..." onkeyup="loadData()">
+        <input type="text" id="search" class="search-box" placeholder="🔍 Search Name, LIN, or Location..." onkeyup="loadData()">
         <button class="btn btn-primary" onclick="addStudent()">+ REGISTER STUDENT</button>
     </div>
 
-    <!-- Data Table -->
     <div class="table-container">
         <table>
             <thead>
                 <tr>
                     <th>LIN</th>
                     <th>Name</th>
-                    <th>Age/DOB</th>
+                    <th>Age</th>
                     <th>Class</th>
                     <th>Location</th>
                     <th>Health</th>
                     <th>Contact</th>
                     <th>Debt (UGX)</th>
                     <th>Status</th>
-                    <th>Action</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="studentTableBody">
-                <tr><td colspan="10" style="text-align:center; padding:40px;">Connecting to Supabase Database...</td></tr>
+                <tr><td colspan="10" style="text-align:center; padding:40px;">Initializing connection...</td></tr>
             </tbody>
         </table>
     </div>
 
     <footer>
         <p><strong>EUDES MEDIA</strong></p>
-        <p>Professional Information Technology & Media Services</p>
+        <p>Professional Digital Solutions & Educational Support</p>
         <p>Contact: +256762992440</p>
     </footer>
 </div>
 
 <script>
-    // --- DATABASE CONFIGURATION ---
+    // --- DATABASE CONFIG ---
     const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -151,87 +147,75 @@
             }
 
             const { data, error } = await query.order('name', { ascending: true });
-
             if (error) throw error;
 
             if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:40px;">No student records found.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:40px;">No student records found. Click Register to add one.</td></tr>';
+                updateStats([]);
                 return;
             }
 
-            renderTable(data);
+            tbody.innerHTML = data.map(s => {
+                const debt = (s.total_fees || 0) - (s.fees_paid || 0);
+                return `
+                    <tr>
+                        <td><small><strong>${s.lin || '-'}</strong></small></td>
+                        <td><strong>${s.name}</strong></td>
+                        <td>${s.age || '?'} yrs</td>
+                        <td>${s.class || '-'}</td>
+                        <td>${s.physical_location || '-'}</td>
+                        <td><small>${s.health_status || 'Normal'}</small></td>
+                        <td>${s.contact_number || '-'}</td>
+                        <td style="color:${debt > 0 ? '#c53030' : '#2f855a'}; font-weight:bold;">${debt.toLocaleString()}</td>
+                        <td><span class="badge ${s.is_absent ? 'badge-absent' : 'badge-present'}">${s.is_absent ? 'ABSENT' : 'PRESENT'}</span></td>
+                        <td>
+                            <button class="btn btn-action btn-primary" onclick="toggleAttendance('${s.id}', ${s.is_absent})">Toggle</button>
+                            <button class="btn btn-action btn-danger" onclick="deleteStudent('${s.id}')">Del</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
             updateStats(data);
-
         } catch (err) {
-            console.error("Fetch Error:", err);
-            tbody.innerHTML = `<tr><td colspan="10" style="color:red; text-align:center; padding:20px;">
-                <strong>Database Error:</strong> ${err.message}<br>
-                Please ensure you ran the SQL script in Supabase.
-            </td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="10" style="color:red; text-align:center; padding:20px;">Error: ${err.message}</td></tr>`;
         }
     }
 
-    // --- DISPLAY DATA ---
-    function renderTable(students) {
-        const tbody = document.getElementById('studentTableBody');
-        tbody.innerHTML = students.map(s => {
-            const debt = (s.total_fees || 0) - (s.fees_paid || 0);
-            return `
-                <tr>
-                    <td><small><strong>${s.lin || '-'}</strong></small></td>
-                    <td><strong>${s.name || 'Unknown'}</strong></td>
-                    <td>${s.age || '?'} yrs <br><small>${s.dob || ''}</small></td>
-                    <td>${s.class || '-'}</td>
-                    <td>${s.physical_location || '-'}</td>
-                    <td><small>${s.health_status || 'Normal'}</small></td>
-                    <td>${s.contact_number || '-'}</td>
-                    <td style="color:${debt > 0 ? '#c53030' : '#2f855a'}; font-weight:bold;">${debt.toLocaleString()}</td>
-                    <td>
-                        <span class="badge ${s.is_absent ? 'badge-absent' : 'badge-present'}">
-                            ${s.is_absent ? 'ABSENT' : 'PRESENT'}
-                        </span>
-                    </td>
-                    <td>
-                        <button class="btn btn-action btn-primary" onclick="toggleAttendance('${s.id}', ${s.is_absent})">Toggle</button>
-                        <button class="btn btn-action btn-danger" onclick="deleteStudent('${s.id}')">Del</button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+    // --- REGISTRATION ---
+    async function addStudent() {
+        try {
+            const name = prompt("Student Full Name:");
+            if (!name) return;
+
+            const age = prompt("Age (Number):", "6");
+            const dob = prompt("DOB (YYYY-MM-DD):", "2020-01-01");
+            const contact = prompt("Contact / Parent Phone:", "+256");
+            const location = prompt("Physical Location (Where they stay):", "Seeta");
+            const health = prompt("Health Status:", "Normal");
+            const className = prompt("Class:", "P.1");
+            const totalFees = prompt("Total Term Fees (UGX):", "350000");
+
+            const lin = "LIN-" + Math.floor(1000 + Math.random() * 9000);
+
+            const { error } = await supabase.from('students').insert([{
+                name, age: parseInt(age) || 0, dob, contact_number: contact, 
+                physical_location: location, health_status: health, 
+                class: className, total_fees: parseInt(totalFees) || 0,
+                lin, fees_paid: 0, is_absent: false
+            }]);
+
+            if (error) alert("Error: " + error.message);
+            else { alert("✅ Registered Successfully!"); loadData(); }
+        } catch (err) { alert("Unexpected Error: " + err.message); }
     }
 
+    // --- HELPERS ---
     function updateStats(data) {
         document.getElementById('statTotal').innerText = data.length;
         document.getElementById('statPresent').innerText = data.filter(s => !s.is_absent).length;
         const totalDebt = data.reduce((sum, s) => sum + ((s.total_fees || 0) - (s.fees_paid || 0)), 0);
         document.getElementById('statDebt').innerText = "UGX " + totalDebt.toLocaleString();
-    }
-
-    // --- ACTIONS ---
-    async function addStudent() {
-        const name = prompt("Student Full Name:");
-        if(!name) return;
-
-        const age = prompt("Age:");
-        const dob = prompt("Date of Birth (YYYY-MM-DD):");
-        const contact = prompt("Contact Number / Parent Phone:");
-        const location = prompt("Physical Location (Where they stay):");
-        const health = prompt("Health Status (e.g. Normal, Sick):", "Normal");
-        const className = prompt("Class (e.g. P.1):");
-        const totalFees = prompt("Total Term Fees (UGX):", "350000");
-
-        // Auto-generate LIN
-        const lin = "LIN-" + Math.floor(1000 + Math.random() * 9000);
-
-        const { error } = await supabase.from('students').insert([{
-            name, age: parseInt(age) || 0, dob, contact_number: contact, 
-            physical_location: location, health_status: health, 
-            class: className, total_fees: parseInt(totalFees) || 0,
-            lin, fees_paid: 0, is_absent: false
-        }]);
-
-        if(error) alert("Save Error: " + error.message);
-        else loadData();
     }
 
     async function toggleAttendance(id, currentStatus) {
@@ -240,7 +224,7 @@
     }
 
     async function deleteStudent(id) {
-        if(confirm("Confirm deletion of this student record?")) {
+        if (confirm("Delete this student record?")) {
             await supabase.from('students').delete().eq('id', id);
             loadData();
         }
