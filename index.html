@@ -2,108 +2,317 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EUDES MEDIA SCHOOL SYSTEM</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>EUDES MEDIA | ULTIMATE SCHOOL SYSTEM</title>
     <style>
-        :root { --primary: #003366; --secondary: #f0f4f8; --accent: #e11d48; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--secondary); margin: 0; padding: 20px; }
-        .container { max-width: 1100px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-        .header { background: var(--primary); color: white; padding: 25px; border-radius: 10px; text-align: center; margin-bottom: 25px; }
-        .action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
-        th { background: #1e293b; color: white; padding: 15px; text-align: left; }
-        td { padding: 15px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
-        .btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn-pay { background: #16a34a; font-size: 12px; }
+        :root { --primary: #003366; --secondary: #f0f4f8; --accent: #e11d48; --gold: #D4A017; --success: #16a34a; --warning: #f59e0b; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: var(--secondary); padding: 20px; }
+        .container { max-width: 1400px; margin: auto; background: white; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: linear-gradient(135deg, var(--primary), #1e4a7a); color: white; padding: 25px; text-align: center; }
+        .header h1 { margin: 0; }
+        .header h1 span { color: var(--gold); }
+        .clock { font-size: 28px; font-weight: bold; font-family: monospace; margin-top: 10px; }
+        /* Navigation Tabs */
+        .nav-tabs { display: flex; background: var(--primary); overflow-x: auto; }
+        .tab { flex: 1; text-align: center; padding: 12px; color: rgba(255,255,255,0.7); cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .tab.active { color: var(--gold); border-bottom: 3px solid var(--gold); background: rgba(0,0,0,0.2); }
+        .content { padding: 25px; display: none; }
+        .content.active { display: block; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: #f8fafc; padding: 20px; border-radius: 12px; text-align: center; border-left: 4px solid var(--primary); }
+        .stat-number { font-size: 32px; font-weight: bold; color: var(--primary); }
+        .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+        .filter-bar input, .filter-bar select { padding: 10px 15px; border-radius: 8px; border: 1px solid #cbd5e1; flex: 1; min-width: 150px; }
+        .btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-gold { background: var(--gold); color: var(--primary); }
+        .btn-green { background: var(--success); }
+        .btn-red { background: #d90429; }
+        .btn-sm { padding: 5px 12px; font-size: 12px; margin: 2px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #1e293b; color: white; padding: 12px; text-align: left; font-size: 13px; }
+        td { padding: 12px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+        tr:hover { background: #f8fafc; }
+        .student-photo { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: var(--primary); }
         .debt-text { font-weight: bold; color: var(--accent); }
-        .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; background: #dcfce7; color: #166534; }
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; background: #dcfce7; color: #166534; display: inline-block; }
+        .absent-badge { background: #fee2e2; color: #991b1b; }
+        .pagination { display: flex; gap: 5px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+        .page-btn { padding: 6px 12px; border: 1px solid var(--primary); background: white; cursor: pointer; border-radius: 6px; }
+        .page-btn.active { background: var(--primary); color: white; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 25px; border-radius: 16px; max-width: 550px; width: 90%; max-height: 85vh; overflow-y: auto; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { font-weight: bold; display: block; margin-bottom: 5px; color: var(--primary); }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; }
+        .photo-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin: 10px auto; display: block; border: 2px solid var(--gold); }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: var(--success); color: white; padding: 12px 24px; border-radius: 8px; z-index: 1000; animation: slideIn 0.3s; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .id-card { width: 85mm; height: 54mm; border: 2px solid var(--primary); border-radius: 12px; padding: 10px; background: white; margin: 0 auto; }
+        .id-card-header { background: var(--primary); color: white; text-align: center; padding: 5px; border-radius: 8px 8px 0 0; margin: -10px -10px 10px -10px; }
+        .id-card-body { display: flex; gap: 15px; }
+        .id-card-photo { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gold); }
+        @media (max-width: 768px) { .stats-grid { grid-template-columns: 1fr 1fr; } th, td { font-size: 11px; padding: 8px; } }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h1 style="margin:0; letter-spacing: 1px;">EUDES MEDIA SCHOOL SYSTEM</h1>
-        <p style="margin:8px 0 0 0; opacity:0.8;">Student Finance & Enrollment Portal</p>
+        <h1>🎓 EUDES <span>MEDIA</span></h1>
+        <p>Ultimate School Management System - Uganda</p>
+        <div class="clock" id="clock"></div>
     </div>
 
-    <div class="action-bar">
-        <button class="btn" onclick="addStudent()">+ REGISTER NEW STUDENT</button>
-        <div id="summary" style="font-weight: bold; color: var(--primary);">Loading...</div>
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <div class="tab active" onclick="showTab('students')">👨‍🎓 STUDENTS</div>
+        <div class="tab" onclick="showTab('fees')">💰 FEES & PAYMENTS</div>
+        <div class="tab" onclick="showTab('attendance')">📋 ATTENDANCE</div>
+        <div class="tab" onclick="showTab('reports')">📊 REPORTS</div>
+        <div class="tab" onclick="showTab('idcards')">🪪 ID CARDS</div>
+        <div class="tab" onclick="showTab('admin')">⚙️ ADMIN</div>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>LIN</th>
-                <th>STUDENT NAME</th>
-                <th>CLASS</th>
-                <th>DEBT (UGX)</th>
-                <th>STATUS</th>
-                <th>ACTION</th>
-            </tr>
-        </thead>
-        <tbody id="studentTable"></tbody>
-    </table>
+    <!-- ==================== STUDENTS TAB ==================== -->
+    <div id="studentsTab" class="content active">
+        <div class="stats-grid" id="statsGrid"></div>
+        <div class="filter-bar">
+            <input type="text" id="searchInput" placeholder="🔍 Search by name, LIN, or class..." onkeyup="debouncedSearch()">
+            <select id="classFilter" onchange="loadStudents()"><option value="all">All Classes</option></select>
+            <button class="btn btn-gold" onclick="showAddStudentModal()">+ REGISTER STUDENT</button>
+            <button class="btn" onclick="exportToCSV()">📥 EXPORT CSV</button>
+        </div>
+        <div style="overflow-x: auto;">
+            <table id="studentTable">
+                <thead><tr><th>PHOTO</th><th>LIN</th><th>NAME</th><th>CLASS</th><th>PARENT</th><th>FEES</th><th>DEBT</th><th>ACTIONS</th></tr></thead>
+                <tbody id="studentTableBody"></tbody>
+            </table>
+        </div>
+        <div id="pagination"></div>
+    </div>
+
+    <!-- ==================== FEES TAB ==================== -->
+    <div id="feesTab" class="content">
+        <div class="stats-grid" id="feesStatsGrid"></div>
+        <div class="filter-bar">
+            <select id="feeStudentSelect" onchange="showFeeHistory()"><option value="">-- Select Student --</option></select>
+        </div>
+        <div id="feeHistory"></div>
+    </div>
+
+    <!-- ==================== ATTENDANCE TAB ==================== -->
+    <div id="attendanceTab" class="content">
+        <div class="filter-bar">
+            <select id="attendanceClassFilter" onchange="loadAttendance()"><option value="all">All Classes</option></select>
+            <input type="date" id="attendanceDate" value="">
+            <button class="btn btn-green" onclick="saveAttendance()">💾 SAVE ATTENDANCE</button>
+        </div>
+        <div id="attendanceList"></div>
+    </div>
+
+    <!-- ==================== REPORTS TAB ==================== -->
+    <div id="reportsTab" class="content">
+        <div class="filter-bar">
+            <select id="reportStudentSelect" onchange="generateReport()"><option value="">-- Select Student --</option></select>
+            <select id="reportTerm"><option value="Term 1">Term 1</option><option value="Term 2">Term 2</option><option value="Term 3">Term 3</option></select>
+            <button class="btn" onclick="generateReport()">📄 GENERATE REPORT</button>
+            <button class="btn btn-gold" onclick="printReport()">🖨️ PRINT</button>
+        </div>
+        <div id="reportCard"></div>
+    </div>
+
+    <!-- ==================== ID CARDS TAB ==================== -->
+    <div id="idcardsTab" class="content">
+        <div class="filter-bar">
+            <select id="idCardStudentSelect" onchange="previewIdCard()"><option value="">-- Select Student --</option></select>
+            <button class="btn btn-gold" onclick="printIdCard()">🖨️ PRINT ID CARD</button>
+        </div>
+        <div id="idCardPreview"></div>
+    </div>
+
+    <!-- ==================== ADMIN TAB ==================== -->
+    <div id="adminTab" class="content">
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-number" id="totalSchools">1</div><div class="stat-label">SCHOOLS</div></div>
+            <div class="stat-card"><div class="stat-number" id="totalUsers">0</div><div class="stat-label">USERS</div></div>
+            <div class="stat-card"><button class="btn" onclick="addSchool()">+ ADD SCHOOL</button></div>
+            <div class="stat-card"><button class="btn" onclick="addUser()">+ ADD USER</button></div>
+        </div>
+        <div id="whatsappVerification"></div>
+    </div>
+</div>
+
+<!-- Student Modal -->
+<div id="studentModal" class="modal">
+    <div class="modal-content">
+        <h2 id="modalTitle">Register Student</h2>
+        <input type="hidden" id="editId">
+        <div class="form-group"><label>Photo</label><input type="file" id="studentPhoto" accept="image/*" onchange="previewPhoto(event)"><img id="photoPreview" class="photo-preview" style="display:none;"></div>
+        <div class="form-group"><label>Full Name *</label><input type="text" id="studentName" placeholder="e.g., John Otim"></div>
+        <div class="form-group"><label>Class</label><input type="text" id="studentClass" placeholder="e.g., P.5"></div>
+        <div class="form-group"><label>Parent WhatsApp</label><input type="tel" id="parentWhatsapp" placeholder="0789123456"></div>
+        <div class="form-group"><label>Parent Email</label><input type="email" id="parentEmail" placeholder="parent@example.com"></div>
+        <div class="form-group"><label>Total Fees (UGX)</label><input type="number" id="totalFees" placeholder="350000"></div>
+        <div style="display: flex; gap: 10px;"><button class="btn" onclick="saveStudent()">SAVE</button><button class="btn btn-red" onclick="closeModal()">CANCEL</button></div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div id="paymentModal" class="modal">
+    <div class="modal-content">
+        <h2>Record Payment</h2>
+        <p><strong id="paymentStudentName"></strong></p>
+        <div class="form-group"><label>Amount (UGX)</label><input type="number" id="paymentAmount" placeholder="e.g., 100000"></div>
+        <div class="form-group"><label>Payment Method</label><select id="paymentMethod"><option>Cash</option><option>Mobile Money</option><option>Bank Transfer</option></select></div>
+        <div style="display: flex; gap: 10px;"><button class="btn btn-green" onclick="recordPayment()">RECORD & NOTIFY</button><button class="btn btn-red" onclick="closePaymentModal()">CANCEL</button></div>
+    </div>
 </div>
 
 <script>
-    const API_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co/rest/v1/students';
+    const API_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co/rest/v1';
     const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
     const HEADERS = { 'apikey': API_KEY, 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' };
 
-    async function fetchRecords() {
-        const res = await fetch(`${API_URL}?select=*&order=name.asc`, { headers: HEADERS });
-        const students = await res.json();
-        const table = document.getElementById('studentTable');
-        table.innerHTML = "";
+    let allStudents = [], allPayments = [], currentPage = 1, PAGE_SIZE = 20, totalFiltered = 0, searchTimeout = null, currentPaymentStudent = null;
 
-        students.forEach(s => {
-            const debt = (s.total_fees || 0) - (s.fees_paid || 0);
-            table.innerHTML += `
-                <tr>
-                    <td>${s.lin}</td>
-                    <td><strong>${s.name.toUpperCase()}</strong></td>
-                    <td>${s.class || 'N/A'}</td>
-                    <td class="debt-text">${debt.toLocaleString()} UGX</td>
-                    <td><span class="status-badge">ACTIVE</span></td>
-                    <td><button class="btn btn-pay" onclick="recordPayment('${s.id}', '${s.name}', ${s.fees_paid || 0})">💸 PAY</button></td>
-                </tr>`;
-        });
-        document.getElementById('summary').innerText = `Total Enrolled: ${students.length}`;
+    function showToast(msg) { let t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3000); }
+    function closeModal() { document.getElementById('studentModal').style.display = 'none'; }
+    function closePaymentModal() { document.getElementById('paymentModal').style.display = 'none'; }
+    function showTab(tab) { document.querySelectorAll('.content').forEach(c=>c.classList.remove('active')); document.getElementById(tab+'Tab').classList.add('active'); document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); event.target.classList.add('active'); if(tab==='fees') loadFees(); if(tab==='attendance') loadAttendance(); if(tab==='reports') loadReportOptions(); if(tab==='idcards') loadIdCardOptions(); if(tab==='admin') loadAdminData(); }
+
+    // ==================== CLOCK ====================
+    function updateClock() { const d=new Date(); document.getElementById('clock').innerHTML = `${d.toLocaleDateString('en-US',{timeZone:'Africa/Kampala',year:'numeric',month:'long',day:'numeric'})}<br>🕐 ${d.toLocaleTimeString('en-US',{timeZone:'Africa/Kampala'})} EAT`; }
+    setInterval(updateClock,1000); updateClock();
+
+    // ==================== NOTIFICATIONS ====================
+    function sendNotification(phone, email, studentName, amount, receipt, totalPaid, debt) {
+        const msg = `📢 *EUDES MEDIA SCHOOL*\n\nPayment Received for *${studentName}*\n💰 Amount: UGX ${amount.toLocaleString()}\n🧾 Receipt: ${receipt}\n✅ Total Paid: UGX ${totalPaid.toLocaleString()}\n⚠️ Outstanding: UGX ${debt.toLocaleString()}\n\nThank you!`;
+        if(phone) { let p=phone.toString().replace(/\D/g,''); if(p.startsWith('0')) p='256'+p.substring(1); window.open(`https://wa.me/${p}?text=${encodeURIComponent(msg)}`,'_blank'); }
+        if(email) window.location.href=`mailto:${email}?subject=Payment Receipt&body=${encodeURIComponent(msg)}`;
     }
 
-    async function addStudent() {
-        const name = prompt("Enter Student Name:");
-        if (!name) return;
-        const cls = prompt("Class:");
-        const fees = prompt("Total Term Fees (UGX):", "500000");
+    function generateLIN(name) { let l=name.replace(/[^a-zA-Z]/g,'').toUpperCase().slice(0,2); if(l.length<2) l='XX'; return l+Math.floor(Math.random()*900+100); }
 
-        await fetch(API_URL, {
-            method: 'POST',
-            headers: { ...HEADERS, 'Prefer': 'return=minimal' },
-            body: JSON.stringify({ 
-                name, class: cls, total_fees: parseInt(fees), fees_paid: 0,
-                lin: "LIN-" + Math.floor(1000 + Math.random() * 9000)
-            })
-        });
-        fetchRecords();
+    // ==================== STUDENTS ====================
+    async function loadStudents() {
+        let url = `${API_URL}/students?select=*&order=name.asc`;
+        const res = await fetch(url, { headers: HEADERS });
+        allStudents = await res.json();
+        filterAndRender();
+        loadClassFilter();
+        loadSelectOptions();
     }
 
-    async function recordPayment(id, name, currentPaid) {
-        const amount = prompt(`How much did ${name} pay? (UGX)`);
-        if (!amount || isNaN(amount)) return;
-
-        await fetch(`${API_URL}?id=eq.${id}`, {
-            method: 'PATCH',
-            headers: { ...HEADERS, 'Prefer': 'return=minimal' },
-            body: JSON.stringify({ fees_paid: currentPaid + parseInt(amount) })
-        });
-        alert("Payment Recorded!");
-        fetchRecords();
+    function filterAndRender() {
+        let filtered = [...allStudents];
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        if(search) filtered = filtered.filter(s=>s.name?.toLowerCase().includes(search)||s.lin?.toLowerCase().includes(search)||s.class?.toLowerCase().includes(search));
+        const cls = document.getElementById('classFilter').value;
+        if(cls && cls!=='all') filtered = filtered.filter(s=>s.class===cls);
+        updateStats(filtered);
+        totalFiltered = filtered.length;
+        const start = (currentPage-1)*PAGE_SIZE;
+        renderTable(filtered.slice(start, start+PAGE_SIZE));
+        renderPagination(totalFiltered);
     }
 
-    fetchRecords();
+    function renderTable(students) {
+        const tbody = document.getElementById('studentTableBody');
+        if(!students.length){ tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;">No students. Add some!</tr>'; return; }
+        let html='';
+        for(const s of students){
+            const debt = (s.total_fees||0)-(s.fees_paid||0);
+            html += `<tr>
+                <td><div class="student-photo">${s.photo_url ? `<img src="${s.photo_url}" class="student-photo">` : '📷'}</div></td>
+                <td>${s.lin||'-'}</td>
+                <td><strong>${escapeHtml(s.name)}</strong></td>
+                <td>${s.class||'-'}</td>
+                <td>${s.parent_whatsapp||'-'}</td>
+                <td>UGX ${(s.total_fees||0).toLocaleString()}</td>
+                <td class="debt-text">UGX ${debt.toLocaleString()}</td>
+                <td class="action-buttons">
+                    <button class="btn-sm btn-green" onclick="showPaymentModal('${s.id}','${s.name}',${s.fees_paid||0})">💰 PAY</button>
+                    <button class="btn-sm" onclick="toggleAttendance('${s.id}',${s.is_absent})">📋 ATTEND</button>
+                    <button class="btn-sm" onclick="editStudent('${s.id}')">✏️ EDIT</button>
+                    <button class="btn-sm btn-red" onclick="deleteStudent('${s.id}')">🗑️ DEL</button>
+                </td>
+            </tr>`;
+        }
+        tbody.innerHTML = html;
+    }
+
+    function renderPagination(total){ const tp=Math.ceil(total/PAGE_SIZE); const div=document.getElementById('pagination'); if(tp<=1){div.innerHTML='';return;}
+        let h='<div class="pagination">'; if(currentPage>1) h+=`<button class="page-btn" onclick="goToPage(${currentPage-1})">← Prev</button>`;
+        for(let i=1;i<=Math.min(tp,5);i++) h+=`<button class="page-btn ${i===currentPage?'active':''}" onclick="goToPage(${i})">${i}</button>`;
+        if(currentPage<tp) h+=`<button class="page-btn" onclick="goToPage(${currentPage+1})">Next →</button>`; h+='</div>'; div.innerHTML=h;
+    }
+    function goToPage(p){ currentPage=p; loadStudents(); }
+    function debouncedSearch(){ clearTimeout(searchTimeout); searchTimeout=setTimeout(()=>{currentPage=1; loadStudents();},300); }
+
+    function updateStats(students){
+        const total=students.length, absent=students.filter(s=>s.is_absent).length, collected=students.reduce((s,st)=>s+(st.fees_paid||0),0), debt=students.reduce((s,st)=>s+((st.total_fees||0)-(st.fees_paid||0)),0);
+        document.getElementById('statsGrid').innerHTML = `
+            <div class="stat-card"><div class="stat-number">${total}</div><div>STUDENTS</div></div>
+            <div class="stat-card"><div class="stat-number">${total-absent}</div><div>PRESENT</div></div>
+            <div class="stat-card"><div class="stat-number">${absent}</div><div>ABSENT</div></div>
+            <div class="stat-card"><div class="stat-number">UGX ${collected.toLocaleString()}</div><div>COLLECTED</div></div>
+            <div class="stat-card"><div class="stat-number">UGX ${debt.toLocaleString()}</div><div>OUTSTANDING</div></div>`;
+    }
+
+    async function loadClassFilter(){
+        let classes = [...new Set(allStudents.map(s=>s.class).filter(Boolean))];
+        const select = document.getElementById('classFilter');
+        select.innerHTML = '<option value="all">All Classes</option>' + classes.map(c=>`<option>${c}</option>`).join('');
+    }
+
+    function showAddStudentModal(){ document.getElementById('modalTitle').innerText='Register Student'; document.getElementById('editId').value=''; document.getElementById('studentName').value=''; document.getElementById('studentClass').value=''; document.getElementById('parentWhatsapp').value=''; document.getElementById('parentEmail').value=''; document.getElementById('totalFees').value=''; document.getElementById('photoPreview').style.display='none'; document.getElementById('studentModal').style.display='flex'; }
+    async function editStudent(id){ const s=allStudents.find(st=>st.id===id); if(!s)return; document.getElementById('modalTitle').innerText='Edit Student'; document.getElementById('editId').value=s.id; document.getElementById('studentName').value=s.name; document.getElementById('studentClass').value=s.class||''; document.getElementById('parentWhatsapp').value=s.parent_whatsapp||''; document.getElementById('parentEmail').value=s.parent_email||''; document.getElementById('totalFees').value=s.total_fees||''; document.getElementById('studentModal').style.display='flex'; }
+    function previewPhoto(e){ const file=e.target.files[0]; if(file){ const reader=new FileReader(); reader.onload=ev=>{ document.getElementById('photoPreview').src=ev.target.result; document.getElementById('photoPreview').style.display='block'; }; reader.readAsDataURL(file); } }
+    async function saveStudent(){
+        const id=document.getElementById('editId').value, name=document.getElementById('studentName').value.trim(), className=document.getElementById('studentClass').value, whatsapp=document.getElementById('parentWhatsapp').value, email=document.getElementById('parentEmail').value, fees=parseInt(document.getElementById('totalFees').value)||0;
+        if(!name){ alert('Name required'); return; }
+        if(id){ await fetch(`${API_URL}/students?id=eq.${id}`,{method:'PATCH',headers:{...HEADERS,'Prefer':'return=minimal'},body:JSON.stringify({name,class:className,parent_whatsapp:whatsapp,parent_email:email,total_fees:fees})}); showToast('Student updated'); }
+        else{ const lin=generateLIN(name); await fetch(`${API_URL}/students`,{method:'POST',headers:{...HEADERS,'Prefer':'return=minimal'},body:JSON.stringify({name,lin,class:className,parent_whatsapp:whatsapp,parent_email:email,total_fees:fees,fees_paid:0,is_absent:false})}); showToast(`Student ${name} added! LIN: ${lin}`); }
+        closeModal(); loadStudents();
+    }
+    async function deleteStudent(id){ if(confirm('Delete permanently?')){ await fetch(`${API_URL}/students?id=eq.${id}`,{method:'DELETE',headers:HEADERS}); showToast('Deleted'); loadStudents(); } }
+    async function toggleAttendance(id,status){ await fetch(`${API_URL}/students?id=eq.${id}`,{method:'PATCH',headers:{...HEADERS,'Prefer':'return=minimal'},body:JSON.stringify({is_absent:!status})}); showToast('Attendance updated'); loadStudents(); }
+
+    // ==================== FEES ====================
+    async function loadFees(){ const res=await fetch(`${API_URL}/students?select=*`,{headers:HEADERS}); const students=await res.json(); document.getElementById('feeStudentSelect').innerHTML='<option value="">-- Select Student --</option>'+students.map(s=>`<option value="${s.id}">${s.name} (${s.lin})</option>`).join(''); }
+    async function showFeeHistory(){ const id=document.getElementById('feeStudentSelect').value; if(!id)return; const s=allStudents.find(st=>st.id===id); if(!s)return; const debt=(s.total_fees||0)-(s.fees_paid||0); document.getElementById('feeHistory').innerHTML=`<div class="card"><h3>${s.name} (${s.lin})</h3><p>Total Fees: UGX ${(s.total_fees||0).toLocaleString()}</p><p>Paid: UGX ${(s.fees_paid||0).toLocaleString()}</p><p class="debt-text">Outstanding: UGX ${debt.toLocaleString()}</p><button class="btn btn-green" onclick="showPaymentModal('${s.id}','${s.name}',${s.fees_paid||0})">Record Payment</button></div>`; }
+
+    function showPaymentModal(id,name,paid){ currentPaymentStudent={id,name,currentPaid:paid}; document.getElementById('paymentStudentName').innerText=name; document.getElementById('paymentModal').style.display='flex'; }
+    async function recordPayment(){ const amount=parseInt(document.getElementById('paymentAmount').value), method=document.getElementById('paymentMethod').value; if(!amount){ alert('Enter amount'); return; } const newPaid=currentPaymentStudent.currentPaid+amount, receipt=`RCP-${Date.now()}`; await fetch(`${API_URL}/students?id=eq.${currentPaymentStudent.id}`,{method:'PATCH',headers:{...HEADERS,'Prefer':'return=minimal'},body:JSON.stringify({fees_paid:newPaid})}); const student=allStudents.find(s=>s.id===currentPaymentStudent.id); const debt=(student.total_fees||0)-newPaid; sendNotification(student.parent_whatsapp,student.parent_email,student.name,amount,receipt,newPaid,debt); showToast(`Payment recorded! Receipt: ${receipt}`); closePaymentModal(); loadStudents(); }
+
+    // ==================== ATTENDANCE ====================
+    async function loadAttendance(){ const res=await fetch(`${API_URL}/students?select=*`,{headers:HEADERS}); const students=await res.json(); const cls=document.getElementById('attendanceClassFilter').value; let filtered=students; if(cls && cls!=='all') filtered=students.filter(s=>s.class===cls); const date=document.getElementById('attendanceDate').value||new Date().toISOString().slice(0,10); document.getElementById('attendanceList').innerHTML=`<h3>Attendance for ${date}</h3><table><thead><tr><th>Name</th><th>Class</th><th>Status</th></tr></thead><tbody>${filtered.map(s=>`<tr><td>${s.name}</td><td>${s.class}</td><td><button class="btn-sm ${s.is_absent?'btn-red':'btn-green'}" onclick="toggleAttendance('${s.id}',${s.is_absent})">${s.is_absent?'ABSENT':'PRESENT'}</button></td></tr>`).join('')}</tbody></table>`; }
+    async function saveAttendance(){ showToast('Attendance saved!'); }
+
+    // ==================== REPORTS ====================
+    async function loadReportOptions(){ const res=await fetch(`${API_URL}/students?select=*`,{headers:HEADERS}); const students=await res.json(); document.getElementById('reportStudentSelect').innerHTML='<option value="">-- Select Student --</option>'+students.map(s=>`<option value="${s.id}">${s.name} (${s.lin})</option>`).join(''); }
+    function generateReport(){ const id=document.getElementById('reportStudentSelect').value; if(!id)return; const s=allStudents.find(st=>st.id===id); if(!s)return; const debt=(s.total_fees||0)-(s.fees_paid||0); document.getElementById('reportCard').innerHTML=`<div class="card"><h2>STUDENT REPORT CARD</h2><h3>${s.name} (${s.lin})</h3><p>Class: ${s.class}</p><p>Total Fees: UGX ${(s.total_fees||0).toLocaleString()}</p><p>Paid: UGX ${(s.fees_paid||0).toLocaleString()}</p><p>Outstanding: UGX ${debt.toLocaleString()}</p><p>Status: ${debt<=0?'CLEARED':'PENDING'}</p><p>Attendance: ${s.is_absent?'ABSENT':'PRESENT'}</p><hr><p><em>EUDES MEDIA - Official School Report</em></p></div>`; }
+    function printReport(){ const w=window.open('','_blank'); w.document.write(document.getElementById('reportCard').innerHTML); w.document.write('<button onclick="window.print()">Print</button>'); w.document.close(); }
+
+    // ==================== ID CARDS ====================
+    async function loadIdCardOptions(){ const res=await fetch(`${API_URL}/students?select=*`,{headers:HEADERS}); const students=await res.json(); document.getElementById('idCardStudentSelect').innerHTML='<option value="">-- Select Student --</option>'+students.map(s=>`<option value="${s.id}">${s.name} (${s.lin})</option>`).join(''); }
+    function previewIdCard(){ const id=document.getElementById('idCardStudentSelect').value; if(!id)return; const s=allStudents.find(st=>st.id===id); if(!s)return; document.getElementById('idCardPreview').innerHTML=`<div class="id-card"><div class="id-card-header">🎓 EUDES MEDIA SCHOOL</div><div class="id-card-body"><div class="id-card-photo">📷</div><div><strong>${s.name}</strong><br>LIN: ${s.lin}<br>Class: ${s.class}<br>Parent: ${s.parent_whatsapp||'N/A'}</div></div><div class="id-card-footer" style="text-align:center; margin-top:10px; font-size:10px;">Valid until: Dec 2025 | EUDES MEDIA</div></div>`; }
+    function printIdCard(){ const w=window.open('','_blank'); w.document.write(document.getElementById('idCardPreview').innerHTML); w.document.write('<button onclick="window.print()">Print ID Card</button>'); w.document.close(); }
+
+    // ==================== ADMIN ====================
+    function loadAdminData(){ document.getElementById('whatsappVerification').innerHTML=`<div class="card"><h3>WhatsApp Number Verification</h3><p>Total Students: ${allStudents.length}</p><p>Pending Verification: ${allStudents.filter(s=>!s.parent_whatsapp_verified && s.parent_whatsapp).length}</p><button class="btn" onclick="alert('Verification system ready')">Manage</button></div>`; }
+    function addSchool(){ alert('Add school feature - would create new school record'); }
+    function addUser(){ alert('Add user feature - would create admin/teacher accounts'); }
+
+    function exportToCSV(){ let csv="Name, LIN, Class, Parent WhatsApp, Parent Email, Total Fees, Paid, Debt, Status\n"; for(const s of allStudents){ const debt=(s.total_fees||0)-(s.fees_paid||0); csv+=`"${s.name}",${s.lin},${s.class},${s.parent_whatsapp||''},${s.parent_email||''},${s.total_fees||0},${s.fees_paid||0},${debt},${debt<=0?'Paid':'Pending'}\n`; } const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`eudes_${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(blob); showToast(`Exported ${allStudents.length} students`); }
+
+    function escapeHtml(str){ if(!str) return ''; return str.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]||m)); }
+
+    // Load all select options
+    async function loadSelectOptions(){ const res=await fetch(`${API_URL}/students?select=*`,{headers:HEADERS}); const students=await res.json(); const classes=[...new Set(students.map(s=>s.class).filter(Boolean))]; document.getElementById('attendanceClassFilter').innerHTML='<option value="all">All Classes</option>'+classes.map(c=>`<option>${c}</option>`).join(''); }
+
+    loadStudents();
 </script>
 </body>
 </html>
