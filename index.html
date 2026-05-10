@@ -9,21 +9,9 @@
         /* BRAND COLORS: BLUE (#003366) AND WHITE (#FFFFFF) */
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f8fafc; color: #333; }
-        .hidden { display: none !important; }
         
-        /* Login Screen */
-        .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #003366; padding: 20px; }
-        .login-card { background: white; border-radius: 20px; padding: 40px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        .brand h1 { color: #003366; margin-bottom: 5px; font-size: 24px; }
-        .brand p { color: #666; margin-bottom: 20px; font-size: 14px; }
-        
-        input, select, textarea { width: 100%; padding: 12px 15px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; }
-        
-        .btn { width: 100%; padding: 14px; background: #003366; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn:hover { background: #004a8c; }
-        
-        /* Dashboard Layout */
-        .dashboard { max-width: 1200px; margin: 0 auto; padding: 20px; display: none; }
+        /* Dashboard Layout - Always Visible */
+        .dashboard { max-width: 1200px; margin: 0 auto; padding: 20px; }
         .header { background: white; border-bottom: 3px solid #003366; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .header h2 { color: #003366; }
         
@@ -34,7 +22,7 @@
         
         /* Controls */
         .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .search-input { flex: 2; min-width: 200px; }
+        .search-input { flex: 2; min-width: 200px; padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 8px; }
         
         /* Table */
         .card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-x: auto; }
@@ -42,56 +30,39 @@
         th { background: #f1f5f9; color: #003366; text-align: left; padding: 12px; font-size: 13px; }
         td { padding: 12px; border-bottom: 1px solid #edf2f7; font-size: 14px; }
         
-        /* Status Badges */
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
         .bg-present { background: #dcfce7; color: #166534; }
         .bg-absent { background: #fee2e2; color: #991b1b; }
         
-        .btn-sm { padding: 6px 12px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; margin-right: 5px; }
+        .btn-sm { padding: 8px 15px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; font-weight: bold; }
         .btn-red { background: #ef4444; color: white; }
         .btn-blue { background: #003366; color: white; }
 
         footer { text-align: center; padding: 40px 20px; color: #64748b; font-size: 14px; }
-        .toast { position: fixed; top: 20px; right: 20px; background: #003366; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 10px 15px rgba(0,0,0,0.2); z-index: 1000; }
+        .toast { position: fixed; top: 20px; right: 20px; background: #003366; color: white; padding: 15px 25px; border-radius: 8px; z-index: 1000; }
     </style>
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
-<div id="loginScreen" class="login-screen">
-    <div class="login-card">
-        <div class="brand">
-            <h1>EUDES MEDIA</h1>
-            <p>School Management System</p>
-        </div>
-        <input type="text" id="email" placeholder="Email" value="admin@eudes.com">
-        <input type="password" id="password" placeholder="Password" value="admin123">
-        <button class="btn" onclick="doLogin()">SIGN IN</button>
-        <div id="loginMsg" style="color:red; margin-top:10px; font-size: 13px;"></div>
-        <p style="margin-top:20px; font-size:11px; color:#94a3b8;">Contact: +256762992440</p>
-    </div>
-</div>
-
-<!-- DASHBOARD -->
 <div id="dashboard" class="dashboard">
     <div class="header">
         <div>
-            <h2 id="displaySchoolName">EUDES SCHOOL SYSTEM</h2>
-            <p style="font-size: 12px; color: #64748b;">Administrator Panel | +256762992440</p>
+            <h2>EUDES MEDIA SCHOOL SYSTEM</h2>
+            <p style="font-size: 12px; color: #64748b;">Direct Access Dashboard | +256762992440</p>
         </div>
-        <button class="btn-sm btn-red" onclick="doLogout()">LOGOUT</button>
+        <button class="btn-sm" style="background: #e2e8f0;" onclick="location.reload()">REFRESH SYSTEM</button>
     </div>
 
     <div class="stats">
-        <div class="stat-card"><div class="stat-number" id="statTotal">0</div><div>Students</div></div>
+        <div class="stat-card"><div class="stat-number" id="statTotal">0</div><div>Total Students</div></div>
         <div class="stat-card"><div class="stat-number" id="statPresent">0</div><div>Present Today</div></div>
-        <div class="stat-card"><div class="stat-number" id="statDebt">0</div><div>Total Debt (UGX)</div></div>
+        <div class="stat-card"><div class="stat-number" id="statDebt">0</div><div>Outstanding Debt (UGX)</div></div>
     </div>
 
     <div class="controls">
-        <input type="text" id="search" class="search-input" placeholder="Search by Name, LIN, or Location..." onkeyup="loadData()">
-        <button class="btn-sm btn-blue" onclick="showAddModal()" style="padding: 10px 20px;">+ REGISTER NEW STUDENT</button>
-        <button class="btn-sm" style="background:#cbd5e1;" onclick="exportCSV()">EXPORT LIST</button>
+        <input type="text" id="search" class="search-input" placeholder="🔍 Search Name, LIN, or Physical Location..." onkeyup="loadData()">
+        <button class="btn-sm btn-blue" onclick="showAddModal()" style="font-size: 14px;">+ REGISTER NEW STUDENT</button>
+        <button class="btn-sm" style="background:#cbd5e1;" onclick="exportCSV()">EXPORT CSV</button>
     </div>
 
     <div class="card">
@@ -99,66 +70,49 @@
             <thead>
                 <tr>
                     <th>LIN</th>
-                    <th>Name</th>
+                    <th>Full Name</th>
                     <th>Age/DOB</th>
                     <th>Class</th>
-                    <th>Location</th>
-                    <th>Health</th>
+                    <th>Location (Stay)</th>
+                    <th>Health Status</th>
                     <th>Contact</th>
                     <th>Debt (UGX)</th>
-                    <th>Status</th>
+                    <th>Attendance</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="studentTableBody">
-                <!-- Data loaded here -->
+                <tr><td colspan="10" style="text-align:center; padding:50px;">Loading student records from Supabase...</td></tr>
             </tbody>
         </table>
     </div>
 
     <footer>
-        <p>&copy; 2026 Eudes Media. All Rights Reserved.</p>
-        <p>Support: +256762992440</p>
+        <p><strong>EUDES MEDIA</strong></p>
+        <p>Contact: +256762992440</p>
+        <p style="margin-top:10px; font-size:11px; color:#94a3b8;">&copy; 2026 Powered by Supabase</p>
     </footer>
 </div>
 
 <script>
-    // --- CONFIGURATION ---
     const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // --- AUTHENTICATION ---
-    function doLogin() {
-        const e = document.getElementById('email').value;
-        const p = document.getElementById('password').value;
-        if(e === "admin@eudes.com" && p === "admin123") {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
-            loadData();
-        } else {
-            document.getElementById('loginMsg').innerText = "Invalid Login Credentials";
-        }
-    }
+    // Auto-load data as soon as page opens
+    window.onload = loadData;
 
-    function doLogout() {
-        location.reload();
-    }
-
-    // --- DATA MANAGEMENT ---
     async function loadData() {
         const searchTerm = document.getElementById('search').value;
-        
-        let query = supabase.from('students').select('*').order('created_at', { ascending: false });
+        let query = supabase.from('students').select('*').order('name', { ascending: true });
 
         if (searchTerm) {
             query = query.or(`name.ilike.%${searchTerm}%,lin.ilike.%${searchTerm}%,physical_location.ilike.%${searchTerm}%`);
         }
 
         const { data, error } = await query;
-
         if (error) {
-            console.error(error);
+            document.getElementById('studentTableBody').innerHTML = `<tr><td colspan="10" style="color:red; text-align:center;">Error: ${error.message}</td></tr>`;
             return;
         }
 
@@ -168,40 +122,42 @@
 
     function renderTable(students) {
         const tbody = document.getElementById('studentTableBody');
-        tbody.innerHTML = '';
+        if (students.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:50px;">No students found. Add your first student above.</td></tr>';
+            return;
+        }
 
-        students.forEach(s => {
+        tbody.innerHTML = students.map(s => {
             const debt = (s.total_fees || 0) - (s.fees_paid || 0);
-            const row = `
+            return `
                 <tr>
-                    <td><small>${s.lin}</small></td>
-                    <td><strong>${s.name}</strong></td>
-                    <td>${s.age} yrs <br><small>${s.dob || ''}</small></td>
+                    <td><small><strong>${s.lin}</strong></small></td>
+                    <td>${s.name}</td>
+                    <td>${s.age || '?'} yrs <br><small>${s.dob || ''}</small></td>
                     <td>${s.class}</td>
                     <td>${s.physical_location || '-'}</td>
-                    <td><small>${s.health_status || 'Healthy'}</small></td>
-                    <td>${s.contact_number || s.parent_whatsapp || ''}</td>
-                    <td style="color:${debt > 0 ? 'red' : 'green'}">${debt.toLocaleString()}</td>
+                    <td><small>${s.health_status || 'Normal'}</small></td>
+                    <td>${s.contact_number || ''}</td>
+                    <td style="color:${debt > 0 ? '#ef4444' : '#166534'}; font-weight:bold;">${debt.toLocaleString()}</td>
                     <td>
                         <span class="badge ${s.is_absent ? 'bg-absent' : 'bg-present'}">
                             ${s.is_absent ? 'ABSENT' : 'PRESENT'}
                         </span>
                     </td>
                     <td>
-                        <button class="btn-sm btn-blue" onclick="toggleAttendance('${s.id}', ${s.is_absent})">Status</button>
-                        <button class="btn-sm btn-red" onclick="deleteStudent('${s.id}')">Del</button>
+                        <button class="btn-sm btn-blue" onclick="toggleAttendance('${s.id}', ${s.is_absent})">Toggle</button>
+                        <button class="btn-sm btn-red" onclick="deleteStudent('${s.id}')">Delete</button>
                     </td>
                 </tr>
             `;
-            tbody.innerHTML += row;
-        });
+        }).join('');
     }
 
     function updateStats(data) {
         document.getElementById('statTotal').innerText = data.length;
         document.getElementById('statPresent').innerText = data.filter(s => !s.is_absent).length;
         const totalDebt = data.reduce((sum, s) => sum + ((s.total_fees || 0) - (s.fees_paid || 0)), 0);
-        document.getElementById('statDebt').innerText = totalDebt.toLocaleString();
+        document.getElementById('statDebt').innerText = "UGX " + totalDebt.toLocaleString();
     }
 
     async function showAddModal() {
@@ -212,22 +168,23 @@
         const dob = prompt("Date of Birth (YYYY-MM-DD):");
         const contact = prompt("Contact Number / Parent Phone:");
         const location = prompt("Physical Location (Where they stay):");
-        const health = prompt("Health Status:", "Healthy");
-        const className = prompt("Class:");
-        const totalFees = prompt("Total Fees for this term (UGX):", "350000");
+        const health = prompt("Health Status:", "Normal");
+        const className = prompt("Class (e.g. P.1, P.7):");
+        const totalFees = prompt("Total Fees (UGX):", "350000");
 
-        // Automatic LIN Generation
-        const lin = "LIN" + Math.floor(1000 + Math.random() * 9000);
+        // Automatically generate LIN (e.g. LIN-5432)
+        const lin = "LIN-" + Math.floor(1000 + Math.random() * 9000);
 
         const { error } = await supabase.from('students').insert([{
-            name, age, dob, contact_number: contact, physical_location: location,
-            health_status: health, class: className, total_fees: parseInt(totalFees),
+            name, age: parseInt(age), dob, contact_number: contact, 
+            physical_location: location, health_status: health, 
+            class: className, total_fees: parseInt(totalFees),
             lin, fees_paid: 0, is_absent: false
         }]);
 
-        if(error) alert(error.message);
+        if(error) alert("Error saving: " + error.message);
         else {
-            showToast("Student Registered Successfully!");
+            showToast("✅ Student Registered Successfully!");
             loadData();
         }
     }
@@ -238,7 +195,7 @@
     }
 
     async function deleteStudent(id) {
-        if(confirm("Are you sure you want to delete this student record?")) {
+        if(confirm("Confirm deletion of this record?")) {
             await supabase.from('students').delete().eq('id', id);
             loadData();
         }
@@ -253,8 +210,8 @@
     }
 
     function exportCSV() {
-        // Logic to export current table data to CSV
-        showToast("Generating CSV...");
+        showToast("Preparing CSV file...");
+        // Logic for export would go here
     }
 </script>
 </body>
