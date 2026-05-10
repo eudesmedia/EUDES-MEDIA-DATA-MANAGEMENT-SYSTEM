@@ -6,48 +6,51 @@
     <title>EUDES MEDIA SCHOOL SYSTEM</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Arial, sans-serif; }
-        body { background: #f0f4f8; color: #1a202c; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .header { background: #003366; color: white; padding: 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .stat-card { padding: 20px; background: #f8fafc; border-radius: 10px; text-align: center; border-bottom: 4px solid #003366; }
-        .stat-card h3 { font-size: 12px; color: #64748b; margin-bottom: 5px; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background: #f0f5fa; color: #333; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { background: #003366; color: white; padding: 25px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .stat-card { background: #fff; border: 1px solid #e2e8f0; padding: 20px; border-radius: 10px; text-align: center; border-bottom: 4px solid #003366; }
+        .stat-card h3 { font-size: 12px; color: #64748b; text-transform: uppercase; margin-bottom: 10px; }
         .stat-card p { font-size: 24px; font-weight: bold; color: #003366; }
-        .toolbar { display: flex; gap: 10px; margin-bottom: 20px; }
-        .search { flex: 1; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; }
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-add { background: #003366; color: white; }
-        .btn-add:hover { background: #004a8c; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; padding: 15px; background: #f1f5f9; color: #003366; border-bottom: 2px solid #e2e8f0; font-size: 13px; }
+        .toolbar { display: flex; gap: 15px; margin-bottom: 25px; }
+        .search { flex: 1; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
+        .btn { padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-blue { background: #003366; color: white; }
+        .btn-blue:hover { background: #004a8c; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 15px; background: #f8fafc; color: #003366; border-bottom: 2px solid #e2e8f0; font-size: 13px; }
         td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
-        .badge { padding: 4px 8px; border-radius: 5px; font-size: 11px; font-weight: bold; }
+        .error-box { background: #fee2e2; color: #991b1b; padding: 20px; border-radius: 8px; border: 1px solid #f87171; margin-bottom: 20px; text-align: center; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
         .present { background: #dcfce7; color: #166534; }
         .absent { background: #fee2e2; color: #991b1b; }
-        footer { text-align: center; margin-top: 30px; color: #64748b; font-size: 13px; line-height: 1.6; }
+        footer { text-align: center; margin-top: 40px; padding: 20px; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <div id="errorMessage"></div>
+
     <div class="header">
         <div>
-            <h2>EUDES MEDIA SCHOOL SYSTEM</h2>
-            <p>Direct Portal | Support: +256762992440</p>
+            <h1>EUDES MEDIA SCHOOL SYSTEM</h1>
+            <p>Admin Dashboard | +256762992440</p>
         </div>
-        <button class="btn" style="background:white; color:#003366;" onclick="location.reload()">RELOAD SYSTEM</button>
+        <button class="btn" style="background:white; color:#003366;" onclick="location.reload()">Refresh System</button>
     </div>
 
     <div class="stats">
-        <div class="stat-card"><h3>TOTAL STUDENTS</h3><p id="sCount">0</p></div>
-        <div class="stat-card"><h3>PRESENT TODAY</h3><p id="pCount">0</p></div>
-        <div class="stat-card"><h3>TOTAL DEBT</h3><p id="dCount">0</p></div>
+        <div class="stat-card"><h3>Students</h3><p id="sCount">0</p></div>
+        <div class="stat-card"><h3>Present</h3><p id="pCount">0</p></div>
+        <div class="stat-card"><h3>Debt (UGX)</h3><p id="dCount">0</p></div>
     </div>
 
     <div class="toolbar">
-        <input type="text" id="search" class="search" placeholder="Search by name or location..." onkeyup="loadData()">
-        <button class="btn btn-add" onclick="addNew()">+ NEW REGISTRATION</button>
+        <input type="text" id="search" class="search" placeholder="Search students..." onkeyup="loadData()">
+        <button class="btn btn-blue" onclick="registerStudent()">+ REGISTER STUDENT</button>
     </div>
 
     <div style="overflow-x: auto;">
@@ -59,23 +62,24 @@
                     <th>CLASS</th>
                     <th>LOCATION</th>
                     <th>HEALTH</th>
-                    <th>DEBT (UGX)</th>
+                    <th>DEBT</th>
                     <th>STATUS</th>
-                    <th>ACTIONS</th>
+                    <th>ACTION</th>
                 </tr>
             </thead>
-            <tbody id="tableBody">
-                <tr><td colspan="8" style="text-align:center; padding:50px;">Initializing connection...</td></tr>
+            <tbody id="studentTableBody">
+                <tr><td colspan="8" style="text-align:center; padding:50px;">Initializing connection to database...</td></tr>
             </tbody>
         </table>
     </div>
 
     <footer>
-        <p><strong>EUDES MEDIA</strong><br>Professional IT Services & Data Management<br>Contact: +256762992440</p>
+        <p><strong>EUDES MEDIA</strong><br>Professional IT Services & Data Solutions<br>Contact: +256762992440</p>
     </footer>
 </div>
 
 <script>
+    // --- CONNECT TO SUPABASE ---
     const S_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
     const supabase = window.supabase.createClient(S_URL, S_KEY);
@@ -83,87 +87,79 @@
     window.onload = loadData;
 
     async function loadData() {
-        const body = document.getElementById('tableBody');
-        
-        // Force-load if it takes too long
-        const fallback = setTimeout(() => {
-            if(body.innerText.includes("Initializing")) {
-                body.innerHTML = '<tr><td colspan="8" style="text-align:center; color:red;">Connection taking too long. Please refresh or check Supabase SQL settings.</td></tr>';
-            }
-        }, 4000);
+        const tbody = document.getElementById('studentTableBody');
+        const errDiv = document.getElementById('errorMessage');
 
         try {
             const search = document.getElementById('search').value;
             let query = supabase.from('students').select('*');
-            if(search) query = query.ilike('name', `%${search}%`);
+            if (search) query = query.ilike('name', `%${search}%`);
 
             const { data, error } = await query.order('name');
-            clearTimeout(fallback);
 
-            if (error) throw error;
-
-            if (!data || data.length === 0) {
-                body.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:40px;">System Connected. No students found. Register your first student!</td></tr>';
+            if (error) {
+                // This tells us EXACTLY what Supabase hates
+                errDiv.innerHTML = `<div class="error-box"><strong>Database Error:</strong> ${error.message} (Code: ${error.code})</div>`;
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:red;">Connection Failed. See error box above.</td></tr>';
                 return;
             }
 
-            body.innerHTML = data.map(s => {
+            errDiv.innerHTML = ''; // Clear errors if it works
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:50px;">Connection Success! No students found in database.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(s => {
                 const debt = (s.total_fees || 0) - (s.fees_paid || 0);
                 return `
                     <tr>
-                        <td><small>${s.lin || '-'}</small></td>
-                        <td><strong>${s.name}</strong></td>
+                        <td><strong>${s.lin || '-'}</strong></td>
+                        <td>${s.name}</td>
                         <td>${s.class || '-'}</td>
                         <td>${s.physical_location || '-'}</td>
                         <td>${s.health_status || 'Normal'}</td>
                         <td style="color:red; font-weight:bold;">${debt.toLocaleString()}</td>
                         <td><span class="badge ${s.is_absent ? 'absent' : 'present'}">${s.is_absent ? 'ABSENT' : 'PRESENT'}</span></td>
                         <td>
-                            <button onclick="toggleAttend('${s.id}', ${s.is_absent})" style="padding:4px; cursor:pointer;">Toggle</button>
-                            <button onclick="delStud('${s.id}')" style="padding:4px; cursor:pointer; color:red; border:none; background:none;">[x]</button>
+                            <button onclick="toggleAttendance('${s.id}', ${s.is_absent})">Toggle</button>
                         </td>
-                    </tr>
-                `;
+                    </tr>`;
             }).join('');
 
+            // Update Stats
             document.getElementById('sCount').innerText = data.length;
             document.getElementById('pCount').innerText = data.filter(x => !x.is_absent).length;
-            const totalD = data.reduce((a, b) => a + ((b.total_fees || 0) - (b.fees_paid || 0)), 0);
+            const totalD = data.reduce((sum, s) => sum + ((s.total_fees || 0) - (s.fees_paid || 0)), 0);
             document.getElementById('dCount').innerText = totalD.toLocaleString();
 
-        } catch (e) {
-            clearTimeout(fallback);
-            body.innerHTML = `<tr><td colspan="8" style="text-align:center; color:red;">Error: ${e.message}</td></tr>`;
+        } catch (err) {
+            errDiv.innerHTML = `<div class="error-box"><strong>System Error:</strong> ${err.message}</div>`;
         }
     }
 
-    async function addNew() {
+    async function registerStudent() {
         const name = prompt("Student Full Name:");
-        if(!name) return;
+        if (!name) return;
         const cls = prompt("Class:");
-        const loc = prompt("Location:");
-        const fees = prompt("Fees Amount (UGX):", "350000");
+        const loc = prompt("Physical Location:");
+        const fees = prompt("Total Fees (UGX):", "350000");
         const lin = "LIN-" + Math.floor(1000 + Math.random() * 9000);
 
         const { error } = await supabase.from('students').insert([{
             name, class: cls, physical_location: loc, total_fees: parseInt(fees) || 0, lin
         }]);
 
-        if(error) alert("Error: " + error.message);
+        if (error) alert("Could not save: " + error.message);
         else loadData();
     }
 
-    async function toggleAttend(id, current) {
+    async function toggleAttendance(id, current) {
         await supabase.from('students').update({ is_absent: !current }).eq('id', id);
         loadData();
     }
-
-    async function delStud(id) {
-        if(confirm("Delete student?")) {
-            await supabase.from('students').delete().eq('id', id);
-            loadData();
-        }
-    }
 </script>
+
 </body>
 </html>
