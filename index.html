@@ -1,45 +1,95 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EUDES MEDIA SYSTEM</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; padding: 40px; text-align: center; background: #003366; color: white; }
-        .box { background: white; color: #333; padding: 20px; border-radius: 10px; display: inline-block; min-width: 300px; }
-        .btn { padding: 10px 20px; background: #003366; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #003366; color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .card { background: white; color: #333; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center; width: 90%; max-width: 500px; }
+        h1 { color: #003366; margin-bottom: 10px; }
+        #status { padding: 15px; margin: 20px 0; border-radius: 10px; font-weight: bold; background: #f0f0f0; }
+        .btn { background: #003366; color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; transition: 0.3s; }
+        .btn:hover { background: #0052a3; }
+        .footer { margin-top: 20px; font-size: 12px; color: #666; }
     </style>
 </head>
 <body>
 
-<div class="box">
+<div class="card">
     <h1>EUDES MEDIA</h1>
-    <div id="status">Connecting...</div>
-    <div id="data"></div>
-    <button class="btn" onclick="addTest()">Add Test Student</button>
+    <p>School Data Management</p>
+    
+    <div id="status">Connecting to Database...</div>
+    
+    <button class="btn" onclick="addStudent()">+ REGISTER NEW STUDENT</button>
+
+    <div id="result" style="margin-top:20px; font-weight:bold; color:green;"></div>
+
+    <div class="footer">
+        Support: +256762992440
+    </div>
 </div>
 
 <script>
+    // --- DATABASE CONFIGURATION ---
     const S_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
+    
+    // Create the connection
     const supabase = window.supabase.createClient(S_URL, S_KEY);
 
-    async function check() {
-        const { data, error } = await supabase.from('students').select('*');
-        if (error) {
-            document.getElementById('status').innerHTML = "❌ Error: " + error.message;
-        } else {
-            document.getElementById('status').innerHTML = "✅ Connected!";
-            document.getElementById('data').innerHTML = "Students found: " + data.length;
+    // --- TEST CONNECTION ON LOAD ---
+    window.onload = async function() {
+        const statusDiv = document.getElementById('status');
+        try {
+            const { data, error } = await supabase.from('students').select('count');
+            if (error) {
+                statusDiv.style.color = "red";
+                statusDiv.innerHTML = "❌ Connection Error: " + error.message;
+            } else {
+                statusDiv.style.color = "green";
+                statusDiv.innerHTML = "✅ Database Connected";
+            }
+        } catch (err) {
+            statusDiv.style.color = "red";
+            statusDiv.innerHTML = "❌ Network Error: Library not loading";
+        }
+    };
+
+    // --- ADD STUDENT FUNCTION ---
+    async function addStudent() {
+        const name = prompt("Enter Student Full Name:");
+        if (!name) return; // Exit if user clicks cancel
+
+        const resDiv = document.getElementById('result');
+        resDiv.style.color = "orange";
+        resDiv.innerText = "Saving to database...";
+
+        try {
+            const { data, error } = await supabase
+                .from('students')
+                .insert([{ 
+                    name: name, 
+                    lin: "LIN-" + Math.floor(1000 + Math.random() * 9000),
+                    health_status: 'Normal' 
+                }]);
+
+            if (error) {
+                alert("Database Error: " + error.message);
+                resDiv.style.color = "red";
+                resDiv.innerText = "Failed to save.";
+            } else {
+                alert("Success! " + name + " has been registered.");
+                resDiv.style.color = "green";
+                resDiv.innerText = "Last Saved: " + name;
+            }
+        } catch (err) {
+            alert("Critical Error: " + err.message);
         }
     }
-
-    async function addTest() {
-        const name = prompt("Student Name:");
-        await supabase.from('students').insert([{ name: name, lin: "LIN-"+Math.floor(Math.random()*1000) }]);
-        check();
-    }
-
-    check();
 </script>
+
 </body>
 </html>
