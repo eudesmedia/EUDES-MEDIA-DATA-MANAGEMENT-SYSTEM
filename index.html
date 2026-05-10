@@ -2,100 +2,98 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>EUDES MEDIA | EMERGENCY ACCESS</title>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <title>EUDES MEDIA | Recovery Portal</title>
     <style>
-        body { font-family: sans-serif; background: #003366; color: white; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: white; color: #333; padding: 25px; border-radius: 15px; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
-        th { background: #003366; color: white; }
-        .btn { background: #003366; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        #status-light { height: 10px; width: 10px; border-radius: 50%; display: inline-block; background: red; }
+        body { font-family: 'Segoe UI', sans-serif; background: #003366; color: white; text-align: center; padding: 50px; }
+        .card { background: white; color: #333; padding: 30px; border-radius: 15px; display: inline-block; width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .status-box { padding: 15px; margin: 20px 0; border-radius: 8px; font-weight: bold; background: #f0f0f0; border: 1px solid #ccc; }
+        .btn { background: #003366; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
+        #error-log { color: red; font-size: 11px; margin-top: 10px; text-align: left; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <h1>EUDES MEDIA <span id="status-light"></span></h1>
-        <button class="btn" onclick="addStudent()">+ ADD STUDENT</button>
-    </div>
-
-    <div id="loading-msg" style="padding: 20px; text-align: center;">Connecting to database...</div>
-
-    <table id="mainTable" style="display:none;">
-        <thead>
-            <tr>
-                <th>LIN</th>
-                <th>STUDENT NAME</th>
-                <th>CLASS</th>
-                <th>DEBT (UGX)</th>
-            </tr>
-        </thead>
-        <tbody id="studentList"></tbody>
-    </table>
+<div class="card">
+    <h1 style="color:#003366; margin:0;">EUDES MEDIA</h1>
+    <p style="color:#666;">Database Troubleshooter</p>
     
-    <p style="font-size: 11px; margin-top: 20px; color: #999; text-align: center;">Support: +256762992440</p>
+    <div id="status" class="status-box">⏳ INITIALIZING...</div>
+    
+    <button class="btn" id="regBtn" onclick="addStudent()">+ REGISTER STUDENT</button>
+
+    <div id="error-log"></div>
+    <p style="font-size: 11px; margin-top: 15px; color: #999;">Support: +256762992440</p>
 </div>
 
 <script>
-    // These are your specific keys
-    const S_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
+    const S_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co/rest/v1/students';
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
     
-    let supabase;
+    const statusDiv = document.getElementById('status');
+    const logDiv = document.getElementById('error-log');
 
-    window.onload = async function() {
+    // 1. Check connection immediately
+    async function checkConnection() {
         try {
-            // Check if library loaded
-            if (typeof window.supabase === 'undefined') {
-                document.getElementById('loading-msg').innerHTML = "❌ Library Blocked by Browser. Try a different Wi-Fi or turn off VPN.";
-                return;
+            const response = await fetch(S_URL + '?select=count', {
+                method: 'GET',
+                headers: { 'apikey': S_KEY, 'Authorization': 'Bearer ' + S_KEY }
+            });
+            
+            if (response.ok) {
+                statusDiv.innerHTML = "✅ SYSTEM ONLINE";
+                statusDiv.style.color = "green";
+            } else {
+                const err = await response.json();
+                statusDiv.innerHTML = "❌ DB ERROR";
+                logDiv.innerText = "Database said: " + (err.message || "Unknown Error");
             }
-
-            supabase = window.supabase.createClient(S_URL, S_KEY);
-            document.getElementById('status-light').style.background = "green";
-            loadData();
         } catch (e) {
-            document.getElementById('loading-msg').innerText = "Connection Error: " + e.message;
+            statusDiv.innerHTML = "❌ NETWORK BLOCKED";
+            logDiv.innerText = "Your internet/browser is blocking the link to Supabase.";
         }
-    };
-
-    async function loadData() {
-        const { data, error } = await supabase.from('students').select('*').order('name');
-        
-        if (error) {
-            document.getElementById('loading-msg').innerText = "DB Error: " + error.message;
-            return;
-        }
-
-        document.getElementById('loading-msg').style.display = "none";
-        document.getElementById('mainTable').style.display = "table";
-        
-        const tbody = document.getElementById('studentList');
-        tbody.innerHTML = data.map(s => `
-            <tr>
-                <td>${s.lin}</td>
-                <td><b>${s.name.toUpperCase()}</b></td>
-                <td>${s.class || 'N/A'}</td>
-                <td style="color:red">${((s.total_fees || 0) - (s.fees_paid || 0)).toLocaleString()}</td>
-            </tr>
-        `).join('');
     }
 
+    // 2. Add Student using Direct Fetch (No libraries needed)
     async function addStudent() {
-        const n = prompt("Name:");
-        if(!n) return;
-        const { error } = await supabase.from('students').insert([{
-            name: n,
-            lin: "LIN-" + Math.floor(1000 + Math.random() * 8999),
-            total_fees: 350000,
-            fees_paid: 0
-        }]);
-        if(!error) loadData();
+        const name = prompt("Enter Student Full Name:");
+        if (!name) return;
+
+        statusDiv.innerText = "Saving...";
+        
+        try {
+            const response = await fetch(S_URL, {
+                method: 'POST',
+                headers: {
+                    'apikey': S_KEY,
+                    'Authorization': 'Bearer ' + S_KEY,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({ 
+                    name: name, 
+                    lin: "LIN-" + Math.floor(1000 + Math.random() * 8999),
+                    total_fees: 350000,
+                    fees_paid: 0
+                })
+            });
+
+            if (response.ok) {
+                statusDiv.innerText = "✅ SAVED SUCCESSFULLY!";
+                alert("Success! " + name + " has been added.");
+                checkConnection(); 
+            } else {
+                const err = await response.json();
+                alert("Failed to save: " + err.message);
+            }
+        } catch (e) {
+            alert("Network Error: Could not reach the server.");
+        }
     }
+
+    // Start check
+    checkConnection();
 </script>
+
 </body>
 </html>
