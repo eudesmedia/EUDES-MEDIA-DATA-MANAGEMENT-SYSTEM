@@ -1,45 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>EUDES MEDIA SYSTEM</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; background: #f0f4f8; padding: 20px; color: #003366; }
-        .box { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .header { background: #003366; color: white; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
-        .btn { padding: 10px 20px; background: #003366; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .error-msg { background: #fee2e2; color: #b91c1c; padding: 15px; border-radius: 5px; margin-bottom: 15px; display: none; }
+        body { font-family: sans-serif; padding: 40px; text-align: center; background: #003366; color: white; }
+        .box { background: white; color: #333; padding: 20px; border-radius: 10px; display: inline-block; min-width: 300px; }
+        .btn { padding: 10px 20px; background: #003366; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <div id="errorBox" class="error-msg"></div>
-    
-    <div class="header">
-        <h1>EUDES MEDIA SCHOOL SYSTEM</h1>
-        <p>Contact: +256762992440</p>
-    </div>
-
-    <button class="btn" onclick="addStudent()">+ REGISTER NEW STUDENT</button>
-
-    <table>
-        <thead>
-            <tr>
-                <th>LIN</th>
-                <th>NAME</th>
-                <th>CLASS</th>
-                <th>DEBT (UGX)</th>
-                <th>STATUS</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody">
-            <tr><td colspan="5" style="text-align:center; padding:50px;">Initializing connection to database...</td></tr>
-        </tbody>
-    </table>
+    <h1>EUDES MEDIA</h1>
+    <div id="status">Connecting...</div>
+    <div id="data"></div>
+    <button class="btn" onclick="addTest()">Add Test Student</button>
 </div>
 
 <script>
@@ -47,63 +23,23 @@
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
     const supabase = window.supabase.createClient(S_URL, S_KEY);
 
-    window.onload = loadData;
-
-    async function loadData() {
-        const body = document.getElementById('tableBody');
-        const err = document.getElementById('errorBox');
-
-        // FORCE TIMEOUT: If no response in 5 seconds, explain why.
-        const timer = setTimeout(() => {
-            if (body.innerText.includes("Initializing")) {
-                err.style.display = "block";
-                err.innerHTML = "<strong>Connection Error:</strong> The database is not responding. Please ensure you ran the 'DISABLE ROW LEVEL SECURITY' SQL command in Supabase.";
-                body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:red;">Database Timeout. Check SQL settings.</td></tr>';
-            }
-        }, 5000);
-
-        try {
-            const { data, error } = await supabase.from('students').select('*').order('name');
-            
-            clearTimeout(timer);
-
-            if (error) {
-                err.style.display = "block";
-                err.innerHTML = "<strong>Database Error:</strong> " + error.message;
-                return;
-            }
-
-            if (!data || data.length === 0) {
-                body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px;">Connection Active. No students found.</td></tr>';
-                return;
-            }
-
-            body.innerHTML = data.map(s => `
-                <tr>
-                    <td>${s.lin || '-'}</td>
-                    <td><strong>${s.name}</strong></td>
-                    <td>${s.class || '-'}</td>
-                    <td style="color:red;">${((s.total_fees || 0) - (s.fees_paid || 0)).toLocaleString()}</td>
-                    <td>${s.is_absent ? 'ABSENT' : 'PRESENT'}</td>
-                </tr>`).join('');
-
-        } catch (e) {
-            clearTimeout(timer);
-            err.style.display = "block";
-            err.innerHTML = "<strong>System Error:</strong> " + e.message;
+    async function check() {
+        const { data, error } = await supabase.from('students').select('*');
+        if (error) {
+            document.getElementById('status').innerHTML = "❌ Error: " + error.message;
+        } else {
+            document.getElementById('status').innerHTML = "✅ Connected!";
+            document.getElementById('data').innerHTML = "Students found: " + data.length;
         }
     }
 
-    async function addStudent() {
+    async function addTest() {
         const name = prompt("Student Name:");
-        if (!name) return;
-        const cls = prompt("Class:");
-        const lin = "LIN-" + Math.floor(1000 + Math.random() * 9000);
-
-        const { error } = await supabase.from('students').insert([{ name, class: cls, lin }]);
-        if (error) alert("Error: " + error.message);
-        else loadData();
+        await supabase.from('students').insert([{ name: name, lin: "LIN-"+Math.floor(Math.random()*1000) }]);
+        check();
     }
+
+    check();
 </script>
 </body>
 </html>
