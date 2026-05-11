@@ -1,124 +1,186 @@
-// 1. FIXED MODAL HTML (Ensured all IDs match the save function)
-function showAddStudentModal() {
-    const modal = document.createElement('div'); 
-    modal.className = 'modal'; 
-    modal.id = 'tempModal'; 
-    modal.innerHTML = `
-        <div class="modal-content">
-            <h2>Register Student</h2>
-            <div class="form-group">
-                <label>Photo</label>
-                <input type="file" id="studentPhotoFile" accept="image/*">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EUDES MEDIA | Complete School Management System</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root { --primary: #003366; --accent: #D4A017; --bg: #f1f5f9; --white: #ffffff; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: #333; line-height: 1.6; }
+        
+        /* Mobile Layout */
+        .header { background: var(--primary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .container { padding: 15px; max-width: 1200px; margin: 0 auto; }
+        
+        /* Cards & Components */
+        .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-top: 4px solid var(--primary); }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+        @media (min-width: 768px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
+        .stat-box { background: white; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #e2e8f0; }
+        .stat-box h3 { font-size: 12px; color: #64748b; text-transform: uppercase; }
+        .stat-box p { font-size: 18px; font-weight: 700; color: var(--primary); }
+
+        /* Form Styling */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: #64748b; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
+        
+        .btn { padding: 12px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-p { background: var(--primary); color: white; width: 100%; }
+        .btn-a { background: var(--accent); color: var(--primary); width: 100%; }
+        
+        /* Modal */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal-content { background: white; padding: 25px; border-radius: 16px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        th { text-align: left; background: #f8fafc; padding: 10px; color: #64748b; }
+        td { padding: 10px; border-bottom: 1px solid #f1f5f9; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div><h2 style="font-size: 18px;">🎓 EUDES <span style="color:var(--accent)">MEDIA</span></h2></div>
+        <button class="btn" style="background:transparent; color:white; padding:5px;" onclick="location.reload()"><i class="fas fa-sync"></i></button>
+    </div>
+
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-box"><h3>Students</h3><p id="stat-total">0</p></div>
+            <div class="stat-box"><h3>Collected</h3><p id="stat-paid">0</p></div>
+            <div class="stat-box"><h3>Debt</h3><p id="stat-debt" style="color:#d90429">0</p></div>
+            <div class="stat-box"><h3>Avg %</h3><p id="stat-avg">0</p></div>
+        </div>
+
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2 style="font-size:16px;">Student Registry</h2>
+                <button class="btn btn-a" style="width:auto; padding:8px 15px;" onclick="showAddStudentModal()">+ Register</button>
             </div>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead><tr><th>Name</th><th>Class</th><th>Debt</th></tr></thead>
+                    <tbody id="studentTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="regModal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom:20px;">Register New Student</h2>
             <div class="form-group">
                 <label>Full Name *</label>
-                <input type="text" id="studentName" placeholder="Enter Full Name">
+                <input type="text" id="studentName" placeholder="Enter name">
             </div>
             <div class="form-group">
                 <label>Class</label>
                 <input type="text" id="studentClass" placeholder="e.g. P.7">
             </div>
             <div class="form-group">
-                <label>Parent WhatsApp</label>
-                <input type="tel" id="studentWhatsapp" placeholder="07...">
-            </div>
-            <div class="form-group">
-                <label>Parent Email</label>
-                <input type="email" id="studentEmail">
-            </div>
-            <div class="form-group">
                 <label>Total Fees (UGX)</label>
                 <input type="number" id="studentFees" value="0">
             </div>
-            <div style="display:flex; gap:10px;">
-                <button class="btn" id="saveBtn" onclick="saveNewStudent()">🚀 SAVE STUDENT</button>
-                <button class="btn btn-red" onclick="closeModal()">CANCEL</button>
+            <div class="form-group">
+                <label>WhatsApp Number</label>
+                <input type="tel" id="studentWhatsapp" placeholder="256...">
             </div>
-        </div>`;
-    document.body.appendChild(modal); 
-    modal.style.display = 'flex';
-    
-    window.closeModal = () => { modal.remove(); };
-}
+            <button class="btn btn-p" id="saveBtn" onclick="saveNewStudent()">🚀 SAVE STUDENT</button>
+            <button class="btn" style="background:#eee; width:100%; margin-top:10px;" onclick="closeModal()">CANCEL</button>
+        </div>
+    </div>
 
-// 2. FIXED SAVE FUNCTION (Added Error Handling and Status Tracking)
-async function saveNewStudent() {
-    const saveBtn = document.getElementById('saveBtn');
-    const name = document.getElementById('studentName').value.trim();
-    
-    if (!name) { 
-        alert('Please enter the student\'s name.'); 
-        return; 
+<script>
+    const SB_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
+    const supabase = window.supabase.createClient(SB_URL, SB_KEY);
+
+    let students = [];
+    const currentSchoolId = "PROGRESSIVE MOTHERS"; // Set your default school here
+
+    function generateLIN(name) { 
+        return name.slice(0,2).toUpperCase() + Math.floor(1000 + Math.random() * 9000); 
     }
 
-    // Disable button to prevent double-tapping
-    saveBtn.innerText = "⌛ SAVING...";
-    saveBtn.disabled = true;
+    async function loadData() {
+        const { data, error } = await supabase.from('students').select('*').eq('school_id', currentSchoolId);
+        if (data) {
+            students = data;
+            renderTable();
+            updateStats();
+        }
+    }
 
-    try {
-        const classVal = document.getElementById('studentClass').value;
-        const whatsapp = document.getElementById('studentWhatsapp').value;
-        const email = document.getElementById('studentEmail').value;
+    function renderTable() {
+        const tbody = document.getElementById('studentTableBody');
+        tbody.innerHTML = students.map(s => `
+            <tr>
+                <td><b>${s.name.toUpperCase()}</b><br><small style="color:gray">${s.lin}</small></td>
+                <td>${s.class}</td>
+                <td style="color:#d90429">UGX ${(s.total_fees - s.fees_paid).toLocaleString()}</td>
+            </tr>
+        `).join('');
+    }
+
+    function updateStats() {
+        const total = students.length;
+        const paid = students.reduce((sum, s) => sum + (s.fees_paid || 0), 0);
+        const debt = students.reduce((sum, s) => sum + (s.total_fees - s.fees_paid), 0);
+        
+        document.getElementById('stat-total').innerText = total;
+        document.getElementById('stat-paid').innerText = paid.toLocaleString();
+        document.getElementById('stat-debt').innerText = debt.toLocaleString();
+    }
+
+    function showAddStudentModal() {
+        document.getElementById('regModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('regModal').style.display = 'none';
+    }
+
+    async function saveNewStudent() {
+        const name = document.getElementById('studentName').value.trim();
+        const cls = document.getElementById('studentClass').value;
         const fees = parseInt(document.getElementById('studentFees').value) || 0;
-        const lin = generateLIN(name);
+        const whatsapp = document.getElementById('studentWhatsapp').value;
         
-        // Ensure we have a school ID (Defaults to first school if Super Admin)
-        const schoolId = currentSchoolId || (schools.length > 0 ? schools[0].id : null);
-        
-        if (!schoolId) {
-            throw new Error("No School ID found. Please log in again.");
-        }
+        if (!name) return alert("Name is required!");
 
-        let photoUrl = null;
-        const fileInput = document.getElementById('studentPhotoFile');
-        const file = fileInput.files[0];
+        const btn = document.getElementById('saveBtn');
+        btn.innerText = "⌛ SAVING...";
+        btn.disabled = true;
 
-        // Handle Photo Upload
-        if (file) {
-            const ext = file.name.split('.').pop();
-            const fileName = `student_${Date.now()}.${ext}`;
-            const { data, error: uploadError } = await supabase.storage
-                .from('student_photos')
-                .upload(fileName, file);
-            
-            if (uploadError) {
-                console.error("Upload Error:", uploadError);
-            } else {
-                photoUrl = supabase.storage.from('student_photos').getPublicUrl(fileName).data.publicUrl;
-            }
-        }
-
-        // Insert into Supabase
-        const { error: insertError } = await supabase.from('students').insert([{ 
-            school_id: schoolId, 
-            name: name, 
-            lin: lin, 
-            class: classVal, 
-            parent_whatsapp: whatsapp, 
-            parent_email: email, 
-            total_fees: fees, 
-            fees_paid: 0, 
-            photo_url: photoUrl 
+        const { error } = await supabase.from('students').insert([{
+            school_id: currentSchoolId,
+            name: name,
+            class: cls,
+            total_fees: fees,
+            fees_paid: 0,
+            parent_whatsapp: whatsapp,
+            lin: generateLIN(name)
         }]);
 
-        if (insertError) throw insertError;
-
-        showToast(`Success! ${name} registered with LIN: ${lin}`);
-        closeModal(); 
-        
-        // Refresh the data and the table
-        if (currentUser.role === 'super_admin') {
-            await loadAllData();
+        if (error) {
+            alert("Error: " + error.message);
         } else {
-            await loadSchoolData();
+            alert("Student Registered Successfully!");
+            closeModal();
+            loadData();
         }
-        renderStudentsTab();
-        updateStats();
-
-    } catch (err) {
-        console.error("Detailed Error:", err);
-        alert("Registration failed: " + err.message);
-        saveBtn.innerText = "🚀 SAVE STUDENT";
-        saveBtn.disabled = false;
+        
+        btn.innerText = "🚀 SAVE STUDENT";
+        btn.disabled = false;
     }
-}
+
+    loadData();
+</script>
+</body>
+</html>
