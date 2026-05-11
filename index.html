@@ -1,243 +1,124 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EUDES MEDIA | Management System</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        :root { --primary: #003366; --accent: #D4A017; --bg: #f1f5f9; --white: #ffffff; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+// 1. FIXED MODAL HTML (Ensured all IDs match the save function)
+function showAddStudentModal() {
+    const modal = document.createElement('div'); 
+    modal.className = 'modal'; 
+    modal.id = 'tempModal'; 
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h2>Register Student</h2>
+            <div class="form-group">
+                <label>Photo</label>
+                <input type="file" id="studentPhotoFile" accept="image/*">
+            </div>
+            <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" id="studentName" placeholder="Enter Full Name">
+            </div>
+            <div class="form-group">
+                <label>Class</label>
+                <input type="text" id="studentClass" placeholder="e.g. P.7">
+            </div>
+            <div class="form-group">
+                <label>Parent WhatsApp</label>
+                <input type="tel" id="studentWhatsapp" placeholder="07...">
+            </div>
+            <div class="form-group">
+                <label>Parent Email</label>
+                <input type="email" id="studentEmail">
+            </div>
+            <div class="form-group">
+                <label>Total Fees (UGX)</label>
+                <input type="number" id="studentFees" value="0">
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn" id="saveBtn" onclick="saveNewStudent()">🚀 SAVE STUDENT</button>
+                <button class="btn btn-red" onclick="closeModal()">CANCEL</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal); 
+    modal.style.display = 'flex';
+    
+    window.closeModal = () => { modal.remove(); };
+}
 
-        /* --- MOBILE RESPONSIVE SIDEBAR --- */
-        .sidebar { width: 260px; background: var(--primary); color: white; display: flex; flex-direction: column; height: 100vh; position: fixed; left: -260px; transition: 0.3s; z-index: 1000; }
-        .sidebar.active { left: 0; }
-        .sidebar-header { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .nav-item { padding: 15px 25px; cursor: pointer; display: flex; align-items: center; gap: 12px; font-size: 14px; transition: 0.2s; }
-        .nav-item:hover, .nav-item.active { background: var(--accent); color: var(--primary); font-weight: bold; }
+// 2. FIXED SAVE FUNCTION (Added Error Handling and Status Tracking)
+async function saveNewStudent() {
+    const saveBtn = document.getElementById('saveBtn');
+    const name = document.getElementById('studentName').value.trim();
+    
+    if (!name) { 
+        alert('Please enter the student\'s name.'); 
+        return; 
+    }
 
-        /* --- MAIN AREA --- */
-        .main-content { flex: 1; display: flex; flex-direction: column; width: 100%; transition: 0.3s; margin-left: 0; }
-        .top-nav { background: var(--white); padding: 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 900; }
-        .menu-btn { font-size: 24px; color: var(--primary); cursor: pointer; }
+    // Disable button to prevent double-tapping
+    saveBtn.innerText = "⌛ SAVING...";
+    saveBtn.disabled = true;
+
+    try {
+        const classVal = document.getElementById('studentClass').value;
+        const whatsapp = document.getElementById('studentWhatsapp').value;
+        const email = document.getElementById('studentEmail').value;
+        const fees = parseInt(document.getElementById('studentFees').value) || 0;
+        const lin = generateLIN(name);
         
-        .container { padding: 15px; overflow-y: auto; flex: 1; }
-        .view-section { display: none; }
-        .view-section.active { display: block; }
-
-        /* --- UI COMPONENTS --- */
-        .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .stats-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; }
-        .stat-box { min-width: 120px; background: white; padding: 15px; border-radius: 12px; border-top: 4px solid var(--primary); text-align: center; }
-        .stat-val { font-size: 20px; font-weight: 700; color: var(--primary); }
+        // Ensure we have a school ID (Defaults to first school if Super Admin)
+        const schoolId = currentSchoolId || (schools.length > 0 ? schools[0].id : null);
         
-        input, select, button { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px; font-size: 14px; }
-        .btn-p { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
-        .btn-a { background: var(--accent); color: var(--primary); border: none; font-weight: bold; }
-
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th { background: #f8fafc; text-align: left; padding: 10px; }
-        td { padding: 10px; border-bottom: 1px solid #eee; }
-
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; }
-        .overlay.active { display: block; }
-
-        @media (min-width: 768px) {
-            .sidebar { left: 0; }
-            .main-content { margin-left: 260px; }
-            .menu-btn { display: none; }
+        if (!schoolId) {
+            throw new Error("No School ID found. Please log in again.");
         }
-    </style>
-</head>
-<body>
 
-    <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+        let photoUrl = null;
+        const fileInput = document.getElementById('studentPhotoFile');
+        const file = fileInput.files[0];
 
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <h2 style="color:var(--accent)">EUDES MEDIA</h2>
-        </div>
-        <div class="nav-item active" onclick="switchView('dash')"><i class="fas fa-home"></i> Dashboard</div>
-        <div class="nav-item" onclick="switchView('students')"><i class="fas fa-users"></i> Students</div>
-        <div class="nav-item" onclick="switchView('marks')"><i class="fas fa-edit"></i> Marks Entry</div>
-        <div class="nav-item" onclick="switchView('reports')"><i class="fas fa-file-invoice"></i> Report Cards</div>
-        <div class="nav-item" onclick="switchView('fees')"><i class="fas fa-wallet"></i> Fees & Receipts</div>
-        <div style="margin-top:auto; padding:20px; font-size:11px; opacity:0.7; text-align:center;">
-            Support: +256762992440
-        </div>
-    </div>
-
-    <div class="main-content">
-        <div class="top-nav">
-            <i class="fas fa-bars menu-btn" onclick="toggleMenu()"></i>
-            <h4 id="title">Overview</h4>
-            <input type="text" id="sch-id" value="PROGRESSIVE MOTHERS" style="width:140px; margin:0; padding:5px; font-size:10px;" onchange="sync()">
-        </div>
-
-        <div class="container">
+        // Handle Photo Upload
+        if (file) {
+            const ext = file.name.split('.').pop();
+            const fileName = `student_${Date.now()}.${ext}`;
+            const { data, error: uploadError } = await supabase.storage
+                .from('student_photos')
+                .upload(fileName, file);
             
-            <div id="dash" class="view-section active">
-                <div class="stats-scroll">
-                    <div class="stat-box"><div>TOTAL</div><div class="stat-val" id="st-total">0</div></div>
-                    <div class="stat-box"><div>PRESENT</div><div class="stat-val" id="st-pres">0</div></div>
-                    <div class="stat-box"><div>FEES PAID</div><div class="stat-val" id="st-paid">0</div></div>
-                </div>
-                <div class="card">
-                    <h3>Recent Logs</h3>
-                    <p style="font-size:12px; color:gray;">System connected to Cloud Database.</p>
-                </div>
-            </div>
+            if (uploadError) {
+                console.error("Upload Error:", uploadError);
+            } else {
+                photoUrl = supabase.storage.from('student_photos').getPublicUrl(fileName).data.publicUrl;
+            }
+        }
 
-            <div id="students" class="view-section">
-                <div class="card">
-                    <button class="btn-a" onclick="document.getElementById('reg-form').classList.toggle('hidden')">+ New Student</button>
-                    <div id="reg-form" class="hidden">
-                        <input type="text" id="f-name" placeholder="Full Name">
-                        <input type="text" id="f-class" placeholder="Class">
-                        <input type="number" id="f-fees" placeholder="Total Fees">
-                        <button class="btn-p" onclick="saveStudent()">Register</button>
-                    </div>
-                </div>
-                <div class="card" style="overflow-x:auto;">
-                    <table>
-                        <thead><tr><th>Name</th><th>LIN</th><th>Class</th><th>Debt</th></tr></thead>
-                        <tbody id="stu-list"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="marks" class="view-section">
-                <div class="card">
-                    <h3>Enter Marks</h3>
-                    <select id="m-student"></select>
-                    <select id="m-subject">
-                        <option>English</option><option>Mathematics</option><option>Science</option><option>SST</option>
-                    </select>
-                    <input type="number" id="m-score" placeholder="Score (0-100)">
-                    <button class="btn-p" onclick="saveMark()">Save Score</button>
-                </div>
-                <div class="card" id="m-history"></div>
-            </div>
-
-            <div id="reports" class="view-section">
-                <div class="card">
-                    <h3>Generate Report Card</h3>
-                    <select id="r-student" onchange="genReport()"></select>
-                    <div id="report-view" style="margin-top:20px; font-size:12px;"></div>
-                    <button class="btn-a" onclick="window.print()">Print Report</button>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-<script>
-    const SB_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
-    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
-    const supabase = supabase.createClient(SB_URL, SB_KEY);
-
-    let students = [], marks = [];
-
-    // --- NAVIGATION ---
-    function toggleMenu() {
-        document.getElementById('sidebar').classList.toggle('active');
-        document.getElementById('overlay').classList.toggle('active');
-    }
-
-    function switchView(id) {
-        document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        event.currentTarget.classList.add('active');
-        document.getElementById('title').innerText = id.toUpperCase();
-        if(window.innerWidth < 768) toggleMenu();
-    }
-
-    // --- CORE LOGIC ---
-    function getGrade(s) { 
-        if(s>=90) return 'D1'; if(s>=80) return 'D2'; if(s>=70) return 'C3'; 
-        if(s>=60) return 'C4'; if(s>=50) return 'C5'; if(s>=40) return 'C6'; 
-        if(s>=35) return 'P7'; if(s>=30) return 'P8'; return 'F9'; 
-    }
-
-    async function sync() {
-        const sch = document.getElementById('sch-id').value.toUpperCase();
-        const { data: sData } = await supabase.from('students').select('*').eq('school_id', sch);
-        students = sData || [];
-        
-        const { data: mData } = await supabase.from('marks').select('*').eq('sch_id', sch);
-        marks = mData || [];
-
-        renderStudents();
-        updateDropdowns();
-    }
-
-    function renderStudents() {
-        const list = document.getElementById('stu-list');
-        list.innerHTML = students.map(s => `
-            <tr>
-                <td>${s.name}</td>
-                <td>${s.lin}</td>
-                <td>${s.class}</td>
-                <td style="color:red">${(s.total_fees - s.fees_paid).toLocaleString()}</td>
-            </tr>
-        `).join('');
-        document.getElementById('st-total').innerText = students.length;
-    }
-
-    function updateDropdowns() {
-        const opts = students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-        document.getElementById('m-student').innerHTML = opts;
-        document.getElementById('r-student').innerHTML = '<option value="">Select Student</option>' + opts;
-    }
-
-    async function saveMark() {
-        const sid = document.getElementById('m-student').value;
-        const sub = document.getElementById('m-subject').value;
-        const score = parseInt(document.getElementById('m-score').value);
-        if(!sid || isNaN(score)) return alert("Enter score");
-
-        await supabase.from('marks').insert([{
-            student_id: sid, subject: sub, score: score,
-            grade: getGrade(score), sch_id: document.getElementById('sch-id').value.toUpperCase()
+        // Insert into Supabase
+        const { error: insertError } = await supabase.from('students').insert([{ 
+            school_id: schoolId, 
+            name: name, 
+            lin: lin, 
+            class: classVal, 
+            parent_whatsapp: whatsapp, 
+            parent_email: email, 
+            total_fees: fees, 
+            fees_paid: 0, 
+            photo_url: photoUrl 
         }]);
-        alert("Mark Saved");
-        sync();
-    }
 
-    function genReport() {
-        const sid = document.getElementById('r-student').value;
-        if(!sid) return;
-        const s = students.find(x => x.id === sid);
-        const sMarks = marks.filter(m => m.student_id === sid);
+        if (insertError) throw insertError;
+
+        showToast(`Success! ${name} registered with LIN: ${lin}`);
+        closeModal(); 
         
-        let rows = sMarks.map(m => `<tr><td>${m.subject}</td><td>${m.score}</td><td>${m.grade}</td></tr>`).join('');
-        
-        document.getElementById('report-view').innerHTML = `
-            <div style="border:2px solid #003366; padding:15px; border-radius:10px;">
-                <center><h3>${document.getElementById('sch-id').value}</h3></center>
-                <p><b>Name:</b> ${s.name} | <b>LIN:</b> ${s.lin}</p>
-                <table style="margin-top:10px;"><tr><th>Subject</th><th>Score</th><th>Grade</th></tr>${rows}</table>
-            </div>
-        `;
-    }
+        // Refresh the data and the table
+        if (currentUser.role === 'super_admin') {
+            await loadAllData();
+        } else {
+            await loadSchoolData();
+        }
+        renderStudentsTab();
+        updateStats();
 
-    async function saveStudent() {
-        const name = document.getElementById('f-name').value;
-        const cls = document.getElementById('f-class').value;
-        const fees = document.getElementById('f-fees').value;
-        await supabase.from('students').insert([{
-            name: name, class: cls, total_fees: fees, fees_paid: 0,
-            school_id: document.getElementById('sch-id').value.toUpperCase(),
-            lin: name.slice(0,2).toUpperCase() + Math.floor(1000 + Math.random() * 9000)
-        }]);
-        sync();
+    } catch (err) {
+        console.error("Detailed Error:", err);
+        alert("Registration failed: " + err.message);
+        saveBtn.innerText = "🚀 SAVE STUDENT";
+        saveBtn.disabled = false;
     }
-
-    sync();
-</script>
-</body>
-</html>
+}
