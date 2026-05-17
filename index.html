@@ -3,201 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>EduSuite Pro | School Management System</title>
+    <title>EduSuite Enterprise | Advanced Data Management Platform</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --bg-main: #f8fafc;
-            --sidebar-bg: #0f172a;
-            --sidebar-hover: #1e293b;
-            --text-main: #334155;
-            --text-dark: #0f172a;
-            --accent: #2563eb;
-            --accent-light: rgba(37, 99, 236, 0.1);
-            --border-color: #e2e8f0;
-            --success: #16a34a;
-            --success-bg: #dcfce7;
-            --danger: #dc2626;
-            --danger-bg: #fee2e2;
-            --warning: #d97706;
-            --warning-bg: #fef3c7;
+            --bg-workspace: #f8fafc;
+            --sidebar-dark: #0f172a;
+            --sidebar-item-hover: #1e293b;
+            --text-title: #0f172a;
+            --text-muted: #64748b;
+            --text-body: #334155;
+            --brand-primary: #4f46e5;
+            --brand-primary-light: rgba(79, 70, 229, 0.08);
+            --border-elegant: #e2e8f0;
+            --emerald-success: #10b981;
+            --emerald-bg: #ecfdf5;
+            --rose-danger: #ef4444;
+            --rose-bg: #fef2f2;
+            --amber-warning: #f59e0b;
+            --amber-bg: #fffbeb;
+            --sidebar-width: 280px;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-        body { background: var(--bg-main); color: var(--text-main); min-height: 100vh; display: flex; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+        body { background: var(--bg-workspace); color: var(--text-body); min-height: 100vh; display: flex; -webkit-font-smoothing: antialiased; }
 
-        /* --- SIDEBAR --- */
-        .sidebar {
-            width: 260px; background: var(--sidebar-bg); color: #f1f5f9;
+        /* --- NAVIGATION SIDEBAR ARCHITECTURE --- */
+        .sidebar-wrapper {
+            width: var(--sidebar-width); background: var(--sidebar-dark); color: #f1f5f9;
             position: fixed; top: 0; bottom: 0; left: 0;
             display: flex; flex-direction: column; z-index: 100;
+            border-right: 1px solid #1e293b;
         }
-        .brand {
-            padding: 28px 24px; display: flex; align-items: center; gap: 12px;
+        .sidebar-branding {
+            padding: 32px 28px; display: flex; align-items: center; gap: 14px;
             border-bottom: 1px solid #1e293b;
         }
-        .brand-icon {
-            background: linear-gradient(135deg, #60a5fa, #2563eb);
-            width: 34px; height: 34px; border-radius: 10px;
-            display: flex; align-items: center; justify-content: center; color: white; font-size: 16px;
+        .branding-logo {
+            background: linear-gradient(135deg, #818cf8, #4f46e5);
+            width: 38px; height: 38px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
         }
-        .brand-title { font-weight: 700; font-size: 1.1rem; letter-spacing: -0.5px; color: #fff; }
-        .nav-group { padding: 24px 16px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
-        .nav-btn {
-            width: 100%; background: transparent; border: none; padding: 12px 16px;
-            border-radius: 10px; color: #94a3b8; font-weight: 500; font-size: 14px;
-            cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.2s;
+        .branding-text { font-weight: 800; font-size: 1.2rem; letter-spacing: -0.5px; color: #fff; }
+        .navigation-links { padding: 32px 20px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        .nav-link-item {
+            width: 100%; background: transparent; border: none; padding: 14px 18px;
+            border-radius: 12px; color: #94a3b8; font-weight: 600; font-size: 14px;
+            cursor: pointer; display: flex; align-items: center; gap: 14px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .nav-btn i { width: 20px; font-size: 16px; text-align: left; }
-        .nav-btn:hover { background: var(--sidebar-hover); color: #fff; }
-        .nav-btn.active { background: var(--accent); color: white; font-weight: 600; }
+        .nav-link-item i { width: 20px; font-size: 18px; text-align: left; opacity: 0.8; }
+        .nav-link-item:hover { background: var(--sidebar-item-hover); color: #fff; }
+        .nav-link-item.active { background: var(--brand-primary); color: white; box-shadow: 0 4px 20px rgba(79,70,229,0.25); }
 
-        /* --- MAIN WORKSPACE --- */
-        .main-content { margin-left: 260px; flex: 1; padding: 40px; min-width: 0; }
+        /* --- COMPONENT VIEW PLATFORM CONTAINER --- */
+        .main-workspace-frame { margin-left: var(--sidebar-width); flex: 1; padding: 48px; min-width: 0; }
         
-        /* --- HEADER BANNER --- */
-        .header-panel {
+        /* --- INTEGRATED PROFILE TOP HEADER --- */
+        .workspace-top-bar {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 36px; padding-bottom: 24px; border-bottom: 1px solid var(--border-color);
+            margin-bottom: 40px; padding-bottom: 28px; border-bottom: 1px solid var(--border-elegant);
         }
-        .school-name { font-size: 1.75rem; font-weight: 800; color: var(--text-dark); letter-spacing: -0.75px; }
-        .school-meta { font-size: 0.875rem; color: #64748b; margin-top: 4px; display: flex; gap: 16px; }
-        .school-meta span { display: flex; align-items: center; gap: 6px; }
+        .meta-title-block h1 { font-size: 2rem; font-weight: 800; color: var(--text-title); letter-spacing: -0.75px; }
+        .meta-sub-labels { font-size: 0.9rem; color: var(--text-muted); margin-top: 6px; display: flex; gap: 20px; font-weight: 500; }
+        .meta-sub-labels span { display: flex; align-items: center; gap: 8px; }
+        .meta-sub-labels i { color: var(--brand-primary); }
 
-        /* --- STATS CARDS --- */
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 36px; }
-        .stat-card {
-            background: white; border-radius: 16px; padding: 24px; display: flex; align-items: center;
-            justify-content: space-between; border: 1px solid var(--border-color);
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.02);
+        /* --- VOLUMETRIC METRICS MATRIX GRID --- */
+        .metrics-dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-bottom: 40px; }
+        .metric-volumetric-card {
+            background: white; border-radius: 20px; padding: 28px; display: flex; align-items: center;
+            justify-content: space-between; border: 1px solid var(--border-elegant);
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.03); transition: transform 0.2s;
         }
-        .stat-info h4 { font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
-        .stat-info .value { font-size: 1.85rem; font-weight: 700; color: var(--text-dark); margin-top: 8px; }
-        .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .metric-volumetric-card:hover { transform: translateY(-2px); }
+        .metric-details h4 { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+        .metric-details .metric-numerical-value { font-size: 2rem; font-weight: 800; color: var(--text-title); margin-top: 10px; letter-spacing: -0.5px; }
+        .metric-icon-wrapper { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
 
-        /* --- PANELS & UTILITIES --- */
-        .panel { 
-            background: white; border-radius: 16px; padding: 32px; 
-            border: 1px solid var(--border-color); box-shadow: 0 4px 24px -4px rgba(0,0,0,0.03); 
+        /* --- INTERACTIVE CARD PANELS --- */
+        .workspace-panel-card { 
+            background: white; border-radius: 20px; padding: 36px; 
+            border: 1px solid var(--border-elegant); box-shadow: 0 12px 36px -6px rgba(0,0,0,0.03); 
         }
-        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-        .panel-title { font-size: 1.2rem; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 10px; }
+        .panel-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+        .panel-card-title { font-size: 1.25rem; font-weight: 700; color: var(--text-title); display: flex; align-items: center; gap: 12px; letter-spacing: -0.3px; }
         
-        .search-container {
-            background: white; border-radius: 12px; border: 1px solid var(--border-color);
-            padding: 0 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 24px; width: 100%;
-            max-width: 400px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+        .search-input-group {
+            background: #f1f5f9; border-radius: 14px; border: 1px solid transparent;
+            padding: 0 18px; display: flex; align-items: center; gap: 14px; margin-bottom: 28px; width: 100%;
+            max-width: 440px; transition: all 0.2s;
         }
-        .search-container input { border: none; padding: 12px 0; outline: none; width: 100%; font-size: 14px; color: var(--text-dark); }
-        .search-container i { color: #94a3b8; }
+        .search-input-group:focus-within { background: white; border-color: var(--brand-primary); box-shadow: 0 0 0 4px var(--brand-primary-light); }
+        .search-input-group input { border: none; padding: 14px 0; outline: none; width: 100%; font-size: 14px; color: var(--text-title); font-weight: 500; background: transparent; }
+        .search-input-group i { color: var(--text-muted); font-size: 16px; }
 
         /* --- DATA TABLES --- */
-        .table-container { width: 100%; overflow-x: auto; border-radius: 12px; border: 1px solid var(--border-color); }
+        .table-responsive-container { width: 100%; overflow-x: auto; border-radius: 14px; border: 1px solid var(--border-elegant); }
         table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { background: #f8fafc; padding: 14px 20px; font-size: 12px; font-weight: 600; color: #475569; border-bottom: 1px solid var(--border-color); text-transform: uppercase; letter-spacing: 0.02em; }
-        td { padding: 16px 20px; font-size: 14px; border-bottom: 1px solid #f1f5f9; color: var(--text-main); vertical-align: middle; }
+        th { background: #f8fafc; padding: 16px 24px; font-size: 12px; font-weight: 700; color: #475569; border-bottom: 1px solid var(--border-elegant); text-transform: uppercase; letter-spacing: 0.05em; }
+        td { padding: 18px 24px; font-size: 14px; border-bottom: 1px solid #f1f5f9; color: var(--text-body); vertical-align: middle; }
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: #f8fafc; }
 
-        /* --- BADGES & BUTTONS --- */
-        .badge { display: inline-flex; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; }
-        .badge.danger { background: var(--danger-bg); color: var(--danger); }
-        .badge.success { background: var(--success-bg); color: var(--success); }
+        /* --- PILL SHAPED STAT BADGES --- */
+        .status-pill-badge { display: inline-flex; padding: 6px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; letter-spacing: -0.1px; }
+        .status-pill-badge.danger { background: var(--rose-bg); color: var(--rose-danger); }
+        .status-pill-badge.success { background: var(--emerald-bg); color: var(--emerald-success); }
         
-        .btn-action {
-            background: transparent; border: none; cursor: pointer; font-size: 14px; 
-            padding: 8px; border-radius: 8px; color: #64748b; transition: all 0.15s; margin-left: 4px;
+        .action-tool-btn {
+            background: transparent; border: none; cursor: pointer; font-size: 15px; 
+            padding: 10px; border-radius: 10px; color: var(--text-muted); transition: all 0.2s; margin-left: 6px;
         }
-        .btn-action:hover { background: #f1f5f9; color: var(--text-dark); }
-        .btn-action.delete:hover { background: var(--danger-bg); color: var(--danger); }
+        .action-tool-btn:hover { background: #f1f5f9; color: var(--text-title); }
+        .action-tool-btn.delete-action:hover { background: var(--rose-bg); color: var(--rose-danger); }
 
-        /* --- FORMS --- */
-        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 32px; }
-        .form-group { display: flex; flex-direction: column; gap: 8px; }
-        .form-group label { font-size: 13px; font-weight: 600; color: #475569; }
+        /* --- ENTERPRISE INPUT FORM ELEMENTS --- */
+        .form-layout-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px; margin-bottom: 36px; }
+        .form-input-wrapper { display: flex; flex-direction: column; gap: 10px; }
+        .form-input-wrapper label { font-size: 13px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.03em; }
         input[type="text"], input[type="number"], select {
-            width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 10px;
-            font-size: 14px; color: var(--text-dark); outline: none; transition: all 0.2s; background: #fff;
+            width: 100%; padding: 14px 18px; border: 1px solid #cbd5e1; border-radius: 12px;
+            font-size: 14px; color: var(--text-title); font-weight: 500; outline: none; transition: all 0.2s; background: #fff;
         }
-        input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-light); }
+        input:focus, select:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 4px var(--brand-primary-light); }
 
-        .btn {
-            background: var(--accent); color: white; font-weight: 600; padding: 12px 24px; border: none;
-            border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-size: 14px;
-            transition: background 0.2s;
+        /* --- CALL TO ACTION ACTION UTILITIES --- */
+        .action-btn-primary {
+            background: var(--brand-primary); color: white; font-weight: 600; padding: 14px 28px; border: none;
+            border-radius: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; font-size: 14px;
+            transition: background 0.2s, transform 0.1s; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.2);
         }
-        .btn:hover { background: #1d4ed8; }
-        .btn-secondary { background: #e2e8f0; color: #475569; }
-        .btn-secondary:hover { background: #cbd5e1; }
+        .action-btn-primary:hover { background: #4338ca; }
+        .action-btn-primary:active { transform: scale(0.98); }
+        .action-btn-secondary { background: #e2e8f0; color: #475569; box-shadow: none; }
+        .action-btn-secondary:hover { background: #cbd5e1; }
 
-        /* --- ROLL CALL STYLE --- */
-        .attendance-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid #f1f5f9; }
-        .attendance-select { width: auto; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; }
+        /* --- ROLL CALL MONITOR SPECIFIC LINES --- */
+        .attendance-tracking-strip { display: flex; justify-content: space-between; align-items: center; padding: 16px 4px; border-bottom: 1px solid #f1f5f9; }
+        .attendance-dropdown-pill { width: auto; padding: 8px 16px; border-radius: 10px; font-weight: 700; font-size: 13px; border-color: var(--border-elegant); }
 
-        /* --- TOAST SYSTEM --- */
-        .toast {
-            position: fixed; bottom: 32px; right: 32px; background: var(--sidebar-bg); color: white;
-            padding: 16px 24px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);
-            font-weight: 500; font-size: 14px; z-index: 1000; display: flex; align-items: center; gap: 10px;
-            animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        /* --- PREMIUM TOAST NOTIFICATION DECK --- */
+        .toast-notification-node {
+            position: fixed; bottom: 40px; right: 40px; background: var(--sidebar-dark); color: white;
+            padding: 18px 28px; border-radius: 16px; box-shadow: 0 20px 40px -5px rgba(0,0,0,0.3);
+            font-weight: 600; font-size: 14px; z-index: 1000; display: flex; align-items: center; gap: 12px;
+            border: 1px solid #1e293b; animation: overlayPopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        @keyframes popIn { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes overlayPopIn { from { opacity: 0; transform: scale(0.85) translateY(12px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
-        /* --- MODAL PLUG --- */
-        .modal {
+        /* --- CONTEXUAL LAYER MODALS OVERLAYS --- */
+        .modal-blur-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15,23,42,0.3); backdrop-filter: blur(4px); z-index: 1000;
-            align-items: center; justify-content: center; padding: 16px;
+            background: rgba(15,23,42,0.3); backdrop-filter: blur(8px); z-index: 1000;
+            align-items: center; justify-content: center; padding: 20px;
         }
-        .modal-content { background: white; border-radius: 16px; padding: 32px; width: 100%; max-width: 480px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15); border: 1px solid var(--border-color); }
+        .modal-frame-window { background: white; border-radius: 24px; padding: 40px; width: 100%; max-width: 520px; box-shadow: 0 30px 60px -15px rgba(0,0,0,0.2); border: 1px solid var(--border-elegant); }
 
-        @media (max-width: 968px) {
-            .sidebar { width: 72px; }
-            .sidebar .brand-title, .sidebar span { display: none; }
-            .main-content { margin-left: 72px; padding: 24px; }
-            .stats-grid { grid-template-columns: 1fr; }
-            .form-grid { grid-template-columns: 1fr; }
+        @media (max-width: 1024px) {
+            .sidebar-wrapper { width: 80px; }
+            .sidebar-wrapper .branding-text, .sidebar-wrapper span { display: none; }
+            .main-workspace-frame { margin-left: 80px; padding: 28px; }
+            .metrics-dashboard-grid { grid-template-columns: 1fr; gap: 20px; }
+            .form-layout-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-    <aside class="sidebar">
-        <div class="brand">
-            <div class="brand-icon"><i class="fas fa-layer-group"></i></div>
-            <div class="brand-title">EduSuite</div>
+    <aside class="sidebar-wrapper">
+        <div class="sidebar-branding">
+            <div class="branding-logo"><i class="fas fa-landmark"></i></div>
+            <div class="branding-text">EduSuite Hub</div>
         </div>
-        <nav class="nav-group">
-            <button class="nav-btn active" id="btn-records" onclick="switchView('records')"><i class="fas fa-user-graduate"></i> <span>Students Directory</span></button>
-            <button class="nav-btn" id="btn-admission" onclick="switchView('admission')"><i class="fas fa-plus-circle"></i> <span>Admit Student</span></button>
-            <button class="nav-btn" id="btn-rollcall" onclick="switchView('rollcall')"><i class="fas fa-check-square"></i> <span>Roll Call Monitor</span></button>
+        <nav class="navigation-links">
+            <button class="nav-link-item active" id="btn-records" onclick="switchView('records')"><i class="fas fa-address-book"></i> <span>Students Directory</span></button>
+            <button class="nav-link-item" id="btn-admission" onclick="switchView('admission')"><i class="fas fa-user-plus"></i> <span>Admit Student</span></button>
+            <button class="nav-link-item" id="btn-rollcall" onclick="switchView('rollcall')"><i class="fas fa-calendar-check"></i> <span>Roll Call Monitor</span></button>
         </nav>
     </aside>
 
-    <main class="main-content">
-        <div class="header-panel">
-            <div>
-                <div class="school-name" id="banner-school-name">PROGRESSIVE MOTHERS</div>
-                <div class="school-meta">
-                    <span id="banner-location"><i class="fas fa-map-marker-alt"></i> GAYAZA-KIJABIJJO</span>
-                    <span><i class="fas fa-graduation-cap"></i> Term 1 Core Dashboard</span>
+    <main class="main-workspace-frame">
+        <div class="workspace-top-bar">
+            <div class="meta-title-block">
+                <h1 id="banner-school-name">PROGRESSIVE MOTHERS</h1>
+                <div class="meta-sub-labels">
+                    <span id="banner-location"><i class="fas fa-location-crosshairs"></i> GAYAZA-KIJABIJJO</span>
+                    <span><i class="fas fa-shield-halved"></i> Cloud Workspace Partition</span>
                 </div>
             </div>
         </div>
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-info"><h4>Total Students</h4><div class="value" id="m-total">0</div></div>
-                <div class="stat-icon" style="background:#eff6ff; color:#2563eb;"><i class="fas fa-users"></i></div>
+        <div class="metrics-dashboard-grid">
+            <div class="metric-volumetric-card">
+                <div class="metric-details"><h4>Active Enrollment</h4><div class="metric-numerical-value" id="m-total">0</div></div>
+                <div class="metric-icon-wrapper" style="background:#f5f3ff; color:var(--brand-primary);"><i class="fas fa-graduation-cap"></i></div>
             </div>
-            <div class="stat-card">
-                <div class="stat-info"><h4>Fees Collected</h4><div class="value" id="m-fees">0</div></div>
-                <div class="stat-icon" style="background:#ecfdf5; color:#10b981;"><i class="fas fa-wallet"></i></div>
+            <div class="metric-volumetric-card">
+                <div class="metric-details"><h4>Revenue Logs</h4><div class="metric-numerical-value" id="m-fees">0</div></div>
+                <div class="metric-icon-wrapper" style="background:var(--emerald-bg); color:var(--emerald-success);"><i class="fas fa-vault"></i></div>
             </div>
-            <div class="stat-card">
-                <div class="stat-info"><h4>Absent Today</h4><div class="value" id="m-absent">0</div></div>
-                <div class="stat-icon" style="background:#fef2f2; color:#ef4444;"><i class="fas fa-user-times"></i></div>
+            <div class="metric-volumetric-card">
+                <div class="metric-details"><h4>Daily Absenteeism</h4><div class="metric-numerical-value" id="m-absent">0</div></div>
+                <div class="metric-icon-wrapper" style="background:var(--rose-bg); color:var(--rose-danger);"><i class="fas fa-triangle-exclamation"></i></div>
             </div>
         </div>
 
@@ -205,7 +218,7 @@
     </main>
 
     <script>
-        // ==================== MASTER APP LOGIC CONFIG & DATA REPOSITORIES ====================
+        // ==================== SYSTEM PARSER CONFIG & SUPABASE POOLS ====================
         const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -215,16 +228,16 @@
         let activeView = 'records';
 
         function alertNotify(msg) {
-            const el = document.createElement('div'); el.className = 'toast'; el.innerHTML = `<i class="fas fa-check-circle" style="color:#34d399;"></i> <span>${msg}</span>`;
-            document.body.appendChild(el); setTimeout(() => el.remove(), 3000);
+            const el = document.createElement('div'); el.className = 'toast-notification-node'; el.innerHTML = `<i class="fas fa-circle-check" style="color:var(--emerald-success); font-size:16px;"></i> <span>${msg}</span>`;
+            document.body.appendChild(el); setTimeout(() => el.remove(), 3500);
         }
 
         function formatUGX(val) { return 'UGX ' + (val || 0).toLocaleString(); }
 
-        // ==================== COMPONENT VIEW ROUTER SWITCHER ====================
+        // ==================== VIEW TRANSLATION SWITCH ENGINE ====================
         async function switchView(targetView) {
             activeView = targetView;
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.nav-link-item').forEach(b => b.classList.remove('active'));
             const matchedBtn = document.getElementById(`btn-${targetView}`);
             if(matchedBtn) matchedBtn.classList.add('active');
 
@@ -232,17 +245,17 @@
             
             if (targetView === 'records') {
                 container.innerHTML = `
-                    <div class="search-container">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="directorySearchInput" placeholder="Search students by name or unique LIN...">
+                    <div class="search-input-group">
+                        <i class="fas fa-magnifying-glass"></i>
+                        <input type="text" id="directorySearchInput" placeholder="Filter roster profiles by name or unique LIN keys...">
                     </div>
-                    <div class="panel">
-                        <div class="panel-header">
-                            <div class="panel-title"><i class="fas fa-list" style="color:var(--accent);"></i> Active Student Roster Partition</div>
+                    <div class="workspace-panel-card">
+                        <div class="panel-card-header">
+                            <div class="panel-card-title"><i class="fas fa-database" style="color:var(--brand-primary);"></i> Active Student Roster Partition</div>
                         </div>
-                        <div class="table-container">
+                        <div class="table-responsive-container">
                             <table>
-                                <thead><tr><th>Student / Unique ID</th><th>Class Level</th><th>Arrears Balance</th><th style="text-align:right;">Actions</th></tr></thead>
+                                <thead><tr><th>Student/Identity Keys</th><th>Class Grade</th><th>Arrears Matrix</th><th style="text-align:right;">Control Actions</th></tr></thead>
                                 <tbody id="student-tbody-target"></tbody>
                             </table>
                         </div>
@@ -251,23 +264,23 @@
                 await syncRenderTableData();
             } else if (targetView === 'admission') {
                 container.innerHTML = `
-                    <div class="panel" style="max-width: 680px; margin: 0 auto;">
-                        <div class="panel-header">
-                            <div class="panel-title"><i class="fas fa-user-plus" style="color:var(--accent);"></i> New Student Registry Form</div>
+                    <div class="workspace-panel-card" style="max-width: 760px; margin: 0 auto;">
+                        <div class="panel-card-header">
+                            <div class="panel-card-title"><i class="fas fa-address-card" style="color:var(--brand-primary);"></i> Institutional Admission Registration</div>
                         </div>
-                        <div class="form-grid">
-                            <div class="form-group"><label>Full Student Name</label><input type="text" id="form-name" placeholder="e.g., Namubiru Sarah"></div>
-                            <div class="form-group"><label>Assigned Class Grade</label>
+                        <div class="form-layout-grid">
+                            <div class="form-input-wrapper"><label>Full Legal Name</label><input type="text" id="form-name" placeholder="e.g., Kigozi Arthur"></div>
+                            <div class="form-input-wrapper"><label>Assigned Class Grade</label>
                                 <select id="form-class">
                                     <option>Primary 1</option><option>Primary 2</option><option>Primary 3</option><option>Primary 4</option>
                                     <option>Primary 5</option><option>Primary 6</option><option>Primary 7</option>
                                 </select>
                             </div>
-                            <div class="form-group"><label>Parent Guardian WhatsApp</label><input type="text" id="form-wa" placeholder="e.g., 256701XXXXXX"></div>
-                            <div class="form-group"><label>Termly Tuition Allocated Fees (UGX)</label><input type="number" id="form-fees" placeholder="Allocated amount value"></div>
+                            <div class="form-input-wrapper"><label>Parent Guardian WhatsApp</label><input type="text" id="form-wa" placeholder="e.g., 256701XXXXXX"></div>
+                            <div class="form-input-wrapper"><label>Tuition Standard Flat Allocation (UGX)</label><input type="number" id="form-fees" placeholder="Rate magnitude values"></div>
                         </div>
                         <div style="text-align: right;">
-                            <button class="btn" onclick="commitStudentRegistration()"><i class="fas fa-save"></i> Register Account Profile</button>
+                            <button class="action-btn-primary" onclick="commitStudentRegistration()"><i class="fas fa-circle-arrow-up"></i> Deploy Profile Node</button>
                         </div>
                     </div>`;
             } else if (targetView === 'rollcall') {
@@ -275,7 +288,7 @@
             }
         }
 
-        // ==================== RENDERS & SERVER CONTEXT EXECUTORS ====================
+        // ==================== RENDERS & REPOSITORY STATE BALANCING ====================
         async function fetchSystemState() {
             let { data } = await supabase.from('students').select('*').eq('school_id', schoolContext.id).order('name', { ascending: true });
             localDataCache = data || [];
@@ -284,7 +297,7 @@
             let { data: att } = await supabase.from('attendance').select('status').eq('school_id', schoolContext.id).eq('date', new Date().toISOString().slice(0,10));
             
             document.getElementById('m-total').innerText = localDataCache.length;
-            document.getElementById('m-fees').innerText = formatUGX((trx || []).reduce((acc, current) => acc + (current.amount || 0), 0));
+            document.getElementById('m-fees').innerText = formatUGX((trx || []).reduce((acc, curr) => acc + (curr.amount || 0), 0));
             document.getElementById('m-absent').innerText = (att || []).filter(a => a.status === 'absent').length;
         }
 
@@ -295,7 +308,7 @@
             target.innerHTML = '';
 
             if(!elements.length) {
-                target.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:48px; color:#94a3b8;"><i class="fas fa-folder-open mb-2 text-2xl block"></i> No records found inside current partition scope.</td></tr>`;
+                target.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:56px; color:var(--text-muted); font-weight:500;"><i class="fas fa-cubes-stacked block text-xl mb-2" style="color:#cbd5e1;"></i> Empty query data arrays context returned.</td></tr>`;
                 return;
             }
 
@@ -303,13 +316,13 @@
                 let debt = (s.total_fees || 0) - (s.fees_paid || 0);
                 let row = document.createElement('tr');
                 row.innerHTML = `
-                    <td><strong>${s.name}</strong><br><small style="color:#94a3b8; font-family:monospace;">LIN: ${s.lin || 'UNASSIGNED'}</small></td>
-                    <td><span style="background:#f1f5f9; padding:4px 10px; border-radius:6px; font-weight:600; font-size:12px; color:var(--text-dark);">${s.class}</span></td>
-                    <td><span class="badge ${debt <= 0 ? 'success' : 'danger'}">${debt <= 0 ? 'PAID' : formatUGX(debt)}</span></td>
+                    <td><strong>${s.name}</strong><br><small style="color:var(--text-muted); font-family:'JetBrains Mono', monospace; font-size:11px;">LIN-${s.lin || 'NONE'}</small></td>
+                    <td><span style="background:#f1f5f9; padding:6px 12px; border-radius:8px; font-weight:700; font-size:12px; color:var(--text-title);">${s.class}</span></td>
+                    <td><span class="status-pill-badge ${debt <= 0 ? 'success' : 'danger'}">${debt <= 0 ? 'CLEARED' : formatUGX(debt)}</span></td>
                     <td style="text-align:right;">
-                        <button class="btn-action" onclick="triggerFeesPaymentModal('${s.id}')" title="Collect Fees"><i class="fas fa-dollar-sign" style="color:var(--success);"></i></button>
-                        <button class="btn-action" onclick="triggerMarksInputModal('${s.id}')" title="Enter Marks"><i class="fas fa-edit" style="color:var(--warning);"></i></button>
-                        <button class="btn-action delete" onclick="triggerEraseProfileNode('${s.id}')" title="Delete Profile"><i class="fas fa-trash-alt"></i></button>
+                        <button class="action-tool-btn" onclick="triggerFeesPaymentModal('${s.id}')" title="Collect Fees"><i class="fas fa-receipt" style="color:var(--emerald-success);"></i></button>
+                        <button class="action-tool-btn" onclick="triggerMarksInputModal('${s.id}')" title="Marks Ledger"><i class="fas fa-award" style="color:var(--amber-warning);"></i></button>
+                        <button class="action-tool-btn delete-action" onclick="triggerEraseProfileNode('${s.id}')" title="Drop Node"><i class="fas fa-trash-can"></i></button>
                     </td>`;
                 target.appendChild(row);
             });
@@ -320,10 +333,10 @@
             syncRenderTableData(matches);
         }
 
-        // ==================== DATA TRANSACTIONS WRITERS ====================
+        // ==================== TRANSACTION MUTATORS LOGS ====================
         async function commitStudentRegistration() {
             let name = document.getElementById('form-name').value.trim();
-            if(!name) return alert('Name required');
+            if(!name) return alert('Name tracking parameters verification exception.');
             let lin = name.replace(/[^a-zA-Z]/g,'').slice(0,2).toUpperCase() + Math.floor(1000+Math.random()*9000);
 
             await supabase.from('students').insert({
@@ -333,26 +346,26 @@
                 total_fees: parseFloat(document.getElementById('form-fees').value) || 0, fees_paid: 0
             });
 
-            alertNotify('Account Profile Node Created Successfully');
+            alertNotify('Student Record Block Deployed Matrix Successfully');
             await fetchSystemState();
             switchView('records');
         }
 
-        // ==================== CASHIER ACTIONS POSTS ====================
+        // ==================== REVENUE LOG COLLECTION DIALOGS ====================
         window.triggerFeesPaymentModal = function(id) {
             let s = localDataCache.find(x => x.id === id);
-            let modal = document.createElement('div'); modal.className = 'modal'; modal.id = 'active-modal-node';
+            let modal = document.createElement('div'); modal.className = 'modal-blur-overlay'; modal.id = 'active-modal-node';
             modal.innerHTML = `
-                <div class="modal-content">
-                    <div class="panel-title" style="margin-bottom:12px;"><i class="fas fa-receipt" style="color:var(--success);"></i> Collect Tuition Fees</div>
-                    <div style="background:#f8fafc; padding:14px; border-radius:10px; font-size:13px; margin-bottom:20px; border:1px solid var(--border-color);">
-                        Student Profile: <strong>${s.name}</strong><br>
-                        Arrears Standing: <strong style="color:var(--danger);">${formatUGX(s.total_fees - s.fees_paid)}</strong>
+                <div class="modal-frame-window">
+                    <div class="panel-card-title" style="margin-bottom:16px;"><i class="fas fa-money-check-dollar" style="color:var(--emerald-success);"></i> Post Remittance Value</div>
+                    <div style="background:#f8fafc; padding:18px; border-radius:14px; font-size:13px; margin-bottom:24px; border:1px solid var(--border-elegant);">
+                        Target Learner: <strong style="color:var(--text-title);">${s.name}</strong><br>
+                        Arrears Standing: <strong style="color:var(--rose-danger);">${formatUGX(s.total_fees - s.fees_paid)}</strong>
                     </div>
-                    <div class="form-group" style="margin-bottom:24px;"><label>Remitted Cash Value (UGX)</label><input type="number" id="pay-amt-field" placeholder="Enter collection value amount"></div>
-                    <div style="display:flex; justify-content:flex-end; gap:12px;">
-                        <button class="btn btn-secondary" onclick="document.getElementById('active-modal-node').remove()">Cancel</button>
-                        <button class="btn" style="background:var(--success);" onclick="executePaymentTransactionPost('${id}')">Post Payment Log</button>
+                    <div class="form-input-wrapper" style="margin-bottom:28px;"><label>Remitted Cash Value Input (UGX)</label><input type="number" id="pay-amt-field" placeholder="0.00"></div>
+                    <div style="display:flex; justify-content:flex-end; gap:14px;">
+                        <button class="action-btn-primary action-btn-secondary" onclick="document.getElementById('active-modal-node').remove()">Abort</button>
+                        <button class="action-btn-primary" style="background:var(--emerald-success); box-shadow:none;" onclick="executePaymentTransactionPost('${id}')">Commit Revenue Entry</button>
                     </div>
                 </div>`;
             document.body.appendChild(modal); modal.style.display = 'flex';
@@ -360,7 +373,7 @@
 
         window.executePaymentTransactionPost = async function(id) {
             let val = parseFloat(document.getElementById('pay-amt-field').value);
-            if(isNaN(val) || val <= 0) return alert('Invalid entry volume');
+            if(isNaN(val) || val <= 0) return alert('Input parameters magnitude values configuration exception.');
             let s = localDataCache.find(x => x.id === id);
             let newPaid = (s.fees_paid || 0) + val;
 
@@ -371,29 +384,29 @@
             });
 
             document.getElementById('active-modal-node').remove();
-            alertNotify('Payment posted safely into system books database');
+            alertNotify('Financial ledger matrix updated safely inside secure storage channels.');
             await fetchSystemState();
             await switchView('records');
         };
 
-        // ==================== MARKS PROCESSING ====================
+        // ==================== MARKS PROCESSING GRID SYSTEMS ====================
         window.triggerMarksInputModal = function(id) {
             let s = localDataCache.find(x => x.id === id);
             let subjects = ['English','Science','Social Studies','Mathematics'];
             let injectionHtml = '';
             subjects.forEach(sub => {
-                injectionHtml += `<div class="form-group" style="margin-bottom:14px;"><label>${sub} Grade Score (0-100)</label><input type="number" class="subject-mark-input" data-subject="${sub}" max="100" min="0" placeholder="Raw score"></div>`;
+                injectionHtml += `<div class="form-input-wrapper" style="margin-bottom:16px;"><label>${sub} Score Core Matrix (0-100)</label><input type="number" class="subject-mark-input" data-subject="${sub}" max="100" min="0" placeholder="Raw numerical volume"></div>`;
             });
 
-            let modal = document.createElement('div'); modal.className = 'modal'; modal.id = 'active-modal-node';
+            let modal = document.createElement('div'); modal.className = 'modal-blur-overlay'; modal.id = 'active-modal-node';
             modal.innerHTML = `
-                <div class="modal-content" style="max-height:85vh; overflow-y:auto;">
-                    <div class="panel-title" style="margin-bottom:8px;"><i class="fas fa-edit" style="color:var(--warning);"></i> Academic Evaluation Matrix</div>
-                    <div style="margin-bottom:20px; font-size:13px; color:#64748b;">Updating metrics for student: <strong>${s.name}</strong></div>
+                <div class="modal-frame-window" style="max-height:85vh; overflow-y:auto;">
+                    <div class="panel-card-title" style="margin-bottom:8px;"><i class="fas fa-arrow-up-right-dots" style="color:var(--amber-warning);"></i> Terminal Grade Log Input</div>
+                    <div style="margin-bottom:24px; font-size:13px; color:var(--text-muted);">Syncing parameters for context: <strong>${s.name}</strong></div>
                     ${injectionHtml}
-                    <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
-                        <button class="btn btn-secondary" onclick="document.getElementById('active-modal-node').remove()">Cancel</button>
-                        <button class="btn" style="background:var(--warning);" onclick="commitGradesMatrixLog('${id}')">Save Student Grades</button>
+                    <div style="display:flex; justify-content:flex-end; gap:14px; margin-top:28px;">
+                        <button class="action-btn-primary action-btn-secondary" onclick="document.getElementById('active-modal-node').remove()">Abort</button>
+                        <button class="action-btn-primary" style="background:var(--amber-warning); box-shadow:none;" onclick="commitGradesMatrixLog('${id}')">Sync Grade Profiles</button>
                     </div>
                 </div>`;
             document.body.appendChild(modal); modal.style.display = 'flex';
@@ -419,22 +432,22 @@
             }
 
             document.getElementById('active-modal-node').remove();
-            alertNotify('Student academic marks captured and synced');
+            alertNotify('Academic Evaluation Array Configurations Sync Complete.');
         };
 
-        // ==================== PURGE DATA NODES OPERATORS ====================
+        // ==================== EXPULSION/DESTRUCTIVE ACTIONS ====================
         window.triggerEraseProfileNode = async function(id) {
-            if(!confirm('Are you absolutely sure you want to remove this student account profile row? All related grade and attendance arrays rows will be dropped permanently.')) return;
+            if(!confirm('Security Exception Trigger Notice: Completely purge this profile registration entry across relational cloud arrays frames?')) return;
             await supabase.from('students').delete().eq('id', id);
             await supabase.from('marks').delete().eq('student_id', id);
             await supabase.from('attendance').delete().eq('student_id', id);
             
-            alertNotify('Account Profile Removed Safely From Multitenant Storage Arrays Layers');
+            alertNotify('Account vector schema records dropped safely.');
             await fetchSystemState();
             await switchView('records');
         };
 
-        // ==================== DIGITAL ATTENDANCE LOGISTICS MODULES ====================
+        // ==================== ATTENDANCE OPERATING CONTROL ROLLS ====================
         async function renderAttendanceRegistryView() {
             let today = new Date().toISOString().slice(0,10);
             let { data: currentAttLogs } = await supabase.from('attendance').select('*').eq('school_id', schoolContext.id).eq('date', today);
@@ -445,9 +458,9 @@
                 let status = existingRecord ? existingRecord.status : 'present';
                 
                 listInjections += `
-                    <div class="attendance-row">
-                        <div><strong>${s.name}</strong> <span style="font-size:11px; background:#f1f5f9; padding:3px 8px; border-radius:6px; margin-left:6px; font-weight:600; color:#475569;">${s.class}</span></div>
-                        <select class="att-dropdown-field" data-student-id="${s.id}" style="width:140px; padding:6px 12px; border-radius:8px;">
+                    <div class="attendance-tracking-strip">
+                        <div><strong>${s.name}</strong> <span style="font-size:11px; background:#f1f5f9; padding:4px 10px; border-radius:6px; margin-left:8px; font-weight:700; color:var(--text-body);">${s.class}</span></div>
+                        <select class="att-dropdown-field attendance-dropdown-pill" data-student-id="${s.id}">
                             <option value="present" ${status==='present'?'selected':''}>PRESENT</option>
                             <option value="absent" ${status==='absent'?'selected':''}>ABSENT</option>
                             <option value="late" ${status==='late'?'selected':''}>LATE</option>
@@ -456,12 +469,12 @@
             });
 
             document.getElementById('view-viewport').innerHTML = `
-                <div class="panel" style="max-width:720px; margin:0 auto;">
-                    <div class="panel-header">
-                        <div class="panel-title"><i class="fas fa-calendar-check" style="color:var(--accent);"></i> Daily Class Roll Call Registry — ${today}</div>
+                <div class="workspace-panel-card" style="max-width:760px; margin:0 auto;">
+                    <div class="panel-card-header">
+                        <div class="panel-card-title"><i class="fas fa-clipboard-user" style="color:var(--brand-primary);"></i> Daily Session Roll Call — ${today}</div>
                     </div>
-                    <div style="display:flex; flex-direction:column; margin-bottom:28px;">${listInjections || '<div style="padding:24px; text-align:center; color:#94a3b8;">No enrolled rows returned from server query.</div>'}</div>
-                    ${localDataCache.length ? '<button class="btn" style="width:100%; justify-content:center;" onclick="commitAttendanceStateLogs()"><i class="fas fa-check"></i> Commit Daily Attendance Data Grid</button>' : ''}
+                    <div style="display:flex; flex-direction:column; margin-bottom:32px;">${listInjections || '<div style="padding:32px; text-align:center; color:var(--text-muted); font-weight:500;">No student nodes configured inside partition scope.</div>'}</div>
+                    ${localDataCache.length ? '<button class="action-btn-primary" style="width:100%; justify-content:center;" onclick="commitAttendanceStateLogs()"><i class="fas fa-cloud-arrow-up"></i> Upload Attendance Matrices Logs</button>' : ''}
                 </div>`;
         }
 
@@ -473,18 +486,18 @@
                 let status = select.value;
                 await supabase.from('attendance').upsert({ school_id: schoolContext.id, student_id: studentId, date: today, status }, { onConflict: 'student_id,date' });
             }
-            alertNotify('Daily attendance parameters saved safely');
+            alertNotify('Daily attendance parameters saved safely into network directory indices.');
             await fetchSystemState();
             await switchView('records');
         };
 
-        // ==================== MASTER APP RUN TIME BOOT INITIALIZER ====================
+        // ==================== SYSTEM RUNTIME RUN BOOT KERNEL ====================
         async function bootPlatformKernelInstance() {
             let { data } = await supabase.from('schools').select('id, name, address').eq('subdomain', 'progressive').maybeSingle();
             if(data) { schoolContext = data; }
             
             document.getElementById('banner-school-name').innerText = schoolContext.name;
-            document.getElementById('banner-location').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${schoolContext.address || 'GAYAZA-KIJABIJJO'}`;
+            document.getElementById('banner-location').innerHTML = `<i class="fas fa-location-crosshairs"></i> ${schoolContext.address || 'GAYAZA-KIJABIJJO'}`;
             
             await fetchSystemState();
             await switchView('records');
