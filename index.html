@@ -2,508 +2,757 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>EduSuite Enterprise | Advanced Data Management Platform</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-School Data Management System SaaS Platform Blueprint</title>
     <style>
-        :root {
-            --bg-workspace: #f8fafc;
-            --sidebar-dark: #0f172a;
-            --sidebar-item-hover: #1e293b;
-            --text-title: #0f172a;
-            --text-muted: #64748b;
-            --text-body: #334155;
-            --brand-primary: #4f46e5;
-            --brand-primary-light: rgba(79, 70, 229, 0.08);
-            --border-elegant: #e2e8f0;
-            --emerald-success: #10b981;
-            --emerald-bg: #ecfdf5;
-            --rose-danger: #ef4444;
-            --rose-bg: #fef2f2;
-            --amber-warning: #f59e0b;
-            --amber-bg: #fffbeb;
-            --sidebar-width: 280px;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #334155;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background-color: #f8fafc;
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-        body { background: var(--bg-workspace); color: var(--text-body); min-height: 100vh; display: flex; -webkit-font-smoothing: antialiased; }
-
-        /* --- NAVIGATION SIDEBAR ARCHITECTURE --- */
-        .sidebar-wrapper {
-            width: var(--sidebar-width); background: var(--sidebar-dark); color: #f1f5f9;
-            position: fixed; top: 0; bottom: 0; left: 0;
-            display: flex; flex-direction: column; z-index: 100;
-            border-right: 1px solid #1e293b;
+        h1 {
+            color: #1e3a8a;
+            border-bottom: 3px solid #1e3a8a;
+            padding-bottom: 10px;
+            font-size: 2.5rem;
         }
-        .sidebar-branding {
-            padding: 32px 28px; display: flex; align-items: center; gap: 14px;
-            border-bottom: 1px solid #1e293b;
+        h2 {
+            color: #0f172a;
+            margin-top: 40px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+            font-size: 1.75rem;
         }
-        .branding-logo {
-            background: linear-gradient(135deg, #818cf8, #4f46e5);
-            width: 38px; height: 38px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        h3 {
+            color: #1e40af;
+            margin-top: 25px;
+            font-size: 1.25rem;
         }
-        .branding-text { font-weight: 800; font-size: 1.2rem; letter-spacing: -0.5px; color: #fff; }
-        .navigation-links { padding: 32px 20px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
-        .nav-link-item {
-            width: 100%; background: transparent; border: none; padding: 14px 18px;
-            border-radius: 12px; color: #94a3b8; font-weight: 600; font-size: 14px;
-            cursor: pointer; display: flex; align-items: center; gap: 14px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        p {
+            margin-bottom: 20px;
         }
-        .nav-link-item i { width: 20px; font-size: 18px; text-align: left; opacity: 0.8; }
-        .nav-link-item:hover { background: var(--sidebar-item-hover); color: #fff; }
-        .nav-link-item.active { background: var(--brand-primary); color: white; box-shadow: 0 4px 20px rgba(79,70,229,0.25); }
-
-        /* --- COMPONENT VIEW PLATFORM CONTAINER --- */
-        .main-workspace-frame { margin-left: var(--sidebar-width); flex: 1; padding: 48px; min-width: 0; }
-        
-        /* --- INTEGRATED PROFILE TOP HEADER --- */
-        .workspace-top-bar {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 40px; padding-bottom: 28px; border-bottom: 1px solid var(--border-elegant);
+        .meta-box {
+            background-color: #eff6ff;
+            border-left: 5px solid #2563eb;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 30px;
         }
-        .meta-title-block h1 { font-size: 2rem; font-weight: 800; color: var(--text-title); letter-spacing: -0.75px; }
-        .meta-sub-labels { font-size: 0.9rem; color: var(--text-muted); margin-top: 6px; display: flex; gap: 20px; font-weight: 500; }
-        .meta-sub-labels span { display: flex; align-items: center; gap: 8px; }
-        .meta-sub-labels i { color: var(--brand-primary); }
-
-        /* --- VOLUMETRIC METRICS MATRIX GRID --- */
-        .metrics-dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-bottom: 40px; }
-        .metric-volumetric-card {
-            background: white; border-radius: 20px; padding: 28px; display: flex; align-items: center;
-            justify-content: space-between; border: 1px solid var(--border-elegant);
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.03); transition: transform 0.2s;
+        pre {
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: "Fira Code", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.9rem;
+            border: 1px solid #1e293b;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
-        .metric-volumetric-card:hover { transform: translateY(-2px); }
-        .metric-details h4 { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
-        .metric-details .metric-numerical-value { font-size: 2rem; font-weight: 800; color: var(--text-title); margin-top: 10px; letter-spacing: -0.5px; }
-        .metric-icon-wrapper { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
-
-        /* --- INTERACTIVE CARD PANELS --- */
-        .workspace-panel-card { 
-            background: white; border-radius: 20px; padding: 36px; 
-            border: 1px solid var(--border-elegant); box-shadow: 0 12px 36px -6px rgba(0,0,0,0.03); 
+        code {
+            font-family: monospace;
+            background-color: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #0f172a;
         }
-        .panel-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
-        .panel-card-title { font-size: 1.25rem; font-weight: 700; color: var(--text-title); display: flex; align-items: center; gap: 12px; letter-spacing: -0.3px; }
-        
-        .search-input-group {
-            background: #f1f5f9; border-radius: 14px; border: 1px solid transparent;
-            padding: 0 18px; display: flex; align-items: center; gap: 14px; margin-bottom: 28px; width: 100%;
-            max-width: 440px; transition: all 0.2s;
+        pre code {
+            background-color: transparent;
+            padding: 0;
+            color: inherit;
         }
-        .search-input-group:focus-within { background: white; border-color: var(--brand-primary); box-shadow: 0 0 0 4px var(--brand-primary-light); }
-        .search-input-group input { border: none; padding: 14px 0; outline: none; width: 100%; font-size: 14px; color: var(--text-title); font-weight: 500; background: transparent; }
-        .search-input-group i { color: var(--text-muted); font-size: 16px; }
-
-        /* --- DATA TABLES --- */
-        .table-responsive-container { width: 100%; overflow-x: auto; border-radius: 14px; border: 1px solid var(--border-elegant); }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { background: #f8fafc; padding: 16px 24px; font-size: 12px; font-weight: 700; color: #475569; border-bottom: 1px solid var(--border-elegant); text-transform: uppercase; letter-spacing: 0.05em; }
-        td { padding: 18px 24px; font-size: 14px; border-bottom: 1px solid #f1f5f9; color: var(--text-body); vertical-align: middle; }
-        tr:last-child td { border-bottom: none; }
-        tr:hover td { background: #f8fafc; }
-
-        /* --- PILL SHAPED STAT BADGES --- */
-        .status-pill-badge { display: inline-flex; padding: 6px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; letter-spacing: -0.1px; }
-        .status-pill-badge.danger { background: var(--rose-bg); color: var(--rose-danger); }
-        .status-pill-badge.success { background: var(--emerald-bg); color: var(--emerald-success); }
-        
-        .action-tool-btn {
-            background: transparent; border: none; cursor: pointer; font-size: 15px; 
-            padding: 10px; border-radius: 10px; color: var(--text-muted); transition: all 0.2s; margin-left: 6px;
-        }
-        .action-tool-btn:hover { background: #f1f5f9; color: var(--text-title); }
-        .action-tool-btn.delete-action:hover { background: var(--rose-bg); color: var(--rose-danger); }
-
-        /* --- ENTERPRISE INPUT FORM ELEMENTS --- */
-        .form-layout-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px; margin-bottom: 36px; }
-        .form-input-wrapper { display: flex; flex-direction: column; gap: 10px; }
-        .form-input-wrapper label { font-size: 13px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.03em; }
-        input[type="text"], input[type="number"], select {
-            width: 100%; padding: 14px 18px; border: 1px solid #cbd5e1; border-radius: 12px;
-            font-size: 14px; color: var(--text-title); font-weight: 500; outline: none; transition: all 0.2s; background: #fff;
-        }
-        input:focus, select:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 4px var(--brand-primary-light); }
-
-        /* --- CALL TO ACTION ACTION UTILITIES --- */
-        .action-btn-primary {
-            background: var(--brand-primary); color: white; font-weight: 600; padding: 14px 28px; border: none;
-            border-radius: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; font-size: 14px;
-            transition: background 0.2s, transform 0.1s; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.2);
-        }
-        .action-btn-primary:hover { background: #4338ca; }
-        .action-btn-primary:active { transform: scale(0.98); }
-        .action-btn-secondary { background: #e2e8f0; color: #475569; box-shadow: none; }
-        .action-btn-secondary:hover { background: #cbd5e1; }
-
-        /* --- ROLL CALL MONITOR SPECIFIC LINES --- */
-        .attendance-tracking-strip { display: flex; justify-content: space-between; align-items: center; padding: 16px 4px; border-bottom: 1px solid #f1f5f9; }
-        .attendance-dropdown-pill { width: auto; padding: 8px 16px; border-radius: 10px; font-weight: 700; font-size: 13px; border-color: var(--border-elegant); }
-
-        /* --- PREMIUM TOAST NOTIFICATION DECK --- */
-        .toast-notification-node {
-            position: fixed; bottom: 40px; right: 40px; background: var(--sidebar-dark); color: white;
-            padding: 18px 28px; border-radius: 16px; box-shadow: 0 20px 40px -5px rgba(0,0,0,0.3);
-            font-weight: 600; font-size: 14px; z-index: 1000; display: flex; align-items: center; gap: 12px;
-            border: 1px solid #1e293b; animation: overlayPopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        @keyframes overlayPopIn { from { opacity: 0; transform: scale(0.85) translateY(12px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-
-        /* --- CONTEXUAL LAYER MODALS OVERLAYS --- */
-        .modal-blur-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15,23,42,0.3); backdrop-filter: blur(8px); z-index: 1000;
-            align-items: center; justify-content: center; padding: 20px;
-        }
-        .modal-frame-window { background: white; border-radius: 24px; padding: 40px; width: 100%; max-width: 520px; box-shadow: 0 30px 60px -15px rgba(0,0,0,0.2); border: 1px solid var(--border-elegant); }
-
-        @media (max-width: 1024px) {
-            .sidebar-wrapper { width: 80px; }
-            .sidebar-wrapper .branding-text, .sidebar-wrapper span { display: none; }
-            .main-workspace-frame { margin-left: 80px; padding: 28px; }
-            .metrics-dashboard-grid { grid-template-columns: 1fr; gap: 20px; }
-            .form-layout-grid { grid-template-columns: 1fr; }
+        .badge {
+            display: inline-block;
+            background-color: #10b981;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
         }
     </style>
 </head>
 <body>
 
-    <aside class="sidebar-wrapper">
-        <div class="sidebar-branding">
-            <div class="branding-logo"><i class="fas fa-landmark"></i></div>
-            <div class="branding-text">EduSuite Hub</div>
-        </div>
-        <nav class="navigation-links">
-            <button class="nav-link-item active" id="btn-records" onclick="switchView('records')"><i class="fas fa-address-book"></i> <span>Students Directory</span></button>
-            <button class="nav-link-item" id="btn-admission" onclick="switchView('admission')"><i class="fas fa-user-plus"></i> <span>Admit Student</span></button>
-            <button class="nav-link-item" id="btn-rollcall" onclick="switchView('rollcall')"><i class="fas fa-calendar-check"></i> <span>Roll Call Monitor</span></button>
-        </nav>
-    </aside>
+    <h1>Multi-School Data Management System SaaS Platform Blueprint</h1>
+    <div class="badge">Production-Ready Spec</div>
+    
+    <div class="meta-box">
+        <strong>Architecture Target:</strong> Web (Next.js, React, Tailwind CSS, TypeScript) & Mobile App (Flutter).<br>
+        <strong>Backend Ecosystem:</strong> Supabase, PostgreSQL, Edge Functions, Row Level Security (RLS), Resend API, UltraMsg/WhatsApp Cloud API.<br>
+        <strong>Region/Standards Compliance:</strong> Ministry of Education and Sports (MoES) Uganda, UNEB Lower & Traditional Secondary Grading Standards.
+    </div>
 
-    <main class="main-workspace-frame">
-        <div class="workspace-top-bar">
-            <div class="meta-title-block">
-                <h1 id="banner-school-name">PROGRESSIVE MOTHERS</h1>
-                <div class="meta-sub-labels">
-                    <span id="banner-location"><i class="fas fa-location-crosshairs"></i> GAYAZA-KIJABIJJO</span>
-                    <span><i class="fas fa-shield-halved"></i> Cloud Workspace Partition</span>
-                </div>
-            </div>
-        </div>
+    <p>This single-source implementation manual outlines data persistence, authentication containment, strict multi-tenant isolation barriers, backend automation routines, and responsive cross-platform architectures.</p>
 
-        <div class="metrics-dashboard-grid">
-            <div class="metric-volumetric-card">
-                <div class="metric-details"><h4>Active Enrollment</h4><div class="metric-numerical-value" id="m-total">0</div></div>
-                <div class="metric-icon-wrapper" style="background:#f5f3ff; color:var(--brand-primary);"><i class="fas fa-graduation-cap"></i></div>
-            </div>
-            <div class="metric-volumetric-card">
-                <div class="metric-details"><h4>Revenue Logs</h4><div class="metric-numerical-value" id="m-fees">0</div></div>
-                <div class="metric-icon-wrapper" style="background:var(--emerald-bg); color:var(--emerald-success);"><i class="fas fa-vault"></i></div>
-            </div>
-            <div class="metric-volumetric-card">
-                <div class="metric-details"><h4>Daily Absenteeism</h4><div class="metric-numerical-value" id="m-absent">0</div></div>
-                <div class="metric-icon-wrapper" style="background:var(--rose-bg); color:var(--rose-danger);"><i class="fas fa-triangle-exclamation"></i></div>
-            </div>
-        </div>
+    <h2>1. Relational PostgreSQL Schema</h2>
+    <p>Run this script directly in the Supabase SQL Editor to initialize extensions, custom enumerations, partitioned tables, foreign key mappings, and high-performance b-tree indexes.</p>
+    
+    <pre><code>-- Enable required base extensions
+create extension if not exists "uuid-ossp";
+create extension if not exists "pgcrypto";
 
-        <div id="view-viewport"></div>
-    </main>
+-- Custom Global Enumeration Types
+create type subscription_plan_type as enum ('NURSERY_BASIC', 'PRIMARY_STANDARD', 'SECONDARY_ADVANCED', 'INSTITUTE_ENTERPRISE');
+create type subscription_status_type as enum ('ACTIVE', 'PAST_DUE', 'SUSPENDED', 'EXPIRED');
+create type user_role_type as enum ('SUPER_ADMIN', 'DIRECTOR', 'HEADTEACHER', 'DEPUTY_HEADTEACHER', 'DOS', 'ACADEMIC_REGISTRAR', 'BURSAR', 'ACCOUNTANT', 'TEACHER', 'CLASS_TEACHER', 'LIBRARIAN', 'STORE_KEEPER', 'PARENT', 'STUDENT');
+create type student_status_type as enum ('ACTIVE', 'TRANSFERRED', 'SUSPENDED', 'GRADUATED', 'ARCHIVED');
+create type uneb_division_type as enum ('DIVISION_1', 'DIVISION_2', 'DIVISION_3', 'DIVISION_4', 'DIVISION_7', 'DIVISION_9', 'FAIL');
 
-    <script>
-        // ==================== SYSTEM PARSER CONFIG & SUPABASE POOLS ====================
-        const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+-- =========================================================================
+-- SYSTEM OPERATIONS & TENANT MANAGEMENT
+-- =========================================================================
 
-        let schoolContext = { id: '11111111-1111-1111-1111-111111111111', name: 'PROGRESSIVE MOTHERS', address: 'GAYAZA-KIJABIJJO' };
-        let localDataCache = [];
-        let activeView = 'records';
+create table public.saas_plans (
+    id uuid primary key default uuid_generate_v4(),
+    name subscription_plan_type not null unique,
+    max_students integer not null,
+    max_storage_gb integer not null,
+    monthly_price_ugx numeric(12, 2) not null,
+    yearly_price_ugx numeric(12, 2) not null,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
 
-        function alertNotify(msg) {
-            const el = document.createElement('div'); el.className = 'toast-notification-node'; el.innerHTML = `<i class="fas fa-circle-check" style="color:var(--emerald-success); font-size:16px;"></i> <span>${msg}</span>`;
-            document.body.appendChild(el); setTimeout(() => el.remove(), 3500);
+create table public.schools (
+    id uuid primary key default uuid_generate_v4(),
+    name text not null,
+    license_number text unique,
+    center_number text unique, -- UNEB Center Number compatibility
+    level_type text not null, -- NURSERY, PRIMARY, O_LEVEL, A_LEVEL, INSTITUTE
+    logo_url text,
+    stamp_url text,
+    headteacher_signature_url text,
+    primary_color varchar(7) default '#1e3a8a',
+    secondary_color varchar(7) default '#d97706',
+    address text not null,
+    contact_phone_1 text not null,
+    contact_phone_2 text,
+    email text unique,
+    website text,
+    subscription_plan subscription_plan_type not null default 'PRIMARY_STANDARD',
+    subscription_status subscription_status_type not null default 'ACTIVE',
+    subscription_expiry timestamp with time zone not null,
+    is_suspended boolean not null default false,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+    updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- =========================================================================
+-- TENANT-ISOLATED USER PROFILES
+-- =========================================================================
+
+create table public.profiles (
+    id uuid primary key references auth.users(id) on delete cascade,
+    school_id uuid references public.schools(id) on delete cascade not null,
+    role user_role_type not null,
+    first_name text not null,
+    last_name text not null,
+    middle_name text,
+    phone_number text,
+    whatsapp_number text,
+    is_active boolean default true not null,
+    avatar_url text,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+    updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- =========================================================================
+-- ACADEMIC CONTAINMENT METRICS
+-- =========================================================================
+
+create table public.academic_years (
+    id uuid primary key default uuid_generate_v4(),
+    school_id uuid references public.schools(id) on delete cascade not null,
+    year_label varchar(4) not null, -- e.g. "2026"
+    is_current boolean default false not null,
+    unique(school_id, year_label)
+);
+
+create table public.terms (
+    id uuid primary key default uuid_generate_v4(),
+    school_id uuid references public.schools(id) on delete cascade not null,
+    academic_year_id uuid references public.academic_years(id) on delete cascade not null,
+    name varchar(20) not null, -- Term 1, Term 2, Term 3
+    is_current boolean default false not null,
+    start_date date not null,
+    end_date date not null
+);
+
+create table public.classes (
+    id uuid primary key default uuid_generate_v4(),
+    school_id uuid references public.schools(id) on delete cascade not null,
+    name text not null, -- e.g., "Senior 1", "Primary 4"
+    numeric_level integer not null,
+    section text not null
+);
+
+create table public.streams (
+    id uuid primary key default uuid_generate_v4(),
+    school_id uuid references public.schools(id) on delete cascade not null,
+    class_id uuid references public.classes(id) on delete cascade not null,
+    name text not null
+);
+
+create table public.subjects (
+    id uuid primary key default uuid_generate_v4(),
+    school_id uuid references public.schools(id) on delete cascade not null,
+    name text not null,
+    code varchar(20) not null,
+    is_subsidiary boolean default false not null,
+    class_id uuid references public.classes(id) on delete cascade not null
+);
+
+-- =========================================================================
+-- STUDENT & GUARDIAN CORE DIRECTORIES
+-- =========================================================================
+
+create table public.parents (
+    id uuid primary key default uuid_generate_v4(),
+    school_id uuid references public.schools(id) on delete cascade not null,
+    profile_id uuid references public.profiles(id) on delete set null,
+    full_name text not null,
+    phone_primary text not null,
+    phone_secondary text,
+    email text,
+    occupation text,
+    nin_number text,
+    address text not null
+);
+
+create table public.students (
+    id uuid primary key default uuid_generate_v4(),
+    school_id uuid references public.schools(id) on delete cascade not null,
+    admission_number text not null,
+    lin_number text, -- Uganda MoES Student LIN
+    first_name text not null,
+    last_name text not null,
+    middle_name text,
+    gender varchar(10) not null,
+    date_of_birth date not null,
+    current_class_id uuid references public.classes(id) on delete restrict not null,
+    current_stream_id uuid references public.streams(id) on delete restrict not null,
+    parent_id uuid references public.parents(id) on delete restrict not null,
+    photo_url text,
+    medical_history text,
+    religion text,
+    nationality text default 'Ugandan' not null,
+    former_school text,
+    status student_status_type not null default 'ACTIVE',
+    enrolled_at date default current_date not null,
+    unique(school_id, admission_number)
+);
+
+-- =========================================================================
+-- ACADEMIC EVALUATIONS & EXAMS
+-- =========================================================================
+
+create table public.subject_combinations (
+    id uuid primary key default uuid_generate_v4(),
+    school_id uuid references public.schools(id) on delete cascade not null,
+    student_id uuid references public.students(id) on delete cascade not null,
+    subject_id uuid references public.subjects(id) on delete cascade not null,
+    unique(student_id, subject_id)
+);
+
+create table public.marks_entries (
+    id uuid primary key default uuid_generate_v4(),
+    school_id uuid references public.schools(id) on delete cascade not null,
+    student_id uuid references public.students(id) on delete cascade not null,
+    subject_id uuid references public.subjects(id) on delete cascade not null,
+    term_id uuid references public.terms(id) on delete cascade not null,
+    continuous_assessment numeric(5,2) default 0.00, -- 20% New Lower Secondary Curriculum compatibility
+    end_of_term_mark numeric(5,2) default 0.00,
+    total_calculated_mark numeric(5,2) not null,
+    grade_achieved varchar(2) not null, -- D1, D2, C3, C4, C5, C6, P7, P8, F9
+    teacher_remarks text,
+    entered_by uuid references public.profiles(id) on delete set null,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+    unique(student_id, subject_id, term_id)
+);
+
+create table public.termly_summaries (
+    id uuid primary key default uuid_generate_v4(),
+    school_id uuid references public.schools(id) on delete cascade not null,
+    student_id uuid references public.students(id) on delete cascade not null,
+    term_id uuid references public.terms(id) on delete cascade not null,
+    total_marks numeric(6,2) not null,
+    average_mark numeric(5,2) not null,
+    class_position integer,
+    stream_position integer,
+    total_aggregates integer, -- Best 8 aggregates for traditional evaluation criteria
+    division_achieved uneb_division_type,
+    teacher_comments text,
+    headteacher_comments text,
+    attendance_present integer default 0,
+    attendance_absent integer default 0,
+    updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
+    unique(student_id, term_id)
+);
+
+-- =========================================================================
+-- DISCIPLINE & ATTENDANCE
+-- =========================================================================
+
+create table public.student_attendance (
+    id uuid primary key default uuid_generate_v4(),
+    school_id uuid references public.schools(id) on delete cascade not null,
+    student_id uuid references public.students(id) on delete cascade not null,
+    date date not null,
+    status varchar(15) not null, -- PRESENT, ABSENT, SICK, PERMISSION
+    remarks text,
+    recorded_by uuid references public.profiles(id) on delete set null,
+    unique(student_id, date)
+);
+
+create table public.discipline_records (
+    id uuid primary key default uuid_generate_v4(),
+    school_id uuid references public.schools(id) on delete cascade not null,
+    student_id uuid references public.students(id) on delete cascade not null,
+    incident_date date not null,
+    offense text not null,
+    punishment text,
+    action_taken text not null,
+    status varchar(20) default 'PENDING' not null
+);
+
+-- =========================================================================
+-- BURSARY & ACCOUNTING LEDGERS
+-- =========================================================================
+
+create table public.fees_structures (
+    id uuid primary key default uuid_generate_v4(),
+    school_id uuid references public.schools(id) on delete cascade not null,
+    class_id uuid references public.classes(id) on delete cascade not null,
+    term_id uuid references public.terms(id) on delete cascade not null,
+    tuition_fees numeric(12, 2) not null,
+    development_fees numeric(12, 2) default 0.00,
+    requirements_cost numeric(12, 2) default 0.00,
+    total_compulsory_fees numeric(12, 2) not null,
+    unique(class_id, term_id)
+);
+
+create table public.student_ledger (
+    id uuid primary key default uuid_generate_v4(),
+    school_id uuid references public.schools(id) on delete cascade not null,
+    student_id uuid references public.students(id) on delete cascade not null,
+    term_id uuid references public.terms(id) on delete cascade not null,
+    fees_charged numeric(12,2) not null,
+    fees_paid numeric(12,2) default 0.00 not null,
+    balance_due numeric(12,2) not null,
+    unique(student_id, term_id)
+);
+
+create table public.fees_payments (
+    id uuid primary key default uuid_generate_v4(),
+    school_id uuid references public.schools(id) on delete cascade not null,
+    student_id uuid references public.students(id) on delete cascade not null,
+    term_id uuid references public.terms(id) on delete cascade not null,
+    amount_paid numeric(12, 2) not null,
+    payment_date timestamp with time zone default timezone('utc'::text, now()) not null,
+    payment_method varchar(30) not null, -- CASH, MOBILE_MONEY, BANK_SLIP
+    reference_number text,
+    received_by uuid references public.profiles(id) on delete set null,
+    receipt_number serial not null
+);
+
+create table public.expenses (
+    id uuid primary key default uuid_generate_v4(),
+    school_id uuid references public.schools(id) on delete cascade not null,
+    category text not null, -- SALARIES, MAINTENANCE, STATIONERY, KITCHEN
+    amount numeric(12,2) not null,
+    expense_date date not null,
+    description text,
+    paid_to text,
+    authorized_by uuid references public.profiles(id) on delete set null
+);
+
+-- =========================================================================
+-- TELEMETRY, SMS, WHATSAPP, AND SYSTEM LOGS
+-- =========================================================================
+
+create table public.whatsapp_otp_codes (
+    id uuid primary key default uuid_generate_v4(),
+    phone_number text not null,
+    otp_code varchar(6) not null,
+    expires_at timestamp with time zone not null,
+    is_verified boolean default false not null,
+    attempts integer default 0 not null,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+create table public.communication_logs (
+    id uuid primary key default uuid_generate_v4(),
+    school_id uuid references public.schools(id) on delete cascade not null,
+    recipient_phone_or_email text not null,
+    channel varchar(10) not null, -- WHATSAPP, EMAIL
+    message_body text not null,
+    status varchar(20) not null,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- =========================================================================
+-- DATABASE PERFORMANCE INDEXES
+-- =========================================================================
+create index idx_profiles_school on public.profiles(school_id);
+create index idx_students_school_class on public.students(school_id, current_class_id);
+create index idx_students_admission_no on public.students(admission_number);
+create index idx_students_lin on public.students(lin_number);
+create index idx_marks_student_term on public.marks_entries(student_id, term_id);
+create index idx_attendance_date on public.student_attendance(school_id, date);
+create index idx_ledger_student_term on public.student_ledger(student_id, term_id);
+create index idx_payments_receipt on public.fees_payments(school_id, receipt_number);
+create index idx_otp_phone on public.whatsapp_otp_codes(phone_number, otp_code);
+</code></pre>
+
+    <h2>2. Row Level Security (RLS) Policies</h2>
+    <p>Enforce data isolation across all app schemas based on secure JWT tenant parameters extracted directly from the authenticated session context.</p>
+    
+    <pre><code>-- Enable Row Level Security across structural schemas
+alter table public.schools enable row level security;
+alter table public.profiles enable row level security;
+alter table public.students enable row level security;
+alter table public.marks_entries enable row level security;
+alter table public.termly_summaries enable row level security;
+alter table public.fees_payments enable row level security;
+alter table public.student_ledger enable row level security;
+
+-- Helper parsing parameters to safely pull active tenancy parameters from current context sessions
+create or replace function auth.get_jwt_school_id() 
+returns uuid as $$
+  select nullif(current_setting('request.jwt.claims', true)::jsonb->>'school_id', '')::uuid;
+$$ language sql stable;
+
+create or replace function auth.get_jwt_role() 
+returns text as $$
+  select nullif(current_setting('request.jwt.claims', true)::jsonb->>'role', '')::text;
+$$ language sql stable;
+
+-- =========================================================================
+-- TENANT CONTEXT ISOLATION POLICIES
+-- =========================================================================
+
+create policy "Super Admins possess root clearance across all school instances."
+  on public.schools for all using ( auth.get_jwt_role() = 'SUPER_ADMIN' );
+
+create policy "School operators read self school telemetry properties."
+  on public.schools for select using ( id = auth.get_jwt_school_id() );
+
+create policy "Users read profiles sharing the same school context."
+  on public.profiles for select using ( school_id = auth.get_jwt_school_id() or auth.get_jwt_role() = 'SUPER_ADMIN' );
+
+create policy "Administrative users write profile indexes inside their school context."
+  on public.profiles for all using ( 
+    school_id = auth.get_jwt_school_id() 
+    and auth.get_jwt_role() in ('SUPER_ADMIN', 'DIRECTOR', 'HEADTEACHER', 'DEPUTY_HEADTEACHER') 
+  );
+
+create policy "Tenant restricted visibility rules for student records."
+  on public.students for select using ( school_id = auth.get_jwt_school_id() or auth.get_jwt_role() = 'SUPER_ADMIN' );
+
+create policy "Academic administrators can modify student directories."
+  on public.students for all using ( 
+    school_id = auth.get_jwt_school_id() 
+    and auth.get_jwt_role() in ('SUPER_ADMIN', 'DIRECTOR', 'HEADTEACHER', 'DEPUTY_HEADTEACHER', 'DOS', 'ACADEMIC_REGISTRAR')
+  );
+
+create policy "View system marks data securely."
+  on public.marks_entries for select using ( school_id = auth.get_jwt_school_id() or auth.get_jwt_role() = 'SUPER_ADMIN' );
+
+create policy "Modify records based on matching role permissions and active subscription status."
+  on public.marks_entries for all using (
+    school_id = auth.get_jwt_school_id()
+    and auth.get_jwt_role() in ('SUPER_ADMIN', 'HEADTEACHER', 'DEPUTY_HEADTEACHER', 'DOS', 'TEACHER', 'CLASS_TEACHER')
+    and exists (
+      select 1 from public.schools 
+      where schools.id = auth.get_jwt_school_id() 
+        and schools.subscription_status = 'ACTIVE' 
+        and schools.is_suspended = false
+    )
+  );
+</code></pre>
+
+    <h2>3. Subscription Lock Controls & UNEB Engine</h2>
+    <p>Automate multi-tenant billing protections and calculate grading components, aggregates, and division criteria under standard UNEB rules.</p>
+    
+    <pre><code>-- Subscription verification constraint trigger logic
+create or replace function public.check_school_subscription_standing()
+returns trigger as $$
+declare
+    current_school_status subscription_status_type;
+    is_school_suspended boolean;
+begin
+    select subscription_status, is_suspended 
+    into current_school_status, is_school_suspended
+    from public.schools where id = new.school_id;
+
+    if (current_school_status != 'ACTIVE' or is_school_suspended = true) then
+        raise exception 'Operation Denied: The subscription for this school has expired or has been suspended. Access to data entry, report rendering, and processing modules is restricted until outstanding arrears are cleared.';
+    end if;
+    return new;
+end;
+$$ language plpgsql;
+
+create trigger enforce_subscription_on_marks_entry
+    before insert or update or delete on public.marks_entries
+    for each row execute function public.check_school_subscription_standing();
+
+create trigger enforce_subscription_on_student_add
+    before insert or update or delete on public.students
+    for each row execute function public.check_school_subscription_standing();
+
+-- =========================================================================
+-- EXPERT GRADUATION / PERFORMANCE SCORING COMPILERS
+-- =========================================================================
+
+create or replace function public.calculate_uneb_subject_grade(numeric_mark numeric)
+returns varchar as $$
+begin
+    if numeric_mark >= 80.00 then return 'D1';
+    elsif numeric_mark >= 75.00 then return 'D2';
+    elsif numeric_mark >= 70.00 then return 'C3';
+    elsif numeric_mark >= 65.00 then return 'C4';
+    elsif numeric_mark >= 60.00 then return 'C5';
+    elsif numeric_mark >= 55.00 then return 'C6';
+    elsif numeric_mark >= 50.00 then return 'P7';
+    elsif numeric_mark >= 45.00 then return 'P8';
+    else return 'F9';
+    end if;
+end;
+$$ language plpgsql immutable;
+
+create or replace function public.process_and_compile_termly_uneb_results(
+    target_student_id uuid,
+    target_term_id uuid
+)
+returns void as $$
+declare
+    v_school_id uuid;
+    v_total_marks numeric(6,2);
+    v_avg_mark numeric(5,2);
+    v_aggregate_sum integer := 0;
+    v_division uneb_division_type := 'FAIL';
+    v_credit_count integer := 0;
+    v_p8_count integer := 0;
+    v_math_grade varchar(2);
+    v_eng_grade varchar(2);
+begin
+    select school_id into v_school_id from public.students where id = target_student_id;
+
+    select sum(total_calculated_mark), avg(total_calculated_mark)
+    into v_total_marks, v_avg_mark
+    from public.marks_entries where student_id = target_student_id and term_id = target_term_id;
+
+    select count(*) filter (where grade_achieved in ('D1','D2','C3','C4','C5','C6')) into v_credit_count
+    from public.marks_entries where student_id = target_student_id and term_id = target_term_id;
+
+    select count(*) filter (where grade_achieved in ('P7','P8')) into v_p8_count
+    from public.marks_entries where student_id = target_student_id and term_id = target_term_id;
+
+    select grade_achieved into v_math_grade from public.marks_entries 
+    where student_id = target_student_id and term_id = target_term_id 
+      and subject_id in (select id from public.subjects where code ilike 'UCE-MAT%' or name ilike '%Mathematics%') limit 1;
+
+    select grade_achieved into v_eng_grade from public.marks_entries 
+    where student_id = target_student_id and term_id = target_term_id 
+      and subject_id in (select id from public.subjects where code ilike 'UCE-ENG%' or name ilike '%English%') limit 1;
+
+    select sum(sub.agg_val) into v_aggregate_sum
+    from (
+        select case 
+            when grade_achieved = 'D1' then 1 when grade_achieved = 'D2' then 2
+            when grade_achieved = 'C3' then 3 when grade_achieved = 'C4' then 4
+            when grade_achieved = 'C5' then 5 when grade_achieved = 'C6' then 6
+            when grade_achieved = 'P7' then 7 when grade_achieved = 'P8' then 8
+            else 9 end as agg_val
+        from public.marks_entries where student_id = target_student_id and term_id = target_term_id
+        order by agg_val asc limit 8
+    ) sub;
+
+    -- Strict traditional routing classification algorithm rules
+    if (v_aggregate_sum <= 32 and v_credit_count >= 6 and v_math_grade not in ('F9','P8','P7') and v_eng_grade not in ('F9','P8','P7')) then
+        v_division := 'DIVISION_1';
+    elsif (v_aggregate_sum <= 45 and v_credit_count >= 4) then
+        v_division := 'DIVISION_2';
+    elsif (v_aggregate_sum <= 58 and v_credit_count >= 3) then
+        v_division := 'DIVISION_3';
+    elsif (v_aggregate_sum <= 72 and (v_credit_count >= 1 or v_p8_count >= 3)) then
+        v_division := 'DIVISION_4';
+    else
+        v_division := 'FAIL';
+    end if;
+
+    insert into public.termly_summaries (
+        school_id, student_id, term_id, total_marks, average_mark, total_aggregates, division_achieved, updated_at
+    ) values (
+        v_school_id, target_student_id, target_term_id, v_total_marks, v_avg_mark, v_aggregate_sum, v_division, now()
+    ) on conflict (student_id, term_id) do update set
+        total_marks = excluded.total_marks,
+        average_mark = excluded.average_mark,
+        total_aggregates = excluded.total_aggregates,
+        division_achieved = excluded.division_achieved,
+        updated_at = now();
+end;
+$$ language plpgsql;
+</code></pre>
+
+    <h2>4. Supabase TypeScript Edge Functions</h2>
+    <h3>WhatsApp Identity Gateway Processor (<code>/supabase/functions/whatsapp-otp/index.ts</code>)</h3>
+    <pre><code>import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4"
+
+const ULTRAMSG_INSTANCE_ID = Deno.env.get('ULTRAMSG_INSTANCE_ID')!;
+const ULTRAMSG_API_TOKEN = Deno.env.get('ULTRAMSG_API_TOKEN')!;
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
+  try {
+    const { phoneNumber } = await req.json();
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiryWindow = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+
+    const { error: dbError } = await supabase
+      .from('whatsapp_otp_codes')
+      .insert([{ phone_number: phoneNumber, otp_code: generatedOtp, expires_at: expiryWindow }]);
+
+    if (dbError) throw dbError;
+
+    const messagePayload = `Your Multi-School Portal security validation key token is: *${generatedOtp}*. Access window closes in 5 minutes.`;
+    
+    await fetch(`https://api.ultramsg.com/${ULTRAMSG_INSTANCE_ID}/messages/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ token: ULTRAMSG_API_TOKEN, to: phoneNumber, body: messagePayload, priority: '10' })
+    });
+
+    return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 });
+  } catch (err: any) {
+    return new Response(JSON.stringify({ error: err.message }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 });
+  }
+});
+</code></pre>
+
+    <h2>5. Next.js App Router Component Blueprint</h2>
+    <h3>Dynamic Multi-Tenant Layout Wrapper (<code>src/app/dashboard/layout.tsx</code>)</h3>
+    <pre><code>"use client";
+import React, { useEffect, useState } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useRouter } from 'next/navigation';
+
+export default function TenantDashboardLayout({ children }: { children: React.ReactNode }) {
+  const supabase = createClientComponentClient();
+  const router = useRouter();
+  const [tenant, setTenant] = useState&lt;any&gt;(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function evaluateTenantContext() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return router.push('/login');
+
+      const schoolId = session.user.user_metadata.school_id;
+      const { data } = await supabase.from('schools').select('*').eq('id', schoolId).single();
+      setTenant(data);
+      setLoading(false);
+    }
+    evaluateTenantContext();
+  }, [supabase, router]);
+
+  if (loading) return &lt;div className="min-h-screen flex items-center justify-center"&gt;Verifying Tenant Security Environment...&lt;/div&gt;;
+
+  return (
+    &lt;div className="flex min-h-screen bg-slate-100"&gt;
+      &lt;aside className="w-64 bg-slate-900 text-white flex flex-col"&gt;
+        &lt;div className="p-6 flex items-center space-x-3 text-white font-bold" style={{ backgroundColor: tenant?.primary_color || '#1e3a8a' }}&gt;
+          &lt;img src={tenant?.logo_url || '/logo.png'} alt="Branding Identification" className="w-8 h-8 rounded object-contain bg-white p-1" /&gt;
+          &lt;span className="truncate"&gt;{tenant?.name}&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;nav className="flex-1 p-4 space-y-1 text-sm text-slate-300"&gt;
+          &lt;a href="/dashboard/students" className="block p-3 rounded hover:bg-slate-800"&gt;Student Master Indexes&lt;/a&gt;
+          &lt;a href="/dashboard/academics" className="block p-3 rounded hover:bg-slate-800"&gt;Grades Compilation Ledger&lt;/a&gt;
+          &lt;a href="/dashboard/billing" className="block p-3 rounded hover:bg-slate-800"&gt;Bursary & Accounts Balance&lt;/a&gt;
+        &lt;/nav&gt;
+      &lt;/aside&gt;
+      &lt;div className="flex-1 flex flex-col"&gt;
+        {tenant?.subscription_status !== 'ACTIVE' && (
+          &lt;div className="bg-red-600 text-white text-center p-2.5 text-xs font-bold uppercase tracking-wider"&gt;
+            System Lock Active: Functions are locked until current standing dues are cleared.
+          &lt;/div&gt;
+        )}
+        &lt;main className="p-8 flex-1"&gt;{children}&lt;/main&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+
+    <h2>6. Flutter Mobile Client Architecture</h2>
+    <h3>Tenancy Client Orchestrator Header (<code>tenant_api_client.dart</code>)</h3>
+    <pre><code>import 'package:dio/dio.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+class TenantApiClient {
+  final Dio _dio = Dio();
+  final _secureStorage = const FlutterSecureStorage();
+
+  TenantApiClient() {
+    _dio.options.baseUrl = "https://your-supabase-id.supabase.co/rest/v1";
+    _dio.options.connectTimeout = const Duration(seconds: 15);
+
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        final token = await _secureStorage.read(key: "auth_jwt_token");
+        final schoolId = await _secureStorage.read(key: "tenant_school_id");
+        
+        if (token != null) {
+          options.headers["Authorization"] = "Bearer $token";
+          options.headers["apikey"] = "YOUR_SUPABASE_ANON_KEY";
+          options.headers["X-Tenant-School-ID"] = schoolId;
         }
-
-        function formatUGX(val) { return 'UGX ' + (val || 0).toLocaleString(); }
-
-        // ==================== VIEW TRANSLATION SWITCH ENGINE ====================
-        async function switchView(targetView) {
-            activeView = targetView;
-            document.querySelectorAll('.nav-link-item').forEach(b => b.classList.remove('active'));
-            const matchedBtn = document.getElementById(`btn-${targetView}`);
-            if(matchedBtn) matchedBtn.classList.add('active');
-
-            const container = document.getElementById('view-viewport');
-            
-            if (targetView === 'records') {
-                container.innerHTML = `
-                    <div class="search-input-group">
-                        <i class="fas fa-magnifying-glass"></i>
-                        <input type="text" id="directorySearchInput" placeholder="Filter roster profiles by name or unique LIN keys...">
-                    </div>
-                    <div class="workspace-panel-card">
-                        <div class="panel-card-header">
-                            <div class="panel-card-title"><i class="fas fa-database" style="color:var(--brand-primary);"></i> Active Student Roster Partition</div>
-                        </div>
-                        <div class="table-responsive-container">
-                            <table>
-                                <thead><tr><th>Student/Identity Keys</th><th>Class Grade</th><th>Arrears Matrix</th><th style="text-align:right;">Control Actions</th></tr></thead>
-                                <tbody id="student-tbody-target"></tbody>
-                            </table>
-                        </div>
-                    </div>`;
-                document.getElementById('directorySearchInput').addEventListener('input', (e) => executeClientSearch(e.target.value));
-                await syncRenderTableData();
-            } else if (targetView === 'admission') {
-                container.innerHTML = `
-                    <div class="workspace-panel-card" style="max-width: 760px; margin: 0 auto;">
-                        <div class="panel-card-header">
-                            <div class="panel-card-title"><i class="fas fa-address-card" style="color:var(--brand-primary);"></i> Institutional Admission Registration</div>
-                        </div>
-                        <div class="form-layout-grid">
-                            <div class="form-input-wrapper"><label>Full Legal Name</label><input type="text" id="form-name" placeholder="e.g., Kigozi Arthur"></div>
-                            <div class="form-input-wrapper"><label>Assigned Class Grade</label>
-                                <select id="form-class">
-                                    <option>Primary 1</option><option>Primary 2</option><option>Primary 3</option><option>Primary 4</option>
-                                    <option>Primary 5</option><option>Primary 6</option><option>Primary 7</option>
-                                </select>
-                            </div>
-                            <div class="form-input-wrapper"><label>Parent Guardian WhatsApp</label><input type="text" id="form-wa" placeholder="e.g., 256701XXXXXX"></div>
-                            <div class="form-input-wrapper"><label>Tuition Standard Flat Allocation (UGX)</label><input type="number" id="form-fees" placeholder="Rate magnitude values"></div>
-                        </div>
-                        <div style="text-align: right;">
-                            <button class="action-btn-primary" onclick="commitStudentRegistration()"><i class="fas fa-circle-arrow-up"></i> Deploy Profile Node</button>
-                        </div>
-                    </div>`;
-            } else if (targetView === 'rollcall') {
-                await renderAttendanceRegistryView();
-            }
+        return handler.next(options);
+      },
+      onError: (DioException error, handler) {
+        if (error.response?.statusCode == 403) {
+          print("Subscription Error Exception Block: Data execution path context locked.");
         }
+        return handler.next(error);
+      }
+    ));
+  }
+  Dio get instance => _dio;
+}
+</code></pre>
 
-        // ==================== RENDERS & REPOSITORY STATE BALANCING ====================
-        async function fetchSystemState() {
-            let { data } = await supabase.from('students').select('*').eq('school_id', schoolContext.id).order('name', { ascending: true });
-            localDataCache = data || [];
-            
-            let { data: trx } = await supabase.from('transactions').select('amount').eq('school_id', schoolContext.id);
-            let { data: att } = await supabase.from('attendance').select('status').eq('school_id', schoolContext.id).eq('date', new Date().toISOString().slice(0,10));
-            
-            document.getElementById('m-total').innerText = localDataCache.length;
-            document.getElementById('m-fees').innerText = formatUGX((trx || []).reduce((acc, curr) => acc + (curr.amount || 0), 0));
-            document.getElementById('m-absent').innerText = (att || []).filter(a => a.status === 'absent').length;
-        }
+    <h2>7. Production Environment Setup</h2>
+    <p>Follow these steps to deploy and activate the platform infrastructure:</p>
+    <pre><code># 1. Store operational secrets inside your Supabase cluster
+supabase secrets set ULTRAMSG_INSTANCE_ID="inst_89347"
+supabase secrets set ULTRAMSG_API_TOKEN="token_xyz_5893485"
+supabase secrets set OPENAI_API_KEY="sk-proj-ai-key-string"
+supabase secrets set RESEND_API_KEY="re_8934df9"
 
-        async function syncRenderTableData(dataset = null) {
-            const target = document.getElementById('student-tbody-target');
-            if(!target) return;
-            let elements = dataset || localDataCache;
-            target.innerHTML = '';
+# 2. Deploy structural schemas to your remote instance
+supabase db push
 
-            if(!elements.length) {
-                target.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:56px; color:var(--text-muted); font-weight:500;"><i class="fas fa-cubes-stacked block text-xl mb-2" style="color:#cbd5e1;"></i> Empty query data arrays context returned.</td></tr>`;
-                return;
-            }
+# 3. Deploy systemic backend edge code paths
+supabase functions deploy whatsapp-otp --project-ref your_project_reference
+supabase functions deploy ai-insights --project-ref your_project_reference
 
-            elements.forEach(s => {
-                let debt = (s.total_fees || 0) - (s.fees_paid || 0);
-                let row = document.createElement('tr');
-                row.innerHTML = `
-                    <td><strong>${s.name}</strong><br><small style="color:var(--text-muted); font-family:'JetBrains Mono', monospace; font-size:11px;">LIN-${s.lin || 'NONE'}</small></td>
-                    <td><span style="background:#f1f5f9; padding:6px 12px; border-radius:8px; font-weight:700; font-size:12px; color:var(--text-title);">${s.class}</span></td>
-                    <td><span class="status-pill-badge ${debt <= 0 ? 'success' : 'danger'}">${debt <= 0 ? 'CLEARED' : formatUGX(debt)}</span></td>
-                    <td style="text-align:right;">
-                        <button class="action-tool-btn" onclick="triggerFeesPaymentModal('${s.id}')" title="Collect Fees"><i class="fas fa-receipt" style="color:var(--emerald-success);"></i></button>
-                        <button class="action-tool-btn" onclick="triggerMarksInputModal('${s.id}')" title="Marks Ledger"><i class="fas fa-award" style="color:var(--amber-warning);"></i></button>
-                        <button class="action-tool-btn delete-action" onclick="triggerEraseProfileNode('${s.id}')" title="Drop Node"><i class="fas fa-trash-can"></i></button>
-                    </td>`;
-                target.appendChild(row);
-            });
-        }
+# 4. Verify Next.js compilation bundles before launching live
+npm run build</code></pre>
 
-        function executeClientSearch(term) {
-            let matches = localDataCache.filter(s => s.name.toLowerCase().includes(term.toLowerCase()) || (s.lin || '').toLowerCase().includes(term.toLowerCase()));
-            syncRenderTableData(matches);
-        }
-
-        // ==================== TRANSACTION MUTATORS LOGS ====================
-        async function commitStudentRegistration() {
-            let name = document.getElementById('form-name').value.trim();
-            if(!name) return alert('Name tracking parameters verification exception.');
-            let lin = name.replace(/[^a-zA-Z]/g,'').slice(0,2).toUpperCase() + Math.floor(1000+Math.random()*9000);
-
-            await supabase.from('students').insert({
-                school_id: schoolContext.id, name, lin,
-                class: document.getElementById('form-class').value,
-                parent_whatsapp: document.getElementById('form-wa').value,
-                total_fees: parseFloat(document.getElementById('form-fees').value) || 0, fees_paid: 0
-            });
-
-            alertNotify('Student Record Block Deployed Matrix Successfully');
-            await fetchSystemState();
-            switchView('records');
-        }
-
-        // ==================== REVENUE LOG COLLECTION DIALOGS ====================
-        window.triggerFeesPaymentModal = function(id) {
-            let s = localDataCache.find(x => x.id === id);
-            let modal = document.createElement('div'); modal.className = 'modal-blur-overlay'; modal.id = 'active-modal-node';
-            modal.innerHTML = `
-                <div class="modal-frame-window">
-                    <div class="panel-card-title" style="margin-bottom:16px;"><i class="fas fa-money-check-dollar" style="color:var(--emerald-success);"></i> Post Remittance Value</div>
-                    <div style="background:#f8fafc; padding:18px; border-radius:14px; font-size:13px; margin-bottom:24px; border:1px solid var(--border-elegant);">
-                        Target Learner: <strong style="color:var(--text-title);">${s.name}</strong><br>
-                        Arrears Standing: <strong style="color:var(--rose-danger);">${formatUGX(s.total_fees - s.fees_paid)}</strong>
-                    </div>
-                    <div class="form-input-wrapper" style="margin-bottom:28px;"><label>Remitted Cash Value Input (UGX)</label><input type="number" id="pay-amt-field" placeholder="0.00"></div>
-                    <div style="display:flex; justify-content:flex-end; gap:14px;">
-                        <button class="action-btn-primary action-btn-secondary" onclick="document.getElementById('active-modal-node').remove()">Abort</button>
-                        <button class="action-btn-primary" style="background:var(--emerald-success); box-shadow:none;" onclick="executePaymentTransactionPost('${id}')">Commit Revenue Entry</button>
-                    </div>
-                </div>`;
-            document.body.appendChild(modal); modal.style.display = 'flex';
-        };
-
-        window.executePaymentTransactionPost = async function(id) {
-            let val = parseFloat(document.getElementById('pay-amt-field').value);
-            if(isNaN(val) || val <= 0) return alert('Input parameters magnitude values configuration exception.');
-            let s = localDataCache.find(x => x.id === id);
-            let newPaid = (s.fees_paid || 0) + val;
-
-            await supabase.from('students').update({ fees_paid: newPaid }).eq('id', id);
-            await supabase.from('transactions').insert({
-                school_id: schoolContext.id, student_id: id, amount: val, payment_method: 'cash',
-                receipt_number: 'TXN'+Date.now(), payment_date: new Date().toISOString()
-            });
-
-            document.getElementById('active-modal-node').remove();
-            alertNotify('Financial ledger matrix updated safely inside secure storage channels.');
-            await fetchSystemState();
-            await switchView('records');
-        };
-
-        // ==================== MARKS PROCESSING GRID SYSTEMS ====================
-        window.triggerMarksInputModal = function(id) {
-            let s = localDataCache.find(x => x.id === id);
-            let subjects = ['English','Science','Social Studies','Mathematics'];
-            let injectionHtml = '';
-            subjects.forEach(sub => {
-                injectionHtml += `<div class="form-input-wrapper" style="margin-bottom:16px;"><label>${sub} Score Core Matrix (0-100)</label><input type="number" class="subject-mark-input" data-subject="${sub}" max="100" min="0" placeholder="Raw numerical volume"></div>`;
-            });
-
-            let modal = document.createElement('div'); modal.className = 'modal-blur-overlay'; modal.id = 'active-modal-node';
-            modal.innerHTML = `
-                <div class="modal-frame-window" style="max-height:85vh; overflow-y:auto;">
-                    <div class="panel-card-title" style="margin-bottom:8px;"><i class="fas fa-arrow-up-right-dots" style="color:var(--amber-warning);"></i> Terminal Grade Log Input</div>
-                    <div style="margin-bottom:24px; font-size:13px; color:var(--text-muted);">Syncing parameters for context: <strong>${s.name}</strong></div>
-                    ${injectionHtml}
-                    <div style="display:flex; justify-content:flex-end; gap:14px; margin-top:28px;">
-                        <button class="action-btn-primary action-btn-secondary" onclick="document.getElementById('active-modal-node').remove()">Abort</button>
-                        <button class="action-btn-primary" style="background:var(--amber-warning); box-shadow:none;" onclick="commitGradesMatrixLog('${id}')">Sync Grade Profiles</button>
-                    </div>
-                </div>`;
-            document.body.appendChild(modal); modal.style.display = 'flex';
-        };
-
-        window.commitGradesMatrixLog = async function(id) {
-            const inputs = document.querySelectorAll('.subject-mark-input');
-            function resolveGradeTier(sc) {
-                if (sc >= 80) return 'D1'; if (sc >= 75) return 'D2'; if (sc >= 70) return 'C3'; if (sc >= 65) return 'C4';
-                if (sc >= 60) return 'C5'; if (sc >= 55) return 'C6'; if (sc >= 50) return 'P7'; if (sc >= 45) return 'P8';
-                return 'F9';
-            }
-
-            for(let input of inputs) {
-                let score = parseInt(input.value);
-                let subject = input.getAttribute('data-subject');
-                if(!isNaN(score)) {
-                    await supabase.from('marks').upsert({
-                        school_id: schoolContext.id, student_id: id, subject, score, grade: resolveGradeTier(score),
-                        term: 'Term 1', locked: false, created_at: new Date().toISOString()
-                    }, { onConflict: 'student_id,subject,term' });
-                }
-            }
-
-            document.getElementById('active-modal-node').remove();
-            alertNotify('Academic Evaluation Array Configurations Sync Complete.');
-        };
-
-        // ==================== EXPULSION/DESTRUCTIVE ACTIONS ====================
-        window.triggerEraseProfileNode = async function(id) {
-            if(!confirm('Security Exception Trigger Notice: Completely purge this profile registration entry across relational cloud arrays frames?')) return;
-            await supabase.from('students').delete().eq('id', id);
-            await supabase.from('marks').delete().eq('student_id', id);
-            await supabase.from('attendance').delete().eq('student_id', id);
-            
-            alertNotify('Account vector schema records dropped safely.');
-            await fetchSystemState();
-            await switchView('records');
-        };
-
-        // ==================== ATTENDANCE OPERATING CONTROL ROLLS ====================
-        async function renderAttendanceRegistryView() {
-            let today = new Date().toISOString().slice(0,10);
-            let { data: currentAttLogs } = await supabase.from('attendance').select('*').eq('school_id', schoolContext.id).eq('date', today);
-            
-            let listInjections = '';
-            localDataCache.forEach(s => {
-                let existingRecord = (currentAttLogs || []).find(a => a.student_id === s.id);
-                let status = existingRecord ? existingRecord.status : 'present';
-                
-                listInjections += `
-                    <div class="attendance-tracking-strip">
-                        <div><strong>${s.name}</strong> <span style="font-size:11px; background:#f1f5f9; padding:4px 10px; border-radius:6px; margin-left:8px; font-weight:700; color:var(--text-body);">${s.class}</span></div>
-                        <select class="att-dropdown-field attendance-dropdown-pill" data-student-id="${s.id}">
-                            <option value="present" ${status==='present'?'selected':''}>PRESENT</option>
-                            <option value="absent" ${status==='absent'?'selected':''}>ABSENT</option>
-                            <option value="late" ${status==='late'?'selected':''}>LATE</option>
-                        </select>
-                    </div>`;
-            });
-
-            document.getElementById('view-viewport').innerHTML = `
-                <div class="workspace-panel-card" style="max-width:760px; margin:0 auto;">
-                    <div class="panel-card-header">
-                        <div class="panel-card-title"><i class="fas fa-clipboard-user" style="color:var(--brand-primary);"></i> Daily Session Roll Call — ${today}</div>
-                    </div>
-                    <div style="display:flex; flex-direction:column; margin-bottom:32px;">${listInjections || '<div style="padding:32px; text-align:center; color:var(--text-muted); font-weight:500;">No student nodes configured inside partition scope.</div>'}</div>
-                    ${localDataCache.length ? '<button class="action-btn-primary" style="width:100%; justify-content:center;" onclick="commitAttendanceStateLogs()"><i class="fas fa-cloud-arrow-up"></i> Upload Attendance Matrices Logs</button>' : ''}
-                </div>`;
-        }
-
-        window.commitAttendanceStateLogs = async function() {
-            let today = new Date().toISOString().slice(0,10);
-            const dropdowns = document.querySelectorAll('.att-dropdown-field');
-            for(let select of dropdowns) {
-                let studentId = select.getAttribute('data-student-id');
-                let status = select.value;
-                await supabase.from('attendance').upsert({ school_id: schoolContext.id, student_id: studentId, date: today, status }, { onConflict: 'student_id,date' });
-            }
-            alertNotify('Daily attendance parameters saved safely into network directory indices.');
-            await fetchSystemState();
-            await switchView('records');
-        };
-
-        // ==================== SYSTEM RUNTIME RUN BOOT KERNEL ====================
-        async function bootPlatformKernelInstance() {
-            let { data } = await supabase.from('schools').select('id, name, address').eq('subdomain', 'progressive').maybeSingle();
-            if(data) { schoolContext = data; }
-            
-            document.getElementById('banner-school-name').innerText = schoolContext.name;
-            document.getElementById('banner-location').innerHTML = `<i class="fas fa-location-crosshairs"></i> ${schoolContext.address || 'GAYAZA-KIJABIJJO'}`;
-            
-            await fetchSystemState();
-            await switchView('records');
-        }
-
-        bootPlatformKernelInstance();
-    </script>
 </body>
 </html>
