@@ -9,65 +9,78 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Arial, sans-serif; }
         body { background: #f0f4f8; padding: 16px; }
         .app-container { max-width: 1200px; margin: 0 auto; }
-        /* Header */
         .school-header { background: #003366; color: white; border-radius: 20px; padding: 20px; margin-bottom: 16px; }
-        .school-name { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px; }
+        .school-name { font-size: 1.4rem; font-weight: 800; }
         .school-address { font-size: 0.75rem; opacity: 0.8; margin-top: 4px; }
         .datetime-row { display: flex; justify-content: space-between; margin-top: 12px; background: rgba(255,255,255,0.15); padding: 8px 12px; border-radius: 40px; font-size: 0.7rem; flex-wrap: wrap; gap: 8px; }
-        /* Stats Cards */
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
         .stat-card { background: white; border-radius: 24px; padding: 14px; text-align: center; border-top: 3px solid #D4A017; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
-        .stat-number { font-size: 28px; font-weight: 800; color: #003366; }
+        .stat-number { font-size: 24px; font-weight: 800; color: #003366; }
         .stat-label { font-size: 11px; color: #5a6874; font-weight: 600; text-transform: uppercase; }
-        /* Action Buttons */
-        .action-buttons { display: flex; gap: 12px; margin-bottom: 20px; }
-        .action-btn { flex: 1; background: white; border: none; padding: 12px 0; border-radius: 60px; font-weight: 700; color: #003366; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: 0.2s; }
+        .action-buttons { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .action-btn, .role-tab { background: white; border: none; padding: 10px 20px; border-radius: 60px; font-weight: 700; color: #003366; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .action-btn.active { background: #003366; color: white; }
-        /* Search Bar */
         .search-bar { background: white; border-radius: 60px; padding: 6px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; border: 1px solid #e2e8f0; }
-        .search-bar input { border: none; flex: 1; padding: 10px 0; background: transparent; outline: none; font-size: 14px; }
-        /* Student Table */
+        .search-bar input { flex: 1; border: none; outline: none; padding: 10px 0; background: transparent; }
         .student-table { background: white; border-radius: 24px; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 550px; }
-        th { text-align: left; padding: 14px 12px; background: #f8fafc; font-size: 12px; font-weight: 700; color: #334155; border-bottom: 1px solid #e2e8f0; }
-        td { padding: 12px; font-size: 13px; border-bottom: 1px solid #f0f2f5; }
-        .student-name { font-weight: 600; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #f0f2f5; }
+        th { background: #f8fafc; font-weight: 700; }
         .debt { font-weight: 700; color: #dc2626; }
         .action-icons button { background: none; border: none; font-size: 16px; margin: 0 4px; cursor: pointer; }
-        /* Modals */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: white; border-radius: 32px; padding: 24px; max-width: 500px; width: 90%; max-height: 85vh; overflow-y: auto; }
-        .btn { background: #003366; color: white; padding: 10px 20px; border: none; border-radius: 40px; font-weight: 600; cursor: pointer; }
+        .btn { background: #003366; color: white; padding: 10px 20px; border: none; border-radius: 40px; cursor: pointer; }
         .btn-gold { background: #D4A017; color: #003366; }
         input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 16px; }
-        .flex { display: flex; gap: 8px; justify-content: flex-end; }
-        .attendance-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eef2ff; align-items: center; flex-wrap: wrap; gap: 8px; }
-        .attendance-select { width: auto; margin: 0; padding: 6px 12px; }
+        .flex { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+        .attendance-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eef2ff; align-items: center; flex-wrap: wrap; }
         .toast { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 10px 20px; border-radius: 40px; z-index: 2000; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
-        .loading { text-align: center; padding: 40px; color: #64748b; }
+        .id-card { border: 2px solid #003366; border-radius: 12px; padding: 10px; max-width: 300px; margin: 0 auto; }
+        .id-card-header { background: #003366; color: white; text-align: center; padding: 5px; border-radius: 8px 8px 0 0; margin: -10px -10px 10px -10px; }
+        .hidden { display: none; }
+        @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2,1fr); } }
     </style>
 </head>
 <body>
-<div id="app" class="app-container"></div>
+<div id="app"></div>
 
 <script>
-    // ==================== LOCALSTORAGE DATABASE (NO SUPABASE) ====================
-    // Initialize default data if empty
-    if (!localStorage.getItem('progressive_students')) {
-        localStorage.setItem('progressive_students', JSON.stringify([
-            { id: 's1', name: 'Mugisha Alvin', lin: 'MU1234', class: 'P.7', parent_whatsapp: '256712345678', total_fees: 500000, fees_paid: 350000 },
-            { id: 's2', name: 'Nakato Sarah', lin: 'NA5678', class: 'P.6', parent_whatsapp: '256712345679', total_fees: 450000, fees_paid: 450000 },
-            { id: 's3', name: 'Okello James', lin: 'OK9012', class: 'P.5', parent_whatsapp: '256712345680', total_fees: 400000, fees_paid: 200000 }
+    // ==================== DATA STORAGE (localStorage, no login) ====================
+    if (!localStorage.getItem('schools')) {
+        localStorage.setItem('schools', JSON.stringify([
+            { id: 'sch1', name: 'PROGRESSIVE MOTHERS', subdomain: 'progressive', address: 'GAYAZA-KIJABIJJO' }
         ]));
     }
-    if (!localStorage.getItem('progressive_attendance')) localStorage.setItem('progressive_attendance', '[]');
-    if (!localStorage.getItem('progressive_transactions')) localStorage.setItem('progressive_transactions', '[]');
-    if (!localStorage.getItem('progressive_marks')) localStorage.setItem('progressive_marks', '[]');
+    if (!localStorage.getItem('students')) {
+        localStorage.setItem('students', JSON.stringify([
+            { id: 's1', school_id: 'sch1', name: 'Mugisha Alvin', lin: 'MU1234', class: 'P.7', parent_whatsapp: '256712345678', total_fees: 500000, fees_paid: 350000, branch_id: 'br1' },
+            { id: 's2', school_id: 'sch1', name: 'Nakato Sarah', lin: 'NA5678', class: 'P.6', parent_whatsapp: '256712345679', total_fees: 450000, fees_paid: 450000, branch_id: 'br1' },
+            { id: 's3', school_id: 'sch1', name: 'Okello James', lin: 'OK9012', class: 'P.5', parent_whatsapp: '256712345680', total_fees: 400000, fees_paid: 200000, branch_id: 'br1' }
+        ]));
+    }
+    if (!localStorage.getItem('marks')) localStorage.setItem('marks', '[]');
+    if (!localStorage.getItem('attendance')) localStorage.setItem('attendance', '[]');
+    if (!localStorage.getItem('transactions')) localStorage.setItem('transactions', '[]');
+    if (!localStorage.getItem('branches')) {
+        localStorage.setItem('branches', JSON.stringify([{ id: 'br1', school_id: 'sch1', name: 'Main Campus' }]));
+    }
+    if (!localStorage.getItem('fee_structures')) {
+        localStorage.setItem('fee_structures', JSON.stringify([
+            { id: 'fs1', school_id: 'sch1', class: 'P.7', term: 'Term 1', amount: 500000 },
+            { id: 'fs2', school_id: 'sch1', class: 'P.6', term: 'Term 1', amount: 450000 },
+            { id: 'fs3', school_id: 'sch1', class: 'P.5', term: 'Term 1', amount: 400000 }
+        ]));
+    }
+    if (!localStorage.getItem('notifications')) localStorage.setItem('notifications', '[]');
+    if (!localStorage.getItem('parents')) localStorage.setItem('parents', '[]');
+    if (!localStorage.getItem('student_parents')) localStorage.setItem('student_parents', '[]');
 
-    // Helper functions
+    // Helpers
     function showToast(msg) { let t = document.createElement('div'); t.className = 'toast'; t.innerText = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); }
     function formatMoney(amt) { return 'UGX ' + (amt || 0).toLocaleString(); }
+    function escapeHtml(str) { return str ? str.replace(/[&<>]/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;' })[m]) : ''; }
     function getGrade(score) {
         if (score >= 80) return 'D1';
         if (score >= 75) return 'D2';
@@ -79,101 +92,161 @@
         if (score >= 45) return 'P8';
         return 'F9';
     }
-    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;' })[m]); }
-
-    // Data access
-    function getStudents() { return JSON.parse(localStorage.getItem('progressive_students') || '[]'); }
-    function getAttendance() { return JSON.parse(localStorage.getItem('progressive_attendance') || '[]'); }
-    function getTransactions() { return JSON.parse(localStorage.getItem('progressive_transactions') || '[]'); }
-    function getMarks() { return JSON.parse(localStorage.getItem('progressive_marks') || '[]'); }
-    function saveStudents(data) { localStorage.setItem('progressive_students', JSON.stringify(data)); }
-    function saveAttendance(data) { localStorage.setItem('progressive_attendance', JSON.stringify(data)); }
-    function saveTransactions(data) { localStorage.setItem('progressive_transactions', JSON.stringify(data)); }
-    function saveMarks(data) { localStorage.setItem('progressive_marks', JSON.stringify(data)); }
-
-    // Update stats
-    function updateStats() {
-        const students = getStudents();
-        const transactions = getTransactions();
-        const total = students.length;
-        const cleared = transactions.reduce((s, t) => s + (t.amount || 0), 0);
-        const today = new Date().toISOString().slice(0,10);
-        const attendance = getAttendance();
-        const absentToday = attendance.filter(a => a.date === today && a.status === 'absent').length;
-        document.getElementById('totalStudents').innerText = total;
-        document.getElementById('totalCleared').innerHTML = formatMoney(cleared);
-        document.getElementById('totalAbsent').innerText = absentToday;
+    function getGradePoints(g) { return { D1:1, D2:2, C3:3, C4:4, C5:5, C6:6, P7:7, P8:8, F9:9 }[g] || 9; }
+    function getDivision(agg) {
+        if (agg <= 12) return 'Division 1';
+        if (agg <= 23) return 'Division 2';
+        if (agg <= 29) return 'Division 3';
+        if (agg <= 34) return 'Division 4';
+        return 'Division U';
     }
 
-    // Render student table with search
-    function renderStudentTable() {
-        let students = getStudents();
+    // ==================== GLOBAL STATE (direct admin access) ====================
+    let currentSchool = JSON.parse(localStorage.getItem('schools'))[0];
+    let currentUser = { role: 'admin', full_name: 'System Admin' };
+    let activeTab = 'records';
+
+    // ==================== DASHBOARD ====================
+    function renderDashboard() {
+        const students = JSON.parse(localStorage.getItem('students')).filter(s => s.school_id === currentSchool.id);
+        const transactions = JSON.parse(localStorage.getItem('transactions')).filter(t => t.school_id === currentSchool.id);
+        const attendance = JSON.parse(localStorage.getItem('attendance')).filter(a => a.school_id === currentSchool.id);
+        const today = new Date().toISOString().slice(0,10);
+        const absentToday = attendance.filter(a => a.date === today && a.status === 'absent').length;
+        const totalCollected = transactions.reduce((s, t) => s + t.amount, 0);
+        const totalExpected = students.reduce((s, st) => s + (st.total_fees || 0), 0);
+        const outstanding = totalExpected - totalCollected;
+
+        const tabs = ['records', 'attendance', 'marks', 'fees', 'reports', 'idcards', 'branches', 'fee_structure'];
+        const tabLabels = { records:'📋 RECORDS', attendance:'📆 ATTENDANCE', marks:'📝 MARKS', fees:'💰 FEES', reports:'📊 REPORTS', idcards:'🪪 ID CARDS', branches:'🏢 BRANCHES', fee_structure:'📋 FEE STRUCTURE' };
+        const dateObj = new Date();
+        const formattedDate = dateObj.toLocaleDateString('en-US', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+        const formattedTime = dateObj.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+        const period = "08:30 AM - 10:30 AM";
+
+        document.getElementById('app').innerHTML = `
+            <div class="app-container">
+                <div class="school-header">
+                    <div class="school-name">${escapeHtml(currentSchool.name)}</div>
+                    <div class="school-address">${escapeHtml(currentSchool.address || '')}</div>
+                    <div class="datetime-row"><span>📅 ${formattedDate}</span><span>⏰ ${formattedTime}</span><span>📖 Lesson Period 1 ${period}</span></div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-number" id="statTotal">${students.length}</div><div class="stat-label">TOTAL STUDENTS</div></div>
+                    <div class="stat-card"><div class="stat-number" id="statCleared">${formatMoney(totalCollected)}</div><div class="stat-label">COLLECTED</div></div>
+                    <div class="stat-card"><div class="stat-number" id="statOutstanding">${formatMoney(outstanding)}</div><div class="stat-label">OUTSTANDING</div></div>
+                    <div class="stat-card"><div class="stat-number" id="statAbsent">${absentToday}</div><div class="stat-label">ABSENT TODAY</div></div>
+                </div>
+                <div class="action-buttons">
+                    ${tabs.map(t => `<button class="action-btn ${activeTab === t ? 'active' : ''}" data-tab="${t}">${tabLabels[t]}</button>`).join('')}
+                </div>
+                <div id="searchBar" class="search-bar" style="display:${activeTab === 'records' ? 'flex' : 'none'}"><i class="fas fa-search"></i><input type="text" id="searchInput" placeholder="Search Students..."></div>
+                <div id="dynamicContent"></div>
+            </div>
+        `;
+        document.querySelectorAll('.action-btn').forEach(btn => {
+            btn.onclick = () => {
+                activeTab = btn.dataset.tab;
+                renderDashboard();
+            };
+        });
+        if (activeTab === 'records') renderRecordsTab();
+        else if (activeTab === 'attendance') renderAttendanceTab();
+        else if (activeTab === 'marks') renderMarksTab();
+        else if (activeTab === 'fees') renderFeesTab();
+        else if (activeTab === 'reports') renderReportsTab();
+        else if (activeTab === 'idcards') renderIdCardsTab();
+        else if (activeTab === 'branches') renderBranchesTab();
+        else if (activeTab === 'fee_structure') renderFeeStructureTab();
+    }
+
+    // ==================== RECORDS TAB ====================
+    function renderRecordsTab() {
+        let students = JSON.parse(localStorage.getItem('students')).filter(s => s.school_id === currentSchool.id);
         const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
-        if (searchTerm) {
-            students = students.filter(s => s.name.toLowerCase().includes(searchTerm) || (s.lin || '').toLowerCase().includes(searchTerm));
-        }
+        if (searchTerm) students = students.filter(s => s.name.toLowerCase().includes(searchTerm) || (s.lin || '').toLowerCase().includes(searchTerm));
+        const branches = JSON.parse(localStorage.getItem('branches')).filter(b => b.school_id === currentSchool.id);
+        let html = `
+            <div class="student-table">
+                <table>
+                    <thead><tr><th>Student / LIN</th><th>Class</th><th>Branch</th><th>Fees Balance</th><th>Actions</th></tr></thead>
+                    <tbody id="studentTableBody"></tbody>
+                </table>
+            </div>
+            <div style="margin-top:16px;"><button class="btn btn-gold" onclick="showAddStudentModal()"><i class="fas fa-plus"></i> Add New Student</button></div>
+        `;
+        document.getElementById('dynamicContent').innerHTML = html;
         const tbody = document.getElementById('studentTableBody');
-        if (!tbody) return;
         tbody.innerHTML = '';
         for (let s of students) {
             const debt = (s.total_fees || 0) - (s.fees_paid || 0);
+            const branch = branches.find(b => b.id === s.branch_id)?.name || '-';
             const row = tbody.insertRow();
             row.innerHTML = `
-                <td><span class="student-name">${escapeHtml(s.name)}</span><br><small style="color:#6b7280;">${s.lin || '-'}</small></td>
+                <td><strong>${escapeHtml(s.name)}</strong><br><small>${s.lin || '-'}</small></td>
                 <td>${s.class || '-'}</td>
+                <td>${branch}</td>
                 <td class="debt">${formatMoney(debt)}</td>
                 <td class="action-icons">
-                    <button onclick="showFeesModal('${s.id}')" title="Record Payment"><i class="fas fa-money-bill-wave"></i></button>
+                    <button onclick="showFeeModal('${s.id}')" title="Record Payment"><i class="fas fa-money-bill-wave"></i></button>
                     <button onclick="showMarksModal('${s.id}')" title="Enter Marks"><i class="fas fa-pen"></i></button>
                     <button onclick="deleteStudent('${s.id}')" title="Delete"><i class="fas fa-trash" style="color:#dc2626;"></i></button>
                 </td>
             `;
         }
-        if (students.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:40px;">No students found. Click ADMISSION to add.</td></tr>';
-        }
+        if (students.length === 0) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px;">No students found. Add a student using the button above.</td></tr>';
     }
 
-    // Attendance view
-    function renderAttendanceView() {
-        const students = getStudents();
-        const today = new Date().toISOString().slice(0,10);
-        let html = `<div style="background:white; border-radius:24px; padding:20px;"><h3>📆 Roll Call - ${today}</h3><div id="attendanceList"></div><button class="btn" id="saveAttendanceBtn" style="margin-top:16px;">SAVE ATTENDANCE</button></div>`;
-        document.getElementById('dynamicContent').innerHTML = html;
-        const renderAttList = () => {
-            const attendance = getAttendance();
-            const listDiv = document.getElementById('attendanceList');
-            listDiv.innerHTML = '';
-            for (let s of students) {
-                const record = attendance.find(a => a.student_id === s.id && a.date === today);
-                const status = record ? record.status : 'present';
-                const div = document.createElement('div'); div.className = 'attendance-item';
-                div.innerHTML = `<span><strong>${escapeHtml(s.name)}</strong> (${s.class})</span><select class="attendance-select" data-student="${s.id}"><option ${status==='present'?'selected':''}>present</option><option ${status==='absent'?'selected':''}>absent</option><option ${status==='late'?'selected':''}>late</option></select>`;
-                listDiv.appendChild(div);
-            }
-        };
-        renderAttList();
-        document.getElementById('saveAttendanceBtn').onclick = () => {
-            const selects = document.querySelectorAll('.attendance-select');
-            let attendance = getAttendance();
-            for (let sel of selects) {
-                const studentId = sel.getAttribute('data-student');
-                const status = sel.value;
-                const existingIdx = attendance.findIndex(a => a.student_id === studentId && a.date === today);
-                if (existingIdx !== -1) attendance[existingIdx].status = status;
-                else attendance.push({ id: 'att'+Date.now(), student_id: studentId, date: today, status });
-            }
-            saveAttendance(attendance);
-            showToast('Attendance saved');
-            updateStats();
-        };
-    }
-
-    // ==================== MODALS ====================
-    window.showFeesModal = function(studentId) {
-        const students = getStudents();
+    window.showAddStudentModal = function() {
+        const branches = JSON.parse(localStorage.getItem('branches')).filter(b => b.school_id === currentSchool.id);
+        const branchOptions = branches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+        const modal = document.createElement('div'); modal.className = 'modal'; modal.id = 'addModal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3>➕ Register Student</h3>
+                <input id="newName" placeholder="Full name">
+                <input id="newClass" placeholder="Class (e.g., P.7)">
+                <input id="newWhatsapp" placeholder="Parent WhatsApp">
+                <input id="newFees" type="number" placeholder="Total fees (UGX)">
+                <select id="newBranch">${branchOptions}</select>
+                <div class="flex"><button class="btn" onclick="saveNewStudent()">SAVE</button><button class="btn btn-gold" onclick="closeModal('addModal')">CANCEL</button></div>
+            </div>
+        `;
+        document.body.appendChild(modal); modal.style.display = 'flex';
+    };
+    window.saveNewStudent = function() {
+        const name = document.getElementById('newName').value.trim();
+        if (!name) return alert('Name required');
+        const lin = name.replace(/[^a-zA-Z]/g,'').slice(0,2).toUpperCase() + Math.floor(1000+Math.random()*9000);
+        const students = JSON.parse(localStorage.getItem('students'));
+        students.push({
+            id: 's'+Date.now(), school_id: currentSchool.id, name, lin,
+            class: document.getElementById('newClass').value,
+            parent_whatsapp: document.getElementById('newWhatsapp').value,
+            total_fees: parseFloat(document.getElementById('newFees').value) || 0,
+            fees_paid: 0,
+            branch_id: document.getElementById('newBranch').value
+        });
+        localStorage.setItem('students', JSON.stringify(students));
+        showToast('Student added');
+        closeModal('addModal');
+        renderDashboard();
+    };
+    window.deleteStudent = function(id) {
+        if (!confirm('Delete student?')) return;
+        let students = JSON.parse(localStorage.getItem('students'));
+        students = students.filter(s => s.id !== id);
+        localStorage.setItem('students', JSON.stringify(students));
+        let marks = JSON.parse(localStorage.getItem('marks')).filter(m => m.student_id !== id);
+        localStorage.setItem('marks', JSON.stringify(marks));
+        let attendance = JSON.parse(localStorage.getItem('attendance')).filter(a => a.student_id !== id);
+        localStorage.setItem('attendance', JSON.stringify(attendance));
+        showToast('Student deleted');
+        renderDashboard();
+    };
+    window.showFeeModal = function(studentId) {
+        const students = JSON.parse(localStorage.getItem('students'));
         const student = students.find(s => s.id === studentId);
-        if (!student) return;
         const modal = document.createElement('div'); modal.className = 'modal'; modal.id = 'feeModal';
         modal.innerHTML = `
             <div class="modal-content">
@@ -185,169 +258,266 @@
         `;
         document.body.appendChild(modal); modal.style.display = 'flex';
     };
-
     window.recordPayment = function(studentId) {
         const amount = parseFloat(document.getElementById('feeAmount').value);
-        if (isNaN(amount) || amount <= 0) return alert('Enter valid amount');
-        let students = getStudents();
-        const studentIdx = students.findIndex(s => s.id === studentId);
-        if (studentIdx === -1) return;
-        students[studentIdx].fees_paid = (students[studentIdx].fees_paid || 0) + amount;
-        saveStudents(students);
-        let transactions = getTransactions();
-        transactions.push({
-            id: 'txn'+Date.now(), student_id: studentId, amount, payment_method: 'cash',
-            receipt_number: 'RCP'+Date.now(), payment_date: new Date().toISOString()
-        });
-        saveTransactions(transactions);
-        showToast(`Payment of ${formatMoney(amount)} recorded`);
+        if (isNaN(amount) || amount <= 0) return alert('Enter amount');
+        let students = JSON.parse(localStorage.getItem('students'));
+        const idx = students.findIndex(s => s.id === studentId);
+        if (idx === -1) return;
+        students[idx].fees_paid += amount;
+        localStorage.setItem('students', JSON.stringify(students));
+        let transactions = JSON.parse(localStorage.getItem('transactions'));
+        transactions.push({ id: 'txn'+Date.now(), school_id: currentSchool.id, student_id: studentId, amount, payment_date: new Date().toISOString(), receipt: 'RCP'+Date.now(), payment_method: 'cash' });
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+        const student = students[idx];
+        if (student.parent_whatsapp) {
+            alert(`[WhatsApp Demo] Send to ${student.parent_whatsapp}: Payment of ${formatMoney(amount)} received. New balance: ${formatMoney(student.total_fees - student.fees_paid)}`);
+        }
+        showToast('Payment recorded');
         closeModal('feeModal');
-        renderStudentTable();
-        updateStats();
+        renderDashboard();
     };
-
     window.showMarksModal = function(studentId) {
-        const students = getStudents();
+        const students = JSON.parse(localStorage.getItem('students'));
         const student = students.find(s => s.id === studentId);
         const subjects = ['English','Science','Social Studies','Mathematics'];
         let html = `<div class="modal-content"><h3>📝 Enter Marks - ${escapeHtml(student.name)}</h3>`;
-        for (let sub of subjects) html += `<label>${sub}</label><input type="number" id="mark_${sub}" placeholder="0-100" class="mark-input">`;
+        for (let sub of subjects) html += `<label>${sub}</label><input type="number" id="mark_${sub}" placeholder="0-100">`;
         html += `<div class="flex"><button class="btn" onclick="saveMarks('${studentId}')">SAVE</button><button class="btn btn-gold" onclick="closeModal('marksModal')">CANCEL</button></div></div>`;
         const modal = document.createElement('div'); modal.className = 'modal'; modal.id = 'marksModal';
         modal.innerHTML = html; document.body.appendChild(modal); modal.style.display = 'flex';
     };
-
     window.saveMarks = function(studentId) {
         const subjects = ['English','Science','Social Studies','Mathematics'];
-        let marks = getMarks();
+        let marks = JSON.parse(localStorage.getItem('marks'));
         for (let sub of subjects) {
             const score = parseInt(document.getElementById(`mark_${sub}`).value);
             if (!isNaN(score)) {
                 const grade = getGrade(score);
                 const existingIdx = marks.findIndex(m => m.student_id === studentId && m.subject === sub && m.term === 'Term 1');
-                const newMark = { student_id: studentId, subject: sub, score, grade, term: 'Term 1', locked: false, created_at: new Date().toISOString() };
+                const newMark = { school_id: currentSchool.id, student_id: studentId, subject: sub, score, grade, term: 'Term 1', locked: false, created_at: new Date().toISOString() };
                 if (existingIdx !== -1) marks[existingIdx] = newMark;
                 else marks.push(newMark);
             }
         }
-        saveMarks(marks);
-        showToast('Marks saved');
+        localStorage.setItem('marks', JSON.stringify(marks));
+        showToast('Marks saved (editable for 2 minutes)');
         closeModal('marksModal');
+        renderDashboard();
     };
-
-    window.deleteStudent = function(id) {
-        if (!confirm('Delete this student permanently?')) return;
-        let students = getStudents();
-        students = students.filter(s => s.id !== id);
-        saveStudents(students);
-        let marks = getMarks();
-        marks = marks.filter(m => m.student_id !== id);
-        saveMarks(marks);
-        let attendance = getAttendance();
-        attendance = attendance.filter(a => a.student_id !== id);
-        saveAttendance(attendance);
-        showToast('Student deleted');
-        renderStudentTable();
-        updateStats();
-    };
-
-    function showAddStudentModal() {
-        const modal = document.createElement('div'); modal.className = 'modal'; modal.id = 'addModal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <h3>➕ Register New Student</h3>
-                <input id="newName" placeholder="Full name">
-                <input id="newClass" placeholder="Class (e.g., P.7)">
-                <input id="newWhatsapp" placeholder="Parent WhatsApp">
-                <input id="newFees" type="number" placeholder="Total fees (UGX)">
-                <div class="flex"><button class="btn" onclick="saveNewStudent()">SAVE</button><button class="btn btn-gold" onclick="closeModal('addModal')">CANCEL</button></div>
-            </div>
-        `;
-        document.body.appendChild(modal); modal.style.display = 'flex';
-    }
-
-    window.saveNewStudent = function() {
-        const name = document.getElementById('newName').value.trim();
-        if (!name) return alert('Name required');
-        const lin = name.replace(/[^a-zA-Z]/g,'').slice(0,2).toUpperCase() + Math.floor(1000+Math.random()*9000);
-        const students = getStudents();
-        const newStudent = {
-            id: 's' + Date.now(),
-            name, lin,
-            class: document.getElementById('newClass').value,
-            parent_whatsapp: document.getElementById('newWhatsapp').value,
-            total_fees: parseFloat(document.getElementById('newFees').value) || 0,
-            fees_paid: 0
-        };
-        students.push(newStudent);
-        saveStudents(students);
-        showToast('Student added');
-        closeModal('addModal');
-        renderStudentTable();
-        updateStats();
-    };
-
     window.closeModal = function(id) { const m = document.getElementById(id); if (m) m.remove(); };
 
-    // ==================== MODE SWITCHING ====================
-    function setMode(mode) {
-        const activeMode = mode;
-        document.querySelectorAll('.action-btn').forEach(btn => {
-            if (btn.getAttribute('data-mode') === mode) btn.classList.add('active');
-            else btn.classList.remove('active');
-        });
-        if (mode === 'records') {
-            document.getElementById('dynamicContent').innerHTML = `<div class="student-table"><table><thead><tr><th>Student / LIN</th><th>Class</th><th>Fees Balance</th><th>Actions</th></tr></thead><tbody id="studentTableBody"></tbody></table></div>`;
-            renderStudentTable();
-        } else if (mode === 'admission') {
-            showAddStudentModal();
-        } else if (mode === 'rollcall') {
-            renderAttendanceView();
+    // ==================== ATTENDANCE TAB ====================
+    function renderAttendanceTab() {
+        const students = JSON.parse(localStorage.getItem('students')).filter(s => s.school_id === currentSchool.id);
+        const today = new Date().toISOString().slice(0,10);
+        let html = `<div style="background:white; border-radius:24px; padding:20px;"><h3>📆 Roll Call - ${today}</h3><div id="attendanceList"></div><button class="btn" id="saveAttendanceBtn">SAVE ATTENDANCE</button></div>`;
+        document.getElementById('dynamicContent').innerHTML = html;
+        const renderAtt = () => {
+            const attendance = JSON.parse(localStorage.getItem('attendance')).filter(a => a.school_id === currentSchool.id);
+            const listDiv = document.getElementById('attendanceList');
+            listDiv.innerHTML = '';
+            for (let s of students) {
+                const record = attendance.find(a => a.student_id === s.id && a.date === today);
+                const status = record ? record.status : 'present';
+                const div = document.createElement('div'); div.className = 'attendance-item';
+                div.innerHTML = `<span><strong>${escapeHtml(s.name)}</strong> (${s.class})</span><select class="att-status" data-student="${s.id}"><option ${status==='present'?'selected':''}>present</option><option ${status==='absent'?'selected':''}>absent</option><option ${status==='late'?'selected':''}>late</option></select>`;
+                listDiv.appendChild(div);
+            }
+        };
+        renderAtt();
+        document.getElementById('saveAttendanceBtn').onclick = () => {
+            const selects = document.querySelectorAll('.att-status');
+            let attendance = JSON.parse(localStorage.getItem('attendance'));
+            for (let sel of selects) {
+                const studentId = sel.dataset.student;
+                const status = sel.value;
+                const existingIdx = attendance.findIndex(a => a.student_id === studentId && a.date === today);
+                if (existingIdx !== -1) attendance[existingIdx].status = status;
+                else attendance.push({ id: 'att'+Date.now(), school_id: currentSchool.id, student_id: studentId, date: today, status });
+            }
+            localStorage.setItem('attendance', JSON.stringify(attendance));
+            // Create absence notifications
+            const newNotifications = [];
+            for (let sel of selects) {
+                if (sel.value === 'absent') {
+                    const student = students.find(s => s.id === sel.dataset.student);
+                    if (student && student.parent_whatsapp) {
+                        newNotifications.push({ phone: student.parent_whatsapp, message: `⚠️ Absence Alert: ${student.name} was marked absent on ${today}.` });
+                    }
+                }
+            }
+            if (newNotifications.length) {
+                let notifications = JSON.parse(localStorage.getItem('notifications'));
+                newNotifications.forEach(n => notifications.push({ id: 'not'+Date.now(), ...n, status: 'pending' }));
+                localStorage.setItem('notifications', JSON.stringify(notifications));
+                alert(`📱 ${newNotifications.length} WhatsApp notification(s) queued.`);
+            }
+            showToast('Attendance saved');
+            renderDashboard();
+        };
+    }
+
+    // ==================== MARKS TAB ====================
+    function renderMarksTab() {
+        const students = JSON.parse(localStorage.getItem('students')).filter(s => s.school_id === currentSchool.id);
+        const marks = JSON.parse(localStorage.getItem('marks')).filter(m => m.school_id === currentSchool.id);
+        let html = `<div class="student-table"><table><thead><tr><th>Student</th><th>Subject</th><th>Score</th><th>Grade</th><th>Locked</th><th>Action</th></tr></thead><tbody id="marksTableBody"></tbody></table></div>`;
+        document.getElementById('dynamicContent').innerHTML = html;
+        const tbody = document.getElementById('marksTableBody');
+        tbody.innerHTML = '';
+        for (let s of students) {
+            const studentMarks = marks.filter(m => m.student_id === s.id);
+            const subs = ['English','Science','Social Studies','Mathematics'];
+            for (let sub of subs) {
+                const mark = studentMarks.find(m => m.subject === sub);
+                const score = mark ? mark.score : '-';
+                const grade = mark ? mark.grade : '-';
+                const locked = mark ? mark.locked : false;
+                const canEdit = !locked && (!mark || (new Date(mark.created_at) > new Date(Date.now() - 2*60000)));
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${escapeHtml(s.name)}</td>
+                    <td>${sub}</td>
+                    <td>${score !== '-' ? score : ''}</td>
+                    <td>${grade !== '-' ? grade : ''}</td>
+                    <td>${locked ? '🔒' : '✏️'}</td>
+                    <td>${canEdit ? `<button class="btn btn-sm" onclick="editMark('${s.id}','${sub}')">Edit</button>` : '-'}</td>
+                `;
+            }
         }
+        window.editMark = (studentId, subject) => {
+            const modal = document.createElement('div'); modal.className = 'modal'; modal.id = 'editMarkModal';
+            modal.innerHTML = `<div class="modal-content"><h3>Enter ${subject} Marks</h3><input type="number" id="editScore" placeholder="0-100"><div class="flex"><button class="btn" onclick="saveEditMark('${studentId}','${subject}')">Save</button><button class="btn btn-gold" onclick="closeModal('editMarkModal')">Cancel</button></div></div>`;
+            document.body.appendChild(modal); modal.style.display = 'flex';
+        };
+        window.saveEditMark = (studentId, subject) => {
+            const score = parseInt(document.getElementById('editScore').value);
+            if (isNaN(score)) return;
+            const grade = getGrade(score);
+            let marks = JSON.parse(localStorage.getItem('marks'));
+            const idx = marks.findIndex(m => m.student_id === studentId && m.subject === subject && m.term === 'Term 1');
+            const newMark = { school_id: currentSchool.id, student_id: studentId, subject, score, grade, term: 'Term 1', locked: false, created_at: new Date().toISOString() };
+            if (idx !== -1) marks[idx] = newMark;
+            else marks.push(newMark);
+            localStorage.setItem('marks', JSON.stringify(marks));
+            showToast('Mark saved (editable for 2 minutes)');
+            closeModal('editMarkModal');
+            renderDashboard();
+        };
     }
 
-    // ==================== MAIN RENDER (NO LOADING MESSAGE) ====================
-    function renderMain() {
-        const date = new Date();
-        const formattedDate = date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const formattedTime = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-        const period = "08:30 AM - 10:30 AM";
-        const app = document.getElementById('app');
-        app.innerHTML = `
-            <div class="school-header">
-                <div class="school-name">PROGRESSIVE MOTHERS</div>
-                <div class="school-address">GAYAZA-KIJABIJJO</div>
-                <div class="datetime-row">
-                    <span>📅 ${formattedDate}</span>
-                    <span>⏰ ${formattedTime}</span>
-                    <span>📖 Lesson Period 1 &nbsp; ${period}</span>
-                </div>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-card"><div class="stat-number" id="totalStudents">0</div><div class="stat-label">TOTAL STUDENTS</div></div>
-                <div class="stat-card"><div class="stat-number" id="totalCleared">0</div><div class="stat-label">CLEARED FEES</div></div>
-                <div class="stat-card"><div class="stat-number" id="totalAbsent">0</div><div class="stat-label">ABSENT TODAY</div></div>
-            </div>
-            <div class="action-buttons">
-                <button class="action-btn" data-mode="records"><i class="fas fa-book-open"></i> RECORDS</button>
-                <button class="action-btn" data-mode="admission"><i class="fas fa-user-plus"></i> ADMISSION</button>
-                <button class="action-btn" data-mode="rollcall"><i class="fas fa-clipboard-list"></i> ROLL CALL</button>
-            </div>
-            <div class="search-bar">
-                <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="Search Students...">
-            </div>
-            <div id="dynamicContent"></div>
-        `;
-        document.querySelectorAll('.action-btn').forEach(btn => {
-            btn.addEventListener('click', () => setMode(btn.getAttribute('data-mode')));
-        });
-        document.getElementById('searchInput').addEventListener('input', () => renderStudentTable());
-        updateStats();
-        setMode('records');
+    // ==================== FEES TAB ====================
+    function renderFeesTab() {
+        const students = JSON.parse(localStorage.getItem('students')).filter(s => s.school_id === currentSchool.id);
+        const transactions = JSON.parse(localStorage.getItem('transactions')).filter(t => t.school_id === currentSchool.id);
+        let html = `<div class="student-table"><table><thead><tr><th>Student</th><th>Total Fees</th><th>Paid</th><th>Outstanding</th><th>Actions</th></tr></thead><tbody id="feesTableBody"></tbody></table></div>`;
+        document.getElementById('dynamicContent').innerHTML = html;
+        const tbody = document.getElementById('feesTableBody');
+        tbody.innerHTML = '';
+        for (let s of students) {
+            const debt = s.total_fees - s.fees_paid;
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td>${escapeHtml(s.name)}</td>
+                <td>${formatMoney(s.total_fees)}</td>
+                <td>${formatMoney(s.fees_paid)}</td>
+                <td class="debt">${formatMoney(debt)}</td>
+                <td><button class="btn btn-sm" onclick="showFeeModal('${s.id}')">Record Payment</button></td>
+            `;
+        }
+        const totalCollected = transactions.reduce((s,t)=>s+t.amount,0);
+        const totalExpected = students.reduce((s,st)=>s+st.total_fees,0);
+        const summary = `<div style="margin-top:20px; background:white; border-radius:24px; padding:16px;"><h3>Financial Summary</h3><p>Total Collected: ${formatMoney(totalCollected)}<br>Total Expected: ${formatMoney(totalExpected)}<br>Outstanding: ${formatMoney(totalExpected-totalCollected)}</p></div>`;
+        document.getElementById('dynamicContent').innerHTML += summary;
     }
 
-    renderMain();
+    // ==================== REPORTS TAB ====================
+    function renderReportsTab() {
+        const students = JSON.parse(localStorage.getItem('students')).filter(s => s.school_id === currentSchool.id);
+        let html = `<div><select id="reportStudent"><option value="">Select student</option>${students.map(s=>`<option value="${s.id}">${s.name} (${s.lin})</option>`).join('')}</select><button class="btn" id="genReportBtn">Generate Report</button><div id="reportPreview"></div></div>`;
+        document.getElementById('dynamicContent').innerHTML = html;
+        document.getElementById('genReportBtn').onclick = () => {
+            const sid = document.getElementById('reportStudent').value;
+            if (!sid) return alert('Select student');
+            const student = students.find(s => s.id === sid);
+            const marks = JSON.parse(localStorage.getItem('marks')).filter(m => m.student_id === sid && m.school_id === currentSchool.id);
+            if (!marks.length) return alert('No marks recorded');
+            let total = 0, points = [];
+            for (let m of marks) { total += m.score; points.push(getGradePoints(m.grade)); }
+            points.sort((a,b)=>a-b);
+            const best8 = points.slice(0,8);
+            const aggregate = best8.reduce((a,b)=>a+b,0);
+            const division = getDivision(aggregate);
+            const avg = (total/marks.length).toFixed(1);
+            let table = `<table><thead><tr><th>Subject</th><th>Score</th><th>Grade</th><th>Points</th></tr></thead><tbody>`;
+            for (let m of marks) table += `<tr><td>${m.subject}</td><td>${m.score}</td><td>${m.grade}</td><td>${getGradePoints(m.grade)}</td></tr>`;
+            table += `</tbody></table>`;
+            const preview = `<div id="printableReport"><div style="text-align:center;"><h2>${currentSchool.name}</h2><p>Report Card</p></div><div><strong>${student.name}</strong> (${student.lin}) | Class: ${student.class}</div>${table}<div>Total: ${total} | Average: ${avg}% | Aggregate: ${aggregate} | ${division}</div><div>Generated: ${new Date().toLocaleDateString()}</div></div><button class="btn btn-gold" onclick="window.print()">Print</button>`;
+            document.getElementById('reportPreview').innerHTML = preview;
+        };
+    }
+
+    // ==================== ID CARDS TAB ====================
+    function renderIdCardsTab() {
+        const students = JSON.parse(localStorage.getItem('students')).filter(s => s.school_id === currentSchool.id);
+        let html = `<select id="idStudent"><option value="">Select student</option>${students.map(s=>`<option value="${s.id}">${s.name} (${s.lin})</option>`).join('')}</select><div id="idPreview"></div><button class="btn hidden" id="printIdBtn">Print</button>`;
+        document.getElementById('dynamicContent').innerHTML = html;
+        document.getElementById('idStudent').onchange = () => {
+            const sid = document.getElementById('idStudent').value;
+            if (!sid) return;
+            const s = students.find(st => st.id === sid);
+            const preview = `<div id="printableId" class="id-card"><div class="id-card-header">${currentSchool.name}</div><div style="display:flex; gap:10px; margin-top:10px;"><div style="width:70px;height:70px;background:#eee;border-radius:50%;display:flex;align-items:center;justify-content:center;">📷</div><div><strong>${s.name}</strong><br>LIN: ${s.lin}<br>Class: ${s.class}<br>Parent: ${s.parent_whatsapp || 'N/A'}</div></div></div>`;
+            document.getElementById('idPreview').innerHTML = preview;
+            document.getElementById('printIdBtn').classList.remove('hidden');
+        };
+        document.getElementById('printIdBtn').onclick = () => { const w=window.open('','_blank'); w.document.write(document.getElementById('printableId').outerHTML); w.document.write('<button onclick="window.print()">Print</button>'); w.document.close(); };
+    }
+
+    // ==================== BRANCHES TAB ====================
+    function renderBranchesTab() {
+        let branches = JSON.parse(localStorage.getItem('branches')).filter(b => b.school_id === currentSchool.id);
+        let html = `<div><input id="newBranchName" placeholder="Branch name"><button class="btn" id="addBranchBtn">Add Branch</button></div><ul>${branches.map(b=>`<li>${b.name} <button class="btn btn-sm" onclick="deleteBranch('${b.id}')">Delete</button></li>`).join('')}</ul>`;
+        document.getElementById('dynamicContent').innerHTML = html;
+        document.getElementById('addBranchBtn').onclick = () => {
+            const name = document.getElementById('newBranchName').value.trim();
+            if (!name) return;
+            branches.push({ id: 'br'+Date.now(), school_id: currentSchool.id, name });
+            localStorage.setItem('branches', JSON.stringify(branches));
+            renderDashboard();
+        };
+        window.deleteBranch = (id) => {
+            let branches = JSON.parse(localStorage.getItem('branches')).filter(b => b.id !== id);
+            localStorage.setItem('branches', JSON.stringify(branches));
+            renderDashboard();
+        };
+    }
+
+    // ==================== FEE STRUCTURE TAB ====================
+    function renderFeeStructureTab() {
+        let structures = JSON.parse(localStorage.getItem('fee_structures')).filter(f => f.school_id === currentSchool.id);
+        let classes = [...new Set(JSON.parse(localStorage.getItem('students')).filter(s=>s.school_id===currentSchool.id).map(s=>s.class))];
+        let html = `<div><select id="feeClass">${classes.map(c=>`<option>${c}</option>`).join('')}</select><input id="feeAmount" type="number" placeholder="Amount (UGX)"><select id="feeTerm"><option>Term 1</option><option>Term 2</option><option>Term 3</option></select><button class="btn" id="addFeeStructureBtn">Set Fee</button></div><table><thead><tr><th>Class</th><th>Term</th><th>Amount</th><th>Action</th></tr></thead><tbody>${structures.map(f=>`<tr><td>${f.class}</td><td>${f.term}</td><td>${formatMoney(f.amount)}</td><td><button onclick="deleteFeeStructure('${f.id}')">Delete</button></td></tr>`).join('')}</tbody></table>`;
+        document.getElementById('dynamicContent').innerHTML = html;
+        document.getElementById('addFeeStructureBtn').onclick = () => {
+            const className = document.getElementById('feeClass').value;
+            const amount = parseFloat(document.getElementById('feeAmount').value);
+            const term = document.getElementById('feeTerm').value;
+            if (!className || isNaN(amount)) return alert('Fill all');
+            let structures = JSON.parse(localStorage.getItem('fee_structures'));
+            structures.push({ id: 'fs'+Date.now(), school_id: currentSchool.id, class: className, term, amount });
+            localStorage.setItem('fee_structures', JSON.stringify(structures));
+            renderDashboard();
+        };
+        window.deleteFeeStructure = (id) => {
+            let structures = JSON.parse(localStorage.getItem('fee_structures')).filter(f => f.id !== id);
+            localStorage.setItem('fee_structures', JSON.stringify(structures));
+            renderDashboard();
+        };
+    }
+
+    // Start directly
+    renderDashboard();
 </script>
 </body>
 </html>
