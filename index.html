@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>PROGRESSIVE MOTHERS | Complete School System</title>
+    <title>PROGRESSIVE MOTHERS | Finance Management</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -22,34 +22,22 @@
         .action-buttons { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
         .action-btn { background: white; border: none; padding: 10px 20px; border-radius: 60px; font-weight: 700; color: #003366; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .action-btn.active { background: #003366; color: white; }
-        .search-bar { background: white; border-radius: 60px; padding: 6px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; border: 1px solid #e2e8f0; }
-        .search-bar input { flex: 1; border: none; outline: none; padding: 10px 0; background: transparent; }
-        .student-table { background: white; border-radius: 24px; overflow-x: auto; }
+        .filter-buttons { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+        .filter-btn { background: #e2e8f0; border: none; padding: 6px 12px; border-radius: 40px; cursor: pointer; }
+        .filter-btn.active { background: #003366; color: white; }
+        .student-table { background: white; border-radius: 24px; overflow-x: auto; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; min-width: 700px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #f0f2f5; }
         th { background: #f8fafc; font-weight: 700; }
         .debt { font-weight: 700; color: #dc2626; }
-        .action-icons button { background: none; border: none; font-size: 16px; margin: 0 4px; cursor: pointer; }
-        .student-photo-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: #eef2ff; display: flex; align-items: center; justify-content: center; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: white; border-radius: 32px; padding: 24px; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; }
         .btn { background: #003366; color: white; padding: 10px 20px; border: none; border-radius: 40px; cursor: pointer; font-weight: 600; }
         .btn-gold { background: #D4A017; color: #003366; }
-        .btn-danger { background: #dc2626; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; border-radius: 32px; padding: 24px; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; }
         input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 16px; }
         .flex { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
-        .attendance-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eef2ff; align-items: center; flex-wrap: wrap; }
-        .toast { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 10px 20px; border-radius: 40px; z-index: 2000; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
-        .id-card { border: 2px solid #003366; border-radius: 12px; padding: 10px; max-width: 300px; margin: 0 auto; }
-        .id-card-header { background: #003366; color: white; text-align: center; padding: 5px; border-radius: 8px 8px 0 0; margin: -10px -10px 10px -10px; }
-        .report-card { max-width: 800px; margin: 0 auto; background: white; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .report-header { text-align: center; border-bottom: 2px solid #003366; padding-bottom: 10px; margin-bottom: 20px; }
-        .report-header h2 { color: #003366; font-size: 1.6rem; }
-        .fees-report { background: #f8fafc; border-radius: 16px; padding: 12px; margin-top: 12px; }
-        .hidden { display: none; }
-        .error-box { background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 12px; margin: 12px 0; border-left: 4px solid #dc2626; }
-        @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2,1fr); } th, td { font-size: 12px; padding: 8px; } .action-btn { padding: 6px 12px; font-size: 12px; } }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 10px 20px; border-radius: 40px; z-index: 2000; }
+        .expense-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eef2ff; }
     </style>
 </head>
 <body>
@@ -57,26 +45,16 @@
 
 <script>
     (function() {
-        // ==================== SUPABASE CONFIG (YOUR CORRECT SCHOOL ID) ====================
         const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
-        const SCHOOL_ID = '11111111-1111-1111-1111-111111111111';  // YOUR ACTUAL SCHOOL ID
+        const SCHOOL_ID = '11111111-1111-1111-1111-111111111111';
         const ACADEMIC_YEARS = ['2026', '2027', '2028'];
         const TERMS = ['Term I', 'Term II', 'Term III'];
-        const EXAM_TYPES = ['Beginning of Term', 'Mid Term', 'End of Term'];
-        const CORE_SUBJECTS = ['English', 'Science', 'Social Studies', 'Mathematics'];
         
-        // Pure fetch helpers (with better error logging)
         async function restFetch(table, queryParams = '') {
             const url = `${SUPABASE_URL}/rest/v1/${table}?select=*${queryParams ? `&${queryParams}` : ''}`;
-            const res = await fetch(url, {
-                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-            });
-            if (!res.ok) {
-                const text = await res.text();
-                console.error(`Fetch error ${table}:`, text);
-                throw new Error(`${table}: ${res.status} ${text}`);
-            }
+            const res = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+            if (!res.ok) throw new Error(await res.text());
             return res.json();
         }
         async function restInsert(table, data) {
@@ -106,98 +84,26 @@
             });
             if (!res.ok) throw new Error(await res.text());
         }
-        async function restUpsert(table, data, conflict) {
-            const url = `${SUPABASE_URL}/rest/v1/${table}?on_conflict=${conflict}`;
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            if (!res.ok) throw new Error(await res.text());
-            const ct = res.headers.get('content-type');
-            if (ct && ct.includes('application/json')) return res.json();
-            return {};
-        }
         
-        // ==================== STORAGE HELPERS (OPTIONAL) ====================
-        async function uploadPhoto(studentId, fileBlob) {
-            const fileName = `student_${studentId}_${Date.now()}.jpg`;
-            const url = `${SUPABASE_URL}/storage/v1/object/student_photos/${fileName}`;
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': fileBlob.type },
-                body: fileBlob
-            });
-            if (!res.ok) throw new Error(await res.text());
-            return `${SUPABASE_URL}/storage/v1/object/public/student_photos/${fileName}`;
-        }
-        function compressImage(file, callback) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    let width = img.width, height = img.height;
-                    const maxSize = 200;
-                    if (width > height) {
-                        if (width > maxSize) { height = (height * maxSize) / width; width = maxSize; }
-                    } else {
-                        if (height > maxSize) { width = (width * maxSize) / height; height = maxSize; }
-                    }
-                    canvas.width = width; canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    canvas.toBlob(callback, 'image/jpeg', 0.7);
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-        
-        // ==================== GRADING & UTILITIES ====================
-        function getGrade(score) {
-            if (score >= 90) return 'D1';
-            if (score >= 80) return 'D2';
-            if (score >= 70) return 'C3';
-            if (score >= 60) return 'C4';
-            if (score >= 50) return 'C5';
-            if (score >= 40) return 'C6';
-            if (score >= 35) return 'P7';
-            if (score >= 30) return 'P8';
-            return 'F9';
-        }
-        function getGradePoints(g) {
-            const p = { 'D1':1, 'D2':2, 'C3':3, 'C4':4, 'C5':5, 'C6':6, 'P7':7, 'P8':8, 'F9':9 };
-            return p[g] || 9;
-        }
-        function getDivision(agg) {
-            if (agg <= 12) return 'Division 1';
-            if (agg <= 23) return 'Division 2';
-            if (agg <= 29) return 'Division 3';
-            if (agg <= 34) return 'Division 4';
-            return 'Division U';
-        }
         function formatMoney(amt) { return 'UGX ' + (amt || 0).toLocaleString(); }
         function escapeHtml(str) { return str ? str.replace(/[&<>]/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;' })[m]) : ''; }
         function showToast(msg) { let t = document.createElement('div'); t.className = 'toast'; t.innerText = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); }
         
         let currentSchool = null;
-        let students = [], marks = [], attendance = [], payments = [], branches = [], transactions = [], feeStructures = [];
-        let activeTab = 'students';
+        let students = [], feeStructures = [], transactions = [], expenses = [];
+        let activeTab = 'finance';
+        let financeFilter = 'all';
+        let financeSearch = '';
         
         async function loadAllData() {
             if (!currentSchool) return;
             try {
                 students = await restFetch('students', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
-                marks = await restFetch('marks', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
-                attendance = await restFetch('attendance', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
-                payments = await restFetch('payments', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
-                branches = await restFetch('branches', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
-                transactions = await restFetch('transactions', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
                 feeStructures = await restFetch('fee_structures', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
-            } catch(err) {
-                console.error("Error loading data", err);
-            }
+                transactions = await restFetch('transactions', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
+                expenses = await restFetch('expenses', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
+                console.log('Loaded transactions:', transactions);
+            } catch(err) { console.error(err); }
         }
         
         async function renderDashboard() {
@@ -206,38 +112,34 @@
             const formattedDate = date.toLocaleDateString('en-US', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
             const formattedTime = date.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
             const period = "08:30 AM - 10:30 AM";
-            const totalCollected = payments.reduce((s,p)=>s+p.amount,0);
-            const totalExpected = students.reduce((s,st)=>s+st.total_fees,0);
-            const outstanding = totalExpected - totalCollected;
-            const today = new Date().toISOString().slice(0,10);
-            const absentToday = attendance.filter(a => a.date === today && a.status === 'absent').length;
+            const totalCollected = transactions.reduce((s,t)=>s+t.amount,0);
+            const totalExpected = students.reduce((s,st)=>s+(st.total_fees||0),0);
+            const totalExpenses = expenses.reduce((s,e)=>s+e.amount,0);
+            const netIncome = totalCollected - totalExpenses;
             
             const app = document.getElementById('app');
             app.innerHTML = `
                 <div class="app-container">
                     <div class="school-header">
-                        <div class="school-name">${escapeHtml(currentSchool?.name || 'PROGRESSIVE MOTHERS')}</div>
+                        <div class="school-name">${escapeHtml(currentSchool?.name || 'PROGRESSIVE MOTHERS NURSERY AND PRIMARY SCHOOL')}</div>
                         <div class="school-address">${escapeHtml(currentSchool?.address || 'GAYAZA-KIJABIJJO')}</div>
-                        <div class="school-contacts">
-                            <i class="fas fa-phone-alt"></i> 0779585035, 0756585035
-                        </div>
+                        <div class="school-contacts"><i class="fas fa-phone-alt"></i> 0779585035, 0756585035</div>
                         <div class="datetime-row"><span>📅 ${formattedDate}</span><span>⏰ ${formattedTime}</span><span>📖 Lesson Period 1 ${period}</span></div>
                     </div>
                     <div class="stats-grid">
                         <div class="stat-card"><div class="stat-number">${students.length}</div><div class="stat-label">TOTAL STUDENTS</div></div>
-                        <div class="stat-card"><div class="stat-number">${formatMoney(totalCollected)}</div><div class="stat-label">COLLECTED</div></div>
-                        <div class="stat-card"><div class="stat-number">${formatMoney(outstanding)}</div><div class="stat-label">OUTSTANDING</div></div>
-                        <div class="stat-card"><div class="stat-number">${absentToday}</div><div class="stat-label">ABSENT TODAY</div></div>
+                        <div class="stat-card"><div class="stat-number">${formatMoney(totalCollected)}</div><div class="stat-label">FEES COLLECTED</div></div>
+                        <div class="stat-card"><div class="stat-number">${formatMoney(totalExpenses)}</div><div class="stat-label">EXPENSES</div></div>
+                        <div class="stat-card"><div class="stat-number">${formatMoney(netIncome)}</div><div class="stat-label">NET INCOME</div></div>
                     </div>
                     <div class="action-buttons">
-                        <button class="action-btn ${activeTab === 'students' ? 'active' : ''}" data-tab="students">📋 RECORDS</button>
+                        <button class="action-btn ${activeTab === 'finance' ? 'active' : ''}" data-tab="finance">💰 FINANCE</button>
+                        <button class="action-btn ${activeTab === 'students' ? 'active' : ''}" data-tab="students">📋 STUDENTS</button>
                         <button class="action-btn ${activeTab === 'attendance' ? 'active' : ''}" data-tab="attendance">📆 ATTENDANCE</button>
                         <button class="action-btn ${activeTab === 'marks' ? 'active' : ''}" data-tab="marks">📝 MARKS</button>
-                        <button class="action-btn ${activeTab === 'fees' ? 'active' : ''}" data-tab="fees">💰 FEES</button>
                         <button class="action-btn ${activeTab === 'reports' ? 'active' : ''}" data-tab="reports">📊 REPORTS</button>
                         <button class="action-btn ${activeTab === 'idcards' ? 'active' : ''}" data-tab="idcards">🪪 ID CARDS</button>
                     </div>
-                    <div id="searchBar" class="search-bar" style="display:${activeTab === 'students' ? 'flex' : 'none'}"><i class="fas fa-search"></i><input type="text" id="searchInput" placeholder="Search Students..."></div>
                     <div id="dynamicContent"></div>
                 </div>
             `;
@@ -247,641 +149,336 @@
                     renderDashboard();
                 };
             });
-            if (activeTab === 'students') renderStudentsTab();
-            else if (activeTab === 'attendance') renderAttendanceTab();
-            else if (activeTab === 'marks') renderMarksTab();
-            else if (activeTab === 'fees') renderFeesTab();
-            else if (activeTab === 'reports') renderReportsTab();
-            else if (activeTab === 'idcards') renderIdCardsTab();
+            if (activeTab === 'finance') renderFinanceTab();
+            else if (activeTab === 'students') renderStudentsTab();
+            else renderPlaceholder();
         }
         
-        // ==================== STUDENTS TAB ====================
-        function renderStudentsTab() {
-            let filtered = [...students];
-            const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
-            if (searchTerm) filtered = filtered.filter(s => s.first_name?.toLowerCase().includes(searchTerm) || (s.last_name?.toLowerCase().includes(searchTerm)) || (s.lin || '').toLowerCase().includes(searchTerm));
+        function renderFinanceTab() {
             const contentDiv = document.getElementById('dynamicContent');
             if (!contentDiv) return;
-            contentDiv.innerHTML = `
-                <div class="student-table"><table><thead><tr><th>Photo</th><th>Student / LIN</th><th>Class</th><th>Address</th><th>Total Fees</th><th>Paid</th><th>Balance</th><th>Actions</th></tr></thead><tbody id="studentTableBody"></tbody></tr></div>
-                <div style="margin-top:16px;"><button class="btn btn-gold" onclick="showAddStudentModal()"><i class="fas fa-plus"></i> Add New Student</button></div>
-            `;
-            const tbody = document.getElementById('studentTableBody');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-            for (let s of filtered) {
-                const fullName = `${s.first_name || ''} ${s.last_name || ''}`.trim();
-                const totalFees = s.total_fees || 0;
-                const feesPaid = s.fees_paid || 0;
-                const debt = totalFees - feesPaid;
-                const photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="student-photo-img" style="width:45px;height:45px;border-radius:50%;object-fit:cover;">` : '<div class="student-photo-img" style="display:flex;align-items:center;justify-content:center;">📷</div>';
-                const row = tbody.insertRow();
-                row.innerHTML = `
-                    <td>${photoHtml}</td>
-                    <td><strong>${escapeHtml(fullName)}</strong><br><small>${s.lin || '-'}</small></td>
-                    <td>${s.class || '-'}</td>
-                    <td>${escapeHtml(s.address || '-')}</td>
-                    <td>${formatMoney(totalFees)}</td><td>${formatMoney(feesPaid)}</td>
-                    <td class="debt">${formatMoney(debt)}</td>
-                    <td class="action-icons">
-                        <button onclick="showFeeModal('${s.id}')" title="Record Payment"><i class="fas fa-money-bill-wave"></i></button>
-                        <button onclick="editStudent('${s.id}')" title="Edit"><i class="fas fa-edit"></i></button>
-                        <button onclick="editStudentPhoto('${s.id}')" title="Edit Photo"><i class="fas fa-camera"></i></button>
-                        <button onclick="deleteStudent('${s.id}')" title="Delete"><i class="fas fa-trash" style="color:#dc2626;"></i></button>
-                    </td>
-                `;
+            
+            // Calculate per-student paid and balance
+            let studentList = students.map(s => {
+                const paid = transactions.filter(t => t.student_id === s.id).reduce((sum,t)=>sum+t.amount,0);
+                const total = s.total_fees || 0;
+                const balance = total - paid;
+                return { ...s, paid, balance };
+            });
+            
+            let filtered = [...studentList];
+            if (financeFilter === 'debtors') filtered = filtered.filter(s => s.balance > 0);
+            if (financeFilter === 'paid') filtered = filtered.filter(s => s.balance <= 0);
+            if (financeSearch) {
+                const term = financeSearch.toLowerCase();
+                filtered = filtered.filter(s => (s.first_name+' '+s.last_name).toLowerCase().includes(term) || (s.class || '').toLowerCase().includes(term));
             }
-            if (filtered.length === 0) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:40px;">No students found. Add a student using the button above.></td><\/tr>';
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) searchInput.oninput = () => renderStudentsTab();
+            
+            const totalCollected = transactions.reduce((s,t)=>s+t.amount,0);
+            const totalExpected = students.reduce((s,st)=>s+(st.total_fees||0),0);
+            const totalOutstanding = totalExpected - totalCollected;
+            const totalExpenses = expenses.reduce((s,e)=>s+e.amount,0);
+            
+            // Transactions log
+            const sortedTransactions = [...transactions].sort((a,b)=>new Date(b.payment_date) - new Date(a.payment_date));
+            const transactionsHtml = sortedTransactions.map(t => {
+                const student = students.find(s => s.id === t.student_id);
+                return `<tr>
+                    <td>${t.payment_date || '-'}</td>
+                    <td>${student ? `${student.first_name} ${student.last_name}` : '-'}</td>
+                    <td>${formatMoney(t.amount)}</td>
+                    <td>${t.payment_code || '-'}</td>
+                    <td>${t.receipt || '-'}</td>
+                    <td>${t.academic_year || '-'} ${t.term || '-'}</td>
+                </tr>`;
+            }).join('');
+            
+            contentDiv.innerHTML = `
+                <div style="margin-bottom:20px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+                    <button class="btn" onclick="showRecordPaymentModal()"><i class="fas fa-plus"></i> Record Payment</button>
+                    <button class="btn btn-gold" onclick="showAddExpenseModal()"><i class="fas fa-receipt"></i> Add Expense</button>
+                    <button class="btn" onclick="showFeeStructureModal()"><i class="fas fa-cog"></i> Fee Structures</button>
+                    <button class="btn" onclick="refreshFinanceData()"><i class="fas fa-sync-alt"></i> Refresh Data</button>
+                    <input type="text" id="financeSearch" placeholder="Search student..." style="width:200px;" value="${escapeHtml(financeSearch)}">
+                    <div class="filter-buttons">
+                        <button class="filter-btn ${financeFilter==='all'?'active':''}" onclick="setFinanceFilter('all')">All</button>
+                        <button class="filter-btn ${financeFilter==='debtors'?'active':''}" onclick="setFinanceFilter('debtors')">Debtors</button>
+                        <button class="filter-btn ${financeFilter==='paid'?'active':''}" onclick="setFinanceFilter('paid')">Fully Paid</button>
+                    </div>
+                </div>
+                <div class="stats-grid" style="margin-bottom:20px;">
+                    <div class="stat-card"><div class="stat-number">${formatMoney(totalCollected)}</div><div class="stat-label">Total Collected</div></div>
+                    <div class="stat-card"><div class="stat-number">${formatMoney(totalExpected)}</div><div class="stat-label">Total Expected</div></div>
+                    <div class="stat-card"><div class="stat-number debt">${formatMoney(totalOutstanding)}</div><div class="stat-label">Outstanding</div></div>
+                    <div class="stat-card"><div class="stat-number">${formatMoney(totalExpenses)}</div><div class="stat-label">Expenses</div></div>
+                </div>
+                <div class="student-table">
+                    <h3>Student Balances</h3>
+                    <table>
+                        <thead><tr><th>Student</th><th>Class</th><th>Total Fees</th><th>Paid</th><th>Balance</th><th>Actions</th></tr></thead>
+                        <tbody>${filtered.map(s => `
+                            <tr>
+                                <td>${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}<br><small>${s.lin || '-'}</small></td>
+                                <td>${s.class || '-'}</td>
+                                <td>${formatMoney(s.total_fees || 0)}</td>
+                                <td>${formatMoney(s.paid)}</td>
+                                <td class="${s.balance>0?'debt':'paid'}">${formatMoney(s.balance)}</td>
+                                <td><button class="btn btn-sm" onclick="viewStudentPayments('${s.id}')">History</button> <button class="btn btn-sm" onclick="recordPaymentForStudent('${s.id}')">Pay</button></td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="student-table">
+                    <h3>Transaction Log</h3>
+                    <table>
+                        <thead><tr><th>Date</th><th>Student</th><th>Amount</th><th>Payment Code</th><th>Receipt</th><th>Year/Term</th></tr></thead>
+                        <tbody>${transactionsHtml || '<tr><td colspan="6">No transactions recorded.</td></tr>'}</tbody>
+                    </table>
+                </div>
+                <div style="margin-top:20px;">
+                    <h3>Expenses Log</h3>
+                    <div style="overflow-x:auto;"><table style="width:100%;"><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Actions</th></tr></thead><tbody id="expensesList"></tbody></table></div>
+                    <button class="btn btn-gold" onclick="showAddExpenseModal()">+ Add Expense</button>
+                </div>
+            `;
+            
+            const expensesBody = document.getElementById('expensesList');
+            if (expensesBody) {
+                expensesBody.innerHTML = expenses.map(e => `
+                    <tr>
+                        <td>${e.expense_date || '-'}</td>
+                        <td>${escapeHtml(e.category || 'General')}</td>
+                        <td>${escapeHtml(e.description || '')}</td>
+                        <td class="debt">${formatMoney(e.amount)}</td>
+                        <td><button onclick="deleteExpense('${e.id}')" class="text-red-600">Delete</button></td>
+                    </tr>
+                `).join('');
+                if (expenses.length === 0) expensesBody.innerHTML = '<tr><td colspan="5">No expenses recorded.</td></tr>';
+            }
+            
+            const searchInput = document.getElementById('financeSearch');
+            if (searchInput) searchInput.oninput = (e) => { financeSearch = e.target.value; renderFinanceTab(); };
         }
         
-        window.showAddStudentModal = function() {
-            const classOptions = ['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'].map(c => `<option>${c}</option>`).join('');
-            const yearOptions = ACADEMIC_YEARS.map(y => `<option>${y}</option>`).join('');
-            const branchOptions = branches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
-            const modal = document.createElement('div'); modal.className = 'modal'; modal.id = 'addModal';
+        window.refreshFinanceData = async () => {
+            await loadAllData();
+            renderFinanceTab();
+            showToast('Data refreshed');
+        };
+        
+        window.setFinanceFilter = (filter) => { financeFilter = filter; renderFinanceTab(); };
+        
+        window.showRecordPaymentModal = () => {
+            const modal = document.createElement('div'); modal.className = 'modal'; modal.id = 'paymentModal';
             modal.innerHTML = `
                 <div class="modal-content">
-                    <h3>➕ Register Student</h3>
-                    <input id="newFirstName" placeholder="First name" required>
-                    <input id="newLastName" placeholder="Last name (optional)">
-                    <select id="newClass">${classOptions}</select>
-                    <input id="newAddress" placeholder="Address">
-                    <input id="newWhatsapp" placeholder="Parent WhatsApp">
-                    <input id="newFees" type="number" placeholder="Total fees (UGX)">
-                    <select id="newAcademicYear">${yearOptions}</select>
-                    <select id="newBranch">${branchOptions}</select>
-                    <div><label>Profile Photo</label><input type="file" id="newPhoto" accept="image/*"></div>
-                    <div class="flex"><button class="btn" onclick="saveNewStudent()">SAVE</button><button class="btn btn-gold" onclick="closeModal('addModal')">CANCEL</button></div>
-                </div>
-            `;
-            document.body.appendChild(modal); modal.style.display = 'flex';
-        };
-        
-        window.saveNewStudent = async function() {
-            const firstName = document.getElementById('newFirstName').value.trim();
-            if (!firstName) return alert('First name required');
-            const lastName = document.getElementById('newLastName').value.trim() || '';
-            const className = document.getElementById('newClass').value;
-            const address = document.getElementById('newAddress').value;
-            const whatsapp = document.getElementById('newWhatsapp').value;
-            const totalFees = parseFloat(document.getElementById('newFees').value) || 0;
-            const academicYear = document.getElementById('newAcademicYear').value;
-            const branchId = document.getElementById('newBranch').value;
-            const lin = (firstName.slice(0,2) + (lastName ? lastName.slice(0,2) : 'XX')).toUpperCase() + Math.floor(1000+Math.random()*9000);
-            const admissionNumber = 'ADM' + Date.now();
-            const studentId = crypto.randomUUID ? crypto.randomUUID() : 's' + Date.now();
-            const studentData = {
-                id: studentId, school_id: SCHOOL_ID, admission_number: admissionNumber,
-                first_name: firstName, last_name: lastName, lin: lin, class: className,
-                address: address, parent_whatsapp: whatsapp, total_fees: totalFees, fees_paid: 0,
-                academic_year: academicYear, photo_url: '', branch_id: branchId
-            };
-            const fileInput = document.getElementById('newPhoto');
-            if (fileInput.files && fileInput.files[0]) {
-                compressImage(fileInput.files[0], async (blob) => {
-                    try {
-                        const url = await uploadPhoto(studentId, blob);
-                        studentData.photo_url = url;
-                        await restInsert('students', studentData);
-                        showToast('Student added with photo');
-                        closeModal('addModal');
-                        renderDashboard();
-                    } catch (err) {
-                        showToast('Photo upload failed, but student saved without photo');
-                        await restInsert('students', studentData);
-                        closeModal('addModal');
-                        renderDashboard();
-                    }
-                });
-            } else {
-                await restInsert('students', studentData);
-                showToast('Student added');
-                closeModal('addModal');
-                renderDashboard();
-            }
-        };
-        
-        window.editStudent = function(studentId) {
-            const student = students.find(s => s.id === studentId);
-            if (!student) return;
-            const classOptions = ['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'].map(c => `<option ${student.class === c ? 'selected' : ''}>${c}</option>`).join('');
-            const yearOptions = ACADEMIC_YEARS.map(y => `<option ${student.academic_year === y ? 'selected' : ''}>${y}</option>`).join('');
-            const branchOptions = branches.map(b => `<option value="${b.id}" ${student.branch_id === b.id ? 'selected' : ''}>${b.name}</option>`).join('');
-            const modal = document.createElement('div'); modal.className = 'modal'; modal.id = 'editModal';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <h3>✏️ Edit Student</h3>
-                    <input id="editFirstName" value="${escapeHtml(student.first_name)}" placeholder="First name">
-                    <input id="editLastName" value="${escapeHtml(student.last_name)}" placeholder="Last name">
-                    <select id="editClass">${classOptions}</select>
-                    <input id="editAddress" value="${escapeHtml(student.address || '')}" placeholder="Address">
-                    <input id="editWhatsapp" value="${escapeHtml(student.parent_whatsapp || '')}" placeholder="Parent WhatsApp">
-                    <input id="editTotalFees" type="number" value="${student.total_fees}" placeholder="Total fees (UGX)">
-                    <select id="editAcademicYear">${yearOptions}</select>
-                    <select id="editBranch">${branchOptions}</select>
-                    <div style="margin-top:10px;"><label>Profile Photo</label><input type="file" id="editPhoto" accept="image/*"></div>
-                    <div class="flex"><button class="btn" onclick="saveEditStudent('${studentId}')">UPDATE</button><button class="btn btn-gold" onclick="closeModal('editModal')">CANCEL</button></div>
-                </div>
-            `;
-            document.body.appendChild(modal); modal.style.display = 'flex';
-        };
-        
-        window.saveEditStudent = async function(studentId) {
-            const updatedData = {
-                first_name: document.getElementById('editFirstName').value.trim(),
-                last_name: document.getElementById('editLastName').value.trim(),
-                class: document.getElementById('editClass').value,
-                address: document.getElementById('editAddress').value,
-                parent_whatsapp: document.getElementById('editWhatsapp').value,
-                total_fees: parseFloat(document.getElementById('editTotalFees').value) || 0,
-                academic_year: document.getElementById('editAcademicYear').value,
-                branch_id: document.getElementById('editBranch').value
-            };
-            if (!updatedData.first_name) return alert('First name required');
-            const photoFile = document.getElementById('editPhoto').files[0];
-            if (photoFile) {
-                compressImage(photoFile, async (blob) => {
-                    try {
-                        const url = await uploadPhoto(studentId, blob);
-                        updatedData.photo_url = url;
-                        await restUpdate('students', studentId, updatedData);
-                        showToast('Student updated with new photo');
-                    } catch (err) {
-                        showToast('Photo upload failed, but other data updated');
-                        await restUpdate('students', studentId, updatedData);
-                    }
-                    closeModal('editModal');
-                    renderDashboard();
-                });
-            } else {
-                await restUpdate('students', studentId, updatedData);
-                showToast('Student updated');
-                closeModal('editModal');
-                renderDashboard();
-            }
-        };
-        
-        window.editStudentPhoto = async function(studentId) {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = async function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                compressImage(file, async (blob) => {
-                    try {
-                        const url = await uploadPhoto(studentId, blob);
-                        await restUpdate('students', studentId, { photo_url: url });
-                        showToast('Photo updated');
-                        renderDashboard();
-                    } catch (err) {
-                        showToast('Upload failed: ' + err.message);
-                    }
-                });
-            };
-            input.click();
-        };
-        
-        window.deleteStudent = async function(id) {
-            if (!confirm('Delete student permanently?')) return;
-            await restDelete('students', id);
-            showToast('Student deleted');
-            renderDashboard();
-        };
-        
-        // ==================== FEES MODAL ====================
-        window.showFeeModal = function(studentId) {
-            const student = students.find(s => s.id === studentId);
-            const modal = document.createElement('div'); modal.className = 'modal'; modal.id = 'feeModal';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <h3>💰 Record Payment - ${escapeHtml(student.first_name)} ${escapeHtml(student.last_name)}</h3>
-                    <p>Paid: ${formatMoney(student.fees_paid || 0)} | Owing: ${formatMoney((student.total_fees || 0) - (student.fees_paid || 0))}</p>
-                    <input type="number" id="feeAmount" placeholder="Amount (UGX)">
-                    <input type="text" id="paymentCode" placeholder="Payment Code (e.g., MOB-12345)">
+                    <h3>Record Payment</h3>
+                    <select id="paymentStudentId">${students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.class || 'N/A'})</option>`).join('')}</select>
+                    <input type="number" id="paymentAmount" placeholder="Amount (UGX)">
+                    <input type="text" id="paymentCode" placeholder="Payment Code (optional)">
                     <input type="date" id="paymentDate" value="${new Date().toISOString().slice(0,10)}">
                     <select id="paymentAcademicYear">${ACADEMIC_YEARS.map(y => `<option>${y}</option>`).join('')}</select>
                     <select id="paymentTerm">${TERMS.map(t => `<option>${t}</option>`).join('')}</select>
-                    <div class="flex"><button class="btn" onclick="recordPayment('${studentId}')">RECORD</button><button class="btn btn-gold" onclick="closeModal('feeModal')">CANCEL</button></div>
+                    <div class="flex"><button class="btn" onclick="savePayment()">Save</button><button class="btn btn-gold" onclick="closeModal('paymentModal')">Cancel</button></div>
                 </div>
             `;
             document.body.appendChild(modal); modal.style.display = 'flex';
         };
         
-        window.recordPayment = async function(studentId) {
-            const amount = parseFloat(document.getElementById('feeAmount').value);
-            if (isNaN(amount) || amount <= 0) return alert('Enter valid amount');
+        window.savePayment = async () => {
+            const studentId = document.getElementById('paymentStudentId').value;
+            const amount = parseFloat(document.getElementById('paymentAmount').value);
+            if (!studentId || isNaN(amount) || amount <= 0) return alert('Select student and valid amount');
             const paymentCode = document.getElementById('paymentCode').value.trim() || 'MANUAL';
             const paymentDate = document.getElementById('paymentDate').value;
             const academicYear = document.getElementById('paymentAcademicYear').value;
             const term = document.getElementById('paymentTerm').value;
+            const receipt = 'RCP' + Date.now();
             const student = students.find(s => s.id === studentId);
             const newPaid = (student.fees_paid || 0) + amount;
-            await restUpdate('students', studentId, { fees_paid: newPaid });
-            const receipt = 'RCP' + Date.now();
-            await restInsert('transactions', {
-                school_id: SCHOOL_ID, student_id: studentId, amount, payment_date: paymentDate,
-                receipt, payment_code: paymentCode, academic_year: academicYear, term
-            });
-            await restInsert('payments', {
-                school_id: SCHOOL_ID, student_id: studentId, amount, payment_date: paymentDate,
-                receipt_number: receipt, payment_code: paymentCode
-            }).catch(e => console.log('payments insert optional', e));
-            showToast('Payment recorded');
-            if (student.parent_whatsapp) alert(`[WhatsApp Demo] Send to ${student.parent_whatsapp}: Payment of ${formatMoney(amount)} received. Code: ${paymentCode}. New balance: ${formatMoney((student.total_fees || 0) - newPaid)}`);
-            closeModal('feeModal');
-            renderDashboard();
+            try {
+                await restUpdate('students', studentId, { fees_paid: newPaid });
+                await restInsert('transactions', {
+                    school_id: SCHOOL_ID, student_id: studentId, amount, payment_date: paymentDate,
+                    receipt, payment_code: paymentCode, academic_year: academicYear, term
+                });
+                await restInsert('payments', {
+                    school_id: SCHOOL_ID, student_id: studentId, amount, payment_date: paymentDate,
+                    receipt_number: receipt, payment_code: paymentCode
+                }).catch(e => console.log('payments insert optional', e));
+                showToast('Payment recorded');
+                closeModal('paymentModal');
+                await loadAllData();  // Force reload
+                renderFinanceTab();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
         };
         
-        window.viewFeesReport = function(studentId) {
+        window.recordPaymentForStudent = (studentId) => {
             const student = students.find(s => s.id === studentId);
-            const studentTransactions = transactions.filter(t => t.student_id === studentId);
-            const totalPaid = studentTransactions.reduce((s,t)=>s+t.amount,0);
-            const totalExpected = student.total_fees || 0;
-            const balance = totalExpected - totalPaid;
-            let paymentRows = '';
-            for (let t of studentTransactions) {
-                paymentRows += `<td>
-                    <td>${t.payment_date || 'N/A'}</td>
-                    <td>${formatMoney(t.amount)}</td><td>${t.payment_code || 'MANUAL'}</td>
-                    <td>${t.receipt || 'N/A'}</td><td>${t.academic_year || student.academic_year || '2026'}</td>
-                    <td>${t.term || 'Term I'}</td>
-                </tr>`;
-            }
-            const modal = document.createElement('div'); modal.className = 'modal'; modal.id = 'feesReportModal';
+            const modal = document.createElement('div'); modal.className = 'modal'; modal.id = 'paymentModal';
             modal.innerHTML = `
                 <div class="modal-content">
-                    <h3>📄 Financial History - ${escapeHtml(student.first_name)} ${escapeHtml(student.last_name)}</h3>
-                    <p><strong>LIN:</strong> ${student.lin || '-'} | <strong>Class:</strong> ${student.class || '-'}</p>
-                    <div class="fees-report"><p><strong>Total Fees Payable:</strong> ${formatMoney(totalExpected)}</p><p><strong>Total Paid:</strong> ${formatMoney(totalPaid)}</p><p><strong>Outstanding:</strong> <span class="debt">${formatMoney(balance)}</span></p></div>
-                    <h4>Payment History</h4>
-                    <div style="overflow-x:auto;"><table style="width:100%;"><thead><tr><th>Date</th><th>Amount</th><th>Payment Code</th><th>Receipt</th><th>Academic Year</th><th>Term</th></tr></thead><tbody>${paymentRows || '<tr><td colspan="6">No payments recorded</td><\/tr>'}</tbody></table></div>
-                    <div class="flex"><button class="btn" onclick="closeModal('feesReportModal')">Close</button><button class="btn btn-gold" onclick="showFeeModal('${studentId}')">Record Payment</button></div>
+                    <h3>Record Payment - ${student.first_name} ${student.last_name}</h3>
+                    <input type="number" id="paymentAmount" placeholder="Amount (UGX)">
+                    <input type="text" id="paymentCode" placeholder="Payment Code (optional)">
+                    <input type="date" id="paymentDate" value="${new Date().toISOString().slice(0,10)}">
+                    <select id="paymentAcademicYear">${ACADEMIC_YEARS.map(y => `<option>${y}</option>`).join('')}</select>
+                    <select id="paymentTerm">${TERMS.map(t => `<option>${t}</option>`).join('')}</select>
+                    <div class="flex"><button class="btn" onclick="savePaymentForStudent('${studentId}')">Save</button><button class="btn btn-gold" onclick="closeModal('paymentModal')">Cancel</button></div>
                 </div>
             `;
             document.body.appendChild(modal); modal.style.display = 'flex';
         };
         
-        // ==================== ATTENDANCE TAB ====================
-        function renderAttendanceTab() {
-            const classes = [...new Set(students.map(s => s.class).filter(Boolean))];
-            const contentDiv = document.getElementById('dynamicContent');
-            if (!contentDiv) return;
-            contentDiv.innerHTML = `
-                <div style="background:white; border-radius:24px; padding:20px;">
-                    <h3>📆 Roll Call</h3>
-                    <select id="attClassSelect"><option value="">-- Select Class --</option>${classes.map(c => `<option value="${c}">${c}</option>`).join('')}</select>
-                    <input type="date" id="attDate" value="${new Date().toISOString().slice(0,10)}">
-                    <div id="attendanceList"></div>
-                    <button class="btn" id="saveAttendanceBtn" style="margin-top:16px;">SAVE ATTENDANCE</button>
+        window.savePaymentForStudent = async (studentId) => {
+            const amount = parseFloat(document.getElementById('paymentAmount').value);
+            if (isNaN(amount) || amount <= 0) return alert('Valid amount required');
+            const paymentCode = document.getElementById('paymentCode').value.trim() || 'MANUAL';
+            const paymentDate = document.getElementById('paymentDate').value;
+            const academicYear = document.getElementById('paymentAcademicYear').value;
+            const term = document.getElementById('paymentTerm').value;
+            const receipt = 'RCP' + Date.now();
+            const student = students.find(s => s.id === studentId);
+            const newPaid = (student.fees_paid || 0) + amount;
+            try {
+                await restUpdate('students', studentId, { fees_paid: newPaid });
+                await restInsert('transactions', {
+                    school_id: SCHOOL_ID, student_id: studentId, amount, payment_date: paymentDate,
+                    receipt, payment_code: paymentCode, academic_year: academicYear, term
+                });
+                await restInsert('payments', {
+                    school_id: SCHOOL_ID, student_id: studentId, amount, payment_date: paymentDate,
+                    receipt_number: receipt, payment_code: paymentCode
+                }).catch(e => console.log('payments insert optional', e));
+                showToast('Payment recorded');
+                closeModal('paymentModal');
+                await loadAllData();
+                renderFinanceTab();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        };
+        
+        window.viewStudentPayments = async (studentId) => {
+            const student = students.find(s => s.id === studentId);
+            const studentTransactions = transactions.filter(t => t.student_id === studentId);
+            let rows = '';
+            for (let t of studentTransactions) {
+                rows += `<tr>
+                    <td>${t.payment_date || 'N/A'}</td>
+                    <td>${formatMoney(t.amount)}</td>
+                    <td>${t.payment_code || 'MANUAL'}</td>
+                    <td>${t.receipt || 'N/A'}</td>
+                    <td>${t.academic_year || '-'} ${t.term || '-'}</td>
+                </tr>`;
+            }
+            const modal = document.createElement('div'); modal.className = 'modal'; modal.id = 'historyModal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>Payment History - ${student.first_name} ${student.last_name}</h3>
+                    <div style="overflow-x:auto;"><table style="width:100%;"><thead><tr><th>Date</th><th>Amount</th><th>Code</th><th>Receipt</th><th>Year/Term</th></tr></thead><tbody>${rows || '<tr><td colspan="5">No payments recorded</td></td>'}</tbody></table></div>
+                    <div class="flex"><button class="btn btn-gold" onclick="closeModal('historyModal')">Close</button></div>
                 </div>
             `;
-            const renderList = async () => {
-                const selectedClass = document.getElementById('attClassSelect')?.value;
-                if (!selectedClass) { const listDiv = document.getElementById('attendanceList'); if (listDiv) listDiv.innerHTML = '<p>Select a class first</p>'; return; }
-                const classStudents = students.filter(s => s.class === selectedClass);
-                const date = document.getElementById('attDate')?.value;
-                const attData = attendance.filter(a => a.date === date);
-                const listDiv = document.getElementById('attendanceList');
-                if (!listDiv) return;
-                listDiv.innerHTML = '';
-                for (let s of classStudents) {
-                    const record = attData.find(a => a.student_id === s.id);
-                    const status = record ? record.status : 'present';
-                    const div = document.createElement('div'); div.className = 'attendance-item';
-                    div.innerHTML = `<span><strong>${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</strong> (${s.class})</span><select class="att-status" data-student="${s.id}"><option ${status==='present'?'selected':''}>present</option><option ${status==='absent'?'selected':''}>absent</option><option ${status==='late'?'selected':''}>late</option></select>`;
-                    listDiv.appendChild(div);
-                }
-            };
-            document.getElementById('attClassSelect').addEventListener('change', renderList);
-            document.getElementById('attDate').addEventListener('change', renderList);
-            renderList();
-            document.getElementById('saveAttendanceBtn').onclick = async () => {
-                const date = document.getElementById('attDate')?.value;
-                const selects = document.querySelectorAll('.att-status');
-                for (let sel of selects) {
-                    const studentId = sel.dataset.student;
-                    const status = sel.value;
-                    await restUpsert('attendance', { school_id: SCHOOL_ID, student_id: studentId, date, status }, 'student_id,date');
-                }
-                showToast('Attendance saved');
-                renderDashboard();
-            };
-        }
+            document.body.appendChild(modal); modal.style.display = 'flex';
+        };
         
-        // ==================== MARKS TAB ====================
-        async function renderMarksTab() {
-            const contentDiv = document.getElementById('dynamicContent');
-            if (!contentDiv) return;
-            if (students.length === 0) {
-                contentDiv.innerHTML = '<div class="card"><p>No students yet. Add students first.</p></div>';
-                return;
-            }
-            const classes = [...new Set(students.map(s => s.class).filter(Boolean))];
-            let html = `
-                <div style="background:white; border-radius:24px; padding:20px;">
-                    <h3>📝 Enter Marks (Core Subjects)</h3>
-                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
-                        <select id="marksClassSelect" style="flex:1;"><option value="">-- Select Class --</option>${classes.map(c => `<option value="${c}">${c}</option>`).join('')}</select>
-                        <select id="marksStudentSelect" disabled style="flex:2;"><option>Select class first</option></select>
-                    </div>
-                    <div style="display:flex; gap:10px; margin-bottom:16px;">
-                        <select id="marksTermSelect" style="flex:1;"><option value="">-- Term --</option>${TERMS.map(t => `<option>${t}</option>`).join('')}</select>
-                        <select id="marksExamTypeSelect" style="flex:1;"><option value="">-- Exam Type --</option>${EXAM_TYPES.map(e => `<option>${e}</option>`).join('')}</select>
-                    </div>
-                    <div id="marksInputArea" style="margin-top:20px;"></div>
-                    <div id="marksSummaryArea" style="margin-top:20px; background:#f8fafc; border-radius:16px; padding:12px; display:none;"></div>
-                    <div id="existingMarksArea" style="margin-top:20px;"></div>
+        window.showAddExpenseModal = () => {
+            const modal = document.createElement('div'); modal.className = 'modal'; modal.id = 'expenseModal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>Add Expense</h3>
+                    <input type="text" id="expenseCategory" placeholder="Category (e.g., Salaries, Utilities)">
+                    <input type="text" id="expenseDesc" placeholder="Description">
+                    <input type="number" id="expenseAmount" placeholder="Amount (UGX)">
+                    <input type="date" id="expenseDate" value="${new Date().toISOString().slice(0,10)}">
+                    <div class="flex"><button class="btn" onclick="saveExpense()">Save</button><button class="btn btn-gold" onclick="closeModal('expenseModal')">Cancel</button></div>
                 </div>
             `;
-            contentDiv.innerHTML = html;
-            
-            const classSelect = document.getElementById('marksClassSelect');
-            const studentSelect = document.getElementById('marksStudentSelect');
-            const termSelect = document.getElementById('marksTermSelect');
-            const examTypeSelect = document.getElementById('marksExamTypeSelect');
-            const inputArea = document.getElementById('marksInputArea');
-            const summaryArea = document.getElementById('marksSummaryArea');
-            const existingArea = document.getElementById('existingMarksArea');
-            
-            async function refreshMarksForStudent(studentId, term, examType) {
-                if (!studentId || !term || !examType) return;
-                const freshMarks = await restFetch('marks', `student_id=eq.${studentId}&school_id=eq.${SCHOOL_ID}&term=eq.${term}&exam_type=eq.${examType}`).catch(e => []);
-                const marksMap = new Map();
-                for (let m of freshMarks) marksMap.set(m.subject, m);
-                
-                let inputsHtml = `<div style="margin-bottom:16px;"><h4>Enter/Update Marks for ${term} – ${examType}</h4>`;
-                for (let sub of CORE_SUBJECTS) {
-                    const existing = marksMap.get(sub);
-                    const score = existing ? existing.score : '';
-                    inputsHtml += `<div style="margin-bottom:12px;"><label>${sub}</label><input type="number" class="mark-score-input" data-subject="${sub}" value="${score}" placeholder="0-100" style="width:100%;"></div>`;
-                }
-                inputsHtml += `<button class="btn" id="saveMarksBtn">💾 Save Marks</button></div>`;
-                inputArea.innerHTML = inputsHtml;
-                
-                let total = 0, points = [];
-                for (let sub of CORE_SUBJECTS) {
-                    const m = marksMap.get(sub);
-                    if (m) {
-                        total += m.score;
-                        points.push(getGradePoints(m.grade));
-                    }
-                }
-                const count = marksMap.size;
-                const avg = count ? (total / count).toFixed(1) : 0;
-                points.sort((a,b)=>a-b);
-                const best8 = points.slice(0,8);
-                const aggregate = best8.reduce((a,b)=>a+b,0);
-                const division = getDivision(aggregate);
-                summaryArea.style.display = 'block';
-                summaryArea.innerHTML = `
-                    <h4>Performance Summary (${term} – ${examType})</h4>
-                    <p><strong>Total Marks:</strong> ${total} / 400</p>
-                    <p><strong>Average:</strong> ${avg}%</p>
-                    <p><strong>Aggregate (best 8 points):</strong> ${aggregate} | <strong>${division}</strong></p>
-                `;
-                
-                if (marksMap.size === 0) {
-                    existingArea.innerHTML = '<p>No marks recorded for this term & exam type yet.</p>';
-                } else {
-                    let tableHtml = `<div class="student-table"><table><thead><tr><th>Subject</th><th>Marks</th><th>Grade</th><th>Points</th><th>Locked</th></tr></thead><tbody>`;
-                    for (let sub of CORE_SUBJECTS) {
-                        const m = marksMap.get(sub);
-                        if (m) {
-                            tableHtml += `<tr>
-                                <td>${m.subject}</td>
-                                <td>${m.score}</td>
-                                <td>${m.grade}</td><td>${getGradePoints(m.grade)}</td><td>${m.locked ? '🔒' : '✏️'}</td>
-                            </tr>`;
-                        } else {
-                            tableHtml += `<tr><td>${sub}</td><td colspan="4" style="color:#aaa;">Not entered yet</td></tr>`;
-                        }
-                    }
-                    tableHtml += `</tbody></table></div>`;
-                    existingArea.innerHTML = tableHtml;
-                }
-                
-                const saveBtn = document.getElementById('saveMarksBtn');
-                if (saveBtn) {
-                    saveBtn.onclick = async () => {
-                        const inputs = document.querySelectorAll('.mark-score-input');
-                        for (let inp of inputs) {
-                            const subject = inp.dataset.subject;
-                            const score = parseInt(inp.value);
-                            if (!isNaN(score) && score >= 0 && score <= 100) {
-                                const grade = getGrade(score);
-                                try {
-                                    await restUpsert('marks', {
-                                        school_id: SCHOOL_ID,
-                                        student_id: studentId,
-                                        subject: subject,
-                                        score: score,
-                                        grade: grade,
-                                        term: term,
-                                        exam_type: examType,
-                                        locked: false,
-                                        created_at: new Date().toISOString()
-                                    }, 'student_id,subject,term,exam_type');
-                                } catch (err) {
-                                    showToast('Error saving mark: ' + err.message);
-                                    return;
-                                }
-                            }
-                        }
-                        showToast('Marks saved');
-                        refreshMarksForStudent(studentId, term, examType);
-                    };
-                }
+            document.body.appendChild(modal); modal.style.display = 'flex';
+        };
+        
+        window.saveExpense = async () => {
+            const category = document.getElementById('expenseCategory').value;
+            const description = document.getElementById('expenseDesc').value;
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+            const expenseDate = document.getElementById('expenseDate').value;
+            if (isNaN(amount) || amount <= 0) return alert('Valid amount required');
+            await restInsert('expenses', {
+                school_id: SCHOOL_ID, category: category || 'General', description, amount, expense_date: expenseDate
+            });
+            showToast('Expense added');
+            closeModal('expenseModal');
+            await loadAllData();
+            renderFinanceTab();
+        };
+        
+        window.deleteExpense = async (id) => {
+            if (confirm('Delete this expense?')) {
+                await restDelete('expenses', id);
+                await loadAllData();
+                renderFinanceTab();
             }
-            
-            const updateMarks = () => {
-                const studentId = studentSelect.value;
-                const term = termSelect.value;
-                const examType = examTypeSelect.value;
-                if (studentId && term && examType) {
-                    refreshMarksForStudent(studentId, term, examType);
-                } else {
-                    inputArea.innerHTML = '';
-                    summaryArea.style.display = 'none';
-                    existingArea.innerHTML = '';
-                }
-            };
-            
-            classSelect.onchange = async () => {
-                const selectedClass = classSelect.value;
-                if (!selectedClass) {
-                    studentSelect.disabled = true;
-                    studentSelect.innerHTML = '<option>Select class first</option>';
-                    termSelect.disabled = true;
-                    examTypeSelect.disabled = true;
-                    inputArea.innerHTML = '';
-                    summaryArea.style.display = 'none';
-                    existingArea.innerHTML = '';
-                    return;
-                }
-                const classStudents = students.filter(s => s.class === selectedClass);
-                studentSelect.disabled = false;
-                termSelect.disabled = false;
-                examTypeSelect.disabled = false;
-                studentSelect.innerHTML = '<option value="">-- Select Student --</option>' + classStudents.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.lin})</option>`).join('');
-                studentSelect.onchange = updateMarks;
-                termSelect.onchange = updateMarks;
-                examTypeSelect.onchange = updateMarks;
-            };
-        }
+        };
         
-        // ==================== FEES TAB (summary) ====================
-        function renderFeesTab() {
-            const contentDiv = document.getElementById('dynamicContent');
-            if (!contentDiv) return;
-            contentDiv.innerHTML = `
-                <div class="student-table"></td><thead><tr><th>Student</th><th>Total Fees</th><th>Paid</th><th>Outstanding</th><th>Actions</th></tr></thead><tbody>
-                    ${students.map(s => `<tr>
-                        <td>${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</td>
-                        <td>${formatMoney(s.total_fees || 0)}</td>
-                        <td>${formatMoney(s.fees_paid || 0)}</td>
-                        <td class="debt">${formatMoney((s.total_fees || 0) - (s.fees_paid || 0))}</td>
-                        <td><button class="btn btn-sm" onclick="viewFeesReport('${s.id}')">History</button> <button class="btn btn-sm" onclick="showFeeModal('${s.id}')">Pay</button></td>
-                    </tr>`).join('')}
-                </tbody></table></div>
-                <div style="margin-top:20px; background:white; border-radius:24px; padding:16px;"><h3>Financial Summary</h3><p>Total Collected: ${formatMoney(transactions.reduce((s,t)=>s+t.amount,0))}<br>Total Expected: ${formatMoney(students.reduce((s,st)=>s+st.total_fees,0))}<br>Outstanding: ${formatMoney(students.reduce((s,st)=>s+st.total_fees,0)-transactions.reduce((s,t)=>s+t.amount,0))}</p></div>
-            `;
-        }
-        
-        // ==================== REPORTS TAB ====================
-        async function renderReportsTab() {
+        window.showFeeStructureModal = async () => {
             const classes = [...new Set(students.map(s => s.class).filter(Boolean))];
-            const contentDiv = document.getElementById('dynamicContent');
-            if (!contentDiv) return;
-            contentDiv.innerHTML = `
-                <div style="background:white; border-radius:24px; padding:20px;">
-                    <h3>📄 Generate Report Card</h3>
-                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
-                        <select id="reportClassSelect" style="flex:1;"><option value="">-- Select Class --</option>${classes.map(c => `<option value="${c}">${c}</option>`).join('')}</select>
-                        <select id="reportStudentSelect" disabled style="flex:1;"><option>Select class first</option></select>
-                        <select id="reportTermSelect" style="flex:1;">${TERMS.map(t => `<option>${t}</option>`).join('')}</select>
-                        <select id="reportExamTypeSelect" style="flex:1;">${EXAM_TYPES.map(e => `<option>${e}</option>`).join('')}</select>
-                    </div>
-                    <button class="btn" id="generateReportBtn">Generate Report</button>
-                    <div id="reportPreview" style="margin-top:20px;"></div>
+            const modal = document.createElement('div'); modal.className = 'modal'; modal.id = 'feeStructModal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>Fee Structures</h3>
+                    <div style="margin-bottom:16px;"><select id="newStructClass">${classes.map(c=>`<option>${c}</option>`).join('')}</select>
+                    <input type="number" id="newStructAmount" placeholder="Amount (UGX)">
+                    <select id="newStructTerm">${TERMS.map(t=>`<option>${t}</option>`).join('')}</select>
+                    <select id="newStructYear">${ACADEMIC_YEARS.map(y=>`<option>${y}</option>`).join('')}</select>
+                    <button class="btn" onclick="addFeeStructure()">Add</button></div>
+                    <div id="structList"></div>
+                    <div class="flex"><button class="btn btn-gold" onclick="closeModal('feeStructModal')">Close</button></div>
                 </div>
             `;
-            const classSelect = document.getElementById('reportClassSelect');
-            const studentSelect = document.getElementById('reportStudentSelect');
-            const termSelect = document.getElementById('reportTermSelect');
-            const examTypeSelect = document.getElementById('reportExamTypeSelect');
-            
-            classSelect.onchange = () => {
-                const selectedClass = classSelect.value;
-                if (!selectedClass) {
-                    studentSelect.disabled = true;
-                    studentSelect.innerHTML = '<option>Select class first</option>';
-                    return;
-                }
-                const filtered = students.filter(s => s.class === selectedClass);
-                studentSelect.disabled = false;
-                studentSelect.innerHTML = '<option value="">-- Select Student --</option>' + filtered.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.lin})</option>`).join('');
-            };
-            
-            document.getElementById('generateReportBtn').onclick = async () => {
-                const sid = studentSelect.value;
-                const term = termSelect.value;
-                const examType = examTypeSelect.value;
-                if (!sid || !term || !examType) return alert('Select student, term and exam type');
-                const student = students.find(s => s.id === sid);
-                const studentMarksRaw = await restFetch('marks', `student_id=eq.${sid}&school_id=eq.${SCHOOL_ID}&term=eq.${term}&exam_type=eq.${examType}`).catch(e => []);
-                const marksMap = new Map();
-                for (let m of studentMarksRaw) marksMap.set(m.subject, m);
-                let total = 0, points = [], tableRows = '';
-                for (let sub of CORE_SUBJECTS) {
-                    const m = marksMap.get(sub);
-                    const score = m ? m.score : '-';
-                    const grade = m ? m.grade : '-';
-                    const pointsVal = m ? getGradePoints(m.grade) : '-';
-                    if (m) {
-                        total += m.score;
-                        points.push(getGradePoints(m.grade));
-                    }
-                    tableRows += `<tr>
-                        <td>${sub}</td><td>${score !== '-' ? score : '—'}</td><td>${grade !== '-' ? grade : '—'}</td>
-                        <td>${pointsVal !== '-' ? pointsVal : '—'}</td>
-                    </tr>`;
-                }
-                const avg = points.length ? (total / points.length).toFixed(1) : 0;
-                points.sort((a,b)=>a-b);
-                const best8 = points.slice(0,8);
-                const aggregate = best8.reduce((a,b)=>a+b,0);
-                const division = getDivision(aggregate);
-                const photoHtml = student.photo_url ? `<img src="${student.photo_url}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;">` : '<div style="width:80px;height:80px;border-radius:50%;background:#eef2ff;display:flex;align-items:center;justify-content:center;">📷</div>';
-                const preview = `
-                    <div id="printableReport" class="report-card">
-                        <div class="report-header">
-                            <h2>${escapeHtml(currentSchool.name)}</h2>
-                            <p>${escapeHtml(currentSchool.address || 'GAYAZA-KIJABIJJO')} | 📞 0779585035, 0756585035</p>
-                            <p><strong>${examType} Report – ${term}</strong></p>
-                            <p>Academic Year: ${student.academic_year || '2026'}</p>
-                            <p>Issue Date: ${new Date().toLocaleDateString()}</p>
-                        </div>
-                        <div style="display:flex; align-items:center; margin-bottom:20px;">
-                            <div>${photoHtml}</div>
-                            <div style="margin-left:15px;">
-                                <strong>${escapeHtml(student.first_name)} ${escapeHtml(student.last_name)}</strong><br>
-                                LIN: ${student.lin || '-'}<br>
-                                Class: ${student.class || '-'}<br>
-                                Admission No: ${student.admission_number || 'N/A'}
-                            </div>
-                        </div>
-                        <div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse;"><thead><tr style="background:#003366; color:white;"><th>Subject</th><th>Marks</th><th>Grade</th><th>Points</th></tr></thead><tbody>${tableRows}</tbody></table></div>
-                        <div style="margin-top:20px;">
-                            <p><strong>Total Marks:</strong> ${total} / 400</p>
-                            <p><strong>Average:</strong> ${avg}%</p>
-                            <p><strong>Aggregate (best 8 points):</strong> ${aggregate} | <strong>${division}</strong></p>
-                        </div>
-                        <div style="margin-top:30px; border-top:1px solid #e2e8f0; padding-top:15px; display:flex; justify-content:space-between;">
-                            <div>____________________<br>Class Teacher</div>
-                            <div>____________________<br>Headteacher</div>
-                        </div>
-                        <div style="margin-top:15px; text-align:center; font-size:11px; color:#666;">
-                            Support: 0794423143 | This is a computer-generated report. No signature required.
-                        </div>
-                    </div>
-                    <button class="btn btn-gold" onclick="window.print()" style="margin-top:20px;">Print Report</button>
-                `;
-                document.getElementById('reportPreview').innerHTML = preview;
-            };
-        }
-        
-        // ==================== ID CARDS ====================
-        function renderIdCardsTab() {
-            const contentDiv = document.getElementById('dynamicContent');
-            if (!contentDiv) return;
-            contentDiv.innerHTML = `<select id="idStudent"><option value="">Select student</option>${students.map(s=>`<option value="${s.id}">${s.first_name} ${s.last_name} (${s.lin || '-'})</option>`).join('')}</select><div id="idPreview"></div><button class="btn hidden" id="printIdBtn">Print</button>`;
-            const idStudent = document.getElementById('idStudent');
-            if (idStudent) {
-                idStudent.onchange = () => {
-                    const sid = idStudent.value;
-                    if (!sid) return;
-                    const s = students.find(st => st.id === sid);
-                    const photoHtml = s.photo_url ? `<img src="${s.photo_url}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;">` : '<div style="width:70px;height:70px;background:#eee;border-radius:50%;display:flex;align-items:center;justify-content:center;">📷</div>';
-                    const preview = `<div id="printableId" class="id-card"><div class="id-card-header">${currentSchool.name}</div><div style="display:flex; gap:10px; margin-top:10px;"><div>${photoHtml}</div><div><strong>${s.first_name} ${s.last_name}</strong><br>LIN: ${s.lin || '-'}<br>Class: ${s.class || '-'}<br>Parent: ${s.parent_whatsapp || 'N/A'}</div></div></div>`;
-                    document.getElementById('idPreview').innerHTML = preview;
-                    document.getElementById('printIdBtn').classList.remove('hidden');
-                };
+            document.body.appendChild(modal); modal.style.display = 'flex';
+            const structList = document.getElementById('structList');
+            if (structList) {
+                structList.innerHTML = feeStructures.map(f => `
+                    <div class="expense-item"><span>${f.class} - ${f.term} ${f.academic_year || '2026'}: ${formatMoney(f.amount)}</span><button onclick="deleteFeeStructure('${f.id}')" class="text-red-600">Delete</button></div>
+                `).join('');
             }
-            document.getElementById('printIdBtn').onclick = () => { const w=window.open('','_blank'); w.document.write(document.getElementById('printableId').outerHTML); w.document.write('<button onclick="window.print()">Print</button>'); w.document.close(); };
-        }
+        };
+        
+        window.addFeeStructure = async () => {
+            const className = document.getElementById('newStructClass').value;
+            const amount = parseFloat(document.getElementById('newStructAmount').value);
+            const term = document.getElementById('newStructTerm').value;
+            const year = document.getElementById('newStructYear').value;
+            if (!className || isNaN(amount)) return alert('Fill all');
+            await restInsert('fee_structures', { school_id: SCHOOL_ID, class: className, amount, term, academic_year: year });
+            showToast('Fee structure added');
+            closeModal('feeStructModal');
+            await loadAllData();
+            renderFinanceTab();
+        };
+        
+        window.deleteFeeStructure = async (id) => {
+            if (confirm('Delete this fee structure?')) {
+                await restDelete('fee_structures', id);
+                await loadAllData();
+                renderFinanceTab();
+            }
+        };
+        
+        function renderStudentsTab() { document.getElementById('dynamicContent').innerHTML = '<div style="padding:20px;">Student management (full version available separately).</div>'; }
+        function renderPlaceholder() { document.getElementById('dynamicContent').innerHTML = '<div style="padding:20px;">Module under development.</div>'; }
         
         window.closeModal = function(id) { const m = document.getElementById(id); if (m) m.remove(); };
         
-        // ==================== INITIALISATION ====================
         (async function init() {
             try {
                 const schools = await restFetch('schools', `id=eq.${SCHOOL_ID}`);
                 if (!schools || schools.length === 0) {
-                    await restInsert('schools', { id: SCHOOL_ID, name: 'PROGRESSIVE MOTHERS', address: 'GAYAZA-KIJABIJJO', phone: '0779585035, 0756585035' });
-                    currentSchool = { id: SCHOOL_ID, name: 'PROGRESSIVE MOTHERS', address: 'GAYAZA-KIJABIJJO', phone: '0779585035, 0756585035' };
+                    await restInsert('schools', { id: SCHOOL_ID, name: 'PROGRESSIVE MOTHERS NURSERY AND PRIMARY SCHOOL', address: 'GAYAZA-KIJABIJJO', phone: '0779585035, 0756585035' });
+                    currentSchool = { id: SCHOOL_ID, name: 'PROGRESSIVE MOTHERS NURSERY AND PRIMARY SCHOOL', address: 'GAYAZA-KIJABIJJO', phone: '0779585035, 0756585035' };
                 } else {
                     currentSchool = schools[0];
                 }
