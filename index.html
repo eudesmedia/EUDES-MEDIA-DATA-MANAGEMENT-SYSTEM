@@ -68,6 +68,8 @@
         @keyframes fadeOut { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
         @media print { .support-badge, .role-badge, .logout-btn, .action-buttons, .global-search, .btn:not(.btn-print) { display: none !important; } }
         .photo-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-top: 8px; }
+        .photo-buttons { display: flex; gap: 10px; margin-top: 8px; }
+        .photo-buttons button { flex: 1; font-size: 12px; padding: 6px; }
     </style>
 </head>
 <body>
@@ -129,13 +131,24 @@
         }
         function isValidLIN(lin) { return /^[A-Z]{3}[0-9]{4}$/.test(lin); }
 
-        // -------------------- PHOTO AS BASE64 (NO STORAGE NEEDED) --------------------
-        function resizeAndGetBase64(file, callback) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
+        // -------------------- ROBUST PHOTO COMPRESSION (USING BLOB + CANVAS) --------------------
+        async function compressImageFile(file) {
+            return new Promise((resolve, reject) => {
+                // Validate file type
+                if (!file.type.match('image/jpeg') && !file.type.match('image/png')) {
+                    reject(new Error('Only JPEG and PNG images are allowed'));
+                    return;
+                }
+                
+                // Create object URL for the file
+                const objectUrl = URL.createObjectURL(file);
                 const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
+                
+                img.onload = () => {
+                    // Clean up object URL
+                    URL.revokeObjectURL(objectUrl);
+                    
+                    // Calculate new dimensions (max 150x150)
                     let width = img.width, height = img.height;
                     const maxSize = 150;
                     if (width > height) {
@@ -149,16 +162,78 @@
                             height = maxSize;
                         }
                     }
+                    
+                    // Create canvas and resize
+                    const canvas = document.createElement('canvas');
                     canvas.width = width;
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    const base64 = canvas.toDataURL('image/jpeg', 0.7);
-                    callback(base64);
+                    
+                    // Convert to Base64 with compression
+                    const base64 = canvas.toDataURL('image/jpeg', 0.6);
+                    resolve(base64);
                 };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+                
+                img.onerror = (err) => {
+                    URL.revokeObjectURL(objectUrl);
+                    reject(new Error('Failed to load image. The file may be corrupted or unsupported.'));
+                };
+                
+                img.src = objectUrl;
+            });
+        }
+
+        // Alternative: use FileReader if objectURL fails (fallback)
+        async function compressImageFallback(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let width = img.width, height = img.height;
+                        const maxSize = 150;
+                        if (width > height) {
+                            if (width > maxSize) {
+                                height = (height * maxSize) / width;
+                                width = maxSize;
+                            }
+                        } else {
+                            if (height > maxSize) {
+                                width = (width * maxSize) / height;
+                                height = maxSize;
+                            }
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const base64 = canvas.toDataURL('image/jpeg', 0.6);
+                        resolve(base64);
+                    };
+                    img.onerror = () => reject(new Error('Failed to load image in fallback mode'));
+                    img.src = e.target.result;
+                };
+                reader.onerror = () => reject(new Error('FileReader failed'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Main function with retry
+        async function compressPhoto(file) {
+            try {
+                // First try with object URL (more efficient)
+                return await compressImageFile(file);
+            } catch (err) {
+                console.warn("Object URL method failed, trying fallback:", err);
+                try {
+                    // Fallback to FileReader
+                    return await compressImageFallback(file);
+                } catch (fallbackErr) {
+                    throw new Error(`Could not process image: ${fallbackErr.message}`);
+                }
+            }
         }
 
         // -------------------- SUPABASE HELPERS --------------------
@@ -181,7 +256,9 @@
                 const errText = await res.text();
                 throw new Error(`Insert failed: ${errText}`);
             }
-            return res.json().catch(() => ({}));
+            const text = await res.text();
+            if (text && text.trim()) return JSON.parse(text);
+            return {};
         }
         
         async function restUpdate(table, id, data) {
@@ -194,7 +271,11 @@
                 const errText = await res.text();
                 throw new Error(`Update failed: ${errText}`);
             }
-            return res.json();
+            const text = await res.text();
+            if (text && text.trim()) {
+                try { return JSON.parse(text); } catch(e) { return {}; }
+            }
+            return {};
         }
         
         async function restDeleteFilter(table, filterColumn, filterValue) {
@@ -222,10 +303,8 @@
                 attendance = await restFetch('attendance', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
                 payments = await restFetch('payments', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
                 transactions = await restFetch('transactions', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
-                // Check for photo_url column
                 if (students.length > 0 && !students[0].hasOwnProperty('photo_url')) {
-                    console.warn("Missing photo_url column - run: ALTER TABLE students ADD COLUMN photo_url TEXT;");
-                    showToast("Missing 'photo_url' column. Please run SQL: ALTER TABLE students ADD COLUMN photo_url TEXT;", true);
+                    showToast("⚠️ Missing 'photo_url' column. Please run SQL: ALTER TABLE students ADD COLUMN photo_url TEXT;", true);
                 }
             } catch(e) { console.error("Load error:", e); }
         }
@@ -254,7 +333,7 @@
             window.open(`https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
         }
 
-        // -------------------- STUDENTS TAB (BASE64 PHOTOS - WORKS!) --------------------
+        // -------------------- STUDENTS TAB --------------------
         async function renderStudents() {
             const container = document.getElementById('tabContent');
             const canEdit = canManageStudents();
@@ -306,6 +385,52 @@
             container.innerHTML = html;
         }
 
+        // Create file input for gallery and camera
+        function createPhotoInputWithCamera(containerId, onPhotoSelected, previewContainerId) {
+            // Clear container
+            const container = document.getElementById(containerId);
+            container.innerHTML = `
+                <div class="photo-buttons">
+                    <button type="button" class="btn-sm" id="galleryBtn"><i class="fas fa-images"></i> Gallery</button>
+                    <button type="button" class="btn-sm" id="cameraBtn"><i class="fas fa-camera"></i> Camera</button>
+                </div>
+                <input type="file" id="fileInput" accept="image/jpeg,image/png" style="display:none">
+                <input type="file" id="cameraInput" accept="image/jpeg,image/png" capture="environment" style="display:none">
+            `;
+            
+            const fileInput = document.getElementById('fileInput');
+            const cameraInput = document.getElementById('cameraInput');
+            const previewDiv = document.getElementById(previewContainerId);
+            
+            document.getElementById('galleryBtn').onclick = () => fileInput.click();
+            document.getElementById('cameraBtn').onclick = () => cameraInput.click();
+            
+            const handleFile = async (file) => {
+                if (!file) return;
+                // Show preview immediately
+                const reader = new FileReader();
+                reader.onload = (e) => { previewDiv.innerHTML = `<img src="${e.target.result}" class="photo-preview">`; };
+                reader.readAsDataURL(file);
+                // Process and compress
+                try {
+                    const compressedBase64 = await compressPhoto(file);
+                    onPhotoSelected(compressedBase64);
+                } catch (err) {
+                    showToast(`Photo error: ${err.message}`, true);
+                    previewDiv.innerHTML = '';
+                }
+            };
+            
+            fileInput.onchange = (e) => {
+                if (e.target.files.length) handleFile(e.target.files[0]);
+                fileInput.value = '';
+            };
+            cameraInput.onchange = (e) => {
+                if (e.target.files.length) handleFile(e.target.files[0]);
+                cameraInput.value = '';
+            };
+        }
+
         function showAddStudentModal() {
             const modal = document.createElement('div');
             modal.className = 'modal';
@@ -321,8 +446,7 @@
                     <input id="newParentWhatsapp" placeholder="Parent WhatsApp">
                     <input id="newParentName" placeholder="Parent Name">
                     <input id="newTotalFees" type="number" placeholder="Total Fees (UGX)">
-                    <div><label>Photo (optional)</label><input type="file" id="newPhoto" accept="image/*"></div>
-                    <div id="photoPreview" class="text-center"></div>
+                    <div><label>Photo</label><div id="photoControls"></div><div id="photoPreview" class="text-center"></div></div>
                     <div class="flex justify-end gap-2 mt-4">
                         <button class="btn" id="confirmAddStudent">Save</button>
                         <button class="btn-gold" onclick="this.closest('.modal').remove()">Cancel</button>
@@ -331,16 +455,8 @@
             `;
             document.body.appendChild(modal);
             
-            const photoInput = document.getElementById('newPhoto');
-            const previewDiv = document.getElementById('photoPreview');
-            photoInput.onchange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => { previewDiv.innerHTML = `<img src="${ev.target.result}" class="photo-preview">`; };
-                    reader.readAsDataURL(file);
-                } else previewDiv.innerHTML = '';
-            };
+            let selectedPhotoBase64 = null;
+            createPhotoInputWithCamera('photoControls', (base64) => { selectedPhotoBase64 = base64; }, 'photoPreview');
             
             const linInput = document.getElementById('newLin');
             linInput.addEventListener('input', (e) => {
@@ -365,7 +481,6 @@
                     const parentWhatsapp = document.getElementById('newParentWhatsapp').value.trim();
                     const parentName = document.getElementById('newParentName').value.trim();
                     const totalFees = parseFloat(document.getElementById('newTotalFees').value) || 0;
-                    const photoFile = document.getElementById('newPhoto').files[0];
                     
                     const studentId = crypto.randomUUID ? crypto.randomUUID() : `s_${Date.now()}`;
                     const studentData = {
@@ -382,25 +497,19 @@
                         fees_paid: 0
                     };
                     
-                    if (photoFile) {
-                        showToast("Processing photo...");
-                        resizeAndGetBase64(photoFile, async (base64) => {
-                            studentData.photo_url = base64;
-                            await restInsert('students', studentData);
-                            showToast(`Student ${first} ${last} added with photo`);
-                            modal.remove();
-                            await loadAll();
-                            await renderStudentList();
-                        });
-                    } else {
-                        await restInsert('students', studentData);
-                        showToast(`Student ${first} ${last} added`);
-                        modal.remove();
-                        await loadAll();
-                        await renderStudentList();
+                    if (selectedPhotoBase64) {
+                        studentData.photo_url = selectedPhotoBase64;
                     }
+                    
+                    await restInsert('students', studentData);
+                    showToast(`Student ${first} ${last} added ${selectedPhotoBase64 ? 'with photo' : ''}`);
+                    modal.remove();
+                    await loadAll();
+                    await renderStudentList();
                 } catch(err) {
+                    console.error("Add error:", err);
                     showToast(`Error: ${err.message}`, true);
+                } finally {
                     saveBtn.disabled = false;
                     saveBtn.innerHTML = 'Save';
                 }
@@ -425,8 +534,7 @@
                     <input id="editParentWhatsapp" value="${escapeHtml(s.parent_whatsapp || '')}">
                     <input id="editParentName" value="${escapeHtml(s.parent_name || '')}">
                     <input id="editTotalFees" type="number" value="${s.total_fees || 0}">
-                    <div><label>Change Photo (optional)</label><input type="file" id="editPhoto" accept="image/*"></div>
-                    <div id="editPhotoPreview" class="text-center">${s.photo_url ? `<img src="${s.photo_url}" class="photo-preview">` : ''}</div>
+                    <div><label>Change Photo</label><div id="editPhotoControls"></div><div id="editPhotoPreview" class="text-center">${s.photo_url ? `<img src="${s.photo_url}" class="photo-preview">` : ''}</div></div>
                     <div class="flex justify-end gap-2 mt-4">
                         <button class="btn" id="confirmEditStudent">Update</button>
                         <button class="btn-gold" onclick="this.closest('.modal').remove()">Cancel</button>
@@ -435,18 +543,12 @@
             `;
             document.body.appendChild(modal);
             
-            const photoInput = document.getElementById('editPhoto');
+            let selectedPhotoBase64 = null;
             const previewDiv = document.getElementById('editPhotoPreview');
-            photoInput.onchange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => { previewDiv.innerHTML = `<img src="${ev.target.result}" class="photo-preview">`; };
-                    reader.readAsDataURL(file);
-                } else {
-                    previewDiv.innerHTML = s.photo_url ? `<img src="${s.photo_url}" class="photo-preview">` : '';
-                }
-            };
+            createPhotoInputWithCamera('editPhotoControls', (base64) => {
+                selectedPhotoBase64 = base64;
+                // Preview is already updated by the handler in createPhotoInputWithCamera
+            }, 'editPhotoPreview');
             
             const linInput = document.getElementById('editLin');
             linInput.addEventListener('input', (e) => {
@@ -476,27 +578,19 @@
                         updateBtn.innerHTML = 'Update';
                         return;
                     }
-                    const photoFile = document.getElementById('editPhoto').files[0];
-                    
-                    if (photoFile) {
-                        showToast("Processing new photo...");
-                        resizeAndGetBase64(photoFile, async (base64) => {
-                            updates.photo_url = base64;
-                            await restUpdate('students', id, updates);
-                            showToast("Student updated with new photo");
-                            modal.remove();
-                            await loadAll();
-                            await renderStudentList();
-                        });
-                    } else {
-                        await restUpdate('students', id, updates);
-                        showToast("Student updated successfully");
-                        modal.remove();
-                        await loadAll();
-                        await renderStudentList();
+                    if (selectedPhotoBase64) {
+                        updates.photo_url = selectedPhotoBase64;
                     }
+                    
+                    await restUpdate('students', id, updates);
+                    showToast("Student updated successfully");
+                    modal.remove();
+                    await loadAll();
+                    await renderStudentList();
                 } catch(err) {
+                    console.error("Update error:", err);
                     showToast(`Update failed: ${err.message}`, true);
+                } finally {
                     updateBtn.disabled = false;
                     updateBtn.innerHTML = 'Update';
                 }
@@ -546,7 +640,7 @@
             XLSX.writeFile(wb, `students_${SCHOOL_ID}.xlsx`);
         }
 
-        // -------------------- MARKS & ATTENDANCE (simplified but working) --------------------
+        // -------------------- MARKS & ATTENDANCE (same as before, working) --------------------
         async function saveMark(markData) {
             const { student_id, subject, term, exam_type, school_id, score, grade } = markData;
             const existing = await restFetch('marks', `student_id=eq.${student_id}&subject=eq.${subject}&term=eq.${term}&exam_type=eq.${exam_type}&school_id=eq.${school_id}`);
@@ -604,7 +698,7 @@
                     }
                     html += `</tr>`;
                 }
-                html += `</tbody></table>`;
+                html += `</tbody><tr>`;
                 document.getElementById('marksGrid').innerHTML = html;
             };
             document.getElementById('loadMarksBtn').onclick = loadMarksGrid;
