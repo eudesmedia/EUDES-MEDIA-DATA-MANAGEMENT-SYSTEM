@@ -67,6 +67,7 @@
         .toast.error { background: #dc2626; }
         @keyframes fadeOut { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
         @media print { .support-badge, .role-badge, .logout-btn, .action-buttons, .global-search, .btn:not(.btn-print) { display: none !important; } }
+        .photo-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-top: 8px; }
     </style>
 </head>
 <body>
@@ -118,7 +119,63 @@
         function canManageAttendance() { return currentUser?.role === 'admin' || currentUser?.role === 'teacher'; }
         function canViewStats() { return currentUser?.role === 'admin'; }
 
-        // -------------------- SUPABASE HELPERS WITH ERROR LOGGING --------------------
+        // Generate 4-letter LIN
+        function generateLIN() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < 4; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        // -------------------- PHOTO UPLOAD --------------------
+        async function uploadPhoto(studentId, fileBlob) {
+            const fileName = `student_${studentId}_${Date.now()}.jpg`;
+            const url = `${SUPABASE_URL}/storage/v1/object/public/student_photos/${fileName}`;
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': fileBlob.type },
+                body: fileBlob
+            });
+            if (!res.ok) {
+                const err = await res.text();
+                throw new Error(`Upload failed: ${err}`);
+            }
+            return `${SUPABASE_URL}/storage/v1/object/public/student_photos/${fileName}`;
+        }
+
+        function compressImage(file, callback) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width, height = img.height;
+                    const maxSize = 200;
+                    if (width > height) {
+                        if (width > maxSize) {
+                            height = (height * maxSize) / width;
+                            width = maxSize;
+                        }
+                    } else {
+                        if (height > maxSize) {
+                            width = (width * maxSize) / height;
+                            height = maxSize;
+                        }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    canvas.toBlob(callback, 'image/jpeg', 0.7);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // -------------------- SUPABASE HELPERS --------------------
         async function restFetch(table, query = '') {
             const url = `${SUPABASE_URL}/rest/v1/${table}?select=*${query ? `&${query}` : ''}`;
             const res = await fetch(url, {
@@ -136,7 +193,6 @@
             });
             if (!res.ok) {
                 const errText = await res.text();
-                console.error(`Insert failed on ${table}:`, errText);
                 throw new Error(`Insert failed: ${errText}`);
             }
             return res.json().catch(() => ({}));
@@ -150,7 +206,6 @@
             });
             if (!res.ok) {
                 const errText = await res.text();
-                console.error(`Update failed on ${table} id ${id}:`, errText);
                 throw new Error(`Update failed: ${errText}`);
             }
             return res.json();
@@ -174,7 +229,6 @@
                 marks = await restFetch('marks', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
                 attendance = await restFetch('attendance', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
                 payments = await restFetch('payments', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
-                console.log(`Loaded: ${students.length} students, ${marks.length} marks`);
             } catch(e) { console.error("Load error:", e); }
         }
 
@@ -204,7 +258,7 @@
             window.open(`https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
         }
 
-        // -------------------- STUDENTS TAB (FULL CRUD WITH ERROR HANDLING) --------------------
+        // -------------------- STUDENTS TAB (WITH PHOTO UPLOAD) --------------------
         async function renderStudents() {
             const container = document.getElementById('tabContent');
             const canEdit = canManageStudents();
@@ -252,7 +306,7 @@
                     ${canManageStudents() ? `<td class="p-2"><button class="btn-sm" onclick="window.editStudent('${s.id}')"><i class="fas fa-edit"></i></button> <button class="btn-sm text-red-600" onclick="window.deleteStudent('${s.id}')"><i class="fas fa-trash"></i></button> <button class="btn-sm whatsapp-btn" onclick="window.sendFeeReminder('${s.id}')"><i class="fab fa-whatsapp"></i></button></td>` : ''}
                 </tr>`;
             }
-            html += '</tbody><table>';
+            html += '</tbody></table>';
             container.innerHTML = html;
         }
 
@@ -267,10 +321,12 @@
                     <input id="newLastName" placeholder="Last Name *">
                     <input id="newAdm" placeholder="Admission Number (auto if blank)">
                     <select id="newClass">${CLASS_ORDER.map(c => `<option>${c}</option>`).join('')}</select>
-                    <input id="newLin" placeholder="LIN (auto if blank)">
+                    <input id="newLin" placeholder="LIN (4 letters, auto if blank)">
                     <input id="newParentWhatsapp" placeholder="Parent WhatsApp">
                     <input id="newParentName" placeholder="Parent Name">
                     <input id="newTotalFees" type="number" placeholder="Total Fees (UGX)">
+                    <div><label>Photo (optional)</label><input type="file" id="newPhoto" accept="image/*"></div>
+                    <div id="photoPreview" class="text-center"></div>
                     <div class="flex justify-end gap-2 mt-4">
                         <button class="btn" id="confirmAddStudent">Save</button>
                         <button class="btn-gold" onclick="this.closest('.modal').remove()">Cancel</button>
@@ -278,18 +334,40 @@
                 </div>
             `;
             document.body.appendChild(modal);
+            
+            // Preview photo
+            const photoInput = document.getElementById('newPhoto');
+            const previewDiv = document.getElementById('photoPreview');
+            photoInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        previewDiv.innerHTML = `<img src="${ev.target.result}" class="photo-preview">`;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    previewDiv.innerHTML = '';
+                }
+            };
+            
             document.getElementById('confirmAddStudent').onclick = async () => {
                 const first = document.getElementById('newFirstName').value.trim();
                 const last = document.getElementById('newLastName').value.trim();
                 if (!first || !last) return showToast("First and Last name required", true);
                 const admission = document.getElementById('newAdm').value.trim() || `ADM${Date.now()}`;
                 const className = document.getElementById('newClass').value;
-                const lin = document.getElementById('newLin').value.trim() || `LIN${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+                let lin = document.getElementById('newLin').value.trim().toUpperCase();
+                if (!lin) lin = generateLIN();
+                if (lin.length !== 4) return showToast("LIN must be exactly 4 characters", true);
                 const parentWhatsapp = document.getElementById('newParentWhatsapp').value.trim();
                 const parentName = document.getElementById('newParentName').value.trim();
                 const totalFees = parseFloat(document.getElementById('newTotalFees').value) || 0;
-                const newStudent = {
-                    id: crypto.randomUUID ? crypto.randomUUID() : `s_${Date.now()}`,
+                const photoFile = document.getElementById('newPhoto').files[0];
+                
+                const studentId = crypto.randomUUID ? crypto.randomUUID() : `s_${Date.now()}`;
+                const studentData = {
+                    id: studentId,
                     school_id: SCHOOL_ID,
                     admission_number: admission,
                     first_name: first,
@@ -301,15 +379,37 @@
                     total_fees: totalFees,
                     fees_paid: 0
                 };
+                
                 try {
-                    await restInsert('students', newStudent);
-                    showToast(`Student ${first} ${last} added successfully`);
-                    modal.remove();
-                    await loadAll();
-                    await renderStudentList();
+                    if (photoFile) {
+                        showToast("Uploading photo...");
+                        compressImage(photoFile, async (blob) => {
+                            try {
+                                const photoUrl = await uploadPhoto(studentId, blob);
+                                studentData.photo_url = photoUrl;
+                                await restInsert('students', studentData);
+                                showToast(`Student ${first} ${last} added with photo`);
+                                modal.remove();
+                                await loadAll();
+                                await renderStudentList();
+                            } catch(err) {
+                                showToast(`Photo upload failed: ${err.message}`, true);
+                                await restInsert('students', studentData);
+                                showToast(`Student added without photo`);
+                                modal.remove();
+                                await loadAll();
+                                await renderStudentList();
+                            }
+                        });
+                    } else {
+                        await restInsert('students', studentData);
+                        showToast(`Student ${first} ${last} added`);
+                        modal.remove();
+                        await loadAll();
+                        await renderStudentList();
+                    }
                 } catch(err) {
-                    showToast(`Error adding student: ${err.message}`, true);
-                    console.error(err);
+                    showToast(`Error: ${err.message}`, true);
                 }
             };
         }
@@ -332,6 +432,8 @@
                     <input id="editParentWhatsapp" value="${escapeHtml(s.parent_whatsapp || '')}">
                     <input id="editParentName" value="${escapeHtml(s.parent_name || '')}">
                     <input id="editTotalFees" type="number" value="${s.total_fees || 0}">
+                    <div><label>Change Photo (optional)</label><input type="file" id="editPhoto" accept="image/*"></div>
+                    <div id="editPhotoPreview" class="text-center">${s.photo_url ? `<img src="${s.photo_url}" class="photo-preview">` : ''}</div>
                     <div class="flex justify-end gap-2 mt-4">
                         <button class="btn" id="confirmEditStudent">Update</button>
                         <button class="btn-gold" onclick="this.closest('.modal').remove()">Cancel</button>
@@ -339,6 +441,22 @@
                 </div>
             `;
             document.body.appendChild(modal);
+            
+            const photoInput = document.getElementById('editPhoto');
+            const previewDiv = document.getElementById('editPhotoPreview');
+            photoInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        previewDiv.innerHTML = `<img src="${ev.target.result}" class="photo-preview">`;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    previewDiv.innerHTML = s.photo_url ? `<img src="${s.photo_url}" class="photo-preview">` : '';
+                }
+            };
+            
             document.getElementById('confirmEditStudent').onclick = async () => {
                 const updates = {
                     first_name: document.getElementById('editFirstName').value,
@@ -350,22 +468,44 @@
                     parent_name: document.getElementById('editParentName').value,
                     total_fees: parseFloat(document.getElementById('editTotalFees').value) || 0
                 };
+                const photoFile = document.getElementById('editPhoto').files[0];
                 try {
-                    await restUpdate('students', id, updates);
-                    showToast("Student updated successfully");
-                    modal.remove();
-                    await loadAll();
-                    await renderStudentList();
+                    if (photoFile) {
+                        showToast("Uploading new photo...");
+                        compressImage(photoFile, async (blob) => {
+                            try {
+                                const photoUrl = await uploadPhoto(id, blob);
+                                updates.photo_url = photoUrl;
+                                await restUpdate('students', id, updates);
+                                showToast("Student updated with new photo");
+                                modal.remove();
+                                await loadAll();
+                                await renderStudentList();
+                            } catch(err) {
+                                showToast(`Photo upload failed: ${err.message}`, true);
+                                await restUpdate('students', id, updates);
+                                showToast("Student updated without photo change");
+                                modal.remove();
+                                await loadAll();
+                                await renderStudentList();
+                            }
+                        });
+                    } else {
+                        await restUpdate('students', id, updates);
+                        showToast("Student updated successfully");
+                        modal.remove();
+                        await loadAll();
+                        await renderStudentList();
+                    }
                 } catch(err) {
                     showToast(`Update failed: ${err.message}`, true);
-                    console.error(err);
                 }
             };
         };
 
         window.deleteStudent = async (id) => {
             if (!canManageStudents()) return;
-            if (!confirm("Delete this student permanently? This will also remove all marks and attendance records.")) return;
+            if (!confirm("Delete this student permanently?")) return;
             try {
                 await restDelete('students', id);
                 showToast("Student deleted");
@@ -373,13 +513,12 @@
                 await renderStudentList();
             } catch(err) {
                 showToast(`Delete failed: ${err.message}`, true);
-                console.error(err);
             }
         };
 
         window.sendFeeReminder = (id) => {
             const s = students.find(st => st.id === id);
-            if (!s || !s.parent_whatsapp) return showToast("No WhatsApp number for this student", true);
+            if (!s || !s.parent_whatsapp) return showToast("No WhatsApp number", true);
             const paid = payments.filter(p => p.student_id === id).reduce((a, b) => a + b.amount, 0);
             const balance = (s.total_fees || 0) - paid;
             const msg = `Dear Parent, fee balance for ${s.first_name} ${s.last_name} is ${formatMoney(balance)}. Please clear. - ${currentSchool.name}`;
@@ -407,15 +546,12 @@
         // -------------------- MARKS TAB (FIXED SAVING) --------------------
         async function saveMark(markData) {
             const { student_id, subject, term, exam_type, school_id, score, grade } = markData;
-            // Check if mark exists
             const existing = await restFetch('marks', 
                 `student_id=eq.${student_id}&subject=eq.${subject}&term=eq.${term}&exam_type=eq.${exam_type}&school_id=eq.${school_id}`);
             if (existing && existing.length > 0) {
                 await restUpdate('marks', existing[0].id, { score, grade });
-                return { action: 'updated' };
             } else {
                 await restInsert('marks', { school_id, student_id, subject, score, grade, term, exam_type });
-                return { action: 'inserted' };
             }
         }
 
@@ -505,8 +641,8 @@
                         success++;
                     } catch(e) { 
                         errors++;
-                        console.error(`Error saving ${subject} for student ${studentId}:`, e);
-                        showToast(`Error saving ${subject}: ${e.message}`, true);
+                        console.error(e);
+                        showToast(`Error saving ${subject}`, true);
                     }
                 }
                 if (success) showToast(`✅ Saved ${success} marks successfully`);
@@ -553,7 +689,7 @@
                     }
                     summary += `<td class="p-2 text-center">${total}/400<br><small>Agg: ${agg}</small></td>`;
                 }
-                summary += `</tr><tr class="bg-gray-50"><td class="p-2 font-bold">Division</td>`;
+                summary += `<tr><tr class="bg-gray-50"><td class="p-2 font-bold">Division</td>`;
                 for (let ex of examsToShow) {
                     let agg = 0;
                     if (pointsList[ex]) {
@@ -568,7 +704,7 @@
                     <div class="report-card">
                         <div class="report-header"><h2>${escapeHtml(currentSchool.name)}</h2><p>${currentSchool.address} | ${SCHOOL_CONTACTS.join(', ')}</p><p>${term} | ${examTarget} Cumulative Report</p></div>
                         <div class="flex gap-3 items-center mb-3">${photoHtml}<div><strong>${student.first_name} ${student.last_name}</strong><br>LIN: ${student.lin}<br>Class: ${student.class}</div></div>
-                        <table class="w-full border"><thead><tr><th>Subject</th>${examsToShow.map(e=>`<th>${e}</th>`).join('')}</thead><tbody>${rows}${summary}</tbody>}</table>
+                        <table class="w-full border"><thead><tr><th>Subject</th>${examsToShow.map(e=>`<th>${e}</th>`).join('')}</thead><tbody>${rows}${summary}</tbody>}结合
                         <div class="text-center text-xs mt-3">Generated: ${new Date().toLocaleString()}</div>
                     </div>
                 `;
@@ -637,7 +773,6 @@
                         success++;
                     } catch(e) {
                         errors++;
-                        console.error("Attendance save error:", e);
                     }
                 }
                 if (success) showToast(`Attendance saved for ${success} students`);
