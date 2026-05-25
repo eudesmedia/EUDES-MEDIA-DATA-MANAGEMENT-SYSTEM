@@ -17,7 +17,7 @@
         .school-address { font-size: 0.85rem; opacity: 0.8; margin-top: 4px; }
         .datetime-row { display: flex; justify-content: space-between; margin-top: 12px; background: rgba(255,255,255,0.15); padding: 8px 16px; border-radius: 40px; font-size: 0.75rem; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: white; border-radius: 24px; padding: 16px; text-align: center; border-top: 4px solid #D4A017; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .stat-card { background: white; border-radius: 24px; padding: 16px; text-align: center; border-top: 4px solid #D4A017; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.2s; cursor: pointer; }
         .stat-card:hover { transform: translateY(-3px); }
         .stat-number { font-size: 28px; font-weight: 800; color: #003366; }
         .stat-label { font-size: 12px; color: #5a6874; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
@@ -78,7 +78,9 @@
         .space-y-2 > * + * { margin-top: 8px; }
         .text-red-600 { color: #dc2626; }
         .whatsapp-btn { background: #25D366; color: white; }
-        .absent-section { background: #fff5f5; border-left: 4px solid #dc2626; padding: 12px; margin-top: 20px; border-radius: 16px; }
+        .absent-section { background: #fff5f5; border-left: 4px solid #dc2626; padding: 16px; margin-top: 20px; border-radius: 16px; }
+        .absent-section table { width: 100%; border-collapse: collapse; }
+        .absent-section th, .absent-section td { padding: 8px; text-align: left; border-bottom: 1px solid #fce4e4; }
     </style>
 </head>
 <body>
@@ -223,119 +225,44 @@
             await render();
         }
 
-        // ==================== ABSENTEE SECTION ====================
-        async function renderAbsentees() {
-            const today = document.getElementById('attDate')?.value || new Date().toISOString().slice(0,10);
-            const absentRecords = attendance.filter(a => a.date === today && a.status === 'absent');
+        // ==================== ABSENT SECTION HELPERS ====================
+        async function getAbsentSectionHtml(date) {
+            const absentRecords = attendance.filter(a => a.date === date && a.status === 'absent');
             const absentStudents = absentRecords.map(rec => students.find(s => s.id === rec.student_id)).filter(s => s);
-            if (absentStudents.length === 0) return '<div class="p-4 text-gray-500 text-center">✅ No absent students on this date.</div>';
-            let html = '<div class="absent-section"><h4 class="font-bold mb-3"><i class="fas fa-user-slash"></i> Absent Students Today</h4><div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Name</th><th>Class</th><th>Parent WhatsApp</th><th>Action</th></tr></thead><tbody>';
+            if (absentStudents.length === 0) return '<div class="bg-green-50 p-3 rounded-lg">✅ No absent students on this date.</div>';
+            let html = `<div class="absent-section"><h4 class="font-bold mb-2"><i class="fas fa-user-slash"></i> 📋 Absent Students on ${date}</h4>
+                        <table class="w-full"><thead><tr><th>Name</th><th>Class</th><th>Parent Name</th><th>WhatsApp</th><th>Action</th></tr></thead><tbody>`;
             for (let s of absentStudents) {
-                html += `<tr><td class="p-2">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</td>
-                         <td class="p-2">${escapeHtml(s.class)}</td>
-                         <td class="p-2">${escapeHtml(s.parent_whatsapp || 'N/A')}</td>
-                         <td class="p-2"><button class="btn-sm whatsapp-btn" onclick="window.notifyAbsent('${s.id}')"><i class="fab fa-whatsapp"></i> Notify</button></td>
+                html += `<tr>
+                            <td class="p-2">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</td>
+                            <td class="p-2">${escapeHtml(s.class)}</td>
+                            <td class="p-2">${escapeHtml(s.parent_name || 'N/A')}</td>
+                            <td class="p-2">${escapeHtml(s.parent_whatsapp || 'N/A')}</td>
+                            <td class="p-2"><button class="btn-sm whatsapp-btn" onclick="window.notifyAbsent('${s.id}', '${date}')"><i class="fab fa-whatsapp"></i> Notify</button></td>
                          </tr>`;
             }
-            html += '</tbody></table></div><button class="btn whatsapp-btn mt-3" onclick="window.notifyAllAbsent()"><i class="fab fa-whatsapp"></i> Notify All Absent Parents</button></div>';
+            html += '</tbody></table><button class="btn whatsapp-btn mt-2" onclick="window.notifyAllAbsent(\''+date+'\')"><i class="fab fa-whatsapp"></i> Notify All Absent Parents</button></div>';
             return html;
         }
 
-        window.notifyAbsent = (studentId) => {
+        window.notifyAbsent = (studentId, date) => {
             const student = students.find(s => s.id === studentId);
-            if (!student || !student.parent_whatsapp) return alert('No parent WhatsApp number');
-            const today = new Date().toISOString().slice(0,10);
-            const msg = `Dear Parent, ${student.first_name} ${student.last_name} was absent from school today (${today}). Please ensure regular attendance. - ${currentSchool.name}`;
+            if (!student || !student.parent_whatsapp) return alert('No WhatsApp number');
+            const msg = `Dear Parent, ${student.first_name} ${student.last_name} was absent from school on ${date}. Please ensure regular attendance. - ${currentSchool.name}`;
             sendWhatsApp(student.parent_whatsapp, msg);
         };
-        window.notifyAllAbsent = () => {
-            const today = document.getElementById('attDate')?.value || new Date().toISOString().slice(0,10);
-            const absentRecords = attendance.filter(a => a.date === today && a.status === 'absent');
+        window.notifyAllAbsent = (date) => {
+            const absentRecords = attendance.filter(a => a.date === date && a.status === 'absent');
             const absentStudents = absentRecords.map(rec => students.find(s => s.id === rec.student_id)).filter(s => s && s.parent_whatsapp);
-            if (!absentStudents.length) return showToast('No absent students with WhatsApp numbers', true);
+            if (!absentStudents.length) return showToast('No absent students with WhatsApp', true);
             absentStudents.forEach(s => {
-                const msg = `Dear Parent, ${s.first_name} ${s.last_name} was absent from school today (${today}). Please ensure regular attendance. - ${currentSchool.name}`;
+                const msg = `Dear Parent, ${s.first_name} ${s.last_name} was absent on ${date}. Please ensure regular attendance. - ${currentSchool.name}`;
                 sendWhatsApp(s.parent_whatsapp, msg);
             });
-            showToast(`Notified ${absentStudents.length} parents via WhatsApp`);
+            showToast(`Notified ${absentStudents.length} parents`);
         };
 
-        // ==================== PROMOTION ====================
-        window.promoteStudents = async () => {
-            if (!confirm('Promote all students to next class? This will update their class level.')) return;
-            const nextClassMap = {};
-            for (let i = 0; i < CLASS_ORDER.length - 1; i++) nextClassMap[CLASS_ORDER[i]] = CLASS_ORDER[i+1];
-            for (let student of students) {
-                const current = student.class;
-                if (nextClassMap[current]) {
-                    await restUpdate('students', student.id, { class: nextClassMap[current] });
-                }
-            }
-            showToast('Students promoted to next class');
-            await refreshAllAndRender();
-        };
-
-        // ==================== CUMULATIVE REPORT ====================
-        async function generateCumulativeReport(studentId, selectedTerm, selectedExam) {
-            const student = students.find(s => s.id === studentId);
-            if (!student) return null;
-            let examTypesToShow = [];
-            if (selectedExam === 'Beginning of Term') examTypesToShow = ['Beginning of Term'];
-            else if (selectedExam === 'Mid Term') examTypesToShow = ['Beginning of Term', 'Mid Term'];
-            else examTypesToShow = ['Beginning of Term', 'Mid Term', 'End of Term'];
-            
-            const allMarks = marks.filter(m => m.student_id === studentId && m.term === selectedTerm);
-            const marksBySubject = {};
-            for (let sub of CORE_SUBJECTS) {
-                marksBySubject[sub] = {};
-                for (let exam of examTypesToShow) {
-                    const m = allMarks.find(m => m.subject === sub && m.exam_type === exam);
-                    marksBySubject[sub][exam] = m ? { score: m.score, grade: m.grade, points: gradePoints(m.grade) } : null;
-                }
-            }
-            let examTotals = {};
-            let examPoints = {};
-            for (let exam of examTypesToShow) {
-                let totalScore = 0, pointsList = [];
-                for (let sub of CORE_SUBJECTS) {
-                    const data = marksBySubject[sub][exam];
-                    if (data) {
-                        totalScore += data.score;
-                        pointsList.push(data.points);
-                    }
-                }
-                examTotals[exam] = totalScore;
-                pointsList.sort((a,b)=>a-b);
-                const aggregate = pointsList.slice(0,8).reduce((s,p)=>s+p,0);
-                examPoints[exam] = { aggregate, division: getDivision(aggregate) };
-            }
-            const photoHtml = student.photo_url ? `<img src="${student.photo_url}" style="width:80px;height:80px;border-radius:50%;">` : '<div style="width:80px;height:80px;background:#eef2ff;border-radius:50%;display:flex;align-items:center;justify-content:center;">📷</div>';
-            let tableRows = '';
-            for (let sub of CORE_SUBJECTS) {
-                tableRows += `<tr><td class="p-2 font-bold">${sub}</td>`;
-                for (let exam of examTypesToShow) {
-                    const data = marksBySubject[sub][exam];
-                    const score = data ? data.score : '-';
-                    const grade = data ? data.grade : '-';
-                    tableRows += `<td class="p-2 text-center">${score}<br><small>${grade}</small></td>`;
-                }
-                tableRows += `</tr>`;
-            }
-            let summaryRow = `<tr class="bg-gray-100"><td class="p-2 font-bold">Total / Aggregate</td>`;
-            for (let exam of examTypesToShow) {
-                const total = examTotals[exam] || 0;
-                const agg = examPoints[exam]?.aggregate || 0;
-                summaryRow += `<td class="p-2 text-center">${total}/400<br><small>Agg: ${agg}</small></td>`;
-            }
-            summaryRow += `</tr><tr class="bg-gray-50"><td class="p-2 font-bold">Division</td>`;
-            for (let exam of examTypesToShow) {
-                summaryRow += `<td class="p-2 text-center">${examPoints[exam]?.division || '-'}</td>`;
-            }
-            summaryRow += `</tr>`;
-            return { student, photoHtml, examTypesToShow, tableRows, summaryRow };
-        }
-
-        // ==================== RENDER FUNCTIONS ====================
+        // ==================== STUDENTS TAB (FULL CRUD) ====================
         async function renderStudents() {
             const container = document.getElementById('tabContent');
             container.innerHTML = `
@@ -353,7 +280,6 @@
             document.getElementById('studentSearch').addEventListener('input', () => renderStudentList());
             await renderStudentList();
         }
-
         async function renderStudentList() {
             const search = document.getElementById('studentSearch')?.value.toLowerCase() || '';
             let filtered = students.filter(s => (s.first_name+' '+s.last_name).toLowerCase().includes(search) || (s.admission_number||'').includes(search));
@@ -384,7 +310,6 @@
             html += '</tbody></table>';
             container.innerHTML = html;
         }
-
         window.exportStudentsExcel = () => {
             const ws = XLSX.utils.json_to_sheet(students.map(s => ({ 'Admission Number': s.admission_number, 'First Name': s.first_name, 'Last Name': s.last_name, 'Class': s.class, 'LIN': s.lin, 'Parent WhatsApp': s.parent_whatsapp, 'Total Fees': s.total_fees })));
             const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Students'); XLSX.writeFile(wb, `students_${SCHOOL_ID}.xlsx`);
@@ -410,27 +335,28 @@
         };
         window.showAddStudentModal = () => {
             const modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
-            modal.innerHTML = `<div class="modal-content"><h3>Add Student</h3><input id="newFirstName" placeholder="First Name"><input id="newLastName" placeholder="Last Name"><input id="newAdm" placeholder="Admission Number"><select id="newClass">${CLASS_ORDER.map(c=>`<option>${c}</option>`).join('')}</select><input id="newParent" placeholder="Parent WhatsApp"><input id="newTotal" type="number" placeholder="Total Fees"><input id="newLin" placeholder="LIN"><div><label>Photo</label><input type="file" id="newPhoto" accept="image/*"></div><div class="flex justify-end gap-2 mt-4"><button class="btn" onclick="window.saveNewStudent()">Save</button><button class="btn-gold" onclick="this.closest('.modal').remove()">Cancel</button></div></div>`;
+            modal.innerHTML = `<div class="modal-content"><h3>Add Student</h3><input id="newFirstName" placeholder="First Name"><input id="newLastName" placeholder="Last Name"><input id="newAdm" placeholder="Admission Number"><select id="newClass">${CLASS_ORDER.map(c=>`<option>${c}</option>`).join('')}</select><input id="newParent" placeholder="Parent WhatsApp"><input id="newParentName" placeholder="Parent Name"><input id="newTotal" type="number" placeholder="Total Fees"><input id="newLin" placeholder="LIN"><div><label>Photo</label><input type="file" id="newPhoto" accept="image/*"></div><div class="flex justify-end gap-2 mt-4"><button class="btn" onclick="window.saveNewStudent()">Save</button><button class="btn-gold" onclick="this.closest('.modal').remove()">Cancel</button></div></div>`;
             document.body.appendChild(modal);
         };
         window.saveNewStudent = async () => {
             const first = document.getElementById('newFirstName').value.trim(), last = document.getElementById('newLastName').value.trim();
             if (!first || !last) return alert('Required');
-            const classVal = document.getElementById('newClass').value, whatsapp = document.getElementById('newParent').value, total = parseFloat(document.getElementById('newTotal').value)||0;
+            const classVal = document.getElementById('newClass').value, whatsapp = document.getElementById('newParent').value, parentName = document.getElementById('newParentName').value;
+            const total = parseFloat(document.getElementById('newTotal').value)||0;
             const lin = document.getElementById('newLin').value.trim() || `PM${Math.random().toString(36).substring(2,6).toUpperCase()}`;
             const adm = document.getElementById('newAdm').value.trim() || `PM${Date.now()}`;
             const studentId = crypto.randomUUID ? crypto.randomUUID() : 's'+Date.now();
             const photoFile = document.getElementById('newPhoto').files[0];
             const finish = async (url) => {
-                await restInsert('students', { id: studentId, school_id: SCHOOL_ID, admission_number: adm, first_name: first, last_name: last, class: classVal, parent_whatsapp: whatsapp, total_fees: total, lin: lin, photo_url: url, fees_paid: 0 });
+                await restInsert('students', { id: studentId, school_id: SCHOOL_ID, admission_number: adm, first_name: first, last_name: last, class: classVal, parent_whatsapp: whatsapp, parent_name: parentName, total_fees: total, lin: lin, photo_url: url, fees_paid: 0 });
                 showToast('Added'); document.querySelector('.modal')?.remove(); await refreshAllAndRender();
             };
             if (photoFile) compressImage(photoFile, async blob => { try { const url = await uploadPhoto(studentId, blob); await finish(url); } catch(e){ await finish(null); } });
             else await finish(null);
         };
-        window.editStudent = async (id) => { const s = students.find(st=>st.id===id); const modal = document.createElement('div'); modal.className='modal'; modal.style.display='flex'; modal.innerHTML=`<div class="modal-content"><h3>Edit</h3><input id="editFirst" value="${escapeHtml(s.first_name)}"><input id="editLast" value="${escapeHtml(s.last_name)}"><input id="editAdm" value="${escapeHtml(s.admission_number)}"><select id="editClass">${CLASS_ORDER.map(c=>`<option ${s.class===c?'selected':''}>${c}</option>`).join('')}</select><input id="editParent" value="${escapeHtml(s.parent_whatsapp)}"><input id="editTotal" type="number" value="${s.total_fees}"><input id="editLin" value="${escapeHtml(s.lin)}"><div><label>New Photo</label><input type="file" id="editPhoto"></div><div class="flex justify-end gap-2 mt-4"><button class="btn" onclick="window.updateStudent('${id}')">Update</button><button class="btn-gold" onclick="this.closest('.modal').remove()">Cancel</button></div></div>`; document.body.appendChild(modal); };
+        window.editStudent = async (id) => { const s = students.find(st=>st.id===id); const modal = document.createElement('div'); modal.className='modal'; modal.style.display='flex'; modal.innerHTML=`<div class="modal-content"><h3>Edit</h3><input id="editFirst" value="${escapeHtml(s.first_name)}"><input id="editLast" value="${escapeHtml(s.last_name)}"><input id="editAdm" value="${escapeHtml(s.admission_number)}"><select id="editClass">${CLASS_ORDER.map(c=>`<option ${s.class===c?'selected':''}>${c}</option>`).join('')}</select><input id="editParent" value="${escapeHtml(s.parent_whatsapp)}"><input id="editParentName" value="${escapeHtml(s.parent_name||'')}"><input id="editTotal" type="number" value="${s.total_fees}"><input id="editLin" value="${escapeHtml(s.lin)}"><div><label>New Photo</label><input type="file" id="editPhoto"></div><div class="flex justify-end gap-2 mt-4"><button class="btn" onclick="window.updateStudent('${id}')">Update</button><button class="btn-gold" onclick="this.closest('.modal').remove()">Cancel</button></div></div>`; document.body.appendChild(modal); };
         window.updateStudent = async (id) => {
-            const updates = { first_name: document.getElementById('editFirst').value, last_name: document.getElementById('editLast').value, admission_number: document.getElementById('editAdm').value, class: document.getElementById('editClass').value, parent_whatsapp: document.getElementById('editParent').value, total_fees: parseFloat(document.getElementById('editTotal').value)||0, lin: document.getElementById('editLin').value };
+            const updates = { first_name: document.getElementById('editFirst').value, last_name: document.getElementById('editLast').value, admission_number: document.getElementById('editAdm').value, class: document.getElementById('editClass').value, parent_whatsapp: document.getElementById('editParent').value, parent_name: document.getElementById('editParentName').value, total_fees: parseFloat(document.getElementById('editTotal').value)||0, lin: document.getElementById('editLin').value };
             const photoFile = document.getElementById('editPhoto').files[0];
             const finish = async (url) => { if(url) updates.photo_url = url; await restUpdate('students', id, updates); showToast('Updated'); document.querySelector('.modal')?.remove(); await refreshAllAndRender(); };
             if (photoFile) compressImage(photoFile, async blob => { try { const url = await uploadPhoto(id, blob); await finish(url); } catch(e){ await finish(null); } });
@@ -451,47 +377,57 @@
             if (student.parent_whatsapp) sendWhatsApp(student.parent_whatsapp, `Dear Parent, payment of ${formatMoney(amount)} received for ${student.first_name} ${student.last_name}. Receipt: ${receipt}. Thank you - ${currentSchool.name}`);
         };
 
-        // ATTENDANCE TAB WITH WORKING ABSENT SECTION
+        // ==================== ATTENDANCE TAB (with absent section below) ====================
         async function renderAttendance() {
             const container = document.getElementById('tabContent');
             const classes = [...new Set(students.map(s=>s.class).filter(Boolean))];
-            container.innerHTML = `<div class="bg-white rounded-xl p-4 shadow-sm">
-                <h3 class="font-bold mb-3"><i class="fas fa-calendar-check"></i> Roll Call</h3>
-                <div class="flex gap-3 mb-4">
-                    <select id="attClass">${classes.map(c=>`<option>${c}</option>`).join('')}</select>
-                    <input type="date" id="attDate" value="${new Date().toISOString().slice(0,10)}">
+            if (classes.length === 0) {
+                container.innerHTML = `<div class="bg-white p-4 rounded-xl text-center">No students yet. <button class="btn demo-btn" onclick="window.addDemoData()">Add Demo Students</button></div>`;
+                return;
+            }
+            container.innerHTML = `
+                <div class="bg-white rounded-xl p-4 shadow-sm">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold"><i class="fas fa-calendar-check"></i> Roll Call</h3>
+                        <button class="btn btn-gold" onclick="window.addDemoData()">➕ Add Demo Students</button>
+                    </div>
+                    <div class="flex gap-3 mb-4">
+                        <select id="attClass">${classes.map(c=>`<option>${c}</option>`).join('')}</select>
+                        <input type="date" id="attDate" value="${new Date().toISOString().slice(0,10)}">
+                    </div>
+                    <div id="attendanceList"></div>
+                    <button class="btn mt-3" id="saveAttendanceBtn">💾 Save Attendance</button>
+                    <div id="absenteesSection" class="mt-4"></div>
                 </div>
-                <div id="attendanceList"></div>
-                <button class="btn mt-3" id="saveAttendanceBtn">Save Attendance</button>
-                <div id="absenteesSection" class="mt-4"></div>
-            </div>`;
-            
+            `;
             const loadAttendanceAndAbsent = async () => {
                 const selectedClass = document.getElementById('attClass').value;
                 const date = document.getElementById('attDate').value;
                 const classStudents = students.filter(s=>s.class===selectedClass);
-                if (!classStudents.length) { 
-                    document.getElementById('attendanceList').innerHTML='<p class="text-gray-500">No students in this class</p>';
-                    document.getElementById('absenteesSection').innerHTML = await renderAbsentees();
-                    return; 
+                if (!classStudents.length) {
+                    document.getElementById('attendanceList').innerHTML = '<p>No students in this class</p>';
+                    document.getElementById('absenteesSection').innerHTML = await getAbsentSectionHtml(date);
+                    return;
                 }
                 const existing = await restFetch('attendance', `date=eq.${date}&class=eq.${selectedClass}&school_id=eq.${SCHOOL_ID}`).catch(e=>[]);
                 const map = {}; existing.forEach(a=>map[a.student_id]=a.status);
                 let html = '<div class="space-y-2">';
                 for(let s of classStudents){
-                    const status = map[s.id]||'present';
-                    html+=`<div class="flex justify-between items-center p-2 border-b"><span><strong>${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</strong></span><select class="att-status" data-student="${s.id}"><option value="present" ${status==='present'?'selected':''}>Present</option><option value="absent" ${status==='absent'?'selected':''}>Absent</option><option value="late" ${status==='late'?'selected':''}>Late</option></select></div>`;
+                    const status = map[s.id] || 'present';
+                    html += `<div class="flex justify-between items-center p-2 border-b"><span><strong>${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</strong></span>
+                             <select class="att-status" data-student="${s.id}">
+                                 <option value="present" ${status==='present'?'selected':''}>Present</option>
+                                 <option value="absent" ${status==='absent'?'selected':''}>Absent</option>
+                                 <option value="late" ${status==='late'?'selected':''}>Late</option>
+                             </select></div>`;
                 }
-                html+='</div>';
+                html += '</div>';
                 document.getElementById('attendanceList').innerHTML = html;
-                // Update absent section
-                document.getElementById('absenteesSection').innerHTML = await renderAbsentees();
+                document.getElementById('absenteesSection').innerHTML = await getAbsentSectionHtml(date);
             };
-            
             document.getElementById('attClass').addEventListener('change', loadAttendanceAndAbsent);
             document.getElementById('attDate').addEventListener('change', loadAttendanceAndAbsent);
             await loadAttendanceAndAbsent();
-            
             document.getElementById('saveAttendanceBtn').onclick = async () => {
                 const date = document.getElementById('attDate').value;
                 const selectedClass = document.getElementById('attClass').value;
@@ -500,19 +436,158 @@
                     const studentId = sel.dataset.student, status = sel.value;
                     await restUpsert('attendance', { school_id: SCHOOL_ID, student_id: studentId, date, status, class: selectedClass }, 'student_id,date');
                 }
-                showToast('Attendance saved');
-                // Reload the absent section without full page reload
-                await loadAttendanceAndAbsent();
-                // Also refresh global stats (optional)
+                showToast('Attendance saved!');
                 await loadAll();
-                // Update stats cards (simple way: re-render entire page? but that would reset tab. Instead just update absent stats)
-                const absentToday = attendance.filter(a => a.date === date && a.status === 'absent').length;
+                await loadAttendanceAndAbsent();
+                const newAbsentToday = attendance.filter(a => a.date === date && a.status === 'absent').length;
                 const statCards = document.querySelectorAll('.stat-number');
-                if(statCards.length >= 4) statCards[3].innerText = absentToday;
+                if(statCards.length >= 4) statCards[3].innerText = newAbsentToday;
             };
         }
 
-        // MARKS TAB
+        // ==================== DEDICATED ABSENCES TAB ====================
+        async function renderAbsencesTab() {
+            const container = document.getElementById('tabContent');
+            const today = new Date().toISOString().slice(0,10);
+            container.innerHTML = `
+                <div class="bg-white rounded-xl p-4 shadow-sm">
+                    <h3 class="font-bold text-lg mb-3"><i class="fas fa-user-slash"></i> Absent Students Tracker (All History)</h3>
+                    <div class="flex flex-wrap gap-3 mb-4">
+                        <input type="date" id="absentDateFilter" value="${today}" class="w-auto">
+                        <select id="absentClassFilter" class="w-auto"><option value="">All Classes</option>${CLASS_ORDER.map(c=>`<option>${c}</option>`).join('')}</select>
+                        <button class="btn" id="filterAbsentBtn">Filter</button>
+                        <button class="btn whatsapp-btn" id="notifyAllFilteredBtn"><i class="fab fa-whatsapp"></i> Notify All Listed</button>
+                    </div>
+                    <div id="absentListContainer" class="overflow-x-auto"></div>
+                </div>
+            `;
+            const loadAbsentList = async () => {
+                const date = document.getElementById('absentDateFilter').value;
+                const classFilter = document.getElementById('absentClassFilter').value;
+                let absentRecords = attendance.filter(a => a.date === date && a.status === 'absent');
+                if (classFilter) absentRecords = absentRecords.filter(a => a.class === classFilter);
+                const absentStudents = absentRecords.map(rec => {
+                    const student = students.find(s => s.id === rec.student_id);
+                    return student ? { ...student, recDate: rec.date } : null;
+                }).filter(s => s);
+                if (absentStudents.length === 0) {
+                    document.getElementById('absentListContainer').innerHTML = '<div class="p-6 text-center text-gray-500">✅ No absent students on this date.</div>';
+                    return;
+                }
+                let html = '<table class="w-full border"><thead><tr><th>Photo</th><th>Name</th><th>Class</th><th>LIN</th><th>Parent Name</th><th>Parent WhatsApp</th><th>Action</th></tr></thead><tbody>';
+                for (let s of absentStudents) {
+                    const photo = s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;">` : '<i class="fas fa-user-circle fa-2x"></i>';
+                    html += `<tr>
+                                <td class="p-2">${photo}</td>
+                                <td class="p-2">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</td>
+                                <td class="p-2">${escapeHtml(s.class)}</td>
+                                <td class="p-2">${escapeHtml(s.lin)}</td>
+                                <td class="p-2">${escapeHtml(s.parent_name || 'N/A')}</td>
+                                <td class="p-2">${escapeHtml(s.parent_whatsapp || 'N/A')}</td>
+                                <td class="p-2"><button class="btn-sm whatsapp-btn" onclick="window.notifyAbsent('${s.id}', '${date}')"><i class="fab fa-whatsapp"></i> Notify</button></td>
+                             </tr>`;
+                }
+                html += '</tbody></table>';
+                document.getElementById('absentListContainer').innerHTML = html;
+            };
+            document.getElementById('filterAbsentBtn').addEventListener('click', loadAbsentList);
+            document.getElementById('notifyAllFilteredBtn').addEventListener('click', async () => {
+                const date = document.getElementById('absentDateFilter').value;
+                const classFilter = document.getElementById('absentClassFilter').value;
+                let absentRecords = attendance.filter(a => a.date === date && a.status === 'absent');
+                if (classFilter) absentRecords = absentRecords.filter(a => a.class === classFilter);
+                const absentStudents = absentRecords.map(rec => students.find(s => s.id === rec.student_id)).filter(s => s && s.parent_whatsapp);
+                if (!absentStudents.length) return showToast('No absent students with WhatsApp numbers', true);
+                absentStudents.forEach(s => {
+                    const msg = `Dear Parent, ${s.first_name} ${s.last_name} was absent on ${date}. Please ensure regular attendance. - ${currentSchool.name}`;
+                    sendWhatsApp(s.parent_whatsapp, msg);
+                });
+                showToast(`Notified ${absentStudents.length} parents`);
+            });
+            await loadAbsentList();
+        }
+
+        // ==================== DEMO DATA BUTTON ====================
+        window.addDemoData = async () => {
+            if (!currentSchool) return alert('School not ready');
+            const demoStudents = [
+                { first: 'John', last: 'Doe', class: 'P.1', whatsapp: '256700000001', parent: 'Mr. Doe', lin: 'PMJD001' },
+                { first: 'Jane', last: 'Smith', class: 'P.1', whatsapp: '256700000002', parent: 'Mrs. Smith', lin: 'PMJS002' },
+                { first: 'Alice', last: 'Brown', class: 'P.2', whatsapp: '256700000003', parent: 'Mr. Brown', lin: 'PMAB003' }
+            ];
+            for (let d of demoStudents) {
+                await restInsert('students', {
+                    id: crypto.randomUUID(),
+                    school_id: SCHOOL_ID,
+                    admission_number: `ADM${Math.floor(Math.random()*1000)}`,
+                    first_name: d.first, last_name: d.last,
+                    class: d.class, parent_whatsapp: d.whatsapp, parent_name: d.parent,
+                    lin: d.lin, total_fees: 500000, fees_paid: 0
+                });
+            }
+            showToast('Demo students added! Now go to Attendance tab and mark some absent.');
+            await refreshAllAndRender();
+        };
+
+        // ==================== ACADEMICS (MARKS, PROMOTION, CUMULATIVE REPORT) ====================
+        window.promoteStudents = async () => {
+            if (!confirm('Promote all students to next class?')) return;
+            const nextClassMap = {};
+            for (let i = 0; i < CLASS_ORDER.length - 1; i++) nextClassMap[CLASS_ORDER[i]] = CLASS_ORDER[i+1];
+            for (let student of students) {
+                if (nextClassMap[student.class]) {
+                    await restUpdate('students', student.id, { class: nextClassMap[student.class] });
+                }
+            }
+            showToast('Students promoted');
+            await refreshAllAndRender();
+        };
+        async function generateCumulativeReport(studentId, term, examType) {
+            const student = students.find(s => s.id === studentId);
+            if (!student) return null;
+            let exams = [];
+            if (examType === 'Beginning of Term') exams = ['Beginning of Term'];
+            else if (examType === 'Mid Term') exams = ['Beginning of Term', 'Mid Term'];
+            else exams = ['Beginning of Term', 'Mid Term', 'End of Term'];
+            const studentMarks = marks.filter(m => m.student_id === studentId && m.term === term);
+            let rows = '', totals = {}, points = {};
+            for (let sub of CORE_SUBJECTS) {
+                rows += `<tr><td class="p-2 font-bold">${sub}</td>`;
+                for (let ex of exams) {
+                    const m = studentMarks.find(m => m.subject === sub && m.exam_type === ex);
+                    const score = m ? m.score : '-';
+                    const grade = m ? m.grade : '-';
+                    rows += `<td class="p-2 text-center">${score}<br><small>${grade}</small></td>`;
+                    if (m) {
+                        totals[ex] = (totals[ex]||0) + m.score;
+                        (points[ex] = points[ex] || []).push(gradePoints(m.grade));
+                    }
+                }
+                rows += `</tr>`;
+            }
+            let summary = `<tr class="bg-gray-100"><td class="p-2 font-bold">Total / Aggregate</td>`;
+            for (let ex of exams) {
+                const total = totals[ex] || 0;
+                let agg = 0;
+                if (points[ex]) {
+                    points[ex].sort((a,b)=>a-b);
+                    agg = points[ex].slice(0,8).reduce((s,p)=>s+p,0);
+                }
+                summary += `<td class="p-2 text-center">${total}/400<br><small>Agg: ${agg}</small></td>`;
+            }
+            summary += `</tr><tr class="bg-gray-50"><td class="p-2 font-bold">Division</td>`;
+            for (let ex of exams) {
+                let agg = 0;
+                if (points[ex]) {
+                    points[ex].sort((a,b)=>a-b);
+                    agg = points[ex].slice(0,8).reduce((s,p)=>s+p,0);
+                }
+                summary += `<td class="p-2 text-center">${getDivision(agg)}</td>`;
+            }
+            summary += `</tr>`;
+            const photo = student.photo_url ? `<img src="${student.photo_url}" style="width:80px;height:80px;border-radius:50%;">` : '<div style="width:80px;height:80px;background:#eef2ff;border-radius:50%;display:flex;align-items:center;justify-content:center;">📷</div>';
+            return { student, photo, exams, rows, summary };
+        }
         async function renderMarks() {
             const container = document.getElementById('tabContent');
             const classes = [...new Set(students.map(s=>s.class).filter(Boolean))];
@@ -526,7 +601,7 @@
                 if(!classStudents.length){ document.getElementById('marksGrid').innerHTML='<p>No students</p>'; return; }
                 const existing = await restFetch('marks', `class=eq.${className}&term=eq.${term}&exam_type=eq.${examType}&school_id=eq.${SCHOOL_ID}`).catch(e=>[]);
                 const map = {}; existing.forEach(m=>map[`${m.student_id}_${m.subject}`]=m);
-                let html = '<table class="w-full"><thead><tr><th>Student</th>'+CORE_SUBJECTS.map(s=>`<th>${s}</th>`).join('')+'</tr></thead><tbody>';
+                let html = '<table class="w-full"><thead><tr><th>Student</th>'+CORE_SUBJECTS.map(s=>`<th>${s}</th>`).join('')+'</thead><tbody>';
                 for(let s of classStudents){
                     html+=`<tr><td class="p-2">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</td>`;
                     for(let sub of CORE_SUBJECTS){
@@ -535,7 +610,7 @@
                     }
                     html+=`</tr>`;
                 }
-                html+='</tbody></table>';
+                html+='</tbody><table>';
                 document.getElementById('marksGrid').innerHTML = html;
             };
             document.getElementById('saveMarksBtn').onclick = async () => {
@@ -553,25 +628,23 @@
                 const studentId = document.getElementById('reportStudent').value, term = document.getElementById('reportTerm').value, examType = document.getElementById('reportExam').value;
                 const report = await generateCumulativeReport(studentId, term, examType);
                 if(!report) return alert('Select student');
-                const { student, photoHtml, examTypesToShow, tableRows, summaryRow } = report;
-                let examHeader = '<tr><th>Subject</th>'+examTypesToShow.map(e=>`<th>${e}</th>`).join('')+'</tr>';
-                const reportHtml = `<div id="printableReport" class="report-card"><div class="report-header"><h2>${escapeHtml(currentSchool.name)}</h2><p>${currentSchool.address||''}</p><p>${term} Cumulative Report</p></div><div class="flex gap-4 items-center mb-4">${photoHtml}<div><strong>${student.first_name} ${student.last_name}</strong><br>LIN: ${student.lin}<br>Class: ${student.class}</div></div><table class="w-full border">${examHeader}${tableRows}${summaryRow}</table><div class="mt-4"><button class="btn" onclick="window.print()">Print Report</button></div></div>`;
+                const { student, photo, exams, rows, summary } = report;
+                let examHeader = '<tr><th>Subject</th>'+exams.map(e=>`<th>${e}</th>`).join('')+'</tr>';
+                const reportHtml = `<div id="printableReport" class="report-card"><div class="report-header"><h2>${escapeHtml(currentSchool.name)}</h2><p>${currentSchool.address||''}</p><p>${term} Cumulative Report</p></div><div class="flex gap-4 items-center mb-4">${photo}<div><strong>${student.first_name} ${student.last_name}</strong><br>LIN: ${student.lin}<br>Class: ${student.class}</div></div><table class="w-full border">${examHeader}${rows}${summary}</table><div class="mt-4"><button class="btn" onclick="window.print()">Print Report</button></div></div>`;
                 document.getElementById('reportPreview').innerHTML = reportHtml;
             };
         }
 
-        // FEES TAB
+        // ==================== FEES TAB ====================
         async function renderFees() {
             const totalCollected = payments.reduce((s,p)=>s+p.amount,0);
             const totalExpected = students.reduce((s,st)=>s+st.total_fees,0);
             const container = document.getElementById('tabContent');
             container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div class="bg-white p-4 rounded-xl text-center"><div class="text-2xl font-bold text-green-700">${formatMoney(totalCollected)}</div><div>Collected</div></div><div class="bg-white p-4 rounded-xl text-center"><div class="text-2xl font-bold">${formatMoney(totalExpected)}</div><div>Expected</div></div><div class="bg-white p-4 rounded-xl text-center"><div class="text-2xl font-bold text-red-600">${formatMoney(totalExpected-totalCollected)}</div><div>Outstanding</div></div></div>
             <div class="bg-white rounded-xl p-4 shadow mb-4"><h3>Record Payment</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-3"><select id="payStudent">${students.map(s=>`<option value="${s.id}">${s.first_name} ${s.last_name}</option>`).join('')}</select><input type="number" id="payAmount" placeholder="Amount"><input id="payCode" placeholder="Payment Code"><input type="date" id="payDate" value="${new Date().toISOString().slice(0,10)}"></div><button class="btn mt-3" id="recordPayBtn">Record Payment</button></div>
-            <div class="bg-white rounded-xl p-4 shadow"><h3>Student Balances</h3><div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Student</th><th>Total</th><th>Paid</th><th>Balance</th><th>WhatsApp</th></tr></thead><tbody id="balanceTable"></tbody></table></div></div>`;
-            const renderBalances = () => {
-                const tbody = document.getElementById('balanceTable');
-                if(tbody) tbody.innerHTML = students.map(s => { const paid = payments.filter(p=>p.student_id===s.id).reduce((a,b)=>a+b.amount,0); const bal = (s.total_fees||0)-paid; return `<tr><td class="p-2">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</td><td class="p-2">${formatMoney(s.total_fees)}</td><td class="p-2">${formatMoney(paid)}</td><td class="p-2 ${bal>0?'debt':''}">${formatMoney(bal)}</td><td class="p-2"><button class="btn-sm whatsapp-btn" onclick="sendWhatsApp('${s.parent_whatsapp}','Fee reminder: Outstanding ${formatMoney(bal)} for ${s.first_name}')"><i class="fab fa-whatsapp"></i> Remind</button></td></tr>`; }).join('');
-            };
+            <div class="bg-white rounded-xl p-4 shadow"><h3>Student Balances</h3><div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Student</th><th>Total</th><th>Paid</th><th>Balance</th><th>WhatsApp</th></tr></thead><tbody id="balanceTable"></tbody></table></div></div>
+            <div class="bg-white rounded-xl p-4 shadow mt-4"><h3>Expenses</h3><div class="flex gap-2 mb-3"><input id="expCat" placeholder="Category"><input id="expDesc" placeholder="Desc"><input type="number" id="expAmount" placeholder="Amount"><button class="btn" id="addExpenseBtn">Add</button></div><div id="expenseList"></div></div>`;
+            const renderBalances = () => { const tbody = document.getElementById('balanceTable'); if(tbody) tbody.innerHTML = students.map(s => { const paid = payments.filter(p=>p.student_id===s.id).reduce((a,b)=>a+b.amount,0); const bal = (s.total_fees||0)-paid; return `<tr><td class="p-2">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</td><td class="p-2">${formatMoney(s.total_fees)}</td><td class="p-2">${formatMoney(paid)}</td><td class="p-2 ${bal>0?'debt':''}">${formatMoney(bal)}</td><td class="p-2"><button class="btn-sm whatsapp-btn" onclick="sendWhatsApp('${s.parent_whatsapp}','Fee reminder: Outstanding ${formatMoney(bal)} for ${s.first_name}')"><i class="fab fa-whatsapp"></i> Remind</button></td></tr>`; }).join(''); };
             renderBalances();
             document.getElementById('recordPayBtn').onclick = async () => {
                 const studentId = document.getElementById('payStudent').value, amount = parseFloat(document.getElementById('payAmount').value);
@@ -587,30 +660,94 @@
                 if(student.parent_whatsapp) sendWhatsApp(student.parent_whatsapp, `Dear Parent, payment of ${formatMoney(amount)} received for ${student.first_name}. Receipt: ${receipt}. Thank you.`);
                 await refreshAllAndRender();
             };
+            document.getElementById('addExpenseBtn').onclick = async () => {
+                const cat = document.getElementById('expCat').value, desc = document.getElementById('expDesc').value, amt = parseFloat(document.getElementById('expAmount').value);
+                if(isNaN(amt)) return;
+                await restInsert('expenses', { school_id: SCHOOL_ID, category: cat, description: desc, amount: amt, expense_date: new Date().toISOString().slice(0,10) });
+                showToast('Expense added');
+                await refreshAllAndRender();
+            };
+            const expDiv = document.getElementById('expenseList'); if(expDiv) expDiv.innerHTML = expenses.map(e => `<div class="flex justify-between border-b py-1">${e.expense_date} ${e.category}: ${formatMoney(e.amount)} <button class="text-red-600" onclick="window.deleteExpense('${e.id}')">Delete</button></div>`).join('');
+        }
+        window.deleteExpense = async (id) => { if(confirm('Delete expense?')){ await restDelete('expenses', id); await refreshAllAndRender(); } };
+
+        // ==================== REPORTS CHART ====================
+        async function renderReports() { 
+            const container = document.getElementById('tabContent'); 
+            const counts = ['D1','D2','C3','C4','C5','C6','P7','P8','F9'].map(g=>marks.filter(m=>m.grade===g).length); 
+            container.innerHTML = `<div class="bg-white p-4 rounded-xl shadow"><canvas id="gradeChart"></canvas></div>`; 
+            const ctx = document.getElementById('gradeChart')?.getContext('2d'); 
+            if(window.chart) window.chart.destroy(); 
+            if(ctx) window.chart = new Chart(ctx, { type:'bar', data:{ labels:['D1','D2','C3','C4','C5','C6','P7','P8','F9'], datasets:[{ label:'Grade Distribution', data:counts, backgroundColor:'#3b82f6' }] } }); 
         }
 
-        async function renderReports() { const container = document.getElementById('tabContent'); const counts = ['D1','D2','C3','C4','C5','C6','P7','P8','F9'].map(g=>marks.filter(m=>m.grade===g).length); container.innerHTML = `<div class="bg-white p-4 rounded-xl shadow"><canvas id="gradeChart"></canvas></div>`; const ctx = document.getElementById('gradeChart')?.getContext('2d'); if(window.chart) window.chart.destroy(); if(ctx) window.chart = new Chart(ctx, { type:'bar', data:{ labels:['D1','D2','C3','C4','C5','C6','P7','P8','F9'], datasets:[{ label:'Grade Distribution', data:counts, backgroundColor:'#3b82f6' }] } }); }
-        async function renderIdCards() { const container = document.getElementById('tabContent'); container.innerHTML = `<div class="bg-white rounded-xl p-4 shadow"><h3>ID Card</h3><select id="idStudentSelect" class="w-full mb-3">${students.map(s=>`<option value="${s.id}">${s.first_name} ${s.last_name}</option>`).join('')}</select><button class="btn" id="previewIdBtn">Preview</button><div id="idPreview"></div></div>`; document.getElementById('previewIdBtn').onclick = () => { const s = students.find(st=>st.id===document.getElementById('idStudentSelect').value); if(s){ const photo = s.photo_url ? `<img src="${s.photo_url}" style="width:80px;height:80px;border-radius:50%;">` : '<div style="width:80px;height:80px;background:#eef2ff;border-radius:50%;display:flex;align-items:center;justify-content:center;">📷</div>'; document.getElementById('idPreview').innerHTML = `<div id="printableId" class="id-card"><div class="id-card-header">${escapeHtml(currentSchool.name)}</div><div class="flex justify-center mt-3">${photo}</div><div class="font-bold text-center mt-2">${s.first_name} ${s.last_name}</div><div>LIN: ${s.lin}</div><div>Class: ${s.class}</div><div>Parent: ${s.parent_whatsapp||'N/A'}</div><button class="btn btn-gold mt-3" onclick="window.print()">Print ID</button></div>`; } }; }
-        async function renderBranches() { const container = document.getElementById('tabContent'); container.innerHTML = `<div class="bg-white rounded-xl p-4 shadow"><h3>Branches</h3><div class="flex gap-2 mb-3"><input id="newBranchName" placeholder="Branch name"><button class="btn" id="addBranchBtn">Add</button></div><ul id="branchList"></ul></div>`; const renderList = () => { const ul = document.getElementById('branchList'); if(ul) ul.innerHTML = branches.map(b=>`<li class="flex justify-between border-b py-2">${escapeHtml(b.name)} <button class="text-red-600" onclick="window.deleteBranch('${b.id}')">Delete</button></li>`).join(''); }; renderList(); document.getElementById('addBranchBtn').onclick = async () => { const name = document.getElementById('newBranchName').value.trim(); if(name){ await restInsert('branches', { school_id: SCHOOL_ID, name }); await refreshAllAndRender(); } }; window.deleteBranch = async (id) => { if(confirm('Delete?')){ await restDelete('branches', id); await refreshAllAndRender(); } }; }
-        async function renderFeeStructure() { const container = document.getElementById('tabContent'); container.innerHTML = `<div class="bg-white rounded-xl p-4 shadow"><h3>Fee Structure</h3><div class="flex flex-wrap gap-2 mb-4"><select id="feeClass">${CLASS_ORDER.map(c=>`<option>${c}</option>`).join('')}</select><input type="number" id="feeAmount" placeholder="Amount"><select id="feeTerm">${TERMS.map(t=>`<option>${t}</option>`).join('')}</select><select id="feeYear">${ACADEMIC_YEARS.map(y=>`<option>${y}</option>`).join('')}</select><button class="btn" id="addFeeStructBtn">Add</button></div><div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Class</th><th>Term</th><th>Year</th><th>Amount</th><th>Action</th></tr></thead><tbody id="feeStructBody"></tbody></table></div></div>`; const render = () => { const tbody = document.getElementById('feeStructBody'); if(tbody) tbody.innerHTML = feeStructures.map(f=>`<tr><td class="p-2">${f.class}</td><td class="p-2">${f.term}</td><td class="p-2">${f.academic_year}</td><td class="p-2">${formatMoney(f.amount)}</td><td class="p-2"><button class="text-red-600" onclick="window.deleteFeeStructure('${f.id}')">Delete</button></td></tr>`).join(''); }; render(); document.getElementById('addFeeStructBtn').onclick = async () => { const className = document.getElementById('feeClass').value, amount = parseFloat(document.getElementById('feeAmount').value), term = document.getElementById('feeTerm').value, year = document.getElementById('feeYear').value; if(!className || isNaN(amount)) return; await restInsert('fee_structures', { school_id: SCHOOL_ID, class: className, term, amount, academic_year: year }); await refreshAllAndRender(); }; window.deleteFeeStructure = async (id) => { if(confirm('Delete?')){ await restDelete('fee_structures', id); await refreshAllAndRender(); } }; }
+        // ==================== ID CARDS ====================
+        async function renderIdCards() { 
+            const container = document.getElementById('tabContent'); 
+            container.innerHTML = `<div class="bg-white rounded-xl p-4 shadow"><h3>ID Card</h3><select id="idStudentSelect" class="w-full mb-3">${students.map(s=>`<option value="${s.id}">${s.first_name} ${s.last_name}</option>`).join('')}</select><button class="btn" id="previewIdBtn">Preview</button><div id="idPreview"></div></div>`; 
+            document.getElementById('previewIdBtn').onclick = () => { const s = students.find(st=>st.id===document.getElementById('idStudentSelect').value); if(s){ const photo = s.photo_url ? `<img src="${s.photo_url}" style="width:80px;height:80px;border-radius:50%;">` : '<div style="width:80px;height:80px;background:#eef2ff;border-radius:50%;display:flex;align-items:center;justify-content:center;">📷</div>'; document.getElementById('idPreview').innerHTML = `<div id="printableId" class="id-card"><div class="id-card-header">${escapeHtml(currentSchool.name)}</div><div class="flex justify-center mt-3">${photo}</div><div class="font-bold text-center mt-2">${s.first_name} ${s.last_name}</div><div>LIN: ${s.lin}</div><div>Class: ${s.class}</div><div>Parent: ${s.parent_name||'N/A'}</div><button class="btn btn-gold mt-3" onclick="window.print()">Print ID</button></div>`; } }; 
+        }
+
+        // ==================== BRANCHES ====================
+        async function renderBranches() { 
+            const container = document.getElementById('tabContent'); 
+            container.innerHTML = `<div class="bg-white rounded-xl p-4 shadow"><h3>Branches</h3><div class="flex gap-2 mb-3"><input id="newBranchName" placeholder="Branch name"><button class="btn" id="addBranchBtn">Add</button></div><ul id="branchList"></ul></div>`; 
+            const renderList = () => { const ul = document.getElementById('branchList'); if(ul) ul.innerHTML = branches.map(b=>`<li class="flex justify-between border-b py-2">${escapeHtml(b.name)} <button class="text-red-600" onclick="window.deleteBranch('${b.id}')">Delete</button></li>`).join(''); }; 
+            renderList(); 
+            document.getElementById('addBranchBtn').onclick = async () => { const name = document.getElementById('newBranchName').value.trim(); if(name){ await restInsert('branches', { school_id: SCHOOL_ID, name }); await refreshAllAndRender(); } }; 
+            window.deleteBranch = async (id) => { if(confirm('Delete?')){ await restDelete('branches', id); await refreshAllAndRender(); } }; 
+        }
+
+        // ==================== FEE STRUCTURE ====================
+        async function renderFeeStructure() { 
+            const container = document.getElementById('tabContent'); 
+            container.innerHTML = `<div class="bg-white rounded-xl p-4 shadow"><h3>Fee Structure</h3><div class="flex flex-wrap gap-2 mb-4"><select id="feeClass">${CLASS_ORDER.map(c=>`<option>${c}</option>`).join('')}</select><input type="number" id="feeAmount" placeholder="Amount"><select id="feeTerm">${TERMS.map(t=>`<option>${t}</option>`).join('')}</select><select id="feeYear">${ACADEMIC_YEARS.map(y=>`<option>${y}</option>`).join('')}</select><button class="btn" id="addFeeStructBtn">Add</button></div><div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Class</th><th>Term</th><th>Year</th><th>Amount</th><th>Action</th><tr></thead><tbody id="feeStructBody"></tbody></table></div></div>`; 
+            const render = () => { const tbody = document.getElementById('feeStructBody'); if(tbody) tbody.innerHTML = feeStructures.map(f=>`<tr><td class="p-2">${f.class}</td><td class="p-2">${f.term}</td><td class="p-2">${f.academic_year}</td><td class="p-2">${formatMoney(f.amount)}</td><td class="p-2"><button class="text-red-600" onclick="window.deleteFeeStructure('${f.id}')">Delete</button></td></tr>`).join(''); }; 
+            render(); 
+            document.getElementById('addFeeStructBtn').onclick = async () => { const className = document.getElementById('feeClass').value, amount = parseFloat(document.getElementById('feeAmount').value), term = document.getElementById('feeTerm').value, year = document.getElementById('feeYear').value; if(!className || isNaN(amount)) return; await restInsert('fee_structures', { school_id: SCHOOL_ID, class: className, term, amount, academic_year: year }); await refreshAllAndRender(); }; 
+            window.deleteFeeStructure = async (id) => { if(confirm('Delete?')){ await restDelete('fee_structures', id); await refreshAllAndRender(); } }; 
+        }
 
         // ========== MAIN RENDER ==========
         async function render() {
             await loadAll();
             const now = new Date();
             const totalCollected = payments.reduce((s,p)=>s+p.amount,0);
-            const totalExpected = students.reduce((s,st)=>s+(st.total_fees||0),0);
+            const totalExpected = students.reduce((s,st)=>s+st.total_fees,0);
             const today = new Date().toISOString().slice(0,10);
             const absentToday = attendance.filter(a => a.date === today && a.status === 'absent').length;
             const app = document.getElementById('app');
             if (!currentSchool) {
-                app.innerHTML = `<div class="bg-red-100 text-red-800 p-4 rounded-xl text-center">❌ School not found. Please ensure a school record exists with ID: ${SCHOOL_ID}.<br><br><button class="btn" onclick="location.reload()">Retry</button></div>`;
+                // Auto-create school
+                await restInsert('schools', { id: SCHOOL_ID, name: 'Progressive Mothers School', address: 'Gayaza-Kijabijjo', phone: '0779585035' });
+                currentSchool = { name: 'Progressive Mothers School', address: 'Gayaza-Kijabijjo', phone: '0779585035' };
+                await render();
                 return;
             }
-            app.innerHTML = `<div class="app-container"><div class="school-header"><div class="school-name">${escapeHtml(currentSchool.name)}</div><div class="school-address">${escapeHtml(currentSchool.address || 'GAYAZA-KIJABIJJO')} | 📞 ${currentSchool.phone || '0779585035'}</div><div class="datetime-row"><span>📅 ${now.toLocaleDateString('en-US', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}</span><span>⏰ ${now.toLocaleTimeString()}</span></div></div><div class="stats-grid"><div class="stat-card"><div class="stat-number">${students.length}</div><div class="stat-label">STUDENTS</div></div><div class="stat-card"><div class="stat-number">${formatMoney(totalCollected)}</div><div class="stat-label">COLLECTED</div></div><div class="stat-card"><div class="stat-number">${formatMoney(totalExpected-totalCollected)}</div><div class="stat-label">OUTSTANDING</div></div><div class="stat-card"><div class="stat-number">${absentToday}</div><div class="stat-label">ABSENT TODAY</div></div></div><div class="action-buttons">${['students','attendance','marks','fees','reports','idcards','branches','fee_structure'].map(tab => `<button class="action-btn ${activeTab===tab?'active':''}" data-tab="${tab}"><i class="fas ${tab==='students'?'fa-user-graduate':tab==='attendance'?'fa-calendar-check':tab==='marks'?'fa-chart-line':tab==='fees'?'fa-money-bill-wave':tab==='reports'?'fa-file-alt':tab==='idcards'?'fa-id-card':tab==='branches'?'fa-building':'fa-cog'}"></i> ${tab.charAt(0).toUpperCase()+tab.slice(1)}</button>`).join('')}</div><div id="tabContent"></div></div>`;
+            app.innerHTML = `
+                <div class="app-container">
+                    <div class="school-header">
+                        <div class="school-name">${escapeHtml(currentSchool.name)}</div>
+                        <div class="school-address">${escapeHtml(currentSchool.address || 'Gayaza-Kijabijjo')} | 📞 ${currentSchool.phone || '0779585035'}</div>
+                        <div class="datetime-row"><span>📅 ${now.toLocaleDateString('en-US', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}</span><span>⏰ ${now.toLocaleTimeString()}</span></div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card"><div class="stat-number">${students.length}</div><div class="stat-label">STUDENTS</div></div>
+                        <div class="stat-card"><div class="stat-number">${formatMoney(totalCollected)}</div><div class="stat-label">COLLECTED</div></div>
+                        <div class="stat-card"><div class="stat-number">${formatMoney(totalExpected-totalCollected)}</div><div class="stat-label">OUTSTANDING</div></div>
+                        <div class="stat-card" data-stat-tab="absences"><div class="stat-number">${absentToday}</div><div class="stat-label">ABSENT TODAY</div></div>
+                    </div>
+                    <div class="action-buttons">
+                        ${['students','attendance','absences','marks','fees','reports','idcards','branches','fee_structure'].map(tab => `<button class="action-btn ${activeTab===tab?'active':''}" data-tab="${tab}"><i class="fas ${tab==='students'?'fa-user-graduate':tab==='attendance'?'fa-calendar-check':tab==='absences'?'fa-user-slash':tab==='marks'?'fa-chart-line':tab==='fees'?'fa-money-bill-wave':tab==='reports'?'fa-file-alt':tab==='idcards'?'fa-id-card':tab==='branches'?'fa-building':'fa-cog'}"></i> ${tab.charAt(0).toUpperCase()+tab.slice(1)}</button>`).join('')}
+                    </div>
+                    <div id="tabContent"></div>
+                </div>
+            `;
             document.querySelectorAll('.action-btn').forEach(btn => { btn.onclick = () => { activeTab = btn.dataset.tab; render(); }; });
+            document.querySelectorAll('.stat-card[data-stat-tab="absences"]').forEach(card => { card.onclick = () => { activeTab = 'absences'; render(); }; });
             if (activeTab === 'students') await renderStudents();
             else if (activeTab === 'attendance') await renderAttendance();
+            else if (activeTab === 'absences') await renderAbsencesTab();
             else if (activeTab === 'marks') await renderMarks();
             else if (activeTab === 'fees') await renderFees();
             else if (activeTab === 'reports') await renderReports();
@@ -624,18 +761,13 @@
             try {
                 let schools = await restFetch('schools', `id=eq.${SCHOOL_ID}`).catch(e => []);
                 if (!schools.length) {
-                    // Uncomment below to auto-create school for testing
-                    /*
-                    const newSchool = { id: SCHOOL_ID, name: 'PROGRESSIVE MOTHERS SCHOOL', address: 'GAYAZA-KIJABIJJO', phone: '0779585035' };
-                    await restInsert('schools', newSchool);
-                    schools = [newSchool];
-                    */
-                    throw new Error(`School with ID ${SCHOOL_ID} not found. Please create a school record in Supabase or uncomment the fallback code above.`);
+                    await restInsert('schools', { id: SCHOOL_ID, name: 'Progressive Mothers School', address: 'Gayaza-Kijabijjo', phone: '0779585035' });
+                    schools = await restFetch('schools', `id=eq.${SCHOOL_ID}`);
                 }
                 currentSchool = schools[0];
                 await render();
             } catch(e) {
-                document.getElementById('app').innerHTML = `<div class="bg-red-100 text-red-800 p-4 rounded-xl text-center">❌ ${e.message}</div>`;
+                document.getElementById('app').innerHTML = `<div class="bg-red-100 p-4 rounded-xl">Error: ${e.message}</div>`;
                 console.error(e);
             }
         })();
