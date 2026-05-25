@@ -70,6 +70,15 @@
         .photo-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-top: 8px; }
         .photo-buttons { display: flex; gap: 10px; margin-top: 8px; }
         .photo-buttons button { flex: 1; font-size: 12px; padding: 6px; }
+        .id-card { width: 400px; margin: 0 auto; background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); overflow: hidden; }
+        .id-card-header { background: #003366; color: white; padding: 15px; text-align: center; }
+        .id-card-header h3 { margin: 0; font-size: 1.2rem; }
+        .id-card-header p { margin: 5px 0 0; font-size: 0.7rem; opacity: 0.9; }
+        .id-card-body { padding: 20px; text-align: center; }
+        .id-card-photo { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin: 0 auto 15px; border: 3px solid #D4A017; }
+        .id-card-details { text-align: left; margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+        .id-card-details p { margin: 8px 0; font-size: 0.85rem; }
+        .id-card-footer { background: #f8fafc; padding: 10px; text-align: center; font-size: 0.7rem; color: #64748b; }
     </style>
 </head>
 <body>
@@ -121,119 +130,54 @@
         function canManageAttendance() { return currentUser?.role === 'admin' || currentUser?.role === 'teacher'; }
         function canViewStats() { return currentUser?.role === 'admin'; }
 
-        // LIN: 3 letters + 4 digits
-        function generateLIN() {
-            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            let result = '';
-            for (let i = 0; i < 3; i++) result += letters.charAt(Math.floor(Math.random() * letters.length));
-            for (let i = 0; i < 4; i++) result += Math.floor(Math.random() * 10);
-            return result;
+        // LIN: PM + first letter of first name + 4 digits (e.g., PMJ1234)
+        function generateLIN(firstName) {
+            const letter = firstName ? firstName.charAt(0).toUpperCase() : 'X';
+            const digits = Math.floor(1000 + Math.random() * 9000);
+            return `PM${letter}${digits}`;
         }
-        function isValidLIN(lin) { return /^[A-Z]{3}[0-9]{4}$/.test(lin); }
+        function isValidLIN(lin, firstName) {
+            const expectedLetter = firstName ? firstName.charAt(0).toUpperCase() : '';
+            const pattern = new RegExp(`^PM${expectedLetter}[0-9]{4}$`);
+            return pattern.test(lin);
+        }
 
-        // -------------------- ROBUST PHOTO COMPRESSION (USING BLOB + CANVAS) --------------------
-        async function compressImageFile(file) {
+        // -------------------- PHOTO COMPRESSION --------------------
+        async function compressPhoto(file) {
             return new Promise((resolve, reject) => {
-                // Validate file type
                 if (!file.type.match('image/jpeg') && !file.type.match('image/png')) {
-                    reject(new Error('Only JPEG and PNG images are allowed'));
+                    reject(new Error('Only JPEG and PNG images allowed'));
                     return;
                 }
-                
-                // Create object URL for the file
                 const objectUrl = URL.createObjectURL(file);
                 const img = new Image();
-                
                 img.onload = () => {
-                    // Clean up object URL
                     URL.revokeObjectURL(objectUrl);
-                    
-                    // Calculate new dimensions (max 150x150)
                     let width = img.width, height = img.height;
                     const maxSize = 150;
-                    if (width > height) {
-                        if (width > maxSize) {
+                    if (width > maxSize || height > maxSize) {
+                        if (width > height) {
                             height = (height * maxSize) / width;
                             width = maxSize;
-                        }
-                    } else {
-                        if (height > maxSize) {
+                        } else {
                             width = (width * maxSize) / height;
                             height = maxSize;
                         }
                     }
-                    
-                    // Create canvas and resize
                     const canvas = document.createElement('canvas');
                     canvas.width = width;
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    
-                    // Convert to Base64 with compression
-                    const base64 = canvas.toDataURL('image/jpeg', 0.6);
+                    const base64 = canvas.toDataURL('image/jpeg', 0.7);
                     resolve(base64);
                 };
-                
-                img.onerror = (err) => {
+                img.onerror = () => {
                     URL.revokeObjectURL(objectUrl);
-                    reject(new Error('Failed to load image. The file may be corrupted or unsupported.'));
+                    reject(new Error('Failed to load image'));
                 };
-                
                 img.src = objectUrl;
             });
-        }
-
-        // Alternative: use FileReader if objectURL fails (fallback)
-        async function compressImageFallback(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        let width = img.width, height = img.height;
-                        const maxSize = 150;
-                        if (width > height) {
-                            if (width > maxSize) {
-                                height = (height * maxSize) / width;
-                                width = maxSize;
-                            }
-                        } else {
-                            if (height > maxSize) {
-                                width = (width * maxSize) / height;
-                                height = maxSize;
-                            }
-                        }
-                        const canvas = document.createElement('canvas');
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        const base64 = canvas.toDataURL('image/jpeg', 0.6);
-                        resolve(base64);
-                    };
-                    img.onerror = () => reject(new Error('Failed to load image in fallback mode'));
-                    img.src = e.target.result;
-                };
-                reader.onerror = () => reject(new Error('FileReader failed'));
-                reader.readAsDataURL(file);
-            });
-        }
-
-        // Main function with retry
-        async function compressPhoto(file) {
-            try {
-                // First try with object URL (more efficient)
-                return await compressImageFile(file);
-            } catch (err) {
-                console.warn("Object URL method failed, trying fallback:", err);
-                try {
-                    // Fallback to FileReader
-                    return await compressImageFallback(file);
-                } catch (fallbackErr) {
-                    throw new Error(`Could not process image: ${fallbackErr.message}`);
-                }
-            }
         }
 
         // -------------------- SUPABASE HELPERS --------------------
@@ -378,16 +322,14 @@
                     <td class="p-2">${formatMoney(s.total_fees || 0)}</td>
                     <td class="p-2">${formatMoney(paid)}</td>
                     <td class="p-2 ${balance > 0 ? 'debt' : ''}">${formatMoney(balance)}</td>
-                    ${canManageStudents() ? `<td class="p-2"><button class="btn-sm" onclick="window.editStudent('${s.id}')"><i class="fas fa-edit"></i></button> <button class="btn-sm text-red-600" onclick="window.deleteStudent('${s.id}')"><i class="fas fa-trash"></i></button> <button class="btn-sm whatsapp-btn" onclick="window.sendFeeReminder('${s.id}')"><i class="fab fa-whatsapp"></i></button></td>` : ''}
+                    ${canManageStudents() ? `<td class="p-2"><button class="btn-sm" onclick="window.editStudent('${s.id}')"><i class="fas fa-edit"></i></button> <button class="btn-sm text-red-600" onclick="window.deleteStudent('${s.id}')"><i class="fas fa-trash"></i></button> <button class="btn-sm whatsapp-btn" onclick="window.sendFeeReminder('${s.id}')"><i class="fab fa-whatsapp"></i></button> <button class="btn-sm btn-gold" onclick="window.printIdCard('${s.id}')"><i class="fas fa-id-card"></i> ID</button></td>` : ''}
                 </tr>`;
             }
             html += '</tbody></table>';
             container.innerHTML = html;
         }
 
-        // Create file input for gallery and camera
         function createPhotoInputWithCamera(containerId, onPhotoSelected, previewContainerId) {
-            // Clear container
             const container = document.getElementById(containerId);
             container.innerHTML = `
                 <div class="photo-buttons">
@@ -397,7 +339,6 @@
                 <input type="file" id="fileInput" accept="image/jpeg,image/png" style="display:none">
                 <input type="file" id="cameraInput" accept="image/jpeg,image/png" capture="environment" style="display:none">
             `;
-            
             const fileInput = document.getElementById('fileInput');
             const cameraInput = document.getElementById('cameraInput');
             const previewDiv = document.getElementById(previewContainerId);
@@ -407,14 +348,14 @@
             
             const handleFile = async (file) => {
                 if (!file) return;
-                // Show preview immediately
+                // Preview
                 const reader = new FileReader();
                 reader.onload = (e) => { previewDiv.innerHTML = `<img src="${e.target.result}" class="photo-preview">`; };
                 reader.readAsDataURL(file);
-                // Process and compress
+                // Compress
                 try {
-                    const compressedBase64 = await compressPhoto(file);
-                    onPhotoSelected(compressedBase64);
+                    const compressed = await compressPhoto(file);
+                    onPhotoSelected(compressed);
                 } catch (err) {
                     showToast(`Photo error: ${err.message}`, true);
                     previewDiv.innerHTML = '';
@@ -442,7 +383,7 @@
                     <input id="newLastName" placeholder="Last Name *">
                     <input id="newAdm" placeholder="Admission Number (auto if blank)">
                     <select id="newClass">${CLASS_ORDER.map(c => `<option>${c}</option>`).join('')}</select>
-                    <input id="newLin" placeholder="LIN (3 letters + 4 digits, e.g., ABC1234)" maxlength="7" style="text-transform:uppercase">
+                    <input id="newLin" placeholder="LIN (auto generated as PM+first letter+4 digits)" maxlength="7" style="text-transform:uppercase">
                     <input id="newParentWhatsapp" placeholder="Parent WhatsApp">
                     <input id="newParentName" placeholder="Parent Name">
                     <input id="newTotalFees" type="number" placeholder="Total Fees (UGX)">
@@ -459,11 +400,18 @@
             createPhotoInputWithCamera('photoControls', (base64) => { selectedPhotoBase64 = base64; }, 'photoPreview');
             
             const linInput = document.getElementById('newLin');
-            linInput.addEventListener('input', (e) => {
-                let val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-                if (val.length > 7) val = val.slice(0,7);
-                e.target.value = val;
-            });
+            const firstNameInput = document.getElementById('newFirstName');
+            function updateLinPlaceholder() {
+                const first = firstNameInput.value.trim();
+                if (first) {
+                    const sampleLin = `PM${first.charAt(0).toUpperCase()}1234`;
+                    linInput.placeholder = `Auto: ${sampleLin}`;
+                } else {
+                    linInput.placeholder = "Auto: PMX1234";
+                }
+            }
+            firstNameInput.addEventListener('input', updateLinPlaceholder);
+            updateLinPlaceholder();
             
             document.getElementById('confirmAddStudent').onclick = async () => {
                 const saveBtn = document.getElementById('confirmAddStudent');
@@ -476,8 +424,10 @@
                     const admission = document.getElementById('newAdm').value.trim() || `ADM${Date.now()}`;
                     const className = document.getElementById('newClass').value;
                     let lin = document.getElementById('newLin').value.trim().toUpperCase();
-                    if (!lin) lin = generateLIN();
-                    if (!isValidLIN(lin)) return showToast("LIN must be exactly 3 letters + 4 digits (e.g., ABC1234)", true);
+                    if (!lin) lin = generateLIN(first);
+                    if (!isValidLIN(lin, first)) {
+                        return showToast(`LIN must be PM + first letter of "${first}" (${first.charAt(0).toUpperCase()}) + 4 digits. Example: PM${first.charAt(0).toUpperCase()}1234`, true);
+                    }
                     const parentWhatsapp = document.getElementById('newParentWhatsapp').value.trim();
                     const parentName = document.getElementById('newParentName').value.trim();
                     const totalFees = parseFloat(document.getElementById('newTotalFees').value) || 0;
@@ -496,10 +446,7 @@
                         total_fees: totalFees,
                         fees_paid: 0
                     };
-                    
-                    if (selectedPhotoBase64) {
-                        studentData.photo_url = selectedPhotoBase64;
-                    }
+                    if (selectedPhotoBase64) studentData.photo_url = selectedPhotoBase64;
                     
                     await restInsert('students', studentData);
                     showToast(`Student ${first} ${last} added ${selectedPhotoBase64 ? 'with photo' : ''}`);
@@ -544,27 +491,31 @@
             document.body.appendChild(modal);
             
             let selectedPhotoBase64 = null;
-            const previewDiv = document.getElementById('editPhotoPreview');
-            createPhotoInputWithCamera('editPhotoControls', (base64) => {
-                selectedPhotoBase64 = base64;
-                // Preview is already updated by the handler in createPhotoInputWithCamera
-            }, 'editPhotoPreview');
+            createPhotoInputWithCamera('editPhotoControls', (base64) => { selectedPhotoBase64 = base64; }, 'editPhotoPreview');
             
             const linInput = document.getElementById('editLin');
-            linInput.addEventListener('input', (e) => {
-                let val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-                if (val.length > 7) val = val.slice(0,7);
-                e.target.value = val;
-            });
+            const firstNameInput = document.getElementById('editFirstName');
+            function validateLinOnEdit() {
+                const lin = linInput.value.trim().toUpperCase();
+                const first = firstNameInput.value.trim();
+                if (lin && first && !isValidLIN(lin, first)) {
+                    showToast(`LIN must be PM + first letter of "${first}" (${first.charAt(0).toUpperCase()}) + 4 digits`, true);
+                }
+            }
+            firstNameInput.addEventListener('input', validateLinOnEdit);
+            linInput.addEventListener('input', validateLinOnEdit);
             
             document.getElementById('confirmEditStudent').onclick = async () => {
                 const updateBtn = document.getElementById('confirmEditStudent');
                 updateBtn.disabled = true;
                 updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
                 try {
+                    const first = document.getElementById('editFirstName').value.trim();
+                    const last = document.getElementById('editLastName').value.trim();
+                    if (!first || !last) return showToast("First and Last name required", true);
                     const updates = {
-                        first_name: document.getElementById('editFirstName').value,
-                        last_name: document.getElementById('editLastName').value,
+                        first_name: first,
+                        last_name: last,
                         admission_number: document.getElementById('editAdm').value,
                         class: document.getElementById('editClass').value,
                         lin: document.getElementById('editLin').value.trim().toUpperCase(),
@@ -572,16 +523,13 @@
                         parent_name: document.getElementById('editParentName').value,
                         total_fees: parseFloat(document.getElementById('editTotalFees').value) || 0
                     };
-                    if (!isValidLIN(updates.lin)) {
-                        showToast("LIN must be exactly 3 letters + 4 digits (e.g., ABC1234)", true);
+                    if (!isValidLIN(updates.lin, first)) {
+                        showToast(`LIN must be PM + first letter of "${first}" (${first.charAt(0).toUpperCase()}) + 4 digits`, true);
                         updateBtn.disabled = false;
                         updateBtn.innerHTML = 'Update';
                         return;
                     }
-                    if (selectedPhotoBase64) {
-                        updates.photo_url = selectedPhotoBase64;
-                    }
-                    
+                    if (selectedPhotoBase64) updates.photo_url = selectedPhotoBase64;
                     await restUpdate('students', id, updates);
                     showToast("Student updated successfully");
                     modal.remove();
@@ -623,6 +571,64 @@
             showToast(`Reminder sent to ${s.parent_whatsapp}`);
         };
 
+        // -------------------- ID CARD GENERATION --------------------
+        window.printIdCard = (studentId) => {
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+            const win = window.open('', '_blank');
+            const photoHtml = student.photo_url ? `<img src="${student.photo_url}" class="id-card-photo">` : `<div class="id-card-photo" style="background:#eef2ff; display:flex; align-items:center; justify-content:center;"><i class="fas fa-user-circle fa-4x" style="color:#003366;"></i></div>`;
+            win.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>ID Card - ${student.first_name} ${student.last_name}</title>
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+                        body { background: #e2e8f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+                        .id-card { width: 400px; background: white; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); overflow: hidden; }
+                        .id-card-header { background: #003366; color: white; padding: 15px; text-align: center; }
+                        .id-card-header h3 { margin: 0; font-size: 1.2rem; }
+                        .id-card-header p { margin: 5px 0 0; font-size: 0.7rem; opacity: 0.9; }
+                        .id-card-body { padding: 20px; text-align: center; }
+                        .id-card-photo { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin: 0 auto 15px; border: 3px solid #D4A017; display: flex; align-items: center; justify-content: center; background: #f1f5f9; }
+                        .id-card-details { text-align: left; margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+                        .id-card-details p { margin: 8px 0; font-size: 0.85rem; }
+                        .id-card-footer { background: #f8fafc; padding: 10px; text-align: center; font-size: 0.7rem; color: #64748b; }
+                        @media print {
+                            body { background: white; padding: 0; }
+                            .id-card { box-shadow: none; margin: 0 auto; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="id-card">
+                        <div class="id-card-header">
+                            <h3>${escapeHtml(currentSchool.name)}</h3>
+                            <p>${escapeHtml(currentSchool.address || '')}</p>
+                        </div>
+                        <div class="id-card-body">
+                            ${photoHtml}
+                            <h2>${escapeHtml(student.first_name)} ${escapeHtml(student.last_name)}</h2>
+                            <div class="id-card-details">
+                                <p><strong>LIN:</strong> ${escapeHtml(student.lin)}</p>
+                                <p><strong>Class:</strong> ${escapeHtml(student.class)}</p>
+                                <p><strong>Admission No:</strong> ${escapeHtml(student.admission_number || 'N/A')}</p>
+                                <p><strong>Parent:</strong> ${escapeHtml(student.parent_name || 'N/A')}</p>
+                                <p><strong>Parent WhatsApp:</strong> ${escapeHtml(student.parent_whatsapp || 'N/A')}</p>
+                            </div>
+                        </div>
+                        <div class="id-card-footer">
+                            <p>School Contacts: ${SCHOOL_CONTACTS.join(', ')}</p>
+                            <p>Valid ID Card - Progressive Mothers School</p>
+                        </div>
+                    </div>
+                    <script>window.print();<\/script>
+                </body>
+                </html>
+            `);
+            win.document.close();
+        };
+
         function exportStudentsToExcel() {
             const data = students.map(s => ({
                 'Admission No': s.admission_number,
@@ -640,7 +646,111 @@
             XLSX.writeFile(wb, `students_${SCHOOL_ID}.xlsx`);
         }
 
-        // -------------------- MARKS & ATTENDANCE (same as before, working) --------------------
+        // -------------------- REPORTS (GRADE DISTRIBUTION CHART) --------------------
+        async function renderReports() {
+            const container = document.getElementById('tabContent');
+            await loadAll(); // ensure marks are fresh
+            const gradeLabels = ['D1', 'D2', 'C3', 'C4', 'C5', 'C6', 'P7', 'P8', 'F9'];
+            const gradeCounts = gradeLabels.map(g => marks.filter(m => m.grade === g).length);
+            container.innerHTML = `
+                <div class="bg-white p-6 rounded-xl shadow">
+                    <h3 class="font-bold text-xl mb-4"><i class="fas fa-chart-bar"></i> Grade Distribution</h3>
+                    <canvas id="gradeChart" height="250"></canvas>
+                    <div class="mt-6 text-sm text-gray-500 text-center">
+                        Based on all marks entered across all terms and exams.
+                    </div>
+                </div>
+            `;
+            const ctx = document.getElementById('gradeChart')?.getContext('2d');
+            if (window.chart) window.chart.destroy();
+            if (ctx) {
+                window.chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: gradeLabels,
+                        datasets: [{
+                            label: 'Number of Marks',
+                            data: gradeCounts,
+                            backgroundColor: '#003366',
+                            borderRadius: 8,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { position: 'top' },
+                            tooltip: { callbacks: { label: (ctx) => `${ctx.raw} marks` } }
+                        }
+                    }
+                });
+            }
+        }
+
+        // -------------------- ID CARDS TAB (with student selector and preview) --------------------
+        async function renderIdCards() {
+            const container = document.getElementById('tabContent');
+            container.innerHTML = `
+                <div class="bg-white rounded-xl p-6 shadow">
+                    <h3 class="font-bold text-xl mb-4"><i class="fas fa-id-card"></i> ID Card Generator</h3>
+                    <div class="mb-4">
+                        <label class="block font-medium mb-1">Select Student</label>
+                        <select id="idStudentSelect" class="border rounded-lg p-2 w-full">${students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.class})</option>`).join('')}</select>
+                    </div>
+                    <div class="flex gap-3 mb-6">
+                        <button class="btn" id="previewIdBtn"><i class="fas fa-eye"></i> Preview</button>
+                        <button class="btn btn-gold" id="printIdBtn"><i class="fas fa-print"></i> Print ID Card</button>
+                    </div>
+                    <div id="idPreviewContainer" class="flex justify-center"></div>
+                </div>
+            `;
+            const previewBtn = document.getElementById('previewIdBtn');
+            const printBtn = document.getElementById('printIdBtn');
+            const studentSelect = document.getElementById('idStudentSelect');
+            
+            const updatePreview = () => {
+                const studentId = studentSelect.value;
+                const student = students.find(s => s.id === studentId);
+                if (!student) return;
+                const photoHtml = student.photo_url ? `<img src="${student.photo_url}" class="id-card-photo" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid #D4A017;">` : `<div class="id-card-photo" style="width:120px;height:120px;border-radius:50%;background:#eef2ff;display:flex;align-items:center;justify-content:center;"><i class="fas fa-user-circle fa-4x" style="color:#003366;"></i></div>`;
+                const previewHtml = `
+                    <div class="id-card" style="width:400px;max-width:100%;">
+                        <div class="id-card-header" style="background:#003366;color:white;padding:15px;text-align:center;">
+                            <h3 style="margin:0;">${escapeHtml(currentSchool.name)}</h3>
+                            <p style="margin:5px 0 0;font-size:0.7rem;">${escapeHtml(currentSchool.address || '')}</p>
+                        </div>
+                        <div class="id-card-body" style="padding:20px;text-align:center;">
+                            ${photoHtml}
+                            <h2 style="margin:10px 0;">${escapeHtml(student.first_name)} ${escapeHtml(student.last_name)}</h2>
+                            <div class="id-card-details" style="text-align:left;margin-top:15px;border-top:1px solid #e2e8f0;padding-top:15px;">
+                                <p><strong>LIN:</strong> ${escapeHtml(student.lin)}</p>
+                                <p><strong>Class:</strong> ${escapeHtml(student.class)}</p>
+                                <p><strong>Admission No:</strong> ${escapeHtml(student.admission_number || 'N/A')}</p>
+                                <p><strong>Parent:</strong> ${escapeHtml(student.parent_name || 'N/A')}</p>
+                                <p><strong>Parent WhatsApp:</strong> ${escapeHtml(student.parent_whatsapp || 'N/A')}</p>
+                            </div>
+                        </div>
+                        <div class="id-card-footer" style="background:#f8fafc;padding:10px;text-align:center;font-size:0.7rem;color:#64748b;">
+                            <p>School Contacts: ${SCHOOL_CONTACTS.join(', ')}</p>
+                            <p>Valid ID Card - Progressive Mothers School</p>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('idPreviewContainer').innerHTML = previewHtml;
+            };
+            
+            previewBtn.onclick = updatePreview;
+            printBtn.onclick = () => {
+                const studentId = studentSelect.value;
+                const student = students.find(s => s.id === studentId);
+                if (student) window.printIdCard(student.id);
+                else showToast("Select a student", true);
+            };
+            if (students.length) updatePreview();
+            else document.getElementById('idPreviewContainer').innerHTML = '<div class="text-center text-gray-500">No students available</div>';
+        }
+
+        // -------------------- MARKS & ATTENDANCE (same as before) --------------------
         async function saveMark(markData) {
             const { student_id, subject, term, exam_type, school_id, score, grade } = markData;
             const existing = await restFetch('marks', `student_id=eq.${student_id}&subject=eq.${subject}&term=eq.${term}&exam_type=eq.${exam_type}&school_id=eq.${school_id}`);
@@ -698,7 +808,7 @@
                     }
                     html += `</tr>`;
                 }
-                html += `</tbody><tr>`;
+                html += `</tbody></table>`;
                 document.getElementById('marksGrid').innerHTML = html;
             };
             document.getElementById('loadMarksBtn').onclick = loadMarksGrid;
@@ -826,17 +936,6 @@
         }
 
         async function renderFees() { document.getElementById('tabContent').innerHTML = '<div class="bg-white p-4 rounded-xl text-center">Fee management: Add payments from student list.</div>'; }
-        async function renderReports() {
-            const container = document.getElementById('tabContent');
-            container.innerHTML = `<div class="bg-white p-4 rounded-xl"><canvas id="gradeChart" height="200"></canvas></div>`;
-            const ctx = document.getElementById('gradeChart')?.getContext('2d');
-            if (window.chart) window.chart.destroy();
-            if (ctx) {
-                const gradeCounts = ['D1','D2','C3','C4','C5','C6','P7','P8','F9'].map(g => marks.filter(m => m.grade === g).length);
-                window.chart = new Chart(ctx, { type: 'bar', data: { labels: ['D1','D2','C3','C4','C5','C6','P7','P8','F9'], datasets: [{ label: 'Grade Distribution', data: gradeCounts, backgroundColor: '#003366' }] } });
-            }
-        }
-        async function renderIdCards() { document.getElementById('tabContent').innerHTML = '<div class="bg-white p-4 rounded-xl text-center">ID card generator ready.</div>'; }
 
         // -------------------- MAIN RENDER --------------------
         function getAvailableTabs() {
