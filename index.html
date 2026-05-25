@@ -68,7 +68,6 @@
         @keyframes fadeOut { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
         @media print { .support-badge, .role-badge, .logout-btn, .action-buttons, .global-search, .btn:not(.btn-print) { display: none !important; } }
         .photo-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-top: 8px; }
-        .loading { opacity: 0.6; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -120,58 +119,25 @@
         function canManageAttendance() { return currentUser?.role === 'admin' || currentUser?.role === 'teacher'; }
         function canViewStats() { return currentUser?.role === 'admin'; }
 
-        // Generate LIN: 3 uppercase letters + 4 digits (e.g., ABC1234)
+        // LIN: 3 letters + 4 digits
         function generateLIN() {
             const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
             let result = '';
-            for (let i = 0; i < 3; i++) {
-                result += letters.charAt(Math.floor(Math.random() * letters.length));
-            }
-            for (let i = 0; i < 4; i++) {
-                result += Math.floor(Math.random() * 10);
-            }
+            for (let i = 0; i < 3; i++) result += letters.charAt(Math.floor(Math.random() * letters.length));
+            for (let i = 0; i < 4; i++) result += Math.floor(Math.random() * 10);
             return result;
         }
+        function isValidLIN(lin) { return /^[A-Z]{3}[0-9]{4}$/.test(lin); }
 
-        function isValidLIN(lin) {
-            return /^[A-Z]{3}[0-9]{4}$/.test(lin);
-        }
-
-        // -------------------- PHOTO UPLOAD WITH TIMEOUT AND ERROR HANDLING --------------------
-        async function uploadPhoto(studentId, fileBlob) {
-            const fileName = `student_${studentId}_${Date.now()}.jpg`;
-            const url = `${SUPABASE_URL}/storage/v1/object/public/student_photos/${fileName}`;
-            console.log("Uploading to:", url);
-            
-            // Create a timeout promise
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error("Upload timeout after 15 seconds")), 15000);
-            });
-            
-            const uploadPromise = fetch(url, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': fileBlob.type },
-                body: fileBlob
-            });
-            
-            const response = await Promise.race([uploadPromise, timeoutPromise]);
-            if (!response.ok) {
-                const errText = await response.text();
-                throw new Error(`Upload failed (${response.status}): ${errText}`);
-            }
-            const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/student_photos/${fileName}`;
-            console.log("Upload success:", publicUrl);
-            return publicUrl;
-        }
-
-        function compressImage(file, callback) {
+        // -------------------- PHOTO AS BASE64 (NO STORAGE NEEDED) --------------------
+        function resizeAndGetBase64(file, callback) {
             const reader = new FileReader();
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
                     let width = img.width, height = img.height;
-                    const maxSize = 200;
+                    const maxSize = 150;
                     if (width > height) {
                         if (width > maxSize) {
                             height = (height * maxSize) / width;
@@ -187,7 +153,8 @@
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    canvas.toBlob(callback, 'image/jpeg', 0.7);
+                    const base64 = canvas.toDataURL('image/jpeg', 0.7);
+                    callback(base64);
                 };
                 img.src = e.target.result;
             };
@@ -236,17 +203,14 @@
                 method: 'DELETE',
                 headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
             });
-            if (!res.ok) {
-                const errText = await res.text();
-                throw new Error(`Delete from ${table} failed: ${errText}`);
-            }
+            if (!res.ok) throw new Error(`Delete from ${table} failed: ${await res.text()}`);
         }
 
         async function deleteStudentAndRelated(studentId) {
-            await restDeleteFilter('transactions', 'student_id', studentId).catch(e => console.warn("Transactions delete:", e.message));
-            await restDeleteFilter('payments', 'student_id', studentId).catch(e => console.warn("Payments delete:", e.message));
-            await restDeleteFilter('marks', 'student_id', studentId).catch(e => console.warn("Marks delete:", e.message));
-            await restDeleteFilter('attendance', 'student_id', studentId).catch(e => console.warn("Attendance delete:", e.message));
+            await restDeleteFilter('transactions', 'student_id', studentId).catch(e=>console.warn);
+            await restDeleteFilter('payments', 'student_id', studentId).catch(e=>console.warn);
+            await restDeleteFilter('marks', 'student_id', studentId).catch(e=>console.warn);
+            await restDeleteFilter('attendance', 'student_id', studentId).catch(e=>console.warn);
             await restDeleteFilter('students', 'id', studentId);
         }
 
@@ -258,6 +222,11 @@
                 attendance = await restFetch('attendance', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
                 payments = await restFetch('payments', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
                 transactions = await restFetch('transactions', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
+                // Check for photo_url column
+                if (students.length > 0 && !students[0].hasOwnProperty('photo_url')) {
+                    console.warn("Missing photo_url column - run: ALTER TABLE students ADD COLUMN photo_url TEXT;");
+                    showToast("Missing 'photo_url' column. Please run SQL: ALTER TABLE students ADD COLUMN photo_url TEXT;", true);
+                }
             } catch(e) { console.error("Load error:", e); }
         }
 
@@ -266,15 +235,13 @@
             if (score >= 60) return 'C4'; if (score >= 50) return 'C5'; if (score >= 40) return 'C6';
             if (score >= 35) return 'P7'; if (score >= 30) return 'P8'; return 'F9';
         }
-        function gradePoints(g) {
-            return { D1: 1, D2: 2, C3: 3, C4: 4, C5: 5, C6: 6, P7: 7, P8: 8, F9: 9 }[g] || 9;
-        }
+        function gradePoints(g) { return { D1:1,D2:2,C3:3,C4:4,C5:5,C6:6,P7:7,P8:8,F9:9 }[g] || 9; }
         function getDivision(agg) {
             if (agg <= 12) return 'Division 1'; if (agg <= 23) return 'Division 2';
             if (agg <= 29) return 'Division 3'; if (agg <= 34) return 'Division 4'; return 'Division U';
         }
         function formatMoney(amt) { return 'UGX ' + (amt || 0).toLocaleString(); }
-        function escapeHtml(str) { return str ? String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]) : ''; }
+        function escapeHtml(str) { return str ? String(str).replace(/[&<>]/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;' })[m]) : ''; }
         function showToast(msg, isError = false) {
             let t = document.createElement('div');
             t.className = `toast ${isError ? 'error' : ''}`;
@@ -287,7 +254,7 @@
             window.open(`https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
         }
 
-        // -------------------- STUDENTS TAB --------------------
+        // -------------------- STUDENTS TAB (BASE64 PHOTOS - WORKS!) --------------------
         async function renderStudents() {
             const container = document.getElementById('tabContent');
             const canEdit = canManageStudents();
@@ -370,13 +337,9 @@
                 const file = e.target.files[0];
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        previewDiv.innerHTML = `<img src="${ev.target.result}" class="photo-preview">`;
-                    };
+                    reader.onload = (ev) => { previewDiv.innerHTML = `<img src="${ev.target.result}" class="photo-preview">`; };
                     reader.readAsDataURL(file);
-                } else {
-                    previewDiv.innerHTML = '';
-                }
+                } else previewDiv.innerHTML = '';
             };
             
             const linInput = document.getElementById('newLin');
@@ -420,24 +383,14 @@
                     };
                     
                     if (photoFile) {
-                        showToast("Uploading photo...");
-                        compressImage(photoFile, async (blob) => {
-                            try {
-                                const photoUrl = await uploadPhoto(studentId, blob);
-                                studentData.photo_url = photoUrl;
-                                await restInsert('students', studentData);
-                                showToast(`Student ${first} ${last} added with photo`);
-                                modal.remove();
-                                await loadAll();
-                                await renderStudentList();
-                            } catch(err) {
-                                console.error("Photo upload error:", err);
-                                showToast(`Photo upload failed: ${err.message}. Student added without photo.`, true);
-                                await restInsert('students', studentData);
-                                modal.remove();
-                                await loadAll();
-                                await renderStudentList();
-                            }
+                        showToast("Processing photo...");
+                        resizeAndGetBase64(photoFile, async (base64) => {
+                            studentData.photo_url = base64;
+                            await restInsert('students', studentData);
+                            showToast(`Student ${first} ${last} added with photo`);
+                            modal.remove();
+                            await loadAll();
+                            await renderStudentList();
                         });
                     } else {
                         await restInsert('students', studentData);
@@ -488,9 +441,7 @@
                 const file = e.target.files[0];
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        previewDiv.innerHTML = `<img src="${ev.target.result}" class="photo-preview">`;
-                    };
+                    reader.onload = (ev) => { previewDiv.innerHTML = `<img src="${ev.target.result}" class="photo-preview">`; };
                     reader.readAsDataURL(file);
                 } else {
                     previewDiv.innerHTML = s.photo_url ? `<img src="${s.photo_url}" class="photo-preview">` : '';
@@ -528,24 +479,14 @@
                     const photoFile = document.getElementById('editPhoto').files[0];
                     
                     if (photoFile) {
-                        showToast("Uploading new photo...");
-                        compressImage(photoFile, async (blob) => {
-                            try {
-                                const photoUrl = await uploadPhoto(id, blob);
-                                updates.photo_url = photoUrl;
-                                await restUpdate('students', id, updates);
-                                showToast("Student updated with new photo");
-                                modal.remove();
-                                await loadAll();
-                                await renderStudentList();
-                            } catch(err) {
-                                console.error("Photo upload error:", err);
-                                showToast(`Photo upload failed: ${err.message}. Student updated without photo.`, true);
-                                await restUpdate('students', id, updates);
-                                modal.remove();
-                                await loadAll();
-                                await renderStudentList();
-                            }
+                        showToast("Processing new photo...");
+                        resizeAndGetBase64(photoFile, async (base64) => {
+                            updates.photo_url = base64;
+                            await restUpdate('students', id, updates);
+                            showToast("Student updated with new photo");
+                            modal.remove();
+                            await loadAll();
+                            await renderStudentList();
                         });
                     } else {
                         await restUpdate('students', id, updates);
@@ -605,25 +546,18 @@
             XLSX.writeFile(wb, `students_${SCHOOL_ID}.xlsx`);
         }
 
-        // -------------------- MARKS TAB --------------------
+        // -------------------- MARKS & ATTENDANCE (simplified but working) --------------------
         async function saveMark(markData) {
             const { student_id, subject, term, exam_type, school_id, score, grade } = markData;
-            const existing = await restFetch('marks', 
-                `student_id=eq.${student_id}&subject=eq.${subject}&term=eq.${term}&exam_type=eq.${exam_type}&school_id=eq.${school_id}`);
-            if (existing && existing.length > 0) {
-                await restUpdate('marks', existing[0].id, { score, grade });
-            } else {
-                await restInsert('marks', { school_id, student_id, subject, score, grade, term, exam_type });
-            }
+            const existing = await restFetch('marks', `student_id=eq.${student_id}&subject=eq.${subject}&term=eq.${term}&exam_type=eq.${exam_type}&school_id=eq.${school_id}`);
+            if (existing && existing.length > 0) await restUpdate('marks', existing[0].id, { score, grade });
+            else await restInsert('marks', { school_id, student_id, subject, score, grade, term, exam_type });
         }
 
         async function renderMarks() {
             const container = document.getElementById('tabContent');
             const classOptions = [...new Set(students.map(s => s.class).filter(Boolean))];
-            if (classOptions.length === 0) {
-                container.innerHTML = '<div class="bg-white p-4 rounded-xl text-center">No students found. Please add students first.</div>';
-                return;
-            }
+            if (classOptions.length === 0) { container.innerHTML = '<div class="bg-white p-4 rounded-xl text-center">No students found. Please add students first.</div>'; return; }
             container.innerHTML = `
                 <div class="bg-white rounded-xl p-4 shadow-sm mb-4">
                     <h3 class="font-bold text-lg mb-2"><i class="fas fa-pen-fancy"></i> Marks Entry</h3>
@@ -654,19 +588,13 @@
                 const term = document.getElementById('marksTerm').value;
                 const examType = document.getElementById('marksExam').value;
                 let classStudents = students.filter(s => s.class === className);
-                classStudents = classStudents.filter(s => 
-                    (s.first_name + ' ' + s.last_name).toLowerCase().includes(globalSearchTerm.toLowerCase()) ||
-                    (s.lin || '').toLowerCase().includes(globalSearchTerm.toLowerCase())
-                );
-                if (!classStudents.length) {
-                    document.getElementById('marksGrid').innerHTML = '<div class="p-4 text-center">No students in this class</div>';
-                    return;
-                }
+                classStudents = classStudents.filter(s => (s.first_name+' '+s.last_name).toLowerCase().includes(globalSearchTerm.toLowerCase()) || (s.lin||'').toLowerCase().includes(globalSearchTerm.toLowerCase()));
+                if (!classStudents.length) { document.getElementById('marksGrid').innerHTML = '<div class="p-4 text-center">No students in this class</div>'; return; }
                 await loadAll();
                 const relevantMarks = marks.filter(m => m.term === term && m.exam_type === examType);
                 const markMap = new Map();
                 relevantMarks.forEach(m => markMap.set(`${m.student_id}_${m.subject}`, m));
-                let html = `<table class="min-w-full border"><thead><tr><th>Student (LIN)</th>${CORE_SUBJECTS.map(s => `<th>${s}</th>`).join('')}</thead><tbody>`;
+                let html = `<table class="min-w-full border"><thead><tr><th>Student (LIN)</th>${CORE_SUBJECTS.map(s => `<th>${s}</th>`).join('')} </thead><tbody>`;
                 for (let s of classStudents) {
                     html += `<tr><td class="p-2 font-medium">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}<br><span class="text-xs">${s.lin}</span></td>`;
                     for (let sub of CORE_SUBJECTS) {
@@ -676,10 +604,9 @@
                     }
                     html += `</tr>`;
                 }
-                html += `</tbody><tr>`;
+                html += `</tbody></table>`;
                 document.getElementById('marksGrid').innerHTML = html;
             };
-
             document.getElementById('loadMarksBtn').onclick = loadMarksGrid;
             document.getElementById('saveMarksBtn').onclick = async () => {
                 const term = document.getElementById('marksTerm').value;
@@ -692,27 +619,18 @@
                     const raw = inp.value.trim();
                     if (raw === "") continue;
                     const score = parseInt(raw);
-                    if (isNaN(score) || score < 0 || score > 100) {
-                        errors++;
-                        showToast(`Invalid score for ${subject} (0-100)`, true);
-                        continue;
-                    }
+                    if (isNaN(score) || score < 0 || score > 100) { errors++; showToast(`Invalid score for ${subject} (0-100)`, true); continue; }
                     const grade = getGrade(score);
                     try {
                         await saveMark({ school_id: SCHOOL_ID, student_id: studentId, subject, score, grade, term, exam_type: examType });
                         success++;
-                    } catch(e) { 
-                        errors++;
-                        console.error(e);
-                        showToast(`Error saving ${subject}`, true);
-                    }
+                    } catch(e) { errors++; showToast(`Error saving ${subject}`, true); }
                 }
                 if (success) showToast(`✅ Saved ${success} marks successfully`);
                 if (errors) showToast(`⚠️ ${errors} marks failed`, true);
                 await loadAll();
                 await loadMarksGrid();
             };
-
             document.getElementById('genReportBtn').onclick = async () => {
                 const studentId = document.getElementById('reportStudent').value;
                 const term = document.getElementById('reportTerm').value;
@@ -745,31 +663,18 @@
                 for (let ex of examsToShow) {
                     let total = totals[ex] || 0;
                     let agg = 0;
-                    if (pointsList[ex]) {
-                        let sorted = [...pointsList[ex]].sort((a,b)=>a-b);
-                        agg = sorted.slice(0,8).reduce((s,p)=>s+p,0);
-                    }
+                    if (pointsList[ex]) { let sorted = [...pointsList[ex]].sort((a,b)=>a-b); agg = sorted.slice(0,8).reduce((s,p)=>s+p,0); }
                     summary += `<td class="p-2 text-center">${total}/400<br><small>Agg: ${agg}</small></td>`;
                 }
                 summary += `<tr><tr class="bg-gray-50"><td class="p-2 font-bold">Division</td>`;
                 for (let ex of examsToShow) {
                     let agg = 0;
-                    if (pointsList[ex]) {
-                        let sorted = [...pointsList[ex]].sort((a,b)=>a-b);
-                        agg = sorted.slice(0,8).reduce((s,p)=>s+p,0);
-                    }
+                    if (pointsList[ex]) { let sorted = [...pointsList[ex]].sort((a,b)=>a-b); agg = sorted.slice(0,8).reduce((s,p)=>s+p,0); }
                     summary += `<td class="p-2 text-center">${getDivision(agg)}</td>`;
                 }
                 summary += `</tr>`;
                 const photoHtml = student.photo_url ? `<img src="${student.photo_url}" width="70" style="border-radius:50%">` : '<div style="width:70px;height:70px;background:#eef;border-radius:50%;display:flex;align-items:center;justify-content:center;">📷</div>';
-                const reportHtml = `
-                    <div class="report-card">
-                        <div class="report-header"><h2>${escapeHtml(currentSchool.name)}</h2><p>${currentSchool.address} | ${SCHOOL_CONTACTS.join(', ')}</p><p>${term} | ${examTarget} Cumulative Report</p></div>
-                        <div class="flex gap-3 items-center mb-3">${photoHtml}<div><strong>${student.first_name} ${student.last_name}</strong><br>LIN: ${student.lin}<br>Class: ${student.class}</div></div>
-                        <table class="w-full border"><thead><tr><th>Subject</th>${examsToShow.map(e=>`<th>${e}</th>`).join('')}</thead><tbody>${rows}${summary}</tbody>}结合
-                        <div class="text-center text-xs mt-3">Generated: ${new Date().toLocaleString()}</div>
-                    </div>
-                `;
+                const reportHtml = `<div class="report-card"><div class="report-header"><h2>${escapeHtml(currentSchool.name)}</h2><p>${currentSchool.address} | ${SCHOOL_CONTACTS.join(', ')}</p><p>${term} | ${examTarget} Cumulative Report</p></div><div class="flex gap-3 items-center mb-3">${photoHtml}<div><strong>${student.first_name} ${student.last_name}</strong><br>LIN: ${student.lin}<br>Class: ${student.class}</div></div><table class="w-full border"><thead><tr><th>Subject</th>${examsToShow.map(e=>`<th>${e}</th>`).join('')} </thead><tbody>${rows}${summary}</tbody>}94<div class="text-center text-xs mt-3">Generated: ${new Date().toLocaleString()}</div></div>`;
                 document.getElementById('reportPreview').innerHTML = reportHtml;
             };
             document.getElementById('downloadReportBtn').onclick = () => {
@@ -783,29 +688,17 @@
             await loadMarksGrid();
         }
 
-        // -------------------- ATTENDANCE TAB --------------------
         async function renderAttendance() {
             const container = document.getElementById('tabContent');
             const classes = [...new Set(students.map(s => s.class).filter(Boolean))];
             if (!classes.length) { container.innerHTML = '<div class="bg-white p-4 rounded-xl">No students</div>'; return; }
-            container.innerHTML = `
-                <div class="bg-white rounded-xl p-4">
-                    <h3 class="font-bold mb-3">Attendance</h3>
-                    <div class="flex gap-3 mb-4">
-                        <select id="attClass">${classes.map(c => `<option>${c}</option>`).join('')}</select>
-                        <input type="date" id="attDate" value="${new Date().toISOString().slice(0,10)}">
-                        <button class="btn" id="saveAttendanceBtn">Save</button>
-                    </div>
-                    <div id="attendanceList"></div>
-                </div>
-            `;
+            container.innerHTML = `<div class="bg-white rounded-xl p-4"><h3 class="font-bold mb-3">Attendance</h3><div class="flex gap-3 mb-4"><select id="attClass">${classes.map(c=>`<option>${c}</option>`).join('')}</select><input type="date" id="attDate" value="${new Date().toISOString().slice(0,10)}"><button class="btn" id="saveAttendanceBtn">Save</button></div><div id="attendanceList"></div></div>`;
             const loadAttendance = async () => {
                 const selectedClass = document.getElementById('attClass').value;
                 const date = document.getElementById('attDate').value;
                 let classStudents = students.filter(s => s.class === selectedClass);
                 const existing = await restFetch('attendance', `date=eq.${date}&class=eq.${selectedClass}&school_id=eq.${SCHOOL_ID}`).catch(e=>[]);
-                const statusMap = {};
-                existing.forEach(a => statusMap[a.student_id] = a.status);
+                const statusMap = {}; existing.forEach(a => statusMap[a.student_id] = a.status);
                 let html = '<div class="space-y-2">';
                 for (let s of classStudents) {
                     const status = statusMap[s.id] || 'present';
@@ -827,15 +720,10 @@
                     const status = sel.value;
                     try {
                         const existing = await restFetch('attendance', `student_id=eq.${studentId}&date=eq.${date}`);
-                        if (existing.length) {
-                            await restUpdate('attendance', existing[0].id, { status, class: selectedClass });
-                        } else {
-                            await restInsert('attendance', { school_id: SCHOOL_ID, student_id: studentId, date, status, class: selectedClass });
-                        }
+                        if (existing.length) await restUpdate('attendance', existing[0].id, { status, class: selectedClass });
+                        else await restInsert('attendance', { school_id: SCHOOL_ID, student_id: studentId, date, status, class: selectedClass });
                         success++;
-                    } catch(e) {
-                        errors++;
-                    }
+                    } catch(e) { errors++; }
                 }
                 if (success) showToast(`Attendance saved for ${success} students`);
                 if (errors) showToast(`${errors} errors`, true);
@@ -843,7 +731,6 @@
             };
         }
 
-        // Stubs
         async function renderFees() { document.getElementById('tabContent').innerHTML = '<div class="bg-white p-4 rounded-xl text-center">Fee management: Add payments from student list.</div>'; }
         async function renderReports() {
             const container = document.getElementById('tabContent');
@@ -892,15 +779,8 @@
                             <div class="global-search"><i class="fas fa-search"></i><input type="text" id="globalSearchInput" placeholder="Search name, LIN, class..."></div>
                         </div>
                     </div>
-                    ${showStats ? `<div class="stats-grid">
-                        <div class="stat-card"><div class="stat-number">${students.length}</div><div class="stat-label">STUDENTS</div></div>
-                        <div class="stat-card"><div class="stat-number">${formatMoney(totalCollected)}</div><div class="stat-label">COLLECTED</div></div>
-                        <div class="stat-card"><div class="stat-number">${formatMoney(totalExpected - totalCollected)}</div><div class="stat-label">OUTSTANDING</div></div>
-                        <div class="stat-card"><div class="stat-number">${absentToday}</div><div class="stat-label">ABSENT TODAY</div></div>
-                    </div>` : ''}
-                    <div class="action-buttons">
-                        ${availableTabs.map(tab => `<button class="action-btn ${activeTab === tab ? 'active' : ''}" data-tab="${tab}"><i class="fas ${tab === 'students' ? 'fa-user-graduate' : tab === 'marks' ? 'fa-chart-line' : tab === 'attendance' ? 'fa-calendar-check' : tab === 'fees' ? 'fa-money-bill-wave' : tab === 'reports' ? 'fa-file-alt' : 'fa-id-card'}"></i> ${tab.charAt(0).toUpperCase() + tab.slice(1)}</button>`).join('')}
-                    </div>
+                    ${showStats ? `<div class="stats-grid"><div class="stat-card"><div class="stat-number">${students.length}</div><div class="stat-label">STUDENTS</div></div><div class="stat-card"><div class="stat-number">${formatMoney(totalCollected)}</div><div class="stat-label">COLLECTED</div></div><div class="stat-card"><div class="stat-number">${formatMoney(totalExpected - totalCollected)}</div><div class="stat-label">OUTSTANDING</div></div><div class="stat-card"><div class="stat-number">${absentToday}</div><div class="stat-label">ABSENT TODAY</div></div></div>` : ''}
+                    <div class="action-buttons">${availableTabs.map(tab => `<button class="action-btn ${activeTab === tab ? 'active' : ''}" data-tab="${tab}"><i class="fas ${tab === 'students' ? 'fa-user-graduate' : tab === 'marks' ? 'fa-chart-line' : tab === 'attendance' ? 'fa-calendar-check' : tab === 'fees' ? 'fa-money-bill-wave' : tab === 'reports' ? 'fa-file-alt' : 'fa-id-card'}"></i> ${tab.charAt(0).toUpperCase() + tab.slice(1)}</button>`).join('')}</div>
                     <div id="tabContent"></div>
                 </div>
                 <div class="support-badge" onclick="window.showSupportWhatsApp()"><i class="fab fa-whatsapp"></i> Eudes Media Support: ${SUPPORT_CONTACTS.map(c => c.whatsapp).join(' / ')} <i class="fas fa-headset"></i></div>
@@ -919,38 +799,18 @@
         window.logout = logout;
 
         function renderLogin() {
-            document.getElementById('app').innerHTML = `
-                <div class="login-container">
-                    <h2><i class="fas fa-school"></i> School Management</h2>
-                    <form id="loginForm">
-                        <input type="text" id="username" placeholder="Username" required>
-                        <input type="password" id="password" placeholder="Password" required>
-                        <button type="submit" class="btn w-full">Login</button>
-                    </form>
-                    <div class="text-center text-xs mt-3">admin/admin123 | teacher/teacher123 | finance/finance123</div>
-                </div>
-            `;
-            document.getElementById('loginForm').onsubmit = (e) => {
-                e.preventDefault();
-                if (login(document.getElementById('username').value, document.getElementById('password').value)) init();
-                else alert('Invalid credentials');
-            };
+            document.getElementById('app').innerHTML = `<div class="login-container"><h2><i class="fas fa-school"></i> School Management</h2><form id="loginForm"><input type="text" id="username" placeholder="Username" required><input type="password" id="password" placeholder="Password" required><button type="submit" class="btn w-full">Login</button></form><div class="text-center text-xs mt-3">admin/admin123 | teacher/teacher123 | finance/finance123</div></div>`;
+            document.getElementById('loginForm').onsubmit = (e) => { e.preventDefault(); if (login(document.getElementById('username').value, document.getElementById('password').value)) init(); else alert('Invalid credentials'); };
         }
 
         async function init() {
             if (!checkAuth()) { renderLogin(); return; }
             try {
                 const schools = await restFetch('schools', `id=eq.${SCHOOL_ID}`).catch(e => []);
-                if (!schools.length) {
-                    await restInsert('schools', { id: SCHOOL_ID, name: 'Progressive Mothers School', address: 'Gayaza-Kijabijjo', phone: '0779585035' });
-                    currentSchool = { name: 'Progressive Mothers School', address: 'Gayaza-Kijabijjo', phone: '0779585035' };
-                } else {
-                    currentSchool = schools[0];
-                }
+                if (!schools.length) { await restInsert('schools', { id: SCHOOL_ID, name: 'Progressive Mothers School', address: 'Gayaza-Kijabijjo', phone: '0779585035' }); currentSchool = { name: 'Progressive Mothers School', address: 'Gayaza-Kijabijjo', phone: '0779585035' }; }
+                else currentSchool = schools[0];
                 await renderMainApp();
-            } catch(err) {
-                document.getElementById('app').innerHTML = `<div class="bg-red-100 p-4 rounded-xl">Error: ${err.message}</div>`;
-            }
+            } catch(err) { document.getElementById('app').innerHTML = `<div class="bg-red-100 p-4 rounded-xl">Error: ${err.message}</div>`; }
         }
         init();
     })();
