@@ -87,7 +87,7 @@
         const CLASS_ORDER = ['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'];
 
         let currentSchool = null;
-        let students = [], marks = [], attendance = [], payments = [];
+        let students = [], marks = [], attendance = [], payments = [], transactions = [];
         let activeTab = 'students';
         let chart = null;
         let currentUser = null;
@@ -119,12 +119,12 @@
         function canManageAttendance() { return currentUser?.role === 'admin' || currentUser?.role === 'teacher'; }
         function canViewStats() { return currentUser?.role === 'admin'; }
 
-        // Generate 4-letter LIN
+        // Generate 4-letter LIN (only uppercase letters)
         function generateLIN() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
             let result = '';
             for (let i = 0; i < 4; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
+                result += letters.charAt(Math.floor(Math.random() * letters.length));
             }
             return result;
         }
@@ -211,15 +211,32 @@
             return res.json();
         }
         
-        async function restDelete(table, id) {
-            const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+        // Direct delete by filter (more robust for related records)
+        async function restDeleteFilter(table, filterColumn, filterValue) {
+            const url = `${SUPABASE_URL}/rest/v1/${table}?${filterColumn}=eq.${filterValue}`;
+            const res = await fetch(url, {
                 method: 'DELETE',
                 headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
             });
             if (!res.ok) {
                 const errText = await res.text();
-                throw new Error(`Delete failed: ${errText}`);
+                throw new Error(`Delete from ${table} failed: ${errText}`);
             }
+        }
+
+        // Cascade delete student and all foreign key dependencies
+        async function deleteStudentAndRelated(studentId) {
+            // Delete from tables that reference students (order matters)
+            // 1. transactions (foreign key to student)
+            await restDeleteFilter('transactions', 'student_id', studentId).catch(e => console.warn("Transactions delete:", e.message));
+            // 2. payments (likely has foreign key)
+            await restDeleteFilter('payments', 'student_id', studentId).catch(e => console.warn("Payments delete:", e.message));
+            // 3. marks
+            await restDeleteFilter('marks', 'student_id', studentId).catch(e => console.warn("Marks delete:", e.message));
+            // 4. attendance
+            await restDeleteFilter('attendance', 'student_id', studentId).catch(e => console.warn("Attendance delete:", e.message));
+            // 5. finally, delete student
+            await restDeleteFilter('students', 'id', studentId);
         }
 
         async function loadAll() {
@@ -229,6 +246,7 @@
                 marks = await restFetch('marks', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
                 attendance = await restFetch('attendance', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
                 payments = await restFetch('payments', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
+                transactions = await restFetch('transactions', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
             } catch(e) { console.error("Load error:", e); }
         }
 
@@ -258,7 +276,7 @@
             window.open(`https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
         }
 
-        // -------------------- STUDENTS TAB (WITH PHOTO UPLOAD) --------------------
+        // -------------------- STUDENTS TAB (FULL CRUD WITH PHOTO & CASCADE DELETE) --------------------
         async function renderStudents() {
             const container = document.getElementById('tabContent');
             const canEdit = canManageStudents();
@@ -321,7 +339,7 @@
                     <input id="newLastName" placeholder="Last Name *">
                     <input id="newAdm" placeholder="Admission Number (auto if blank)">
                     <select id="newClass">${CLASS_ORDER.map(c => `<option>${c}</option>`).join('')}</select>
-                    <input id="newLin" placeholder="LIN (4 letters, auto if blank)">
+                    <input id="newLin" placeholder="LIN (4 letters, auto if blank)" maxlength="4" style="text-transform:uppercase">
                     <input id="newParentWhatsapp" placeholder="Parent WhatsApp">
                     <input id="newParentName" placeholder="Parent Name">
                     <input id="newTotalFees" type="number" placeholder="Total Fees (UGX)">
@@ -335,7 +353,6 @@
             `;
             document.body.appendChild(modal);
             
-            // Preview photo
             const photoInput = document.getElementById('newPhoto');
             const previewDiv = document.getElementById('photoPreview');
             photoInput.onchange = (e) => {
@@ -351,6 +368,12 @@
                 }
             };
             
+            // Auto uppercase for LIN input
+            const linInput = document.getElementById('newLin');
+            linInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0,4);
+            });
+            
             document.getElementById('confirmAddStudent').onclick = async () => {
                 const first = document.getElementById('newFirstName').value.trim();
                 const last = document.getElementById('newLastName').value.trim();
@@ -359,7 +382,7 @@
                 const className = document.getElementById('newClass').value;
                 let lin = document.getElementById('newLin').value.trim().toUpperCase();
                 if (!lin) lin = generateLIN();
-                if (lin.length !== 4) return showToast("LIN must be exactly 4 characters", true);
+                if (!/^[A-Z]{4}$/.test(lin)) return showToast("LIN must be exactly 4 uppercase letters (A-Z)", true);
                 const parentWhatsapp = document.getElementById('newParentWhatsapp').value.trim();
                 const parentName = document.getElementById('newParentName').value.trim();
                 const totalFees = parseFloat(document.getElementById('newTotalFees').value) || 0;
@@ -428,7 +451,7 @@
                     <input id="editLastName" value="${escapeHtml(s.last_name)}">
                     <input id="editAdm" value="${escapeHtml(s.admission_number || '')}">
                     <select id="editClass">${CLASS_ORDER.map(c => `<option ${s.class === c ? 'selected' : ''}>${c}</option>`).join('')}</select>
-                    <input id="editLin" value="${escapeHtml(s.lin)}">
+                    <input id="editLin" value="${escapeHtml(s.lin)}" maxlength="4" style="text-transform:uppercase">
                     <input id="editParentWhatsapp" value="${escapeHtml(s.parent_whatsapp || '')}">
                     <input id="editParentName" value="${escapeHtml(s.parent_name || '')}">
                     <input id="editTotalFees" type="number" value="${s.total_fees || 0}">
@@ -457,17 +480,23 @@
                 }
             };
             
+            const linInput = document.getElementById('editLin');
+            linInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0,4);
+            });
+            
             document.getElementById('confirmEditStudent').onclick = async () => {
                 const updates = {
                     first_name: document.getElementById('editFirstName').value,
                     last_name: document.getElementById('editLastName').value,
                     admission_number: document.getElementById('editAdm').value,
                     class: document.getElementById('editClass').value,
-                    lin: document.getElementById('editLin').value,
+                    lin: document.getElementById('editLin').value.trim().toUpperCase(),
                     parent_whatsapp: document.getElementById('editParentWhatsapp').value,
                     parent_name: document.getElementById('editParentName').value,
                     total_fees: parseFloat(document.getElementById('editTotalFees').value) || 0
                 };
+                if (!/^[A-Z]{4}$/.test(updates.lin)) return showToast("LIN must be exactly 4 uppercase letters", true);
                 const photoFile = document.getElementById('editPhoto').files[0];
                 try {
                     if (photoFile) {
@@ -505,14 +534,17 @@
 
         window.deleteStudent = async (id) => {
             if (!canManageStudents()) return;
-            if (!confirm("Delete this student permanently?")) return;
+            const student = students.find(s => s.id === id);
+            if (!confirm(`Delete ${student.first_name} ${student.last_name} permanently? This will also delete all marks, attendance, payments, and transactions.`)) return;
             try {
-                await restDelete('students', id);
-                showToast("Student deleted");
+                showToast("Deleting student and all related data...");
+                await deleteStudentAndRelated(id);
+                showToast("Student and all related data deleted successfully");
                 await loadAll();
                 await renderStudentList();
             } catch(err) {
                 showToast(`Delete failed: ${err.message}`, true);
+                console.error(err);
             }
         };
 
@@ -612,7 +644,7 @@
                         const val = existing ? existing.score : '';
                         html += `<td class="p-2"><input type="number" class="mark-input" data-student="${s.id}" data-subject="${sub}" value="${val}" min="0" max="100"> <span class="text-xs">${existing ? existing.grade : ''}</span></td>`;
                     }
-                    html += `</tr>`;
+                    html += `<tr>`;
                 }
                 html += `</tbody></table>`;
                 document.getElementById('marksGrid').innerHTML = html;
@@ -689,7 +721,7 @@
                     }
                     summary += `<td class="p-2 text-center">${total}/400<br><small>Agg: ${agg}</small></td>`;
                 }
-                summary += `<tr><tr class="bg-gray-50"><td class="p-2 font-bold">Division</td>`;
+                summary += `</tr><tr class="bg-gray-50"><td class="p-2 font-bold">Division</td>`;
                 for (let ex of examsToShow) {
                     let agg = 0;
                     if (pointsList[ex]) {
