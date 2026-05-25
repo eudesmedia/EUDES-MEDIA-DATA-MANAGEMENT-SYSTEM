@@ -71,7 +71,7 @@
     </style>
 </head>
 <body>
-<div id="app"></div>
+<div id="app">Loading...</div>
 
 <script>
     (function(){
@@ -211,7 +211,6 @@
             return res.json();
         }
         
-        // Direct delete by filter (more robust for related records)
         async function restDeleteFilter(table, filterColumn, filterValue) {
             const url = `${SUPABASE_URL}/rest/v1/${table}?${filterColumn}=eq.${filterValue}`;
             const res = await fetch(url, {
@@ -224,18 +223,11 @@
             }
         }
 
-        // Cascade delete student and all foreign key dependencies
         async function deleteStudentAndRelated(studentId) {
-            // Delete from tables that reference students (order matters)
-            // 1. transactions (foreign key to student)
-            await restDeleteFilter('transactions', 'student_id', studentId).catch(e => console.warn("Transactions delete:", e.message));
-            // 2. payments (likely has foreign key)
-            await restDeleteFilter('payments', 'student_id', studentId).catch(e => console.warn("Payments delete:", e.message));
-            // 3. marks
-            await restDeleteFilter('marks', 'student_id', studentId).catch(e => console.warn("Marks delete:", e.message));
-            // 4. attendance
-            await restDeleteFilter('attendance', 'student_id', studentId).catch(e => console.warn("Attendance delete:", e.message));
-            // 5. finally, delete student
+            await restDeleteFilter('transactions', 'student_id', studentId).catch(e => console.warn(e));
+            await restDeleteFilter('payments', 'student_id', studentId).catch(e => console.warn(e));
+            await restDeleteFilter('marks', 'student_id', studentId).catch(e => console.warn(e));
+            await restDeleteFilter('attendance', 'student_id', studentId).catch(e => console.warn(e));
             await restDeleteFilter('students', 'id', studentId);
         }
 
@@ -276,7 +268,7 @@
             window.open(`https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
         }
 
-        // -------------------- STUDENTS TAB (FULL CRUD WITH PHOTO & CASCADE DELETE) --------------------
+        // -------------------- STUDENTS TAB --------------------
         async function renderStudents() {
             const container = document.getElementById('tabContent');
             const canEdit = canManageStudents();
@@ -368,7 +360,6 @@
                 }
             };
             
-            // Auto uppercase for LIN input
             const linInput = document.getElementById('newLin');
             linInput.addEventListener('input', (e) => {
                 e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0,4);
@@ -382,7 +373,7 @@
                 const className = document.getElementById('newClass').value;
                 let lin = document.getElementById('newLin').value.trim().toUpperCase();
                 if (!lin) lin = generateLIN();
-                if (!/^[A-Z]{4}$/.test(lin)) return showToast("LIN must be exactly 4 uppercase letters (A-Z)", true);
+                if (!/^[A-Z]{4}$/.test(lin)) return showToast("LIN must be exactly 4 uppercase letters", true);
                 const parentWhatsapp = document.getElementById('newParentWhatsapp').value.trim();
                 const parentName = document.getElementById('newParentName').value.trim();
                 const totalFees = parseFloat(document.getElementById('newTotalFees').value) || 0;
@@ -535,16 +526,15 @@
         window.deleteStudent = async (id) => {
             if (!canManageStudents()) return;
             const student = students.find(s => s.id === id);
-            if (!confirm(`Delete ${student.first_name} ${student.last_name} permanently? This will also delete all marks, attendance, payments, and transactions.`)) return;
+            if (!confirm(`Delete ${student.first_name} ${student.last_name} permanently? This will also delete all related records.`)) return;
             try {
                 showToast("Deleting student and all related data...");
                 await deleteStudentAndRelated(id);
-                showToast("Student and all related data deleted successfully");
+                showToast("Student deleted successfully");
                 await loadAll();
                 await renderStudentList();
             } catch(err) {
                 showToast(`Delete failed: ${err.message}`, true);
-                console.error(err);
             }
         };
 
@@ -555,7 +545,6 @@
             const balance = (s.total_fees || 0) - paid;
             const msg = `Dear Parent, fee balance for ${s.first_name} ${s.last_name} is ${formatMoney(balance)}. Please clear. - ${currentSchool.name}`;
             sendWhatsApp(s.parent_whatsapp, msg);
-            showToast(`Reminder sent to ${s.parent_whatsapp}`);
         };
 
         function exportStudentsToExcel() {
@@ -575,7 +564,7 @@
             XLSX.writeFile(wb, `students_${SCHOOL_ID}.xlsx`);
         }
 
-        // -------------------- MARKS TAB (FIXED SAVING) --------------------
+        // -------------------- MARKS TAB --------------------
         async function saveMark(markData) {
             const { student_id, subject, term, exam_type, school_id, score, grade } = markData;
             const existing = await restFetch('marks', 
@@ -644,7 +633,7 @@
                         const val = existing ? existing.score : '';
                         html += `<td class="p-2"><input type="number" class="mark-input" data-student="${s.id}" data-subject="${sub}" value="${val}" min="0" max="100"> <span class="text-xs">${existing ? existing.grade : ''}</span></td>`;
                     }
-                    html += `<tr>`;
+                    html += `</tr>`;
                 }
                 html += `</tbody></table>`;
                 document.getElementById('marksGrid').innerHTML = html;
@@ -664,21 +653,16 @@
                     const score = parseInt(raw);
                     if (isNaN(score) || score < 0 || score > 100) {
                         errors++;
-                        showToast(`Invalid score for ${subject} (0-100)`, true);
                         continue;
                     }
                     const grade = getGrade(score);
                     try {
                         await saveMark({ school_id: SCHOOL_ID, student_id: studentId, subject, score, grade, term, exam_type: examType });
                         success++;
-                    } catch(e) { 
-                        errors++;
-                        console.error(e);
-                        showToast(`Error saving ${subject}`, true);
-                    }
+                    } catch(e) { errors++; }
                 }
-                if (success) showToast(`✅ Saved ${success} marks successfully`);
-                if (errors) showToast(`⚠️ ${errors} marks failed`, true);
+                if (success) showToast(`Saved ${success} marks`);
+                if (errors) showToast(`${errors} errors`, true);
                 await loadAll();
                 await loadMarksGrid();
             };
@@ -721,7 +705,7 @@
                     }
                     summary += `<td class="p-2 text-center">${total}/400<br><small>Agg: ${agg}</small></td>`;
                 }
-                summary += `</tr><tr class="bg-gray-50"><td class="p-2 font-bold">Division</td>`;
+                summary += `</td><tr class="bg-gray-50"><td class="p-2 font-bold">Division</td>`;
                 for (let ex of examsToShow) {
                     let agg = 0;
                     if (pointsList[ex]) {
@@ -791,7 +775,7 @@
                 const date = document.getElementById('attDate').value;
                 const selectedClass = document.getElementById('attClass').value;
                 const selects = document.querySelectorAll('.att-status');
-                let success = 0, errors = 0;
+                let success = 0;
                 for (let sel of selects) {
                     const studentId = sel.dataset.student;
                     const status = sel.value;
@@ -803,12 +787,9 @@
                             await restInsert('attendance', { school_id: SCHOOL_ID, student_id: studentId, date, status, class: selectedClass });
                         }
                         success++;
-                    } catch(e) {
-                        errors++;
-                    }
+                    } catch(e) { console.warn(e); }
                 }
                 if (success) showToast(`Attendance saved for ${success} students`);
-                if (errors) showToast(`${errors} errors`, true);
                 await loadAll();
             };
         }
@@ -844,7 +825,7 @@
             const absentToday = attendance.filter(a => a.date === today && a.status === 'absent').length;
             const app = document.getElementById('app');
             if (!currentSchool) {
-                await restInsert('schools', { id: SCHOOL_ID, name: 'Progressive Mothers School', address: 'Gayaza-Kijabijjo', phone: '0779585035' });
+                await restInsert('schools', { id: SCHOOL_ID, name: 'Progressive Mothers School', address: 'Gayaza-Kijabijjo', phone: '0779585035' }).catch(e=>console.warn);
                 currentSchool = { name: 'Progressive Mothers School', address: 'Gayaza-Kijabijjo', phone: '0779585035' };
             }
             const availableTabs = getAvailableTabs();
@@ -908,6 +889,7 @@
         }
 
         async function init() {
+            console.log("Initializing...");
             if (!checkAuth()) { renderLogin(); return; }
             try {
                 const schools = await restFetch('schools', `id=eq.${SCHOOL_ID}`).catch(e => []);
@@ -919,6 +901,7 @@
                 }
                 await renderMainApp();
             } catch(err) {
+                console.error("Init error:", err);
                 document.getElementById('app').innerHTML = `<div class="bg-red-100 p-4 rounded-xl">Error: ${err.message}</div>`;
             }
         }
