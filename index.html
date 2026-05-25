@@ -68,10 +68,11 @@
         @keyframes fadeOut { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
         @media print { .support-badge, .role-badge, .logout-btn, .action-buttons, .global-search, .btn:not(.btn-print) { display: none !important; } }
         .photo-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-top: 8px; }
+        .loading { opacity: 0.6; pointer-events: none; }
     </style>
 </head>
 <body>
-<div id="app">Loading...</div>
+<div id="app"></div>
 
 <script>
     (function(){
@@ -119,30 +120,48 @@
         function canManageAttendance() { return currentUser?.role === 'admin' || currentUser?.role === 'teacher'; }
         function canViewStats() { return currentUser?.role === 'admin'; }
 
-        // Generate 4-letter LIN (only uppercase letters)
+        // Generate LIN: 3 uppercase letters + 4 digits (e.g., ABC1234)
         function generateLIN() {
             const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
             let result = '';
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < 3; i++) {
                 result += letters.charAt(Math.floor(Math.random() * letters.length));
+            }
+            for (let i = 0; i < 4; i++) {
+                result += Math.floor(Math.random() * 10);
             }
             return result;
         }
 
-        // -------------------- PHOTO UPLOAD --------------------
+        function isValidLIN(lin) {
+            return /^[A-Z]{3}[0-9]{4}$/.test(lin);
+        }
+
+        // -------------------- PHOTO UPLOAD WITH TIMEOUT AND ERROR HANDLING --------------------
         async function uploadPhoto(studentId, fileBlob) {
             const fileName = `student_${studentId}_${Date.now()}.jpg`;
             const url = `${SUPABASE_URL}/storage/v1/object/public/student_photos/${fileName}`;
-            const res = await fetch(url, {
+            console.log("Uploading to:", url);
+            
+            // Create a timeout promise
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error("Upload timeout after 15 seconds")), 15000);
+            });
+            
+            const uploadPromise = fetch(url, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': fileBlob.type },
                 body: fileBlob
             });
-            if (!res.ok) {
-                const err = await res.text();
-                throw new Error(`Upload failed: ${err}`);
+            
+            const response = await Promise.race([uploadPromise, timeoutPromise]);
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(`Upload failed (${response.status}): ${errText}`);
             }
-            return `${SUPABASE_URL}/storage/v1/object/public/student_photos/${fileName}`;
+            const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/student_photos/${fileName}`;
+            console.log("Upload success:", publicUrl);
+            return publicUrl;
         }
 
         function compressImage(file, callback) {
@@ -224,10 +243,10 @@
         }
 
         async function deleteStudentAndRelated(studentId) {
-            await restDeleteFilter('transactions', 'student_id', studentId).catch(e => console.warn(e));
-            await restDeleteFilter('payments', 'student_id', studentId).catch(e => console.warn(e));
-            await restDeleteFilter('marks', 'student_id', studentId).catch(e => console.warn(e));
-            await restDeleteFilter('attendance', 'student_id', studentId).catch(e => console.warn(e));
+            await restDeleteFilter('transactions', 'student_id', studentId).catch(e => console.warn("Transactions delete:", e.message));
+            await restDeleteFilter('payments', 'student_id', studentId).catch(e => console.warn("Payments delete:", e.message));
+            await restDeleteFilter('marks', 'student_id', studentId).catch(e => console.warn("Marks delete:", e.message));
+            await restDeleteFilter('attendance', 'student_id', studentId).catch(e => console.warn("Attendance delete:", e.message));
             await restDeleteFilter('students', 'id', studentId);
         }
 
@@ -331,7 +350,7 @@
                     <input id="newLastName" placeholder="Last Name *">
                     <input id="newAdm" placeholder="Admission Number (auto if blank)">
                     <select id="newClass">${CLASS_ORDER.map(c => `<option>${c}</option>`).join('')}</select>
-                    <input id="newLin" placeholder="LIN (4 letters, auto if blank)" maxlength="4" style="text-transform:uppercase">
+                    <input id="newLin" placeholder="LIN (3 letters + 4 digits, e.g., ABC1234)" maxlength="7" style="text-transform:uppercase">
                     <input id="newParentWhatsapp" placeholder="Parent WhatsApp">
                     <input id="newParentName" placeholder="Parent Name">
                     <input id="newTotalFees" type="number" placeholder="Total Fees (UGX)">
@@ -362,39 +381,44 @@
             
             const linInput = document.getElementById('newLin');
             linInput.addEventListener('input', (e) => {
-                e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0,4);
+                let val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if (val.length > 7) val = val.slice(0,7);
+                e.target.value = val;
             });
             
             document.getElementById('confirmAddStudent').onclick = async () => {
-                const first = document.getElementById('newFirstName').value.trim();
-                const last = document.getElementById('newLastName').value.trim();
-                if (!first || !last) return showToast("First and Last name required", true);
-                const admission = document.getElementById('newAdm').value.trim() || `ADM${Date.now()}`;
-                const className = document.getElementById('newClass').value;
-                let lin = document.getElementById('newLin').value.trim().toUpperCase();
-                if (!lin) lin = generateLIN();
-                if (!/^[A-Z]{4}$/.test(lin)) return showToast("LIN must be exactly 4 uppercase letters", true);
-                const parentWhatsapp = document.getElementById('newParentWhatsapp').value.trim();
-                const parentName = document.getElementById('newParentName').value.trim();
-                const totalFees = parseFloat(document.getElementById('newTotalFees').value) || 0;
-                const photoFile = document.getElementById('newPhoto').files[0];
-                
-                const studentId = crypto.randomUUID ? crypto.randomUUID() : `s_${Date.now()}`;
-                const studentData = {
-                    id: studentId,
-                    school_id: SCHOOL_ID,
-                    admission_number: admission,
-                    first_name: first,
-                    last_name: last,
-                    class: className,
-                    lin: lin,
-                    parent_whatsapp: parentWhatsapp,
-                    parent_name: parentName,
-                    total_fees: totalFees,
-                    fees_paid: 0
-                };
-                
+                const saveBtn = document.getElementById('confirmAddStudent');
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
                 try {
+                    const first = document.getElementById('newFirstName').value.trim();
+                    const last = document.getElementById('newLastName').value.trim();
+                    if (!first || !last) return showToast("First and Last name required", true);
+                    const admission = document.getElementById('newAdm').value.trim() || `ADM${Date.now()}`;
+                    const className = document.getElementById('newClass').value;
+                    let lin = document.getElementById('newLin').value.trim().toUpperCase();
+                    if (!lin) lin = generateLIN();
+                    if (!isValidLIN(lin)) return showToast("LIN must be exactly 3 letters + 4 digits (e.g., ABC1234)", true);
+                    const parentWhatsapp = document.getElementById('newParentWhatsapp').value.trim();
+                    const parentName = document.getElementById('newParentName').value.trim();
+                    const totalFees = parseFloat(document.getElementById('newTotalFees').value) || 0;
+                    const photoFile = document.getElementById('newPhoto').files[0];
+                    
+                    const studentId = crypto.randomUUID ? crypto.randomUUID() : `s_${Date.now()}`;
+                    const studentData = {
+                        id: studentId,
+                        school_id: SCHOOL_ID,
+                        admission_number: admission,
+                        first_name: first,
+                        last_name: last,
+                        class: className,
+                        lin: lin,
+                        parent_whatsapp: parentWhatsapp,
+                        parent_name: parentName,
+                        total_fees: totalFees,
+                        fees_paid: 0
+                    };
+                    
                     if (photoFile) {
                         showToast("Uploading photo...");
                         compressImage(photoFile, async (blob) => {
@@ -407,9 +431,9 @@
                                 await loadAll();
                                 await renderStudentList();
                             } catch(err) {
-                                showToast(`Photo upload failed: ${err.message}`, true);
+                                console.error("Photo upload error:", err);
+                                showToast(`Photo upload failed: ${err.message}. Student added without photo.`, true);
                                 await restInsert('students', studentData);
-                                showToast(`Student added without photo`);
                                 modal.remove();
                                 await loadAll();
                                 await renderStudentList();
@@ -424,6 +448,8 @@
                     }
                 } catch(err) {
                     showToast(`Error: ${err.message}`, true);
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = 'Save';
                 }
             };
         }
@@ -442,7 +468,7 @@
                     <input id="editLastName" value="${escapeHtml(s.last_name)}">
                     <input id="editAdm" value="${escapeHtml(s.admission_number || '')}">
                     <select id="editClass">${CLASS_ORDER.map(c => `<option ${s.class === c ? 'selected' : ''}>${c}</option>`).join('')}</select>
-                    <input id="editLin" value="${escapeHtml(s.lin)}" maxlength="4" style="text-transform:uppercase">
+                    <input id="editLin" value="${escapeHtml(s.lin)}" maxlength="7" style="text-transform:uppercase">
                     <input id="editParentWhatsapp" value="${escapeHtml(s.parent_whatsapp || '')}">
                     <input id="editParentName" value="${escapeHtml(s.parent_name || '')}">
                     <input id="editTotalFees" type="number" value="${s.total_fees || 0}">
@@ -473,23 +499,34 @@
             
             const linInput = document.getElementById('editLin');
             linInput.addEventListener('input', (e) => {
-                e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0,4);
+                let val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if (val.length > 7) val = val.slice(0,7);
+                e.target.value = val;
             });
             
             document.getElementById('confirmEditStudent').onclick = async () => {
-                const updates = {
-                    first_name: document.getElementById('editFirstName').value,
-                    last_name: document.getElementById('editLastName').value,
-                    admission_number: document.getElementById('editAdm').value,
-                    class: document.getElementById('editClass').value,
-                    lin: document.getElementById('editLin').value.trim().toUpperCase(),
-                    parent_whatsapp: document.getElementById('editParentWhatsapp').value,
-                    parent_name: document.getElementById('editParentName').value,
-                    total_fees: parseFloat(document.getElementById('editTotalFees').value) || 0
-                };
-                if (!/^[A-Z]{4}$/.test(updates.lin)) return showToast("LIN must be exactly 4 uppercase letters", true);
-                const photoFile = document.getElementById('editPhoto').files[0];
+                const updateBtn = document.getElementById('confirmEditStudent');
+                updateBtn.disabled = true;
+                updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
                 try {
+                    const updates = {
+                        first_name: document.getElementById('editFirstName').value,
+                        last_name: document.getElementById('editLastName').value,
+                        admission_number: document.getElementById('editAdm').value,
+                        class: document.getElementById('editClass').value,
+                        lin: document.getElementById('editLin').value.trim().toUpperCase(),
+                        parent_whatsapp: document.getElementById('editParentWhatsapp').value,
+                        parent_name: document.getElementById('editParentName').value,
+                        total_fees: parseFloat(document.getElementById('editTotalFees').value) || 0
+                    };
+                    if (!isValidLIN(updates.lin)) {
+                        showToast("LIN must be exactly 3 letters + 4 digits (e.g., ABC1234)", true);
+                        updateBtn.disabled = false;
+                        updateBtn.innerHTML = 'Update';
+                        return;
+                    }
+                    const photoFile = document.getElementById('editPhoto').files[0];
+                    
                     if (photoFile) {
                         showToast("Uploading new photo...");
                         compressImage(photoFile, async (blob) => {
@@ -502,9 +539,9 @@
                                 await loadAll();
                                 await renderStudentList();
                             } catch(err) {
-                                showToast(`Photo upload failed: ${err.message}`, true);
+                                console.error("Photo upload error:", err);
+                                showToast(`Photo upload failed: ${err.message}. Student updated without photo.`, true);
                                 await restUpdate('students', id, updates);
-                                showToast("Student updated without photo change");
                                 modal.remove();
                                 await loadAll();
                                 await renderStudentList();
@@ -519,6 +556,8 @@
                     }
                 } catch(err) {
                     showToast(`Update failed: ${err.message}`, true);
+                    updateBtn.disabled = false;
+                    updateBtn.innerHTML = 'Update';
                 }
             };
         };
@@ -526,15 +565,16 @@
         window.deleteStudent = async (id) => {
             if (!canManageStudents()) return;
             const student = students.find(s => s.id === id);
-            if (!confirm(`Delete ${student.first_name} ${student.last_name} permanently? This will also delete all related records.`)) return;
+            if (!confirm(`Delete ${student.first_name} ${student.last_name} permanently? This will delete all related data.`)) return;
             try {
                 showToast("Deleting student and all related data...");
                 await deleteStudentAndRelated(id);
-                showToast("Student deleted successfully");
+                showToast("Student and all related data deleted successfully");
                 await loadAll();
                 await renderStudentList();
             } catch(err) {
                 showToast(`Delete failed: ${err.message}`, true);
+                console.error(err);
             }
         };
 
@@ -545,6 +585,7 @@
             const balance = (s.total_fees || 0) - paid;
             const msg = `Dear Parent, fee balance for ${s.first_name} ${s.last_name} is ${formatMoney(balance)}. Please clear. - ${currentSchool.name}`;
             sendWhatsApp(s.parent_whatsapp, msg);
+            showToast(`Reminder sent to ${s.parent_whatsapp}`);
         };
 
         function exportStudentsToExcel() {
@@ -635,7 +676,7 @@
                     }
                     html += `</tr>`;
                 }
-                html += `</tbody></table>`;
+                html += `</tbody><tr>`;
                 document.getElementById('marksGrid').innerHTML = html;
             };
 
@@ -653,16 +694,21 @@
                     const score = parseInt(raw);
                     if (isNaN(score) || score < 0 || score > 100) {
                         errors++;
+                        showToast(`Invalid score for ${subject} (0-100)`, true);
                         continue;
                     }
                     const grade = getGrade(score);
                     try {
                         await saveMark({ school_id: SCHOOL_ID, student_id: studentId, subject, score, grade, term, exam_type: examType });
                         success++;
-                    } catch(e) { errors++; }
+                    } catch(e) { 
+                        errors++;
+                        console.error(e);
+                        showToast(`Error saving ${subject}`, true);
+                    }
                 }
-                if (success) showToast(`Saved ${success} marks`);
-                if (errors) showToast(`${errors} errors`, true);
+                if (success) showToast(`✅ Saved ${success} marks successfully`);
+                if (errors) showToast(`⚠️ ${errors} marks failed`, true);
                 await loadAll();
                 await loadMarksGrid();
             };
@@ -705,7 +751,7 @@
                     }
                     summary += `<td class="p-2 text-center">${total}/400<br><small>Agg: ${agg}</small></td>`;
                 }
-                summary += `</td><tr class="bg-gray-50"><td class="p-2 font-bold">Division</td>`;
+                summary += `<tr><tr class="bg-gray-50"><td class="p-2 font-bold">Division</td>`;
                 for (let ex of examsToShow) {
                     let agg = 0;
                     if (pointsList[ex]) {
@@ -775,7 +821,7 @@
                 const date = document.getElementById('attDate').value;
                 const selectedClass = document.getElementById('attClass').value;
                 const selects = document.querySelectorAll('.att-status');
-                let success = 0;
+                let success = 0, errors = 0;
                 for (let sel of selects) {
                     const studentId = sel.dataset.student;
                     const status = sel.value;
@@ -787,14 +833,17 @@
                             await restInsert('attendance', { school_id: SCHOOL_ID, student_id: studentId, date, status, class: selectedClass });
                         }
                         success++;
-                    } catch(e) { console.warn(e); }
+                    } catch(e) {
+                        errors++;
+                    }
                 }
                 if (success) showToast(`Attendance saved for ${success} students`);
+                if (errors) showToast(`${errors} errors`, true);
                 await loadAll();
             };
         }
 
-        // Stubs for other tabs
+        // Stubs
         async function renderFees() { document.getElementById('tabContent').innerHTML = '<div class="bg-white p-4 rounded-xl text-center">Fee management: Add payments from student list.</div>'; }
         async function renderReports() {
             const container = document.getElementById('tabContent');
@@ -825,7 +874,7 @@
             const absentToday = attendance.filter(a => a.date === today && a.status === 'absent').length;
             const app = document.getElementById('app');
             if (!currentSchool) {
-                await restInsert('schools', { id: SCHOOL_ID, name: 'Progressive Mothers School', address: 'Gayaza-Kijabijjo', phone: '0779585035' }).catch(e=>console.warn);
+                await restInsert('schools', { id: SCHOOL_ID, name: 'Progressive Mothers School', address: 'Gayaza-Kijabijjo', phone: '0779585035' });
                 currentSchool = { name: 'Progressive Mothers School', address: 'Gayaza-Kijabijjo', phone: '0779585035' };
             }
             const availableTabs = getAvailableTabs();
@@ -889,7 +938,6 @@
         }
 
         async function init() {
-            console.log("Initializing...");
             if (!checkAuth()) { renderLogin(); return; }
             try {
                 const schools = await restFetch('schools', `id=eq.${SCHOOL_ID}`).catch(e => []);
@@ -901,7 +949,6 @@
                 }
                 await renderMainApp();
             } catch(err) {
-                console.error("Init error:", err);
                 document.getElementById('app').innerHTML = `<div class="bg-red-100 p-4 rounded-xl">Error: ${err.message}</div>`;
             }
         }
