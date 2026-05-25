@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>PROGRESSIVE MOTHERS | School Management</title>
+    <title>PROGRESSIVE MOTHERS | Complete School Management</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
@@ -12,57 +12,77 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background: #f0f4f8; padding: 20px; }
         .app-container { max-width: 1400px; margin: 0 auto; }
-        /* Header */
         .school-header { background: #003366; color: white; border-radius: 24px; padding: 20px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .school-name { font-size: 1.6rem; font-weight: 800; }
         .school-address { font-size: 0.85rem; opacity: 0.8; margin-top: 4px; }
         .datetime-row { display: flex; justify-content: space-between; margin-top: 12px; background: rgba(255,255,255,0.15); padding: 8px 16px; border-radius: 40px; font-size: 0.75rem; }
-        /* Stats cards */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
         .stat-card { background: white; border-radius: 24px; padding: 16px; text-align: center; border-top: 4px solid #D4A017; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.2s; }
         .stat-card:hover { transform: translateY(-3px); }
         .stat-number { font-size: 28px; font-weight: 800; color: #003366; }
         .stat-label { font-size: 12px; color: #5a6874; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
-        /* Tabs */
         .action-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
-        .action-btn { background: white; border: none; padding: 10px 20px; border-radius: 40px; font-weight: 600; color: #003366; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
+        .action-btn { background: white; border: none; padding: 10px 20px; border-radius: 40px; font-weight: 600; color: #003366; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .action-btn.active { background: #003366; color: white; }
-        /* Content area */
         .tab-content { display: none; animation: fadeIn 0.3s ease; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        /* Tables */
         .data-table { background: white; border-radius: 24px; overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #edf2f7; }
         th { background: #f8fafc; font-weight: 700; color: #1e293b; }
-        /* Buttons */
         .btn { background: #003366; color: white; padding: 8px 16px; border: none; border-radius: 40px; cursor: pointer; font-weight: 500; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .btn-gold { background: #D4A017; color: #003366; }
         .btn-sm { padding: 4px 12px; font-size: 12px; }
         .btn-danger { background: #dc2626; }
-        /* Modals */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
-        .modal-content { background: white; border-radius: 32px; padding: 24px; max-width: 600px; width: 90%; max-height: 85vh; overflow-y: auto; }
-        /* Forms */
-        input, select { width: 100%; padding: 10px 12px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 16px; }
-        .flex-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .modal-content { background: white; border-radius: 32px; padding: 24px; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; }
+        input, select, textarea { width: 100%; padding: 10px 12px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 16px; }
         .search-bar { background: white; border: 1px solid #e2e8f0; border-radius: 60px; padding: 6px 16px; display: inline-flex; align-items: center; gap: 8px; }
         .search-bar input { border: none; outline: none; background: transparent; width: 200px; }
-        .toast { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 10px 20px; border-radius: 40px; z-index: 2000; animation: slideIn 0.3s; }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 10px 20px; border-radius: 40px; z-index: 2000; animation: slideIn 0.3s; z-index: 10000; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .student-photo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .student-photo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #eef2ff; display: flex; align-items: center; justify-content: center; }
         .debt { color: #dc2626; font-weight: 600; }
-        .id-card { border: 2px solid #003366; border-radius: 12px; padding: 10px; max-width: 300px; margin: 0 auto; }
-        .id-card-header { background: #003366; color: white; text-align: center; padding: 5px; border-radius: 8px 8px 0 0; margin: -10px -10px 10px -10px; }
-        .report-card { max-width: 800px; margin: 0 auto; background: white; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .id-card { border: 2px solid #003366; border-radius: 12px; padding: 10px; max-width: 300px; margin: 0 auto; background: white; }
+        .id-card-header { background: #003366; color: white; text-align: center; padding: 8px; border-radius: 8px 8px 0 0; margin: -10px -10px 10px -10px; font-weight: bold; }
+        .report-card { max-width: 1000px; margin: 0 auto; background: white; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow-x: auto; }
         .report-header { text-align: center; border-bottom: 2px solid #003366; padding-bottom: 10px; margin-bottom: 20px; }
         .report-header h2 { color: #003366; font-size: 1.6rem; }
-        @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2,1fr); } th, td { font-size: 12px; padding: 8px; } .action-btn { padding: 6px 12px; font-size: 12px; } }
+        .mark-input { width: 70px; padding: 6px; border-radius: 12px; text-align: center; }
+        .flex { display: flex; }
+        .justify-between { justify-content: space-between; }
+        .items-center { align-items: center; }
+        .gap-2 { gap: 8px; }
+        .gap-3 { gap: 12px; }
+        .mb-3 { margin-bottom: 12px; }
+        .mb-4 { margin-bottom: 16px; }
+        .mt-3 { margin-top: 12px; }
+        .mt-4 { margin-top: 16px; }
+        .p-2 { padding: 8px; }
+        .p-4 { padding: 16px; }
+        .shadow { box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .rounded-xl { border-radius: 16px; }
+        .bg-white { background: white; }
+        .text-center { text-align: center; }
+        .text-xl { font-size: 1.25rem; }
+        .font-bold { font-weight: 700; }
+        .grid { display: grid; }
+        .grid-cols-1 { grid-template-columns: 1fr; }
+        .md\:grid-cols-3 { grid-template-columns: repeat(3,1fr); }
+        .cursor-pointer { cursor: pointer; }
+        .w-full { width: 100%; }
+        .border { border: 1px solid #e2e8f0; }
+        .border-t { border-top: 1px solid #e2e8f0; }
+        .pt-2 { padding-top: 8px; }
+        .space-y-2 > * + * { margin-top: 8px; }
+        .text-red-600 { color: #dc2626; }
+        .whatsapp-btn { background: #25D366; color: white; }
+        .absent-section { background: #fff5f5; border-left: 4px solid #dc2626; padding: 12px; margin-top: 20px; border-radius: 16px; }
     </style>
 </head>
 <body>
-<div id="app"><div style="text-align:center; padding:50px;">Loading system...</div></div>
+<div id="app"><div style="text-align:center; padding:50px;"><i class="fas fa-spinner fa-pulse"></i> Loading system...</div></div>
 
 <script>
     (function() {
@@ -74,8 +94,14 @@
         const TERMS = ['Term I', 'Term II', 'Term III'];
         const EXAM_TYPES = ['Beginning of Term', 'Mid Term', 'End of Term'];
         const CORE_SUBJECTS = ['English', 'Science', 'Social Studies', 'Mathematics'];
+        const CLASS_ORDER = ['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'];
 
-        // Pure fetch helpers
+        let currentSchool = null;
+        let students = [], marks = [], attendance = [], payments = [], transactions = [], branches = [], feeStructures = [], expenses = [];
+        let activeTab = 'students';
+        let chart = null;
+
+        // ==================== HELPERS ====================
         async function restFetch(table, query = '') {
             const url = `${SUPABASE_URL}/rest/v1/${table}?select=*${query ? `&${query}` : ''}`;
             const res = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
@@ -122,10 +148,9 @@
             return {};
         }
 
-        // Storage helpers
         async function uploadPhoto(studentId, fileBlob) {
             const fileName = `student_${studentId}_${Date.now()}.jpg`;
-            const url = `${SUPABASE_URL}/storage/v1/object/student_photos/${fileName}`;
+            const url = `${SUPABASE_URL}/storage/v1/object/public/student_photos/${fileName}`;
             const res = await fetch(url, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': fileBlob.type },
@@ -134,6 +159,7 @@
             if (!res.ok) throw new Error(await res.text());
             return `${SUPABASE_URL}/storage/v1/object/public/student_photos/${fileName}`;
         }
+
         function compressImage(file, callback) {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -154,7 +180,6 @@
             reader.readAsDataURL(file);
         }
 
-        // UNEB Grading
         function getGrade(score) {
             if (score >= 90) return 'D1'; if (score >= 80) return 'D2'; if (score >= 70) return 'C3';
             if (score >= 60) return 'C4'; if (score >= 50) return 'C5'; if (score >= 40) return 'C6';
@@ -166,13 +191,20 @@
             if (agg <= 29) return 'Division 3'; if (agg <= 34) return 'Division 4'; return 'Division U';
         }
         function formatMoney(amt) { return 'UGX ' + (amt || 0).toLocaleString(); }
-        function escapeHtml(str) { return str ? str.replace(/[&<>]/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;' })[m]) : ''; }
-        function showToast(msg) { let t = document.createElement('div'); t.className = 'toast'; t.innerText = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); }
-
-        let currentSchool = null;
-        let students = [], marks = [], attendance = [], payments = [], transactions = [], branches = [], feeStructures = [], expenses = [];
-        let activeTab = 'students';
-        let chart = null;
+        function escapeHtml(str) { return str ? String(str).replace(/[&<>]/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;' })[m]) : ''; }
+        function showToast(msg, isError = false) { 
+            let t = document.createElement('div'); 
+            t.className = 'toast'; 
+            t.style.background = isError ? '#dc2626' : '#10b981';
+            t.innerText = msg; 
+            document.body.appendChild(t); 
+            setTimeout(() => t.remove(), 3000); 
+        }
+        function sendWhatsApp(phone, message) {
+            if (!phone) return alert('No phone number available');
+            const url = `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
+            window.open(url, '_blank');
+        }
 
         async function loadAll() {
             if (!currentSchool) return;
@@ -186,86 +218,152 @@
             expenses = await restFetch('expenses', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
         }
 
-        async function render() {
+        async function refreshAllAndRender() {
             await loadAll();
-            const now = new Date();
-            const totalCollected = payments.reduce((s,p)=>s+p.amount,0);
-            const totalExpected = students.reduce((s,st)=>s+(st.total_fees||0),0);
-            const today = new Date().toISOString().slice(0,10);
-            const absentToday = attendance.filter(a => a.date === today && a.status === 'absent').length;
-
-            const app = document.getElementById('app');
-            app.innerHTML = `
-                <div class="app-container">
-                    <div class="school-header">
-                        <div class="school-name">${escapeHtml(currentSchool.name)}</div>
-                        <div class="school-address">${escapeHtml(currentSchool.address || 'GAYAZA-KIJABIJJO')} | 📞 ${currentSchool.phone || '0779585035,0756585035'}</div>
-                        <div class="datetime-row"><span>📅 ${now.toLocaleDateString('en-US', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}</span><span>⏰ ${now.toLocaleTimeString()}</span><span>📖 Lesson Period 1 08:30 - 10:30</span></div>
-                    </div>
-                    <div class="stats-grid">
-                        <div class="stat-card"><div class="stat-number">${students.length}</div><div class="stat-label">STUDENTS</div></div>
-                        <div class="stat-card"><div class="stat-number">${formatMoney(totalCollected)}</div><div class="stat-label">COLLECTED</div></div>
-                        <div class="stat-card"><div class="stat-number">${formatMoney(totalExpected-totalCollected)}</div><div class="stat-label">OUTSTANDING</div></div>
-                        <div class="stat-card"><div class="stat-number">${absentToday}</div><div class="stat-label">ABSENT TODAY</div></div>
-                    </div>
-                    <div class="action-buttons">
-                        <button class="action-btn ${activeTab === 'students' ? 'active' : ''}" data-tab="students"><i class="fas fa-user-graduate"></i> Students</button>
-                        <button class="action-btn ${activeTab === 'attendance' ? 'active' : ''}" data-tab="attendance"><i class="fas fa-calendar-check"></i> Attendance</button>
-                        <button class="action-btn ${activeTab === 'marks' ? 'active' : ''}" data-tab="marks"><i class="fas fa-chart-line"></i> Academics</button>
-                        <button class="action-btn ${activeTab === 'fees' ? 'active' : ''}" data-tab="fees"><i class="fas fa-money-bill-wave"></i> Fees</button>
-                        <button class="action-btn ${activeTab === 'reports' ? 'active' : ''}" data-tab="reports"><i class="fas fa-file-alt"></i> Reports</button>
-                        <button class="action-btn ${activeTab === 'idcards' ? 'active' : ''}" data-tab="idcards"><i class="fas fa-id-card"></i> ID Cards</button>
-                        <button class="action-btn ${activeTab === 'branches' ? 'active' : ''}" data-tab="branches"><i class="fas fa-building"></i> Branches</button>
-                        <button class="action-btn ${activeTab === 'fee_structure' ? 'active' : ''}" data-tab="fee_structure"><i class="fas fa-cog"></i> Fee Structure</button>
-                    </div>
-                    <div id="tabContent"></div>
-                </div>
-            `;
-            document.querySelectorAll('.action-btn').forEach(btn => {
-                btn.onclick = () => {
-                    activeTab = btn.dataset.tab;
-                    render();
-                };
-            });
-            if (activeTab === 'students') renderStudents();
-            else if (activeTab === 'attendance') renderAttendance();
-            else if (activeTab === 'marks') renderMarks();
-            else if (activeTab === 'fees') renderFees();
-            else if (activeTab === 'reports') renderReports();
-            else if (activeTab === 'idcards') renderIdCards();
-            else if (activeTab === 'branches') renderBranches();
-            else if (activeTab === 'fee_structure') renderFeeStructure();
+            await render();
         }
 
-        // ========== STUDENTS ==========
-        function renderStudents() {
+        // ==================== ABSENTEE SECTION ====================
+        async function renderAbsentees() {
+            const today = document.getElementById('attDate')?.value || new Date().toISOString().slice(0,10);
+            const absentRecords = attendance.filter(a => a.date === today && a.status === 'absent');
+            const absentStudents = absentRecords.map(rec => students.find(s => s.id === rec.student_id)).filter(s => s);
+            if (absentStudents.length === 0) return '<div class="p-4 text-gray-500 text-center">✅ No absent students on this date.</div>';
+            let html = '<div class="absent-section"><h4 class="font-bold mb-3"><i class="fas fa-user-slash"></i> Absent Students Today</h4><div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Name</th><th>Class</th><th>Parent WhatsApp</th><th>Action</th></tr></thead><tbody>';
+            for (let s of absentStudents) {
+                html += `<tr><td class="p-2">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</td>
+                         <td class="p-2">${escapeHtml(s.class)}</td>
+                         <td class="p-2">${escapeHtml(s.parent_whatsapp || 'N/A')}</td>
+                         <td class="p-2"><button class="btn-sm whatsapp-btn" onclick="window.notifyAbsent('${s.id}')"><i class="fab fa-whatsapp"></i> Notify</button></td>
+                         </tr>`;
+            }
+            html += '</tbody></table></div><button class="btn whatsapp-btn mt-3" onclick="window.notifyAllAbsent()"><i class="fab fa-whatsapp"></i> Notify All Absent Parents</button></div>';
+            return html;
+        }
+
+        window.notifyAbsent = (studentId) => {
+            const student = students.find(s => s.id === studentId);
+            if (!student || !student.parent_whatsapp) return alert('No parent WhatsApp number');
+            const today = new Date().toISOString().slice(0,10);
+            const msg = `Dear Parent, ${student.first_name} ${student.last_name} was absent from school today (${today}). Please ensure regular attendance. - ${currentSchool.name}`;
+            sendWhatsApp(student.parent_whatsapp, msg);
+        };
+        window.notifyAllAbsent = () => {
+            const today = document.getElementById('attDate')?.value || new Date().toISOString().slice(0,10);
+            const absentRecords = attendance.filter(a => a.date === today && a.status === 'absent');
+            const absentStudents = absentRecords.map(rec => students.find(s => s.id === rec.student_id)).filter(s => s && s.parent_whatsapp);
+            if (!absentStudents.length) return showToast('No absent students with WhatsApp numbers', true);
+            absentStudents.forEach(s => {
+                const msg = `Dear Parent, ${s.first_name} ${s.last_name} was absent from school today (${today}). Please ensure regular attendance. - ${currentSchool.name}`;
+                sendWhatsApp(s.parent_whatsapp, msg);
+            });
+            showToast(`Notified ${absentStudents.length} parents via WhatsApp`);
+        };
+
+        // ==================== PROMOTION ====================
+        window.promoteStudents = async () => {
+            if (!confirm('Promote all students to next class? This will update their class level.')) return;
+            const nextClassMap = {};
+            for (let i = 0; i < CLASS_ORDER.length - 1; i++) nextClassMap[CLASS_ORDER[i]] = CLASS_ORDER[i+1];
+            for (let student of students) {
+                const current = student.class;
+                if (nextClassMap[current]) {
+                    await restUpdate('students', student.id, { class: nextClassMap[current] });
+                }
+            }
+            showToast('Students promoted to next class');
+            await refreshAllAndRender();
+        };
+
+        // ==================== CUMULATIVE REPORT ====================
+        async function generateCumulativeReport(studentId, selectedTerm, selectedExam) {
+            const student = students.find(s => s.id === studentId);
+            if (!student) return null;
+            let examTypesToShow = [];
+            if (selectedExam === 'Beginning of Term') examTypesToShow = ['Beginning of Term'];
+            else if (selectedExam === 'Mid Term') examTypesToShow = ['Beginning of Term', 'Mid Term'];
+            else examTypesToShow = ['Beginning of Term', 'Mid Term', 'End of Term'];
+            
+            const allMarks = marks.filter(m => m.student_id === studentId && m.term === selectedTerm);
+            const marksBySubject = {};
+            for (let sub of CORE_SUBJECTS) {
+                marksBySubject[sub] = {};
+                for (let exam of examTypesToShow) {
+                    const m = allMarks.find(m => m.subject === sub && m.exam_type === exam);
+                    marksBySubject[sub][exam] = m ? { score: m.score, grade: m.grade, points: gradePoints(m.grade) } : null;
+                }
+            }
+            let examTotals = {};
+            let examPoints = {};
+            for (let exam of examTypesToShow) {
+                let totalScore = 0, pointsList = [];
+                for (let sub of CORE_SUBJECTS) {
+                    const data = marksBySubject[sub][exam];
+                    if (data) {
+                        totalScore += data.score;
+                        pointsList.push(data.points);
+                    }
+                }
+                examTotals[exam] = totalScore;
+                pointsList.sort((a,b)=>a-b);
+                const aggregate = pointsList.slice(0,8).reduce((s,p)=>s+p,0);
+                examPoints[exam] = { aggregate, division: getDivision(aggregate) };
+            }
+            const photoHtml = student.photo_url ? `<img src="${student.photo_url}" style="width:80px;height:80px;border-radius:50%;">` : '<div style="width:80px;height:80px;background:#eef2ff;border-radius:50%;display:flex;align-items:center;justify-content:center;">📷</div>';
+            let tableRows = '';
+            for (let sub of CORE_SUBJECTS) {
+                tableRows += `<tr><td class="p-2 font-bold">${sub}</td>`;
+                for (let exam of examTypesToShow) {
+                    const data = marksBySubject[sub][exam];
+                    const score = data ? data.score : '-';
+                    const grade = data ? data.grade : '-';
+                    tableRows += `<td class="p-2 text-center">${score}<br><small>${grade}</small></td>`;
+                }
+                tableRows += `</tr>`;
+            }
+            let summaryRow = `<tr class="bg-gray-100"><td class="p-2 font-bold">Total / Aggregate</td>`;
+            for (let exam of examTypesToShow) {
+                const total = examTotals[exam] || 0;
+                const agg = examPoints[exam]?.aggregate || 0;
+                summaryRow += `<td class="p-2 text-center">${total}/400<br><small>Agg: ${agg}</small></td>`;
+            }
+            summaryRow += `</tr><tr class="bg-gray-50"><td class="p-2 font-bold">Division</td>`;
+            for (let exam of examTypesToShow) {
+                summaryRow += `<td class="p-2 text-center">${examPoints[exam]?.division || '-'}</td>`;
+            }
+            summaryRow += `</tr>`;
+            return { student, photoHtml, examTypesToShow, tableRows, summaryRow };
+        }
+
+        // ==================== RENDER FUNCTIONS ====================
+        async function renderStudents() {
             const container = document.getElementById('tabContent');
             container.innerHTML = `
                 <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
                     <div class="flex gap-2">
-                        <button class="btn" onclick="showAddStudentModal()"><i class="fas fa-plus"></i> Add Student</button>
-                        <button class="btn btn-gold" onclick="exportStudentsExcel()"><i class="fas fa-download"></i> Export</button>
+                        <button class="btn" onclick="window.showAddStudentModal()"><i class="fas fa-plus"></i> Add Student</button>
+                        <button class="btn btn-gold" onclick="window.exportStudentsExcel()"><i class="fas fa-download"></i> Export</button>
                         <label class="btn btn-gold cursor-pointer"><i class="fas fa-upload"></i> Import <input type="file" id="importExcel" accept=".xlsx,.xls,.csv" style="display:none"></label>
                     </div>
                     <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="studentSearch" placeholder="Search..."></div>
                 </div>
                 <div class="data-table" id="studentsTable"></div>
             `;
-            document.getElementById('importExcel').onchange = e => importStudentsExcel(e.target.files[0]);
+            document.getElementById('importExcel').onchange = e => window.importStudentsExcel(e.target.files[0]);
             document.getElementById('studentSearch').addEventListener('input', () => renderStudentList());
-            renderStudentList();
+            await renderStudentList();
         }
 
         async function renderStudentList() {
             const search = document.getElementById('studentSearch')?.value.toLowerCase() || '';
             let filtered = students.filter(s => (s.first_name+' '+s.last_name).toLowerCase().includes(search) || (s.admission_number||'').includes(search));
             const container = document.getElementById('studentsTable');
-            if (!filtered.length) { container.innerHTML = '<p class="text-center py-8 text-gray-500">No students found</p>'; return; }
-            let html = '<table><thead><tr><th>Photo</th><th>Adm No</th><th>Name</th><th>Class</th><th>LIN</th><th>Parent WhatsApp</th><th>Total Fees</th><th>Paid</th><th>Balance</th><th>Actions</th></tr></thead><tbody>';
+            if (!filtered.length) { container.innerHTML = '<div class="p-6 text-center">No students found</div>'; return; }
+            let html = '<table class="w-full"><thead><tr><th>Photo</th><th>Adm No</th><th>Name</th><th>Class</th><th>LIN</th><th>Parent WhatsApp</th><th>Total Fees</th><th>Paid</th><th>Balance</th><th>Actions</th></tr></thead><tbody>';
             for (let s of filtered) {
                 const paid = payments.filter(p => p.student_id === s.id).reduce((a,b)=>a+b.amount,0);
-                const bal = (s.total_fees||0) - paid;
-                const photo = s.photo_url ? `<img src="${s.photo_url}" class="student-photo">` : '<i class="fas fa-user-circle fa-2x"></i>';
+                const bal = (s.total_fees||0)-paid;
+                const photo = s.photo_url ? `<img src="${s.photo_url}" class="student-photo" style="width:40px;height:40px;">` : '<i class="fas fa-user-circle fa-2x"></i>';
                 html += `<tr>
                     <td class="p-2">${photo}</td>
                     <td class="p-2">${escapeHtml(s.admission_number)}</td>
@@ -277,25 +375,21 @@
                     <td class="p-2">${formatMoney(paid)}</td>
                     <td class="p-2 ${bal>0?'debt':''}">${formatMoney(bal)}</td>
                     <td class="p-2">
-                        <button class="btn-sm" onclick="editStudent('${s.id}')"><i class="fas fa-edit"></i></button>
-                        <button class="btn-sm text-red-600" onclick="deleteStudent('${s.id}')"><i class="fas fa-trash"></i></button>
-                        <button class="btn-sm" onclick="showFeeModal('${s.id}')"><i class="fas fa-money-bill-wave"></i></button>
-                     </td>
-                 </tr>`;
+                        <button class="btn-sm" onclick="window.editStudent('${s.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn-sm text-red-600" onclick="window.deleteStudent('${s.id}')"><i class="fas fa-trash"></i></button>
+                        <button class="btn-sm" onclick="window.showFeeModal('${s.id}')"><i class="fas fa-money-bill-wave"></i></button>
+                    </td>
+                </tr>`;
             }
-            html += '</tbody><table>';
+            html += '</tbody></table>';
             container.innerHTML = html;
         }
 
-        function exportStudentsExcel() {
-            const ws = XLSX.utils.json_to_sheet(students.map(s => ({
-                'Admission Number': s.admission_number, 'First Name': s.first_name, 'Last Name': s.last_name,
-                'Class': s.class, 'LIN': s.lin, 'Parent WhatsApp': s.parent_whatsapp,
-                'Total Fees (UGX)': s.total_fees, 'Address': s.address
-            })));
+        window.exportStudentsExcel = () => {
+            const ws = XLSX.utils.json_to_sheet(students.map(s => ({ 'Admission Number': s.admission_number, 'First Name': s.first_name, 'Last Name': s.last_name, 'Class': s.class, 'LIN': s.lin, 'Parent WhatsApp': s.parent_whatsapp, 'Total Fees': s.total_fees })));
             const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Students'); XLSX.writeFile(wb, `students_${SCHOOL_ID}.xlsx`);
-        }
-        async function importStudentsExcel(file) {
+        };
+        window.importStudentsExcel = async (file) => {
             const reader = new FileReader();
             reader.onload = async (e) => {
                 const data = new Uint8Array(e.target.result);
@@ -306,508 +400,243 @@
                     const first = row['First Name'] || row['firstName'];
                     const last = row['Last Name'] || row['lastName'];
                     if (!first || !last) continue;
-                    const lin = row['LIN'] || `PM${(first.slice(0,2)+last.slice(0,2)).toUpperCase()}${Math.floor(1000+Math.random()*9000)}`;
-                    await restInsert('students', {
-                        school_id: SCHOOL_ID,
-                        admission_number: row['Admission Number'] || `PM${Math.floor(Math.random()*1000)}`,
-                        first_name: first, last_name: last,
-                        class: row['Class'] || '',
-                        parent_whatsapp: row['Parent WhatsApp'] || '',
-                        total_fees: parseFloat(row['Total Fees (UGX)']) || 0,
-                        address: row['Address'] || '',
-                        lin: lin
-                    });
+                    const lin = row['LIN'] || `PM${Math.random().toString(36).substring(2,6).toUpperCase()}`;
+                    await restInsert('students', { school_id: SCHOOL_ID, admission_number: row['Admission Number'] || `PM${Date.now()}`, first_name: first, last_name: last, class: row['Class'] || '', parent_whatsapp: row['Parent WhatsApp'] || '', total_fees: parseFloat(row['Total Fees']) || 0, lin: lin, fees_paid: 0 });
                 }
                 showToast('Imported');
-                await loadAll(); renderStudentList();
+                await refreshAllAndRender();
             };
             reader.readAsArrayBuffer(file);
-        }
-
+        };
         window.showAddStudentModal = () => {
             const modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <h3 class="text-xl font-bold mb-3">Add Student</h3>
-                    <input id="newFirstName" placeholder="First Name *">
-                    <input id="newLastName" placeholder="Last Name *">
-                    <input id="newAdm" placeholder="Admission Number (auto)">
-                    <select id="newClass">${['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'].map(c=>`<option>${c}</option>`).join('')}</select>
-                    <input id="newParent" placeholder="Parent WhatsApp">
-                    <input id="newTotal" type="number" placeholder="Total Fees (UGX)">
-                    <input id="newAddress" placeholder="Address">
-                    <input id="newLin" placeholder="LIN (auto)">
-                    <div><label>Photo</label><input type="file" id="newPhoto" accept="image/*"></div>
-                    <div class="flex justify-end gap-2 mt-4"><button class="btn" onclick="saveNewStudent()">Save</button><button class="btn-gold" onclick="this.closest('.modal').remove()">Cancel</button></div>
-                </div>
-            `;
+            modal.innerHTML = `<div class="modal-content"><h3>Add Student</h3><input id="newFirstName" placeholder="First Name"><input id="newLastName" placeholder="Last Name"><input id="newAdm" placeholder="Admission Number"><select id="newClass">${CLASS_ORDER.map(c=>`<option>${c}</option>`).join('')}</select><input id="newParent" placeholder="Parent WhatsApp"><input id="newTotal" type="number" placeholder="Total Fees"><input id="newLin" placeholder="LIN"><div><label>Photo</label><input type="file" id="newPhoto" accept="image/*"></div><div class="flex justify-end gap-2 mt-4"><button class="btn" onclick="window.saveNewStudent()">Save</button><button class="btn-gold" onclick="this.closest('.modal').remove()">Cancel</button></div></div>`;
             document.body.appendChild(modal);
         };
         window.saveNewStudent = async () => {
-            const first = document.getElementById('newFirstName').value.trim();
-            const last = document.getElementById('newLastName').value.trim();
-            if (!first || !last) return alert('First and last name required');
-            const classVal = document.getElementById('newClass').value;
-            const whatsapp = document.getElementById('newParent').value;
-            const total = parseFloat(document.getElementById('newTotal').value) || 0;
-            const address = document.getElementById('newAddress').value;
-            let lin = document.getElementById('newLin').value.trim();
-            if (!lin) lin = `PM${(first.slice(0,2)+last.slice(0,2)).toUpperCase()}${Math.floor(1000+Math.random()*9000)}`;
-            const adm = document.getElementById('newAdm').value.trim() || `PM${Math.floor(1000+Math.random()*9000)}`;
+            const first = document.getElementById('newFirstName').value.trim(), last = document.getElementById('newLastName').value.trim();
+            if (!first || !last) return alert('Required');
+            const classVal = document.getElementById('newClass').value, whatsapp = document.getElementById('newParent').value, total = parseFloat(document.getElementById('newTotal').value)||0;
+            const lin = document.getElementById('newLin').value.trim() || `PM${Math.random().toString(36).substring(2,6).toUpperCase()}`;
+            const adm = document.getElementById('newAdm').value.trim() || `PM${Date.now()}`;
             const studentId = crypto.randomUUID ? crypto.randomUUID() : 's'+Date.now();
-            let photoUrl = null;
             const photoFile = document.getElementById('newPhoto').files[0];
             const finish = async (url) => {
-                await restInsert('students', {
-                    id: studentId, school_id: SCHOOL_ID, admission_number: adm,
-                    first_name: first, last_name: last, class: classVal,
-                    parent_whatsapp: whatsapp, total_fees: total, address: address,
-                    lin: lin, photo_url: url, fees_paid: 0
-                });
-                showToast('Student added');
-                document.querySelector('.modal').remove();
-                await loadAll(); renderStudentList();
+                await restInsert('students', { id: studentId, school_id: SCHOOL_ID, admission_number: adm, first_name: first, last_name: last, class: classVal, parent_whatsapp: whatsapp, total_fees: total, lin: lin, photo_url: url, fees_paid: 0 });
+                showToast('Added'); document.querySelector('.modal')?.remove(); await refreshAllAndRender();
             };
-            if (photoFile) {
-                compressImage(photoFile, async blob => {
-                    try { photoUrl = await uploadPhoto(blob, studentId); await finish(photoUrl); }
-                    catch(e) { showToast('Photo failed, saved without'); await finish(null); }
-                });
-            } else { await finish(null); }
+            if (photoFile) compressImage(photoFile, async blob => { try { const url = await uploadPhoto(studentId, blob); await finish(url); } catch(e){ await finish(null); } });
+            else await finish(null);
         };
-        window.editStudent = async (id) => {
-            const s = students.find(st => st.id === id);
-            const modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <h3>Edit Student</h3>
-                    <input id="editFirst" value="${escapeHtml(s.first_name)}">
-                    <input id="editLast" value="${escapeHtml(s.last_name)}">
-                    <input id="editAdm" value="${escapeHtml(s.admission_number)}">
-                    <select id="editClass">${['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'].map(c=>`<option ${s.class===c?'selected':''}>${c}</option>`).join('')}</select>
-                    <input id="editParent" value="${escapeHtml(s.parent_whatsapp)}">
-                    <input id="editTotal" type="number" value="${s.total_fees}">
-                    <input id="editAddress" value="${escapeHtml(s.address||'')}">
-                    <input id="editLin" value="${escapeHtml(s.lin)}">
-                    <div><label>New Photo</label><input type="file" id="editPhoto" accept="image/*"></div>
-                    <div class="flex justify-end gap-2 mt-4"><button class="btn" onclick="updateStudent('${id}')">Update</button><button class="btn-gold" onclick="this.closest('.modal').remove()">Cancel</button></div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-        };
+        window.editStudent = async (id) => { const s = students.find(st=>st.id===id); const modal = document.createElement('div'); modal.className='modal'; modal.style.display='flex'; modal.innerHTML=`<div class="modal-content"><h3>Edit</h3><input id="editFirst" value="${escapeHtml(s.first_name)}"><input id="editLast" value="${escapeHtml(s.last_name)}"><input id="editAdm" value="${escapeHtml(s.admission_number)}"><select id="editClass">${CLASS_ORDER.map(c=>`<option ${s.class===c?'selected':''}>${c}</option>`).join('')}</select><input id="editParent" value="${escapeHtml(s.parent_whatsapp)}"><input id="editTotal" type="number" value="${s.total_fees}"><input id="editLin" value="${escapeHtml(s.lin)}"><div><label>New Photo</label><input type="file" id="editPhoto"></div><div class="flex justify-end gap-2 mt-4"><button class="btn" onclick="window.updateStudent('${id}')">Update</button><button class="btn-gold" onclick="this.closest('.modal').remove()">Cancel</button></div></div>`; document.body.appendChild(modal); };
         window.updateStudent = async (id) => {
-            const updates = {
-                first_name: document.getElementById('editFirst').value,
-                last_name: document.getElementById('editLast').value,
-                admission_number: document.getElementById('editAdm').value,
-                class: document.getElementById('editClass').value,
-                parent_whatsapp: document.getElementById('editParent').value,
-                total_fees: parseFloat(document.getElementById('editTotal').value) || 0,
-                address: document.getElementById('editAddress').value,
-                lin: document.getElementById('editLin').value
-            };
+            const updates = { first_name: document.getElementById('editFirst').value, last_name: document.getElementById('editLast').value, admission_number: document.getElementById('editAdm').value, class: document.getElementById('editClass').value, parent_whatsapp: document.getElementById('editParent').value, total_fees: parseFloat(document.getElementById('editTotal').value)||0, lin: document.getElementById('editLin').value };
             const photoFile = document.getElementById('editPhoto').files[0];
-            const finish = async (url) => {
-                if (url) updates.photo_url = url;
-                await restUpdate('students', id, updates);
-                showToast('Updated');
-                document.querySelector('.modal').remove();
-                await loadAll(); renderStudentList();
-            };
-            if (photoFile) {
-                compressImage(photoFile, async blob => {
-                    try { const url = await uploadPhoto(blob, id); await finish(url); }
-                    catch(e) { showToast('Photo failed, other data saved'); await finish(null); }
-                });
-            } else { await finish(null); }
+            const finish = async (url) => { if(url) updates.photo_url = url; await restUpdate('students', id, updates); showToast('Updated'); document.querySelector('.modal')?.remove(); await refreshAllAndRender(); };
+            if (photoFile) compressImage(photoFile, async blob => { try { const url = await uploadPhoto(id, blob); await finish(url); } catch(e){ await finish(null); } });
+            else await finish(null);
         };
-        window.deleteStudent = async (id) => {
-            if (confirm('Delete this student?')) {
-                await restDelete('students', id);
-                showToast('Deleted');
-                await loadAll(); renderStudentList();
-            }
+        window.deleteStudent = async (id) => { if(confirm('Delete?')){ await restDelete('students', id); await refreshAllAndRender(); } };
+        window.showFeeModal = (studentId) => { const student = students.find(s=>s.id===studentId); const modal = document.createElement('div'); modal.className='modal'; modal.style.display='flex'; modal.innerHTML=`<div class="modal-content"><h3>Payment for ${student.first_name} ${student.last_name}</h3><p>Paid: ${formatMoney(student.fees_paid)} | Owing: ${formatMoney((student.total_fees||0)-(student.fees_paid||0))}</p><input type="number" id="modalFeeAmount" placeholder="Amount"><input type="text" id="modalPaymentCode" placeholder="Code"><input type="date" id="modalPaymentDate" value="${new Date().toISOString().slice(0,10)}"><select id="modalAcademicYear">${ACADEMIC_YEARS.map(y=>`<option>${y}</option>`).join('')}</select><select id="modalTerm">${TERMS.map(t=>`<option>${t}</option>`).join('')}</select><div class="flex justify-end gap-2 mt-4"><button class="btn" onclick="window.recordFeePayment('${studentId}')">Record</button><button class="btn-gold" onclick="this.closest('.modal').remove()">Cancel</button></div></div>`; document.body.appendChild(modal); };
+        window.recordFeePayment = async (studentId) => {
+            const amount = parseFloat(document.getElementById('modalFeeAmount').value); if (isNaN(amount)) return alert('Valid amount');
+            const code = document.getElementById('modalPaymentCode').value.trim()||'MANUAL', date = document.getElementById('modalPaymentDate').value, year = document.getElementById('modalAcademicYear').value, term = document.getElementById('modalTerm').value;
+            const student = students.find(s=>s.id===studentId);
+            const newPaid = (student.fees_paid||0)+amount;
+            await restUpdate('students', studentId, { fees_paid: newPaid });
+            const receipt = 'RCP'+Date.now();
+            await restInsert('payments', { school_id: SCHOOL_ID, student_id: studentId, amount, payment_date: date, receipt_number: receipt, payment_code: code });
+            await restInsert('transactions', { school_id: SCHOOL_ID, student_id: studentId, amount, payment_date: date, receipt, payment_code: code, academic_year: year, term });
+            showToast('Payment recorded'); document.querySelector('.modal')?.remove(); await refreshAllAndRender();
+            if (student.parent_whatsapp) sendWhatsApp(student.parent_whatsapp, `Dear Parent, payment of ${formatMoney(amount)} received for ${student.first_name} ${student.last_name}. Receipt: ${receipt}. Thank you - ${currentSchool.name}`);
         };
 
-        // ========== ATTENDANCE ==========
-        function renderAttendance() {
+        // ATTENDANCE TAB WITH WORKING ABSENT SECTION
+        async function renderAttendance() {
             const container = document.getElementById('tabContent');
-            const classes = [...new Set(students.map(s => s.class).filter(Boolean))];
-            container.innerHTML = `
-                <div class="bg-white rounded-xl p-4 shadow-sm">
-                    <h3 class="text-lg font-bold mb-3">Roll Call</h3>
-                    <div class="flex flex-wrap gap-3 mb-4">
-                        <select id="attClass" class="w-auto">${classes.map(c=>`<option>${c}</option>`).join('')}</select>
-                        <input type="date" id="attDate" value="${new Date().toISOString().slice(0,10)}" style="width:auto">
-                    </div>
-                    <div id="attendanceList"></div>
-                    <button class="btn mt-4" id="saveAttendanceBtn">Save Attendance</button>
+            const classes = [...new Set(students.map(s=>s.class).filter(Boolean))];
+            container.innerHTML = `<div class="bg-white rounded-xl p-4 shadow-sm">
+                <h3 class="font-bold mb-3"><i class="fas fa-calendar-check"></i> Roll Call</h3>
+                <div class="flex gap-3 mb-4">
+                    <select id="attClass">${classes.map(c=>`<option>${c}</option>`).join('')}</select>
+                    <input type="date" id="attDate" value="${new Date().toISOString().slice(0,10)}">
                 </div>
-            `;
-            const renderAtt = async () => {
+                <div id="attendanceList"></div>
+                <button class="btn mt-3" id="saveAttendanceBtn">Save Attendance</button>
+                <div id="absenteesSection" class="mt-4"></div>
+            </div>`;
+            
+            const loadAttendanceAndAbsent = async () => {
                 const selectedClass = document.getElementById('attClass').value;
                 const date = document.getElementById('attDate').value;
-                const classStudents = students.filter(s => s.class === selectedClass);
-                if (!classStudents.length) { document.getElementById('attendanceList').innerHTML = '<p>No students in this class</p>'; return; }
-                const existing = await restFetch('attendance', `date=eq.${date}&class=eq.${selectedClass}&school_id=eq.${SCHOOL_ID}`).catch(e=>[]);
-                const map = {}; existing.forEach(a => map[a.student_id] = a.status);
-                let html = '<div class="space-y-2">';
-                for (let s of classStudents) {
-                    const status = map[s.id] || 'present';
-                    html += `<div class="flex justify-between items-center p-2 border-b"><span><strong>${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</strong></span><select class="att-status" data-student="${s.id}"><option value="present" ${status==='present'?'selected':''}>Present</option><option value="absent" ${status==='absent'?'selected':''}>Absent</option><option value="late" ${status==='late'?'selected':''}>Late</option></select></div>`;
+                const classStudents = students.filter(s=>s.class===selectedClass);
+                if (!classStudents.length) { 
+                    document.getElementById('attendanceList').innerHTML='<p class="text-gray-500">No students in this class</p>';
+                    document.getElementById('absenteesSection').innerHTML = await renderAbsentees();
+                    return; 
                 }
-                html += '</div>';
+                const existing = await restFetch('attendance', `date=eq.${date}&class=eq.${selectedClass}&school_id=eq.${SCHOOL_ID}`).catch(e=>[]);
+                const map = {}; existing.forEach(a=>map[a.student_id]=a.status);
+                let html = '<div class="space-y-2">';
+                for(let s of classStudents){
+                    const status = map[s.id]||'present';
+                    html+=`<div class="flex justify-between items-center p-2 border-b"><span><strong>${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</strong></span><select class="att-status" data-student="${s.id}"><option value="present" ${status==='present'?'selected':''}>Present</option><option value="absent" ${status==='absent'?'selected':''}>Absent</option><option value="late" ${status==='late'?'selected':''}>Late</option></select></div>`;
+                }
+                html+='</div>';
                 document.getElementById('attendanceList').innerHTML = html;
+                // Update absent section
+                document.getElementById('absenteesSection').innerHTML = await renderAbsentees();
             };
-            document.getElementById('attClass').addEventListener('change', renderAtt);
-            document.getElementById('attDate').addEventListener('change', renderAtt);
-            renderAtt();
+            
+            document.getElementById('attClass').addEventListener('change', loadAttendanceAndAbsent);
+            document.getElementById('attDate').addEventListener('change', loadAttendanceAndAbsent);
+            await loadAttendanceAndAbsent();
+            
             document.getElementById('saveAttendanceBtn').onclick = async () => {
                 const date = document.getElementById('attDate').value;
                 const selectedClass = document.getElementById('attClass').value;
                 const selects = document.querySelectorAll('.att-status');
-                for (let sel of selects) {
-                    const studentId = sel.dataset.student;
-                    const status = sel.value;
+                for(let sel of selects){
+                    const studentId = sel.dataset.student, status = sel.value;
                     await restUpsert('attendance', { school_id: SCHOOL_ID, student_id: studentId, date, status, class: selectedClass }, 'student_id,date');
                 }
                 showToast('Attendance saved');
+                // Reload the absent section without full page reload
+                await loadAttendanceAndAbsent();
+                // Also refresh global stats (optional)
+                await loadAll();
+                // Update stats cards (simple way: re-render entire page? but that would reset tab. Instead just update absent stats)
+                const absentToday = attendance.filter(a => a.date === date && a.status === 'absent').length;
+                const statCards = document.querySelectorAll('.stat-number');
+                if(statCards.length >= 4) statCards[3].innerText = absentToday;
             };
         }
 
-        // ========== MARKS & REPORT CARD ==========
-        function renderMarks() {
+        // MARKS TAB
+        async function renderMarks() {
             const container = document.getElementById('tabContent');
-            const classes = [...new Set(students.map(s => s.class).filter(Boolean))];
-            container.innerHTML = `
-                <div class="bg-white rounded-xl p-4 shadow-sm mb-4">
-                    <h3 class="text-lg font-bold mb-3">Marks Entry</h3>
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        <select id="marksClass">${classes.map(c=>`<option>${c}</option>`).join('')}</select>
-                        <select id="marksTerm">${TERMS.map(t=>`<option>${t}</option>`).join('')}</select>
-                        <select id="marksExam">${EXAM_TYPES.map(e=>`<option>${e}</option>`).join('')}</select>
-                        <button class="btn" id="loadMarksBtn">Load</button>
-                    </div>
-                    <div id="marksGrid" class="overflow-x-auto"></div>
-                    <button class="btn mt-3" id="saveMarksBtn">Save Marks</button>
-                </div>
-                <div class="bg-white rounded-xl p-4 shadow-sm">
-                    <h3 class="text-lg font-bold mb-3">Report Card</h3>
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        <select id="reportStudent"><option>Select Student</option></select>
-                        <select id="reportTerm">${TERMS.map(t=>`<option>${t}</option>`).join('')}</select>
-                        <select id="reportExam">${EXAM_TYPES.map(e=>`<option>${e}</option>`).join('')}</select>
-                        <button class="btn" id="genReportBtn">Generate PDF</button>
-                    </div>
-                    <div id="reportPreview"></div>
-                </div>
-            `;
-            const updateStudentDropdown = () => {
-                const sel = document.getElementById('reportStudent');
-                sel.innerHTML = students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.class})</option>`).join('');
-            };
+            const classes = [...new Set(students.map(s=>s.class).filter(Boolean))];
+            container.innerHTML = `<div class="bg-white rounded-xl p-4 shadow-sm mb-4"><div class="flex justify-between items-center"><h3 class="font-bold">Marks Entry</h3><button class="btn btn-gold" onclick="window.promoteStudents()"><i class="fas fa-arrow-up"></i> Promote Students</button></div><div class="flex flex-wrap gap-2 my-4"><select id="marksClass">${classes.map(c=>`<option>${c}</option>`).join('')}</select><select id="marksTerm">${TERMS.map(t=>`<option>${t}</option>`).join('')}</select><select id="marksExam">${EXAM_TYPES.map(e=>`<option>${e}</option>`).join('')}</select><button class="btn" id="loadMarksBtn">Load</button></div><div id="marksGrid"></div><button class="btn mt-3" id="saveMarksBtn">Save Marks</button></div>
+            <div class="bg-white rounded-xl p-4 shadow-sm"><h3 class="font-bold">Cumulative Report Card</h3><div class="flex flex-wrap gap-2 mb-4"><select id="reportStudent"></select><select id="reportTerm">${TERMS.map(t=>`<option>${t}</option>`).join('')}</select><select id="reportExam">${EXAM_TYPES.map(e=>`<option>${e}</option>`).join('')}</select><button class="btn" id="genReportBtn">Generate Report</button></div><div id="reportPreview"></div></div>`;
+            const updateStudentDropdown = () => { const sel = document.getElementById('reportStudent'); if(sel) sel.innerHTML = students.map(s=>`<option value="${s.id}">${s.first_name} ${s.last_name} (${s.class})</option>`).join(''); };
             updateStudentDropdown();
             document.getElementById('loadMarksBtn').onclick = async () => {
-                const className = document.getElementById('marksClass').value;
-                const term = document.getElementById('marksTerm').value;
-                const examType = document.getElementById('marksExam').value;
-                const classStudents = students.filter(s => s.class === className);
-                if (!classStudents.length) { document.getElementById('marksGrid').innerHTML = '<p>No students in this class</p>'; return; }
+                const className = document.getElementById('marksClass').value, term = document.getElementById('marksTerm').value, examType = document.getElementById('marksExam').value;
+                const classStudents = students.filter(s=>s.class===className);
+                if(!classStudents.length){ document.getElementById('marksGrid').innerHTML='<p>No students</p>'; return; }
                 const existing = await restFetch('marks', `class=eq.${className}&term=eq.${term}&exam_type=eq.${examType}&school_id=eq.${SCHOOL_ID}`).catch(e=>[]);
-                const map = {}; existing.forEach(m => map[`${m.student_id}_${m.subject}`] = m);
-                let html = '<tr><thead><tr><th>Student</th>'+CORE_SUBJECTS.map(s=>`<th>${s}</th>`).join('')+'</thead><tbody>';
-                for (let s of classStudents) {
-                    html += `<tr><td class="p-2">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</td>`;
-                    for (let sub of CORE_SUBJECTS) {
-                        const key = `${s.id}_${sub}`;
-                        const val = map[key]?.score || '';
-                        html += `<td class="p-2"><input type="number" class="mark-input w-20 border rounded p-1" data-student="${s.id}" data-subject="${sub}" value="${val}"></td>`;
+                const map = {}; existing.forEach(m=>map[`${m.student_id}_${m.subject}`]=m);
+                let html = '<table class="w-full"><thead><tr><th>Student</th>'+CORE_SUBJECTS.map(s=>`<th>${s}</th>`).join('')+'</tr></thead><tbody>';
+                for(let s of classStudents){
+                    html+=`<tr><td class="p-2">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</td>`;
+                    for(let sub of CORE_SUBJECTS){
+                        const val = map[`${s.id}_${sub}`]?.score||'';
+                        html+=`<td class="p-2"><input type="number" class="mark-input" data-student="${s.id}" data-subject="${sub}" value="${val}"></td>`;
                     }
-                    html += '</tr>';
+                    html+=`</tr>`;
                 }
-                html += '</tbody></table>';
+                html+='</tbody></table>';
                 document.getElementById('marksGrid').innerHTML = html;
             };
             document.getElementById('saveMarksBtn').onclick = async () => {
-                const className = document.getElementById('marksClass').value;
-                const term = document.getElementById('marksTerm').value;
-                const examType = document.getElementById('marksExam').value;
+                const className = document.getElementById('marksClass').value, term = document.getElementById('marksTerm').value, examType = document.getElementById('marksExam').value;
                 const inputs = document.querySelectorAll('.mark-input');
-                for (let inp of inputs) {
-                    const studentId = inp.dataset.student;
-                    const subject = inp.dataset.subject;
-                    const score = parseInt(inp.value);
-                    if (isNaN(score)) continue;
+                for(let inp of inputs){
+                    const studentId = inp.dataset.student, subject = inp.dataset.subject, score = parseInt(inp.value);
+                    if(isNaN(score)) continue;
                     const grade = getGrade(score);
-                    await restUpsert('marks', {
-                        school_id: SCHOOL_ID, student_id: studentId, subject, score, grade,
-                        term, exam_type: examType, class: className
-                    }, 'student_id,subject,term,exam_type');
+                    await restUpsert('marks', { school_id: SCHOOL_ID, student_id: studentId, subject, score, grade, term, exam_type: examType, class: className }, 'student_id,subject,term,exam_type');
                 }
                 showToast('Marks saved');
             };
             document.getElementById('genReportBtn').onclick = async () => {
-                const studentId = document.getElementById('reportStudent').value;
-                const term = document.getElementById('reportTerm').value;
-                const examType = document.getElementById('reportExam').value;
-                if (!studentId) return alert('Select student');
-                const student = students.find(s => s.id === studentId);
-                const studentMarks = await restFetch('marks', `student_id=eq.${studentId}&term=eq.${term}&exam_type=eq.${examType}&school_id=eq.${SCHOOL_ID}`).catch(e=>[]);
-                let total = 0, points = [], rows = '';
-                for (let sub of CORE_SUBJECTS) {
-                    const m = studentMarks.find(m => m.subject === sub);
-                    const score = m ? m.score : '-';
-                    const grade = m ? m.grade : '-';
-                    const pts = m ? gradePoints(grade) : '-';
-                    if (m) { total += m.score; points.push(gradePoints(m.grade)); }
-                    rows += `<tr><td class="p-2">${sub}</td><td class="p-2">${score}</td><td class="p-2">${grade}</td><td class="p-2">${pts}</td></tr>`;
-                }
-                const avg = points.length ? (total / points.length).toFixed(1) : 0;
-                points.sort((a,b)=>a-b);
-                const aggregate = points.slice(0,8).reduce((s,p)=>s+p,0);
-                const division = getDivision(aggregate);
-                const photoHtml = student.photo_url ? `<img src="${student.photo_url}" style="width:80px;height:80px;border-radius:50%;">` : '<div style="width:80px;height:80px;background:#eef2ff;border-radius:50%;display:flex;align-items:center;justify-content:center;">📷</div>';
-                const reportHtml = `
-                    <div id="printableReport" class="report-card">
-                        <div class="report-header"><h2>${escapeHtml(currentSchool.name)}</h2><p>${currentSchool.address || ''} | ${currentSchool.phone || ''}</p><p>${examType} Report – ${term}</p></div>
-                        <div class="flex gap-4 items-center mb-4"><div>${photoHtml}</div><div><strong>${student.first_name} ${student.last_name}</strong><br>LIN: ${student.lin}<br>Class: ${student.class}<br>Adm No: ${student.admission_number}</div></div>
-                        <table class="w-full border"><thead><tr class="bg-blue-800 text-white"><th>Subject</th><th>Marks</th><th>Grade</th><th>Points</th></tr></thead><tbody>${rows}</tbody></table>
-                        <div class="mt-4"><strong>Total Marks:</strong> ${total} / 400<br><strong>Average:</strong> ${avg}%<br><strong>Aggregate (best 8):</strong> ${aggregate} | <strong>${division}</strong></div>
-                        <div class="flex justify-between mt-6 pt-2 border-t"><div>____________________<br>Class Teacher</div><div>____________________<br>Headteacher</div></div>
-                    </div>
-                    <button class="btn mt-3" onclick="window.print()">Print Report</button>
-                `;
+                const studentId = document.getElementById('reportStudent').value, term = document.getElementById('reportTerm').value, examType = document.getElementById('reportExam').value;
+                const report = await generateCumulativeReport(studentId, term, examType);
+                if(!report) return alert('Select student');
+                const { student, photoHtml, examTypesToShow, tableRows, summaryRow } = report;
+                let examHeader = '<tr><th>Subject</th>'+examTypesToShow.map(e=>`<th>${e}</th>`).join('')+'</tr>';
+                const reportHtml = `<div id="printableReport" class="report-card"><div class="report-header"><h2>${escapeHtml(currentSchool.name)}</h2><p>${currentSchool.address||''}</p><p>${term} Cumulative Report</p></div><div class="flex gap-4 items-center mb-4">${photoHtml}<div><strong>${student.first_name} ${student.last_name}</strong><br>LIN: ${student.lin}<br>Class: ${student.class}</div></div><table class="w-full border">${examHeader}${tableRows}${summaryRow}</table><div class="mt-4"><button class="btn" onclick="window.print()">Print Report</button></div></div>`;
                 document.getElementById('reportPreview').innerHTML = reportHtml;
             };
         }
 
-        // ========== FEES ==========
-        function renderFees() {
-            const container = document.getElementById('tabContent');
+        // FEES TAB
+        async function renderFees() {
             const totalCollected = payments.reduce((s,p)=>s+p.amount,0);
             const totalExpected = students.reduce((s,st)=>s+st.total_fees,0);
-            container.innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="bg-white p-4 rounded-xl text-center shadow"><div class="text-2xl font-bold text-green-700">${formatMoney(totalCollected)}</div><div class="text-sm">Collected</div></div>
-                    <div class="bg-white p-4 rounded-xl text-center shadow"><div class="text-2xl font-bold">${formatMoney(totalExpected)}</div><div class="text-sm">Expected</div></div>
-                    <div class="bg-white p-4 rounded-xl text-center shadow"><div class="text-2xl font-bold text-red-600">${formatMoney(totalExpected-totalCollected)}</div><div class="text-sm">Outstanding</div></div>
-                </div>
-                <div class="bg-white rounded-xl p-4 shadow mb-4">
-                    <h3 class="font-bold text-lg mb-3">Record Payment</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <select id="payStudent">${students.map(s=>`<option value="${s.id}">${s.first_name} ${s.last_name} (${s.class})</option>`).join('')}</select>
-                        <input type="number" id="payAmount" placeholder="Amount (UGX)">
-                        <input type="text" id="payCode" placeholder="Payment Code">
-                        <input type="date" id="payDate" value="${new Date().toISOString().slice(0,10)}">
-                    </div>
-                    <button class="btn mt-3" id="recordPayBtn">Record Payment</button>
-                </div>
-                <div class="bg-white rounded-xl p-4 shadow">
-                    <h3 class="font-bold text-lg mb-3">Student Balances</h3>
-                    <div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Student</th><th>Total Fees</th><th>Paid</th><th>Balance</th><th>Actions</th></tr></thead><tbody id="balanceTable"></tbody></table></div>
-                </div>
-                <div class="bg-white rounded-xl p-4 shadow mt-4">
-                    <h3 class="font-bold text-lg mb-3">Expenses</h3>
-                    <div class="flex flex-wrap gap-2 mb-3"><input id="expCat" placeholder="Category"><input id="expDesc" placeholder="Description"><input type="number" id="expAmount" placeholder="Amount"><button class="btn" id="addExpenseBtn">Add</button></div>
-                    <div id="expenseList" class="space-y-1"></div>
-                </div>
-            `;
+            const container = document.getElementById('tabContent');
+            container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div class="bg-white p-4 rounded-xl text-center"><div class="text-2xl font-bold text-green-700">${formatMoney(totalCollected)}</div><div>Collected</div></div><div class="bg-white p-4 rounded-xl text-center"><div class="text-2xl font-bold">${formatMoney(totalExpected)}</div><div>Expected</div></div><div class="bg-white p-4 rounded-xl text-center"><div class="text-2xl font-bold text-red-600">${formatMoney(totalExpected-totalCollected)}</div><div>Outstanding</div></div></div>
+            <div class="bg-white rounded-xl p-4 shadow mb-4"><h3>Record Payment</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-3"><select id="payStudent">${students.map(s=>`<option value="${s.id}">${s.first_name} ${s.last_name}</option>`).join('')}</select><input type="number" id="payAmount" placeholder="Amount"><input id="payCode" placeholder="Payment Code"><input type="date" id="payDate" value="${new Date().toISOString().slice(0,10)}"></div><button class="btn mt-3" id="recordPayBtn">Record Payment</button></div>
+            <div class="bg-white rounded-xl p-4 shadow"><h3>Student Balances</h3><div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Student</th><th>Total</th><th>Paid</th><th>Balance</th><th>WhatsApp</th></tr></thead><tbody id="balanceTable"></tbody></table></div></div>`;
             const renderBalances = () => {
                 const tbody = document.getElementById('balanceTable');
-                tbody.innerHTML = students.map(s => {
-                    const paid = payments.filter(p=>p.student_id===s.id).reduce((a,b)=>a+b.amount,0);
-                    const bal = (s.total_fees||0)-paid;
-                    return `<tr><td class="p-2">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</td><td>${formatMoney(s.total_fees)}</td><td>${formatMoney(paid)}</td><td class="${bal>0?'debt':''}">${formatMoney(bal)}</td><td><button class="btn-sm" onclick="viewPayments('${s.id}')">History</button></td></tr>`;
-                }).join('');
+                if(tbody) tbody.innerHTML = students.map(s => { const paid = payments.filter(p=>p.student_id===s.id).reduce((a,b)=>a+b.amount,0); const bal = (s.total_fees||0)-paid; return `<tr><td class="p-2">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</td><td class="p-2">${formatMoney(s.total_fees)}</td><td class="p-2">${formatMoney(paid)}</td><td class="p-2 ${bal>0?'debt':''}">${formatMoney(bal)}</td><td class="p-2"><button class="btn-sm whatsapp-btn" onclick="sendWhatsApp('${s.parent_whatsapp}','Fee reminder: Outstanding ${formatMoney(bal)} for ${s.first_name}')"><i class="fab fa-whatsapp"></i> Remind</button></td></tr>`; }).join('');
             };
             renderBalances();
             document.getElementById('recordPayBtn').onclick = async () => {
-                const studentId = document.getElementById('payStudent').value;
-                const amount = parseFloat(document.getElementById('payAmount').value);
-                if (!studentId || isNaN(amount)) return alert('Select student and amount');
-                const code = document.getElementById('payCode').value.trim() || 'MANUAL';
-                const date = document.getElementById('payDate').value;
-                const receipt = 'RCP'+Date.now();
+                const studentId = document.getElementById('payStudent').value, amount = parseFloat(document.getElementById('payAmount').value);
+                if(!studentId || isNaN(amount)) return;
+                const code = document.getElementById('payCode').value.trim()||'MANUAL', date = document.getElementById('payDate').value;
                 const student = students.find(s=>s.id===studentId);
-                const newPaid = (student.fees_paid||0) + amount;
+                const newPaid = (student.fees_paid||0)+amount;
                 await restUpdate('students', studentId, { fees_paid: newPaid });
+                const receipt = 'RCP'+Date.now();
                 await restInsert('payments', { school_id: SCHOOL_ID, student_id: studentId, amount, payment_date: date, receipt_number: receipt, payment_code: code });
-                await restInsert('transactions', { school_id: SCHOOL_ID, student_id: studentId, amount, payment_date: date, receipt, payment_code: code, academic_year: '2026', term: 'Term I' }).catch(e=>console.log);
+                await restInsert('transactions', { school_id: SCHOOL_ID, student_id: studentId, amount, payment_date: date, receipt, payment_code: code });
                 showToast('Payment recorded');
-                await loadAll(); renderFees();
-            };
-            document.getElementById('addExpenseBtn').onclick = async () => {
-                const cat = document.getElementById('expCat').value;
-                const desc = document.getElementById('expDesc').value;
-                const amt = parseFloat(document.getElementById('expAmount').value);
-                if (isNaN(amt)) return;
-                await restInsert('expenses', { school_id: SCHOOL_ID, category: cat, description: desc, amount: amt, expense_date: new Date().toISOString().slice(0,10) });
-                showToast('Expense added');
-                await loadAll(); renderFees();
-            };
-            const expDiv = document.getElementById('expenseList');
-            expDiv.innerHTML = expenses.map(e => `<div class="flex justify-between border-b py-1">${e.expense_date} ${e.category}: ${formatMoney(e.amount)} <button class="text-red-600" onclick="deleteExpense('${e.id}')">Delete</button></div>`).join('');
-            window.deleteExpense = async (id) => { if(confirm('Delete?')){ await restDelete('expenses', id); await loadAll(); renderFees(); } };
-            window.viewPayments = async (studentId) => {
-                const student = students.find(s=>s.id===studentId);
-                const txs = transactions.filter(t=>t.student_id===studentId);
-                let rows = '';
-                for (let t of txs) rows += `<tr><td class="p-2">${t.payment_date}</td><td>${formatMoney(t.amount)}</td><td>${t.payment_code}</td><td>${t.receipt}</td><td>${t.academic_year||'2026'} ${t.term||''}</td></tr>`;
-                const modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
-                modal.innerHTML = `<div class="modal-content"><h3>Payment History - ${student.first_name} ${student.last_name}</h3><div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Date</th><th>Amount</th><th>Code</th><th>Receipt</th><th>Year/Term</th></tr></thead><tbody>${rows || '<tr><td colspan="5">No payments</td></tr>'}</tbody></table><button class="btn mt-3" onclick="this.closest('.modal').remove()">Close</button></div></div>`;
-                document.body.appendChild(modal);
+                if(student.parent_whatsapp) sendWhatsApp(student.parent_whatsapp, `Dear Parent, payment of ${formatMoney(amount)} received for ${student.first_name}. Receipt: ${receipt}. Thank you.`);
+                await refreshAllAndRender();
             };
         }
 
-        // ========== REPORTS ==========
-        async function renderReports() {
-            const container = document.getElementById('tabContent');
-            const marksData = await restFetch('marks', `school_id=eq.${SCHOOL_ID}`).catch(e=>[]);
-            const grades = ['D1','D2','C3','C4','C5','C6','P7','P8','F9'];
-            const counts = grades.map(g => marksData.filter(m => m.grade === g).length);
-            container.innerHTML = `<div class="bg-white p-4 rounded-xl shadow"><canvas id="gradeChart" width="400" height="250"></canvas></div>`;
-            const ctx = document.getElementById('gradeChart').getContext('2d');
-            if (chart) chart.destroy();
-            chart = new Chart(ctx, { type: 'bar', data: { labels: grades, datasets: [{ label: 'Number of Students', data: counts, backgroundColor: '#3b82f6' }] } });
-        }
+        async function renderReports() { const container = document.getElementById('tabContent'); const counts = ['D1','D2','C3','C4','C5','C6','P7','P8','F9'].map(g=>marks.filter(m=>m.grade===g).length); container.innerHTML = `<div class="bg-white p-4 rounded-xl shadow"><canvas id="gradeChart"></canvas></div>`; const ctx = document.getElementById('gradeChart')?.getContext('2d'); if(window.chart) window.chart.destroy(); if(ctx) window.chart = new Chart(ctx, { type:'bar', data:{ labels:['D1','D2','C3','C4','C5','C6','P7','P8','F9'], datasets:[{ label:'Grade Distribution', data:counts, backgroundColor:'#3b82f6' }] } }); }
+        async function renderIdCards() { const container = document.getElementById('tabContent'); container.innerHTML = `<div class="bg-white rounded-xl p-4 shadow"><h3>ID Card</h3><select id="idStudentSelect" class="w-full mb-3">${students.map(s=>`<option value="${s.id}">${s.first_name} ${s.last_name}</option>`).join('')}</select><button class="btn" id="previewIdBtn">Preview</button><div id="idPreview"></div></div>`; document.getElementById('previewIdBtn').onclick = () => { const s = students.find(st=>st.id===document.getElementById('idStudentSelect').value); if(s){ const photo = s.photo_url ? `<img src="${s.photo_url}" style="width:80px;height:80px;border-radius:50%;">` : '<div style="width:80px;height:80px;background:#eef2ff;border-radius:50%;display:flex;align-items:center;justify-content:center;">📷</div>'; document.getElementById('idPreview').innerHTML = `<div id="printableId" class="id-card"><div class="id-card-header">${escapeHtml(currentSchool.name)}</div><div class="flex justify-center mt-3">${photo}</div><div class="font-bold text-center mt-2">${s.first_name} ${s.last_name}</div><div>LIN: ${s.lin}</div><div>Class: ${s.class}</div><div>Parent: ${s.parent_whatsapp||'N/A'}</div><button class="btn btn-gold mt-3" onclick="window.print()">Print ID</button></div>`; } }; }
+        async function renderBranches() { const container = document.getElementById('tabContent'); container.innerHTML = `<div class="bg-white rounded-xl p-4 shadow"><h3>Branches</h3><div class="flex gap-2 mb-3"><input id="newBranchName" placeholder="Branch name"><button class="btn" id="addBranchBtn">Add</button></div><ul id="branchList"></ul></div>`; const renderList = () => { const ul = document.getElementById('branchList'); if(ul) ul.innerHTML = branches.map(b=>`<li class="flex justify-between border-b py-2">${escapeHtml(b.name)} <button class="text-red-600" onclick="window.deleteBranch('${b.id}')">Delete</button></li>`).join(''); }; renderList(); document.getElementById('addBranchBtn').onclick = async () => { const name = document.getElementById('newBranchName').value.trim(); if(name){ await restInsert('branches', { school_id: SCHOOL_ID, name }); await refreshAllAndRender(); } }; window.deleteBranch = async (id) => { if(confirm('Delete?')){ await restDelete('branches', id); await refreshAllAndRender(); } }; }
+        async function renderFeeStructure() { const container = document.getElementById('tabContent'); container.innerHTML = `<div class="bg-white rounded-xl p-4 shadow"><h3>Fee Structure</h3><div class="flex flex-wrap gap-2 mb-4"><select id="feeClass">${CLASS_ORDER.map(c=>`<option>${c}</option>`).join('')}</select><input type="number" id="feeAmount" placeholder="Amount"><select id="feeTerm">${TERMS.map(t=>`<option>${t}</option>`).join('')}</select><select id="feeYear">${ACADEMIC_YEARS.map(y=>`<option>${y}</option>`).join('')}</select><button class="btn" id="addFeeStructBtn">Add</button></div><div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Class</th><th>Term</th><th>Year</th><th>Amount</th><th>Action</th></tr></thead><tbody id="feeStructBody"></tbody></table></div></div>`; const render = () => { const tbody = document.getElementById('feeStructBody'); if(tbody) tbody.innerHTML = feeStructures.map(f=>`<tr><td class="p-2">${f.class}</td><td class="p-2">${f.term}</td><td class="p-2">${f.academic_year}</td><td class="p-2">${formatMoney(f.amount)}</td><td class="p-2"><button class="text-red-600" onclick="window.deleteFeeStructure('${f.id}')">Delete</button></td></tr>`).join(''); }; render(); document.getElementById('addFeeStructBtn').onclick = async () => { const className = document.getElementById('feeClass').value, amount = parseFloat(document.getElementById('feeAmount').value), term = document.getElementById('feeTerm').value, year = document.getElementById('feeYear').value; if(!className || isNaN(amount)) return; await restInsert('fee_structures', { school_id: SCHOOL_ID, class: className, term, amount, academic_year: year }); await refreshAllAndRender(); }; window.deleteFeeStructure = async (id) => { if(confirm('Delete?')){ await restDelete('fee_structures', id); await refreshAllAndRender(); } }; }
 
-        // ========== ID CARDS ==========
-        function renderIdCards() {
-            const container = document.getElementById('tabContent');
-            container.innerHTML = `
-                <div class="bg-white rounded-xl p-4 shadow">
-                    <h3 class="text-lg font-bold mb-3">ID Card</h3>
-                    <select id="idStudentSelect" class="w-full mb-3">${students.map(s=>`<option value="${s.id}">${s.first_name} ${s.last_name} (${s.class})</option>`).join('')}</select>
-                    <button class="btn" id="previewIdBtn">Preview</button>
-                    <div id="idPreview" class="mt-4"></div>
-                </div>
-            `;
-            document.getElementById('previewIdBtn').onclick = () => {
-                const sid = document.getElementById('idStudentSelect').value;
-                const s = students.find(st=>st.id===sid);
-                if (!s) return;
-                const photo = s.photo_url ? `<img src="${s.photo_url}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;">` : '<div style="width:80px;height:80px;background:#eef2ff;border-radius:50%;display:flex;align-items:center;justify-content:center;">📷</div>';
-                const html = `
-                    <div id="printableId" class="id-card">
-                        <div class="id-card-header">${escapeHtml(currentSchool.name)}</div>
-                        <div class="flex justify-center mt-3">${photo}</div>
-                        <div class="font-bold text-center mt-2">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</div>
-                        <div class="text-center">LIN: ${s.lin}</div>
-                        <div class="text-center">Class: ${s.class}</div>
-                        <div class="text-center">Parent: ${s.parent_whatsapp || 'N/A'}</div>
-                        <div class="text-center text-xs mt-2">${currentSchool.phone || ''}</div>
-                    </div>
-                    <button class="btn btn-gold mt-3" onclick="window.print()">Print</button>
-                `;
-                document.getElementById('idPreview').innerHTML = html;
-            };
-        }
-
-        // ========== BRANCHES ==========
-        function renderBranches() {
-            const container = document.getElementById('tabContent');
-            container.innerHTML = `
-                <div class="bg-white rounded-xl p-4 shadow">
-                    <h3 class="text-lg font-bold mb-3">Branches</h3>
-                    <div class="flex gap-2 mb-3"><input id="newBranchName" placeholder="Branch name"><button class="btn" id="addBranchBtn">Add</button></div>
-                    <ul id="branchList" class="space-y-2"></ul>
-                </div>
-            `;
-            const renderList = () => {
-                const ul = document.getElementById('branchList');
-                ul.innerHTML = branches.map(b => `<li class="flex justify-between border-b py-2">${escapeHtml(b.name)} <button class="text-red-600" onclick="deleteBranch('${b.id}')">Delete</button></li>`).join('');
-            };
-            renderList();
-            document.getElementById('addBranchBtn').onclick = async () => {
-                const name = document.getElementById('newBranchName').value.trim();
-                if (!name) return;
-                await restInsert('branches', { school_id: SCHOOL_ID, name });
-                await loadAll(); renderBranches();
-            };
-            window.deleteBranch = async (id) => { if(confirm('Delete branch?')){ await restDelete('branches', id); await loadAll(); renderBranches(); } };
-        }
-
-        // ========== FEE STRUCTURE ==========
-        function renderFeeStructure() {
-            const container = document.getElementById('tabContent');
-            const classes = ['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'];
-            container.innerHTML = `
-                <div class="bg-white rounded-xl p-4 shadow">
-                    <h3 class="text-lg font-bold mb-3">Fee Structure</h3>
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        <select id="feeClass">${classes.map(c=>`<option>${c}</option>`).join('')}</select>
-                        <input type="number" id="feeAmount" placeholder="Amount (UGX)">
-                        <select id="feeTerm">${TERMS.map(t=>`<option>${t}</option>`).join('')}</select>
-                        <select id="feeYear">${ACADEMIC_YEARS.map(y=>`<option>${y}</option>`).join('')}</select>
-                        <button class="btn" id="addFeeStructBtn">Add</button>
-                    </div>
-                    <div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Class</th><th>Term</th><th>Year</th><th>Amount</th><th>Action</th></tr></thead><tbody id="feeStructBody"></tbody></table></div>
-                </div>
-            `;
-            const render = () => {
-                const tbody = document.getElementById('feeStructBody');
-                tbody.innerHTML = feeStructures.map(f => `<tr><td class="p-2">${f.class}</td><td>${f.term}</td><td>${f.academic_year}</td><td>${formatMoney(f.amount)}</td><td><button class="text-red-600" onclick="deleteFeeStructure('${f.id}')">Delete</button></td></tr>`).join('');
-            };
-            render();
-            document.getElementById('addFeeStructBtn').onclick = async () => {
-                const className = document.getElementById('feeClass').value;
-                const amount = parseFloat(document.getElementById('feeAmount').value);
-                const term = document.getElementById('feeTerm').value;
-                const year = document.getElementById('feeYear').value;
-                if (!className || isNaN(amount)) return alert('Fill all');
-                await restInsert('fee_structures', { school_id: SCHOOL_ID, class: className, term, amount, academic_year: year });
-                await loadAll(); renderFeeStructure();
-            };
-            window.deleteFeeStructure = async (id) => { if(confirm('Delete?')){ await restDelete('fee_structures', id); await loadAll(); renderFeeStructure(); } };
-        }
-
-        // ========== FEE MODAL (global) ==========
-        window.showFeeModal = function(studentId) {
-            const student = students.find(s => s.id === studentId);
-            const modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <h3>Record Payment - ${escapeHtml(student.first_name)} ${escapeHtml(student.last_name)}</h3>
-                    <p>Paid: ${formatMoney(student.fees_paid)} | Owing: ${formatMoney(student.total_fees - student.fees_paid)}</p>
-                    <input type="number" id="feeAmount" placeholder="Amount (UGX)">
-                    <input type="text" id="paymentCode" placeholder="Payment Code">
-                    <input type="date" id="paymentDate" value="${new Date().toISOString().slice(0,10)}">
-                    <select id="paymentAcademicYear">${ACADEMIC_YEARS.map(y=>`<option>${y}</option>`).join('')}</select>
-                    <select id="paymentTerm">${TERMS.map(t=>`<option>${t}</option>`).join('')}</select>
-                    <div class="flex justify-end gap-2 mt-4"><button class="btn" onclick="recordFeePayment('${studentId}')">Record</button><button class="btn-gold" onclick="this.closest('.modal').remove()">Cancel</button></div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-        };
-        window.recordFeePayment = async (studentId) => {
-            const amount = parseFloat(document.getElementById('feeAmount').value);
-            if (isNaN(amount) || amount <= 0) return alert('Valid amount');
-            const code = document.getElementById('paymentCode').value.trim() || 'MANUAL';
-            const date = document.getElementById('paymentDate').value;
-            const year = document.getElementById('paymentAcademicYear').value;
-            const term = document.getElementById('paymentTerm').value;
-            const student = students.find(s=>s.id===studentId);
-            const newPaid = (student.fees_paid||0) + amount;
-            await restUpdate('students', studentId, { fees_paid: newPaid });
-            const receipt = 'RCP'+Date.now();
-            await restInsert('payments', { school_id: SCHOOL_ID, student_id: studentId, amount, payment_date: date, receipt_number: receipt, payment_code: code });
-            await restInsert('transactions', { school_id: SCHOOL_ID, student_id: studentId, amount, payment_date: date, receipt, payment_code: code, academic_year: year, term }).catch(e=>console.log);
-            showToast('Payment recorded');
-            document.querySelector('.modal').remove();
+        // ========== MAIN RENDER ==========
+        async function render() {
             await loadAll();
-            if (activeTab === 'fees') renderFees();
-            else if (activeTab === 'students') renderStudentList();
-        };
+            const now = new Date();
+            const totalCollected = payments.reduce((s,p)=>s+p.amount,0);
+            const totalExpected = students.reduce((s,st)=>s+(st.total_fees||0),0);
+            const today = new Date().toISOString().slice(0,10);
+            const absentToday = attendance.filter(a => a.date === today && a.status === 'absent').length;
+            const app = document.getElementById('app');
+            if (!currentSchool) {
+                app.innerHTML = `<div class="bg-red-100 text-red-800 p-4 rounded-xl text-center">❌ School not found. Please ensure a school record exists with ID: ${SCHOOL_ID}.<br><br><button class="btn" onclick="location.reload()">Retry</button></div>`;
+                return;
+            }
+            app.innerHTML = `<div class="app-container"><div class="school-header"><div class="school-name">${escapeHtml(currentSchool.name)}</div><div class="school-address">${escapeHtml(currentSchool.address || 'GAYAZA-KIJABIJJO')} | 📞 ${currentSchool.phone || '0779585035'}</div><div class="datetime-row"><span>📅 ${now.toLocaleDateString('en-US', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}</span><span>⏰ ${now.toLocaleTimeString()}</span></div></div><div class="stats-grid"><div class="stat-card"><div class="stat-number">${students.length}</div><div class="stat-label">STUDENTS</div></div><div class="stat-card"><div class="stat-number">${formatMoney(totalCollected)}</div><div class="stat-label">COLLECTED</div></div><div class="stat-card"><div class="stat-number">${formatMoney(totalExpected-totalCollected)}</div><div class="stat-label">OUTSTANDING</div></div><div class="stat-card"><div class="stat-number">${absentToday}</div><div class="stat-label">ABSENT TODAY</div></div></div><div class="action-buttons">${['students','attendance','marks','fees','reports','idcards','branches','fee_structure'].map(tab => `<button class="action-btn ${activeTab===tab?'active':''}" data-tab="${tab}"><i class="fas ${tab==='students'?'fa-user-graduate':tab==='attendance'?'fa-calendar-check':tab==='marks'?'fa-chart-line':tab==='fees'?'fa-money-bill-wave':tab==='reports'?'fa-file-alt':tab==='idcards'?'fa-id-card':tab==='branches'?'fa-building':'fa-cog'}"></i> ${tab.charAt(0).toUpperCase()+tab.slice(1)}</button>`).join('')}</div><div id="tabContent"></div></div>`;
+            document.querySelectorAll('.action-btn').forEach(btn => { btn.onclick = () => { activeTab = btn.dataset.tab; render(); }; });
+            if (activeTab === 'students') await renderStudents();
+            else if (activeTab === 'attendance') await renderAttendance();
+            else if (activeTab === 'marks') await renderMarks();
+            else if (activeTab === 'fees') await renderFees();
+            else if (activeTab === 'reports') await renderReports();
+            else if (activeTab === 'idcards') await renderIdCards();
+            else if (activeTab === 'branches') await renderBranches();
+            else if (activeTab === 'fee_structure') await renderFeeStructure();
+        }
 
-        // Init
-        (async function() {
+        // ========== INIT ==========
+        (async function init() {
             try {
-                const schools = await restFetch('schools', `id=eq.${SCHOOL_ID}`);
-                if (!schools.length) throw new Error('School not found');
+                let schools = await restFetch('schools', `id=eq.${SCHOOL_ID}`).catch(e => []);
+                if (!schools.length) {
+                    // Uncomment below to auto-create school for testing
+                    /*
+                    const newSchool = { id: SCHOOL_ID, name: 'PROGRESSIVE MOTHERS SCHOOL', address: 'GAYAZA-KIJABIJJO', phone: '0779585035' };
+                    await restInsert('schools', newSchool);
+                    schools = [newSchool];
+                    */
+                    throw new Error(`School with ID ${SCHOOL_ID} not found. Please create a school record in Supabase or uncomment the fallback code above.`);
+                }
                 currentSchool = schools[0];
                 await render();
             } catch(e) {
-                document.getElementById('app').innerHTML = `<div class="bg-red-100 text-red-800 p-4 rounded-xl">❌ ${e.message}</div>`;
+                document.getElementById('app').innerHTML = `<div class="bg-red-100 text-red-800 p-4 rounded-xl text-center">❌ ${e.message}</div>`;
+                console.error(e);
             }
         })();
     })();
