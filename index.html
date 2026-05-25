@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>PROGRESSIVE MOTHERS | School Management System</title>
+    <title>PROGRESSIVE MOTHERS | Role‑Based School Management</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
@@ -105,7 +105,7 @@
     let students = [], marks = [], attendance = [], payments = [], transactions = [], branches = [], feeStructures = [], expenses = [];
     let activeTab = 'students';
     let chart = null;
-    let currentUser = null; // { role: 'admin', 'teacher', 'finance' }
+    let currentUser = null;
 
     // ==================== AUTH ====================
     const USERS = {
@@ -139,7 +139,7 @@
         return false;
     }
 
-    // ==================== PERMISSION HELPERS ====================
+    // ==================== PERMISSIONS ====================
     function canManageStudents() { return currentUser?.role === 'admin'; }
     function canManageFees() { return currentUser?.role === 'admin' || currentUser?.role === 'finance'; }
     function canManageAttendance() { return currentUser?.role === 'admin' || currentUser?.role === 'teacher'; }
@@ -150,8 +150,9 @@
     function canManageReports() { return currentUser?.role === 'admin'; }
     function canDeleteStudent() { return currentUser?.role === 'admin'; }
     function canEditStudent() { return currentUser?.role === 'admin'; }
+    function canViewStats() { return currentUser?.role === 'admin'; }
 
-    // ==================== REST HELPERS (same as before) ====================
+    // ==================== REST HELPERS ====================
     async function restFetch(table, query = '') {
         const url = `${SUPABASE_URL}/rest/v1/${table}?select=*${query ? `&${query}` : ''}`;
         const res = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
@@ -280,7 +281,7 @@
         const absentStudents = absentRecords.map(rec => students.find(s => s.id === rec.student_id)).filter(s => s);
         if (absentStudents.length === 0) return '<div class="bg-green-50 p-3 rounded-lg">✅ No absent students on this date.</div>';
         let html = `<div class="absent-section"><h4 class="font-bold mb-2"><i class="fas fa-user-slash"></i> 📋 Absent Students on ${date}</h4>
-                    <table class="w-full"><thead><tr><th>Name</th><th>Class</th><th>Parent Name</th><th>WhatsApp</th><th>Action</th></tr></thead><tbody>`;
+                    <table class="w-full"><thead><tr><th>Name</th><th>Class</th><th>Parent Name</th><th>WhatsApp</th><th>Action</th></table></thead><tbody>`;
         for (let s of absentStudents) {
             html += `<tr>
                         <td class="p-2">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</td>
@@ -311,24 +312,36 @@
         showToast(`Notified ${absentStudents.length} parents`);
     };
 
-    // ==================== RENDER FUNCTIONS (with permission checks) ====================
-    // Only the necessary tabs are shown based on role
+    // ==================== RENDER FUNCTIONS (ROLE‑BASED) ====================
     function getAvailableTabs() {
-        const allTabs = [
-            { id: 'students', label: 'Students', icon: 'fa-user-graduate', condition: canManageStudents() },
-            { id: 'attendance', label: 'Attendance', icon: 'fa-calendar-check', condition: canManageAttendance() },
-            { id: 'absences', label: 'Absences', icon: 'fa-user-slash', condition: canManageAttendance() },
-            { id: 'marks', label: 'Academics', icon: 'fa-chart-line', condition: canManageMarks() },
-            { id: 'fees', label: 'Fees', icon: 'fa-money-bill-wave', condition: canManageFees() },
-            { id: 'reports', label: 'Reports', icon: 'fa-file-alt', condition: canManageReports() },
-            { id: 'idcards', label: 'ID Cards', icon: 'fa-id-card', condition: canManageIdCards() },
-            { id: 'branches', label: 'Branches', icon: 'fa-building', condition: canManageBranches() },
-            { id: 'fee_structure', label: 'Fee Structure', icon: 'fa-cog', condition: canManageFeeStructure() }
-        ];
-        return allTabs.filter(t => t.condition);
+        const role = currentUser?.role;
+        if (role === 'admin') {
+            return [
+                { id: 'students', label: 'Students', icon: 'fa-user-graduate' },
+                { id: 'attendance', label: 'Attendance', icon: 'fa-calendar-check' },
+                { id: 'absences', label: 'Absences', icon: 'fa-user-slash' },
+                { id: 'marks', label: 'Academics', icon: 'fa-chart-line' },
+                { id: 'fees', label: 'Fees', icon: 'fa-money-bill-wave' },
+                { id: 'reports', label: 'Reports', icon: 'fa-file-alt' },
+                { id: 'idcards', label: 'ID Cards', icon: 'fa-id-card' },
+                { id: 'branches', label: 'Branches', icon: 'fa-building' },
+                { id: 'fee_structure', label: 'Fee Structure', icon: 'fa-cog' }
+            ];
+        } else if (role === 'teacher') {
+            return [
+                { id: 'attendance', label: 'Attendance', icon: 'fa-calendar-check' },
+                { id: 'absences', label: 'Absences', icon: 'fa-user-slash' },
+                { id: 'marks', label: 'Academics', icon: 'fa-chart-line' }
+            ];
+        } else if (role === 'finance') {
+            return [
+                { id: 'fees', label: 'Fees', icon: 'fa-money-bill-wave' }
+            ];
+        }
+        return [];
     }
 
-    // Render students list (hide edit/delete for non-admin)
+    // Students tab (only for admin)
     async function renderStudentList() {
         const search = document.getElementById('studentSearch')?.value.toLowerCase() || '';
         let filtered = students.filter(s => (s.first_name+' '+s.last_name).toLowerCase().includes(search) || (s.admission_number||'').includes(search));
@@ -350,47 +363,42 @@
                         <td class="p-2">${formatMoney(s.total_fees)}</td>
                         <td class="p-2">${formatMoney(paid)}</td>
                         <td class="p-2 ${bal>0?'debt':''}">${formatMoney(bal)}</td>
-                        <td class="p-2">`;
-            if (canEditStudent()) {
-                html += `<button class="btn-sm" onclick="window.editStudent('${s.id}')"><i class="fas fa-edit"></i></button>
-                         <button class="btn-sm text-red-600" onclick="window.deleteStudent('${s.id}')"><i class="fas fa-trash"></i></button>`;
-            }
-            if (canManageFees()) {
-                html += `<button class="btn-sm" onclick="window.showFeeModal('${s.id}')"><i class="fas fa-money-bill-wave"></i></button>`;
-            }
-            html += `</td></tr>`;
+                        <td class="p-2">
+                            <button class="btn-sm" onclick="window.editStudent('${s.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn-sm text-red-600" onclick="window.deleteStudent('${s.id}')"><i class="fas fa-trash"></i></button>
+                            <button class="btn-sm" onclick="window.showFeeModal('${s.id}')"><i class="fas fa-money-bill-wave"></i></button>
+                        </td>
+                      </tr>`;
         }
         html += '</tbody></table>';
         container.innerHTML = html;
     }
 
-    // Students tab (only show add/import/export if admin)
     async function renderStudents() {
+        if (!canManageStudents()) return;
         const container = document.getElementById('tabContent');
         container.innerHTML = `
             <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
                 <div class="flex gap-2">
-                    ${canManageStudents() ? `<button class="btn" onclick="window.showAddStudentModal()"><i class="fas fa-plus"></i> Add Student</button>
+                    <button class="btn" onclick="window.showAddStudentModal()"><i class="fas fa-plus"></i> Add Student</button>
                     <button class="btn btn-gold" onclick="window.exportStudentsExcel()"><i class="fas fa-download"></i> Export</button>
-                    <label class="btn btn-gold cursor-pointer"><i class="fas fa-upload"></i> Import <input type="file" id="importExcel" accept=".xlsx,.xls,.csv" style="display:none"></label>` : ''}
+                    <label class="btn btn-gold cursor-pointer"><i class="fas fa-upload"></i> Import <input type="file" id="importExcel" accept=".xlsx,.xls,.csv" style="display:none"></label>
                 </div>
                 <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="studentSearch" placeholder="Search..."></div>
             </div>
             <div class="data-table" id="studentsTable"></div>
         `;
-        if (canManageStudents()) {
-            document.getElementById('importExcel').onchange = e => window.importStudentsExcel(e.target.files[0]);
-        }
+        document.getElementById('importExcel').onchange = e => window.importStudentsExcel(e.target.files[0]);
         document.getElementById('studentSearch').addEventListener('input', () => renderStudentList());
         await renderStudentList();
     }
 
-    // Attendance tab (visible to teacher/admin)
+    // Attendance tab (teacher/admin)
     async function renderAttendance() {
         const container = document.getElementById('tabContent');
         const classes = [...new Set(students.map(s=>s.class).filter(Boolean))];
         if (classes.length === 0) {
-            container.innerHTML = `<div class="bg-white p-4 rounded-xl text-center">No students yet.</div>`;
+            container.innerHTML = `<div class="bg-white p-4 rounded-xl text-center">No students yet. Admin can add students.</div>`;
             return;
         }
         container.innerHTML = `
@@ -444,13 +452,10 @@
             showToast('Attendance saved!');
             await loadAll();
             await loadAttendanceAndAbsent();
-            const newAbsentToday = attendance.filter(a => a.date === date && a.status === 'absent').length;
-            const statCards = document.querySelectorAll('.stat-number');
-            if(statCards.length >= 4) statCards[3].innerText = newAbsentToday;
         };
     }
 
-    // Absences tab (visible to teacher/admin)
+    // Absences tab (teacher/admin)
     async function renderAbsencesTab() {
         const container = document.getElementById('tabContent');
         const today = new Date().toISOString().slice(0,10);
@@ -526,7 +531,7 @@
             if(!classStudents.length){ document.getElementById('marksGrid').innerHTML='<p>No students</p>'; return; }
             const existing = await restFetch('marks', `class=eq.${className}&term=eq.${term}&exam_type=eq.${examType}&school_id=eq.${SCHOOL_ID}`).catch(e=>[]);
             const map = {}; existing.forEach(m=>map[`${m.student_id}_${m.subject}`]=m);
-            let html = '<table class="w-full"><thead><tr><th>Student</th>'+CORE_SUBJECTS.map(s=>`<th>${s}</th>`).join('')+'</thead><tbody>';
+            let html = '<table class="w-full"><thead><tr><th>Student</th>'+CORE_SUBJECTS.map(s=>`<th>${s}</th>`).join('')+'</tr></thead><tbody>';
             for(let s of classStudents){
                 html+=`<tr><td class="p-2">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</td>`;
                 for(let sub of CORE_SUBJECTS){
@@ -565,7 +570,7 @@
         const totalCollected = payments.reduce((s,p)=>s+p.amount,0);
         const totalExpected = students.reduce((s,st)=>s+st.total_fees,0);
         const container = document.getElementById('tabContent');
-        container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div class="bg-white p-4 rounded-xl text-center"><div class="text-2xl font-bold text-green-700">${formatMoney(totalCollected)}</div><div>Collected</div></div><div class="bg-white p-4 rounded-xl text-center"><div class="text-2xl font-bold">${formatMoney(totalExpected)}</div><div>Expected</div></div><div class="bg-white p-4 rounded-xl text-center"><div class="text-2xl font-bold text-red-600">${formatMoney(totalExpected-totalCollected)}</div><div>Outstanding</div></div></div>
+        container.innerHTML = `
             <div class="bg-white rounded-xl p-4 shadow mb-4"><h3>Record Payment</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-3"><select id="payStudent">${students.map(s=>`<option value="${s.id}">${s.first_name} ${s.last_name}</option>`).join('')}</select><input type="number" id="payAmount" placeholder="Amount"><input id="payCode" placeholder="Payment Code"><input type="date" id="payDate" value="${new Date().toISOString().slice(0,10)}"></div><button class="btn mt-3" id="recordPayBtn">Record Payment</button></div>
             <div class="bg-white rounded-xl p-4 shadow"><h3>Student Balances</h3><div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Student</th><th>Total</th><th>Paid</th><th>Balance</th><th>WhatsApp</th></tr></thead><tbody id="balanceTable"></tbody></table></div></div>
             <div class="bg-white rounded-xl p-4 shadow mt-4"><h3>Expenses</h3><div class="flex gap-2 mb-3"><input id="expCat" placeholder="Category"><input id="expDesc" placeholder="Desc"><input type="number" id="expAmount" placeholder="Amount"><button class="btn" id="addExpenseBtn">Add</button></div><div id="expenseList"></div></div>`;
@@ -595,7 +600,7 @@
         const expDiv = document.getElementById('expenseList'); if(expDiv) expDiv.innerHTML = expenses.map(e => `<div class="flex justify-between border-b py-1">${e.expense_date} ${e.category}: ${formatMoney(e.amount)} <button class="text-red-600" onclick="window.deleteExpense('${e.id}')">Delete</button></div>`).join('');
     }
 
-    // Other tabs (reports, ID cards, branches, fee structure) – only for admin
+    // Other admin-only tabs
     async function renderReports() { 
         const container = document.getElementById('tabContent'); 
         const counts = ['D1','D2','C3','C4','C5','C6','P7','P8','F9'].map(g=>marks.filter(m=>m.grade===g).length); 
@@ -689,6 +694,7 @@
     };
     window.deleteExpense = async (id) => { if(confirm('Delete expense?')){ await restDelete('expenses', id); await refreshAllAndRender(); } };
     window.exportStudentsExcel = () => {
+        if (!canManageStudents()) return;
         const ws = XLSX.utils.json_to_sheet(students.map(s => ({ 'Admission Number': s.admission_number, 'First Name': s.first_name, 'Last Name': s.last_name, 'Class': s.class, 'LIN': s.lin, 'Parent WhatsApp': s.parent_whatsapp, 'Total Fees': s.total_fees })));
         const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Students'); XLSX.writeFile(wb, `students_${SCHOOL_ID}.xlsx`);
     };
@@ -789,6 +795,7 @@
             currentSchool = { name: 'Progressive Mothers School', address: 'Gayaza-Kijabijjo', phone: '0779585035' };
         }
         const availableTabs = getAvailableTabs();
+        const showStats = canViewStats();
         app.innerHTML = `
             <div style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
                 <span class="role-badge">${currentUser.role.toUpperCase()} (${currentUser.username})</span>
@@ -800,12 +807,14 @@
                     <div class="school-address">${escapeHtml(currentSchool.address || 'Gayaza-Kijabijjo')} | 📞 ${currentSchool.phone || '0779585035'}</div>
                     <div class="datetime-row"><span>📅 ${now.toLocaleDateString('en-US', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}</span><span>⏰ ${now.toLocaleTimeString()}</span></div>
                 </div>
+                ${showStats ? `
                 <div class="stats-grid">
                     <div class="stat-card"><div class="stat-number">${students.length}</div><div class="stat-label">STUDENTS</div></div>
                     <div class="stat-card"><div class="stat-number">${formatMoney(totalCollected)}</div><div class="stat-label">COLLECTED</div></div>
                     <div class="stat-card"><div class="stat-number">${formatMoney(totalExpected-totalCollected)}</div><div class="stat-label">OUTSTANDING</div></div>
                     <div class="stat-card" data-stat-tab="absences"><div class="stat-number">${absentToday}</div><div class="stat-label">ABSENT TODAY</div></div>
                 </div>
+                ` : ''}
                 <div class="action-buttons">
                     ${availableTabs.map(tab => `<button class="action-btn ${activeTab===tab.id?'active':''}" data-tab="${tab.id}"><i class="fas ${tab.icon}"></i> ${tab.label}</button>`).join('')}
                 </div>
@@ -813,16 +822,24 @@
             </div>
         `;
         document.querySelectorAll('.action-btn').forEach(btn => { btn.onclick = () => { activeTab = btn.dataset.tab; renderMainApp(); }; });
-        document.querySelectorAll('.stat-card[data-stat-tab="absences"]').forEach(card => { card.onclick = () => { activeTab = 'absences'; renderMainApp(); }; });
-        if (activeTab === 'students') await renderStudents();
-        else if (activeTab === 'attendance') await renderAttendance();
-        else if (activeTab === 'absences') await renderAbsencesTab();
-        else if (activeTab === 'marks') await renderMarks();
-        else if (activeTab === 'fees') await renderFees();
-        else if (activeTab === 'reports') await renderReports();
-        else if (activeTab === 'idcards') await renderIdCards();
-        else if (activeTab === 'branches') await renderBranches();
-        else if (activeTab === 'fee_structure') await renderFeeStructure();
+        if (showStats) {
+            document.querySelectorAll('.stat-card[data-stat-tab="absences"]').forEach(card => { card.onclick = () => { activeTab = 'absences'; renderMainApp(); }; });
+        }
+        // Render the selected tab content
+        if (activeTab === 'students' && canManageStudents()) await renderStudents();
+        else if (activeTab === 'attendance' && canManageAttendance()) await renderAttendance();
+        else if (activeTab === 'absences' && canManageAttendance()) await renderAbsencesTab();
+        else if (activeTab === 'marks' && canManageMarks()) await renderMarks();
+        else if (activeTab === 'fees' && canManageFees()) await renderFees();
+        else if (activeTab === 'reports' && canManageReports()) await renderReports();
+        else if (activeTab === 'idcards' && canManageIdCards()) await renderIdCards();
+        else if (activeTab === 'branches' && canManageBranches()) await renderBranches();
+        else if (activeTab === 'fee_structure' && canManageFeeStructure()) await renderFeeStructure();
+        else {
+            // fallback: first available tab
+            if (availableTabs.length) activeTab = availableTabs[0].id;
+            renderMainApp();
+        }
     }
 
     // ==================== LOGIN SCREEN ====================
