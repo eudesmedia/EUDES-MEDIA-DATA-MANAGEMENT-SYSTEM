@@ -7,82 +7,76 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: white; }
+        body { background: linear-gradient(135deg, #eef2ff 0%, #d9e4f5 100%); min-height: 100vh; }
         .app-container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-        .school-header { background: linear-gradient(135deg, #003366, #002244); color: white; border-radius: 24px; padding: 20px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .school-name { font-size: 1.8rem; font-weight: 800; }
-        .school-address { font-size: 0.85rem; opacity: 0.8; margin-top: 4px; }
-        .datetime-row { display: flex; justify-content: space-between; margin-top: 12px; background: rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 40px; font-size: 0.75rem; flex-wrap: wrap; gap: 10px; }
-        .global-search { background: white; border-radius: 40px; padding: 6px 16px; display: flex; align-items: center; gap: 8px; }
-        .global-search input { border: none; outline: none; background: transparent; width: 200px; color: #003366; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: white; border-radius: 24px; padding: 16px; text-align: center; border-top: 4px solid #D4A017; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.2s; cursor: pointer; }
-        .stat-card:hover { transform: translateY(-4px); }
-        .stat-number { font-size: 32px; font-weight: 800; color: #003366; }
-        .stat-label { font-size: 12px; color: #5a6874; text-transform: uppercase; letter-spacing: 0.5px; }
-        .action-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
-        .action-btn { background: white; border: none; padding: 10px 20px; border-radius: 40px; font-weight: 600; color: #003366; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .action-btn.active { background: #003366; color: white; }
-        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .school-header { background: linear-gradient(135deg, #003366, #001a33); color: white; border-radius: 28px; padding: 24px; margin-bottom: 24px; box-shadow: 0 15px 35px -10px rgba(0,0,0,0.2); }
+        .school-name { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.5px; }
+        .school-address { font-size: 0.85rem; opacity: 0.85; margin-top: 6px; }
+        .datetime-row { display: flex; justify-content: space-between; margin-top: 16px; background: rgba(255,255,255,0.12); padding: 8px 18px; border-radius: 60px; font-size: 0.75rem; flex-wrap: wrap; gap: 10px; backdrop-filter: blur(2px); }
+        .global-search { background: white; border-radius: 40px; padding: 5px 16px; display: flex; align-items: center; gap: 8px; }
+        .global-search input { border: none; outline: none; background: transparent; width: 210px; color: #003366; font-weight: 500; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 18px; margin-bottom: 28px; }
+        .stat-card { background: white; border-radius: 28px; padding: 18px 12px; text-align: center; border-top: 5px solid #D4A017; box-shadow: 0 6px 14px rgba(0,0,0,0.03); transition: all 0.2s ease; cursor: pointer; }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -12px rgba(0,0,0,0.1); }
+        .stat-number { font-size: 34px; font-weight: 800; color: #003366; }
+        .stat-label { font-size: 13px; color: #4a5a6e; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+        .action-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+        .action-btn { background: white; border: none; padding: 10px 22px; border-radius: 50px; font-weight: 600; color: #1e293b; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-size: 0.9rem; }
+        .action-btn.active { background: #003366; color: white; box-shadow: 0 6px 12px -6px rgba(0,51,102,0.3); }
+        .tab-content { display: none; animation: fadeIn 0.25s ease; }
         .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .data-table { background: white; border-radius: 24px; overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .data-table { background: white; border-radius: 28px; overflow-x: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 20px; border: 1px solid #edf2f7; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #edf2f7; }
-        th { background: #f8fafc; font-weight: 700; color: #1e293b; }
-        .btn { background: #003366; color: white; padding: 8px 16px; border: none; border-radius: 40px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
-        .btn-gold { background: #D4A017; color: #003366; }
-        .btn-sm { padding: 4px 12px; font-size: 12px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(2px); }
-        .modal-content { background: white; border-radius: 32px; padding: 24px; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; }
-        input, select, textarea { width: 100%; padding: 10px 12px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 16px; background: white; }
-        .student-photo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: white; }
-        .debt { color: #dc2626; font-weight: 600; }
-        .toast { position: fixed; bottom: 80px; right: 20px; background: #10b981; color: white; padding: 12px 20px; border-radius: 40px; z-index: 2000; font-weight: 500; animation: fadeOut 3s forwards; }
+        th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid #edf2f7; }
+        th { background: #f8fafc; font-weight: 700; color: #0f172a; font-size: 0.85rem; }
+        .btn { background: #003366; color: white; padding: 8px 18px; border: none; border-radius: 40px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-gold { background: #D4A017; color: #003366; font-weight: 700; }
+        .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 30px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(3px); }
+        .modal-content { background: white; border-radius: 32px; padding: 28px; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; }
+        input, select, textarea { width: 100%; padding: 12px 14px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 20px; background: white; font-size: 0.9rem; }
+        .student-photo { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; background: #f1f5f9; border: 1px solid #e2e8f0; }
+        .debt { color: #dc2626; font-weight: 700; }
+        .toast { position: fixed; bottom: 80px; right: 24px; background: #10b981; color: white; padding: 12px 24px; border-radius: 50px; z-index: 2000; font-weight: 500; box-shadow: 0 8px 20px rgba(0,0,0,0.15); animation: fadeOut 3s forwards; }
         .toast.error { background: #dc2626; }
-        @keyframes fadeOut { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
-        .login-container { max-width: 420px; margin: 10vh auto; background: white; border-radius: 32px; padding: 40px 32px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        @keyframes fadeOut { 0% { opacity: 1; transform: translateY(0); } 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; transform: translateY(10px); } }
+        /* Enhanced Login */
+        .login-container { max-width: 460px; margin: 10vh auto; background: rgba(255,255,255,0.98); border-radius: 48px; padding: 48px 40px; box-shadow: 0 40px 60px -20px rgba(0,0,0,0.3); backdrop-filter: blur(2px); border: 1px solid rgba(255,255,255,0.3); }
         .login-header { text-align: center; margin-bottom: 32px; }
-        .login-header i { font-size: 48px; color: #003366; background: #eef2ff; padding: 16px; border-radius: 60px; }
+        .login-header .logo-icon { background: linear-gradient(135deg, #003366, #D4A017); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 12px 20px -8px rgba(0,51,102,0.4); }
+        .login-header .logo-icon i { font-size: 40px; color: white; }
+        .login-header h2 { font-size: 28px; color: #003366; font-weight: 800; margin-bottom: 8px; }
+        .login-header p { color: #5a6e85; font-size: 14px; }
+        .input-group { margin-bottom: 20px; }
         .input-icon { position: relative; }
-        .input-icon i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-        .input-icon input { padding-left: 44px; }
-        .login-btn { width: 100%; background: #003366; color: white; padding: 14px; border-radius: 40px; font-weight: 600; margin-top: 8px; cursor: pointer; }
-        .role-badge { position: fixed; top: 20px; right: 20px; background: #003366; color: white; padding: 8px 16px; border-radius: 40px; font-size: 12px; z-index: 100; }
-        .logout-btn { background: #dc2626; margin-left: 10px; }
-        .support-badge { position: fixed; bottom: 20px; left: 20px; background: linear-gradient(135deg, #25D366, #128C7E); color: white; padding: 10px 18px; border-radius: 50px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 12px; z-index: 1000; cursor: pointer; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
-        .photo-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; background: white; margin-top: 8px; border: 1px solid #e2e8f0; }
-        .photo-buttons { display: flex; gap: 10px; margin-top: 8px; }
-        .photo-buttons button { flex: 1; font-size: 12px; padding: 6px; }
-        .id-card { width: 640px; margin: 0 auto; background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); overflow: hidden; display: flex; flex-direction: row; flex-wrap: wrap; }
-        .id-card-header { background: #003366; color: white; padding: 12px; text-align: center; width: 100%; }
-        .id-card-left { width: 40%; padding: 20px; text-align: center; border-right: 1px solid #e2e8f0; }
-        .id-card-right { width: 60%; padding: 20px; }
-        .id-card-photo { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; margin: 0 auto; border: 2px solid #D4A017; background: white; }
-        .finance-summary { background: #f8fafc; padding: 15px; border-radius: 16px; margin-bottom: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        @media (min-width: 768px) { .md\:grid-cols-4 { grid-template-columns: repeat(4, 1fr); } }
-        .student-report-card { max-width: 1000px; margin: 0 auto; background: white; border-radius: 24px; padding: 30px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
-        .report-header { text-align: center; border-bottom: 3px solid #003366; padding-bottom: 20px; margin-bottom: 20px; }
-        .report-header h2 { color: #003366; font-size: 1.8rem; }
-        .report-student-info { display: flex; gap: 25px; margin-bottom: 25px; padding: 15px; background: #f8fafc; border-radius: 20px; flex-wrap: wrap; align-items: center; }
-        .report-student-photo { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid #D4A017; background: white; }
-        .report-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        .report-table th, .report-table td { border: 1px solid #e2e8f0; padding: 12px; text-align: center; }
-        .report-table th { background: #003366; color: white; }
-        .report-summary { background: #eef2ff; padding: 15px; border-radius: 16px; margin-top: 20px; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 15px; }
-        .report-footer { margin-top: 25px; text-align: center; font-size: 0.75rem; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 15px; }
-        @media print {
-            body { background: white; padding: 0; }
-            .action-buttons, .global-search, .role-badge, .logout-btn, .support-badge, .btn, .action-btn { display: none !important; }
-            .student-report-card { box-shadow: none; padding: 0; }
-        }
-        .absent-checkbox { width: 20px; height: 20px; margin: 0; cursor: pointer; }
-        .chart-container { background: white; border-radius: 20px; padding: 20px; margin-top: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .input-icon i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 18px; }
+        .input-icon input { padding-left: 50px; border-radius: 50px; border: 1.5px solid #e2e8f0; transition: 0.2s; font-size: 15px; }
+        .input-icon input:focus { border-color: #003366; outline: none; box-shadow: 0 0 0 3px rgba(0,51,102,0.1); }
+        .login-btn { width: 100%; background: linear-gradient(135deg, #003366, #002244); color: white; padding: 14px; border-radius: 50px; font-weight: 700; margin-top: 12px; cursor: pointer; font-size: 1rem; border: none; transition: 0.2s; box-shadow: 0 8px 18px rgba(0,51,102,0.3); }
+        .login-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(0,51,102,0.4); }
+        .support-contacts { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eef2ff; text-align: center; }
+        .support-contacts p { font-size: 13px; color: #475569; margin-bottom: 8px; }
+        .support-numbers { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+        .support-numbers a { color: #25D366; font-weight: 600; text-decoration: none; font-size: 14px; background: #f0fdf4; padding: 5px 12px; border-radius: 40px; display: inline-flex; align-items: center; gap: 6px; }
+        .role-badge { background: #003366; color: white; padding: 8px 18px; border-radius: 40px; font-size: 12px; font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+        .logout-btn { background: #b91c1c; margin-left: 12px; border-radius: 40px; padding: 8px 16px; }
+        .support-badge { position: fixed; bottom: 24px; left: 24px; background: linear-gradient(135deg, #25D366, #128C7E); color: white; padding: 12px 22px; border-radius: 60px; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 12px; z-index: 1000; cursor: pointer; box-shadow: 0 6px 14px rgba(0,0,0,0.2); transition: 0.2s; }
+        .support-badge:hover { transform: scale(1.02); }
+        .photo-preview { width: 85px; height: 85px; border-radius: 50%; object-fit: cover; background: white; border: 2px solid #D4A017; margin-top: 8px; }
+        .id-card { width: 680px; background: white; border-radius: 24px; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.2); overflow: hidden; display: flex; flex-wrap: wrap; margin: 0 auto; }
+        .id-card-header { background: #003366; color: white; padding: 16px; text-align: center; width: 100%; }
+        .id-card-left { width: 38%; padding: 24px; text-align: center; border-right: 1px solid #e2e8f0; background: #fefce8; }
+        .id-card-right { width: 62%; padding: 24px; background: white; }
+        .id-card-photo { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; margin: 0 auto; border: 3px solid #D4A017; background: white; }
+        .finance-summary { background: #f1f5f9; padding: 20px; border-radius: 24px; margin-bottom: 24px; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .report-card { max-width: 1000px; margin: 0 auto; background: white; border-radius: 28px; padding: 32px; box-shadow: 0 8px 28px rgba(0,0,0,0.08); }
+        .absent-checkbox { width: 20px; height: 20px; cursor: pointer; accent-color: #003366; }
+        .class-selector-card { background: #f8fafc; border-radius: 24px; padding: 20px; margin-bottom: 24px; border: 1px solid #e2e8f0; }
+        @media print { body { background: white; } .action-buttons, .global-search, .role-badge, .logout-btn, .support-badge, .btn, .action-btn { display: none !important; } }
     </style>
 </head>
 <body>
@@ -90,7 +84,7 @@
 
 <script>
     (function(){
-        // ---------- CONFIG ----------
+        // Supabase Config
         const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
         const SCHOOL_ID = '11111111-1111-1111-1111-111111111111';
@@ -106,9 +100,7 @@
         let activeTab = 'dashboard';
         let currentUser = null;
         let globalSearchTerm = '';
-        let gradeChart = null;
         
-        // ---------- AUTH ----------
         const USERS = { admin: { password: 'admin123', role: 'admin' }, teacher: { password: 'teacher123', role: 'teacher' }, finance: { password: 'finance123', role: 'finance' } };
         function login(u,p) { if(USERS[u] && USERS[u].password===p) { currentUser={username:u,role:USERS[u].role}; sessionStorage.setItem('schoolUser',JSON.stringify(currentUser)); return true; } return false; }
         function logout() { sessionStorage.removeItem('schoolUser'); currentUser=null; renderLogin(); }
@@ -116,29 +108,9 @@
         function canManageStudents() { return currentUser?.role==='admin'; }
         function canManageMarks() { return currentUser?.role==='admin' || currentUser?.role==='teacher'; }
         function canManageAttendance() { return currentUser?.role==='admin' || currentUser?.role==='teacher'; }
-        function canManageFees() { return currentUser?.role==='admin' || currentUser?.role==='finance'; }
-        function canViewReports() { return currentUser?.role==='admin'; }
-        
-        function generateLIN(firstName) { let letter=firstName?firstName.charAt(0).toUpperCase():'X'; return `PM${letter}${Math.floor(1000+Math.random()*9000)}`; }
-        function isValidLIN(lin,firstName) { let expected=firstName?firstName.charAt(0).toUpperCase():''; return new RegExp(`^PM${expected}[0-9]{4}$`).test(lin); }
-        
-        async function compressPhoto(file) {
-            return new Promise((resolve,reject)=>{
-                if(!file.type.match('image/jpeg')&&!file.type.match('image/png')) reject('Only JPEG/PNG');
-                let url=URL.createObjectURL(file);
-                let img=new Image();
-                img.onload=()=>{
-                    URL.revokeObjectURL(url);
-                    let w=img.width, h=img.height, max=150;
-                    if(w>max||h>max){ if(w>h){ h=(h*max)/w; w=max; } else { w=(w*max)/h; h=max; } }
-                    let c=document.createElement('canvas'); c.width=w; c.height=h;
-                    c.getContext('2d').drawImage(img,0,0,w,h);
-                    resolve(c.toDataURL('image/jpeg',0.7));
-                };
-                img.onerror=()=>{ URL.revokeObjectURL(url); reject('Image load failed'); };
-                img.src=url;
-            });
-        }
+        function formatMoney(amt) { return 'UGX '+(amt||0).toLocaleString(); }
+        function escapeHtml(str) { return str?String(str).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]):''; }
+        function showToast(msg,isErr=false) { let t=document.createElement('div'); t.className=`toast ${isErr?'error':''}`; t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3000); }
         
         async function restFetch(table, query='') {
             let url=`${SUPABASE_URL}/rest/v1/${table}?select=*${query?`&${query}`:''}`;
@@ -148,17 +120,16 @@
         }
         async function restInsert(table,data) {
             let res=await fetch(`${SUPABASE_URL}/rest/v1/${table}`,{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(data)});
-            if(!res.ok) throw new Error(`Insert failed: ${await res.text()}`);
+            if(!res.ok) throw new Error(`Insert failed`);
             let txt=await res.text(); return txt.trim()?JSON.parse(txt):{};
         }
         async function restUpdate(table,id,data) {
             let res=await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(data)});
             if(!res.ok) throw new Error(await res.text());
-            let txt=await res.text(); return txt.trim()?JSON.parse(txt):{};
+            return {};
         }
         async function restDeleteFilter(table,filter,val) {
-            let res=await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}=eq.${val}`,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}});
-            if(!res.ok) throw new Error(await res.text());
+            await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}=eq.${val}`,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}});
         }
         
         async function loadAll() {
@@ -173,11 +144,8 @@
         function getGrade(score) { if(score>=90) return 'D1'; if(score>=80) return 'D2'; if(score>=70) return 'C3'; if(score>=60) return 'C4'; if(score>=50) return 'C5'; if(score>=40) return 'C6'; if(score>=35) return 'P7'; if(score>=30) return 'P8'; return 'F9'; }
         function gradePoints(g) { return {D1:1,D2:2,C3:3,C4:4,C5:5,C6:6,P7:7,P8:8,F9:9}[g] || 9; }
         function getDivision(agg) { if(agg<=12) return 'Division 1'; if(agg<=23) return 'Division 2'; if(agg<=29) return 'Division 3'; if(agg<=34) return 'Division 4'; return 'Division U'; }
-        function formatMoney(amt) { return 'UGX '+(amt||0).toLocaleString(); }
-        function escapeHtml(str) { return str?String(str).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]):''; }
-        function showToast(msg,isErr=false) { let t=document.createElement('div'); t.className=`toast ${isErr?'error':''}`; t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3000); }
         
-        // ========== DASHBOARD (with Grade Distribution Chart) ==========
+        // Dashboard without graph
         async function renderDashboard() {
             let totalIncome=payments.reduce((s,p)=>s+p.amount,0);
             let totalExpenses=expenses.reduce((s,e)=>s+e.amount,0);
@@ -186,49 +154,23 @@
             let today=new Date().toISOString().slice(0,10);
             let absentToday=attendance.filter(a=>a.date===today&&a.status==='absent').length;
             let presentToday=students.length-absentToday;
-            
-            const gradeLabels = ['D1','D2','C3','C4','C5','C6','P7','P8','F9'];
-            const gradeCounts = gradeLabels.map(g => marks.filter(m => m.grade === g).length);
-            
             document.getElementById('tabContent').innerHTML=`
                 <div class="stats-grid">
-                    <div class="stat-card"><div class="stat-number">${students.length}</div><div class="stat-label">STUDENTS</div></div>
+                    <div class="stat-card"><div class="stat-number">${students.length}</div><div class="stat-label">TOTAL STUDENTS</div></div>
                     <div class="stat-card"><div class="stat-number">${formatMoney(totalIncome)}</div><div class="stat-label">INCOME</div></div>
                     <div class="stat-card"><div class="stat-number">${formatMoney(totalExpenses)}</div><div class="stat-label">EXPENSES</div></div>
-                    <div class="stat-card"><div class="stat-number">${formatMoney(outstanding)}</div><div class="stat-label">OUTSTANDING</div></div>
+                    <div class="stat-card"><div class="stat-number">${formatMoney(outstanding)}</div><div class="stat-label">OUTSTANDING FEES</div></div>
                     <div class="stat-card"><div class="stat-number">${presentToday}</div><div class="stat-label">PRESENT TODAY</div></div>
                     <div class="stat-card"><div class="stat-number">${absentToday}</div><div class="stat-label">ABSENT TODAY</div></div>
                 </div>
-                <div class="chart-container">
-                    <h3 class="font-bold text-lg mb-3"><i class="fas fa-chart-bar"></i> Grade Distribution (All Marks)</h3>
-                    <canvas id="gradeDistributionChart" height="200"></canvas>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow text-center mt-4">Welcome to Progressive Mothers School Management System</div>
+                <div class="bg-white p-6 rounded-2xl shadow text-center mt-4">🏫 Welcome to Progressive Mothers School Management System<br>📞 Support: ${SCHOOL_CONTACTS.join(' / ')}</div>
             `;
-            
-            const ctx = document.getElementById('gradeDistributionChart')?.getContext('2d');
-            if (gradeChart) gradeChart.destroy();
-            if (ctx) {
-                gradeChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: gradeLabels,
-                        datasets: [{
-                            label: 'Number of Marks',
-                            data: gradeCounts,
-                            backgroundColor: '#003366',
-                            borderRadius: 8,
-                        }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: true }
-                });
-            }
         }
         
-        // ========== STUDENTS (simplified but functional) ==========
+        // Students Management
         async function renderStudents() {
             document.getElementById('tabContent').innerHTML=`
-                <div class="flex flex-wrap justify-between gap-3 mb-4"><div class="flex gap-2"><button class="btn" id="addStudentBtn"><i class="fas fa-plus"></i> Add Student</button><button class="btn btn-gold" id="exportBtn">Export Excel</button></div></div>
+                <div class="flex flex-wrap justify-between gap-3 mb-4"><div class="flex gap-2"><button class="btn" id="addStudentBtn"><i class="fas fa-plus"></i> Add Student</button><button class="btn btn-gold" id="exportBtn">📎 Export Excel</button></div></div>
                 <div class="data-table" id="studentTableContainer"></div>
             `;
             document.getElementById('addStudentBtn').onclick=showAddStudentModal;
@@ -241,458 +183,211 @@
             for(let s of filtered){
                 let paid=payments.filter(p=>p.student_id===s.id).reduce((a,b)=>a+b.amount,0);
                 let bal=(s.total_fees||0)-paid;
-                let photo=s.photo_url?`<img src="${s.photo_url}" class="student-photo">`:'<i class="fas fa-user-circle fa-2x"></i>';
-                html+=`<tr><td class="p-2">${photo}</td><td class="p-2">${s.first_name} ${s.last_name}</td><td class="p-2">${s.class}</td><td class="p-2">${s.lin}</td><td class="p-2 ${bal>0?'debt':''}">${formatMoney(bal)}</td>
-                    <td class="p-2"><button class="btn-sm" onclick="editStudent('${s.id}')">Edit</button> <button class="btn-sm text-red-600" onclick="deleteStudent('${s.id}')">Del</button> <button class="btn-sm btn-gold" onclick="printIdCard('${s.id}')">ID</button> <button class="btn-sm" onclick="quickPayment('${s.id}')">Pay</button> <button class="btn-sm" onclick="showStudentReport('${s.id}')">Report</button></td>
-                `;
+                let photo=s.photo_url?`<img src="${s.photo_url}" class="student-photo">`:'<i class="fas fa-user-circle fa-2x" style="color:#003366;"></i>';
+                html+=`<tr><td class="p-2">${photo}</td><td class="p-2"><strong>${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</strong></td><td class="p-2">${s.class}</td><td class="p-2">${s.lin}</td><td class="p-2 ${bal>0?'debt':''}">${formatMoney(bal)}</td>
+                <td class="p-2"><button class="btn-sm" onclick="window.editStudentPrompt('${s.id}')">✏️ Edit</button> ${canManageStudents()?`<button class="btn-sm" style="background:#dc2626;color:white;" onclick="window.deleteStudentConfirm('${s.id}')">🗑️ Del</button>`:''} <button class="btn-sm btn-gold" onclick="window.printIdCard('${s.id}')">🪪 ID</button> <button class="btn-sm" onclick="window.quickPayment('${s.id}')">💰 Pay</button></td></tr>`;
             }
-            html+='</tbody><table>';
+            html+='</tbody></table>';
             document.getElementById('studentTableContainer').innerHTML=html;
         }
-        window.editStudent=async(id)=>{ let s=students.find(st=>st.id===id); let newName=prompt('New full name',`${s.first_name} ${s.last_name}`); if(newName){ let parts=newName.split(' '); await restUpdate('students',id,{first_name:parts[0],last_name:parts.slice(1).join(' ')}); await loadAll(); await renderStudentList(); } };
-        window.deleteStudent=async(id)=>{ if(confirm('Delete student?')){ await restDeleteFilter('students','id',id); await loadAll(); await renderStudentList(); } };
-        window.quickPayment=async(id)=>{ let s=students.find(st=>st.id===id); let amt=prompt(`Payment for ${s.first_name} (Balance: ${formatMoney((s.total_fees||0)-payments.filter(p=>p.student_id===id).reduce((a,b)=>a+b.amount,0))})`); if(amt&&!isNaN(parseFloat(amt))){ await restUpdate('students',id,{fees_paid:(s.fees_paid||0)+parseFloat(amt)}); await restInsert('payments',{school_id:SCHOOL_ID,student_id:id,amount:parseFloat(amt),payment_date:new Date().toISOString().slice(0,10),receipt_number:`RCP-${Date.now()}`}); showToast('Payment recorded'); await loadAll(); await renderStudentList(); if(activeTab==='fees') renderFees(); } };
-        window.printIdCard=(id)=>{ let s=students.find(st=>st.id===id); if(!s)return; let win=window.open('','_blank'); let photo=s.photo_url?`<img src="${s.photo_url}" class="id-card-photo">`:'<div class="id-card-photo" style="background:white;display:flex;align-items:center;justify-content:center;border:2px solid #D4A017;"><i class="fas fa-user-circle fa-4x" style="color:#003366;"></i></div>'; win.document.write(`<html><head><title>ID Card</title><style>body{font-family:Inter;background:#e2e8f0;display:flex;justify-content:center;align-items:center;min-height:100vh;}.id-card{width:640px;background:white;border-radius:16px;display:flex;flex-wrap:wrap;}.id-card-header{background:#003366;color:white;padding:12px;text-align:center;width:100%;}.id-card-left{width:40%;padding:20px;text-align:center;border-right:1px solid #e2e8f0;}.id-card-right{width:60%;padding:20px;}.id-card-photo{width:140px;height:140px;border-radius:50%;object-fit:cover;margin:0 auto;border:2px solid #D4A017;background:white;}</style></head><body><div class="id-card"><div class="id-card-header"><h3>${escapeHtml(currentSchool.name)}</h3><p>${escapeHtml(currentSchool.address||'')}</p></div><div class="id-card-left">${photo}</div><div class="id-card-right"><h2>${s.first_name} ${s.last_name}</h2><p><strong>LIN:</strong> ${s.lin}</p><p><strong>Class:</strong> ${s.class}</p><p><strong>Admission:</strong> ${s.admission_number||'N/A'}</p><p><strong>Parent:</strong> ${s.parent_name||'N/A'}</p><p><strong>WhatsApp:</strong> ${s.parent_whatsapp||'N/A'}</p></div></div><script>window.print();<\/script></body></html>`); win.document.close(); };
+        window.editStudentPrompt=async(id)=>{ let s=students.find(st=>st.id===id); let newName=prompt('Edit Full Name',`${s.first_name} ${s.last_name}`); if(newName){ let parts=newName.split(' '); await restUpdate('students',id,{first_name:parts[0],last_name:parts.slice(1).join(' ')}); await loadAll(); await renderStudentList(); } };
+        window.deleteStudentConfirm=async(id)=>{ if(confirm('Delete student?')){ await restDeleteFilter('students','id',id); await loadAll(); await renderStudentList(); } };
+        window.quickPayment=async(id)=>{ let s=students.find(st=>st.id===id); let amt=prompt(`Payment for ${s.first_name}`); if(amt&&!isNaN(parseFloat(amt))){ await restInsert('payments',{school_id:SCHOOL_ID,student_id:id,amount:parseFloat(amt),payment_date:new Date().toISOString().slice(0,10),receipt_number:`RCP-${Date.now()}`}); showToast('Payment recorded'); await loadAll(); await renderStudentList(); if(activeTab==='fees') renderFees(); } };
+        window.printIdCard=(id)=>{ let s=students.find(st=>st.id===id); if(!s)return; let win=window.open('','_blank'); let photo=s.photo_url?`<img src="${s.photo_url}" class="id-card-photo">`:'<div class="id-card-photo" style="background:#f1f5f9;display:flex;align-items:center;justify-content:center;"><i class="fas fa-user-circle fa-4x"></i></div>'; win.document.write(`<html><head><title>ID Card</title><style>body{font-family:Inter;background:#e2e8f0;display:flex;justify-content:center;padding:40px;}.id-card{width:640px;background:white;border-radius:20px;display:flex;flex-wrap:wrap;}.id-card-header{background:#003366;color:white;padding:14px;text-align:center;width:100%;}.id-card-left{width:38%;padding:24px;text-align:center;border-right:1px solid #e2e8f0;}.id-card-right{width:62%;padding:24px;}.id-card-photo{width:140px;height:140px;border-radius:50%;object-fit:cover;margin:0 auto;border:3px solid #D4A017;}</style></head><body><div class="id-card"><div class="id-card-header"><h3>${escapeHtml(currentSchool.name)}</h3></div><div class="id-card-left">${photo}</div><div class="id-card-right"><h2>${s.first_name} ${s.last_name}</h2><p><strong>LIN:</strong> ${s.lin}</p><p><strong>Class:</strong> ${s.class}</p><p><strong>Parent:</strong> ${s.parent_name||'N/A'}</p><p><strong>WhatsApp:</strong> ${s.parent_whatsapp||'N/A'}</p></div></div><script>window.print();<\/script></body></html>`); win.document.close(); };
         
-        function showAddStudentModal(){
+        function showAddStudentModal() {
             let modal=document.createElement('div'); modal.className='modal'; modal.style.display='flex';
-            modal.innerHTML=`<div class="modal-content"><h3>Add Student</h3><input id="newFirstName" placeholder="First Name"><input id="newLastName" placeholder="Last Name"><input id="newAdm" placeholder="Admission No (auto)"><select id="newClass">${CLASS_ORDER.map(c=>`<option>${c}</option>`).join('')}</select><input id="newLin" placeholder="LIN (auto)"><input id="newParentWhatsapp" placeholder="Parent WhatsApp"><input id="newParentName" placeholder="Parent Name"><input id="newTotalFees" type="number" placeholder="Total Fees"><div><label>Photo</label><div id="photoControls"></div><div id="photoPreview"></div></div><div class="flex justify-end gap-2 mt-4"><button class="btn" id="confirmAdd">Save</button><button class="btn-gold" onclick="this.closest('.modal').remove()">Cancel</button></div></div>`;
+            modal.innerHTML=`<div class="modal-content"><h3>➕ Register Student</h3><input id="newFirstName" placeholder="First Name"><input id="newLastName" placeholder="Last Name"><select id="newClass">${CLASS_ORDER.map(c=>`<option>${c}</option>`).join('')}</select><input id="newLin" placeholder="LIN (Auto if empty)"><input id="newParentWhatsapp" placeholder="Parent WhatsApp"><input id="newParentName" placeholder="Parent Name"><input id="newTotalFees" type="number" placeholder="Total Fees (UGX)"><div><label>📸 Photo</label><input type="file" id="photoFile" accept="image/jpeg,image/png"><div id="photoPreview"></div></div><div class="flex justify-end gap-2 mt-4"><button class="btn" id="confirmAdd">Save</button><button class="btn-gold" onclick="this.closest('.modal').remove()">Cancel</button></div></div>`;
             document.body.appendChild(modal);
             let selectedPhoto=null;
-            let controls=document.getElementById('photoControls');
-            controls.innerHTML=`<input type="file" id="photoFile" accept="image/jpeg,image/png">`;
-            let preview=document.getElementById('photoPreview');
-            document.getElementById('photoFile').onchange=async(e)=>{
-                let file=e.target.files[0];
-                if(file){
-                    let reader=new FileReader();
-                    reader.onload=(ev)=>preview.innerHTML=`<img src="${ev.target.result}" class="photo-preview">`;
-                    reader.readAsDataURL(file);
-                    selectedPhoto=await compressPhoto(file);
-                } else preview.innerHTML='';
-            };
+            document.getElementById('photoFile').onchange=async(e)=>{ let file=e.target.files[0]; if(file){ let reader=new FileReader(); reader.onload=(ev)=>document.getElementById('photoPreview').innerHTML=`<img src="${ev.target.result}" class="photo-preview">`; reader.readAsDataURL(file); let compress=async(f)=>{ return new Promise((res)=>{ let url=URL.createObjectURL(f); let img=new Image(); img.onload=()=>{ let c=document.createElement('canvas'); c.width=150; c.height=150; c.getContext('2d').drawImage(img,0,0,150,150); URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg',0.7)); }; img.src=url; }); }; selectedPhoto=await compress(file); } };
             document.getElementById('confirmAdd').onclick=async()=>{
-                let first=document.getElementById('newFirstName').value.trim();
-                let last=document.getElementById('newLastName').value.trim();
+                let first=document.getElementById('newFirstName').value.trim(), last=document.getElementById('newLastName').value.trim();
                 if(!first||!last) return showToast("Name required",true);
-                let admission=document.getElementById('newAdm').value.trim()||`ADM${Date.now()}`;
                 let className=document.getElementById('newClass').value;
-                let lin=document.getElementById('newLin').value.trim().toUpperCase();
-                if(!lin) lin=generateLIN(first);
-                if(!isValidLIN(lin,first)) return showToast(`LIN must be PM+${first.charAt(0).toUpperCase()}+4 digits`,true);
-                let parentWhatsapp=document.getElementById('newParentWhatsapp').value.trim();
-                let parentName=document.getElementById('newParentName').value.trim();
-                let totalFees=parseFloat(document.getElementById('newTotalFees').value)||0;
-                let studentId=crypto.randomUUID?crypto.randomUUID():`s_${Date.now()}`;
-                let data={id:studentId,school_id:SCHOOL_ID,admission_number:admission,first_name:first,last_name:last,class:className,lin:lin,parent_whatsapp:parentWhatsapp,parent_name:parentName,total_fees:totalFees,fees_paid:0};
+                let lin=document.getElementById('newLin').value.trim().toUpperCase() || `PM${first.charAt(0).toUpperCase()}${Math.floor(1000+Math.random()*9000)}`;
+                let studentId=crypto.randomUUID();
+                let data={id:studentId,school_id:SCHOOL_ID,admission_number:`ADM-${Date.now()}`,first_name:first,last_name:last,class:className,lin:lin,parent_whatsapp:document.getElementById('newParentWhatsapp').value.trim(),parent_name:document.getElementById('newParentName').value.trim(),total_fees:parseFloat(document.getElementById('newTotalFees').value)||0,fees_paid:0};
                 if(selectedPhoto) data.photo_url=selectedPhoto;
                 await restInsert('students',data);
-                showToast('Student added');
+                showToast(`Student ${first} added`);
                 modal.remove();
                 await loadAll();
                 await renderStudentList();
             };
         }
         
-        // ========== ATTENDANCE (mark absent only) ==========
+        // ATTENDANCE: Select class first, then show students
         async function renderAttendance() {
-            const classOptions = [...new Set(students.map(s => s.class).filter(Boolean))];
-            if (classOptions.length === 0) {
-                document.getElementById('tabContent').innerHTML = '<div class="bg-white p-4 rounded-xl">No students</div>';
-                return;
-            }
-            document.getElementById('tabContent').innerHTML = `
-                <div class="bg-white rounded-xl p-4 shadow">
-                    <h3 class="font-bold mb-3">Mark Absent Students (All others are Present)</h3>
-                    <div class="flex flex-wrap gap-3 mb-4">
-                        <select id="attClass">${classOptions.map(c => `<option>${c}</option>`).join('')}</select>
-                        <input type="date" id="attDate" value="${new Date().toISOString().slice(0,10)}">
-                        <button class="btn" id="loadAttBtn">Load Class</button>
-                        <button class="btn btn-gold" id="saveAttBtn">Save Absent Records</button>
+            let classOptions=[...new Set(students.map(s=>s.class).filter(Boolean))];
+            document.getElementById('tabContent').innerHTML=`
+                <div class="bg-white rounded-2xl p-6 shadow">
+                    <h3 class="font-bold text-xl mb-4"><i class="fas fa-calendar-check"></i> Mark Attendance (Absent Only)</h3>
+                    <div class="class-selector-card">
+                        <label class="font-semibold">Select Class:</label>
+                        <select id="attClassSelect" class="mt-2 mb-4">${classOptions.map(c=>`<option value="${c}">${c}</option>`).join('')}</select>
+                        <input type="date" id="attDate" value="${new Date().toISOString().slice(0,10)}" class="mb-4">
+                        <button class="btn" id="loadClassForAttendance"><i class="fas fa-users"></i> Load Class</button>
                     </div>
-                    <div id="attList"></div>
+                    <div id="attendanceStudentsList" class="mt-4" style="display:none;">
+                        <div class="font-semibold mb-3">✅ Check the box for ABSENT students (unchecked = Present)</div>
+                        <div id="attendanceGrid" class="border rounded-2xl overflow-hidden"></div>
+                        <button class="btn btn-gold mt-4" id="saveAttendanceBtn">💾 Save Attendance</button>
+                    </div>
                 </div>
             `;
-
-            const loadAttendance = async () => {
-                const selectedClass = document.getElementById('attClass').value;
-                const date = document.getElementById('attDate').value;
+            let loadClass = async () => {
+                let selectedClass = document.getElementById('attClassSelect').value;
+                let date = document.getElementById('attDate').value;
                 let classStudents = students.filter(s => s.class === selectedClass);
-                if (classStudents.length === 0) {
-                    document.getElementById('attList').innerHTML = '<div class="p-4 text-center">No students in this class</div>';
-                    return;
+                if(classStudents.length === 0){ showToast("No students in this class", true); return; }
+                let existing = await restFetch('attendance',`date=eq.${date}&status=eq.absent&school_id=eq.${SCHOOL_ID}`).catch(e=>[]);
+                let absentIds = new Set(existing.map(a=>a.student_id));
+                let html = `<div class="divide-y">`;
+                for(let s of classStudents){
+                    html += `<div class="flex justify-between items-center p-4 hover:bg-gray-50">
+                        <div><strong>${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</strong><br><span class="text-xs text-gray-500">${s.lin}</span></div>
+                        <label class="flex items-center gap-3"><input type="checkbox" class="absent-checkbox" data-student="${s.id}" ${absentIds.has(s.id)?'checked':''}> <span class="text-red-600 font-medium">❌ Absent</span></label>
+                    </div>`;
                 }
-                const existing = await restFetch('attendance', `date=eq.${date}&status=eq.absent&school_id=eq.${SCHOOL_ID}`).catch(e => []);
-                const absentIds = new Set(existing.map(a => a.student_id));
-                let html = '<div class="border rounded-lg overflow-hidden">';
-                for (let s of classStudents) {
-                    const isAbsent = absentIds.has(s.id);
-                    html += `
-                        <div class="flex justify-between items-center p-3 border-b">
-                            <span>${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)} (${s.lin})</span>
-                            <label style="display:flex; align-items:center; gap:8px;">
-                                <input type="checkbox" class="absent-checkbox" data-student="${s.id}" ${isAbsent ? 'checked' : ''}>
-                                <span>❌ Absent</span>
-                            </label>
-                        </div>
-                    `;
-                }
-                html += '</div>';
-                document.getElementById('attList').innerHTML = html;
+                html += `</div>`;
+                document.getElementById('attendanceGrid').innerHTML = html;
+                document.getElementById('attendanceStudentsList').style.display = 'block';
             };
-
-            document.getElementById('loadAttBtn').onclick = loadAttendance;
-            document.getElementById('saveAttBtn').onclick = async () => {
-                const date = document.getElementById('attDate').value;
-                const checkboxes = document.querySelectorAll('.absent-checkbox');
-                let saved = 0, deleted = 0;
-                for (let cb of checkboxes) {
-                    const studentId = cb.dataset.student;
-                    const isAbsent = cb.checked;
-                    const existing = await restFetch('attendance', `student_id=eq.${studentId}&date=eq.${date}`).catch(e => []);
-                    if (isAbsent) {
-                        if (existing.length === 0) {
-                            await restInsert('attendance', { school_id: SCHOOL_ID, student_id: studentId, date, status: 'absent' });
-                            saved++;
-                        }
+            document.getElementById('loadClassForAttendance').onclick = loadClass;
+            document.getElementById('saveAttendanceBtn')?.removeEventListener('click', saveAttendance);
+            let saveAttendance = async () => {
+                let date = document.getElementById('attDate').value;
+                let checkboxes = document.querySelectorAll('.absent-checkbox');
+                let saved=0, removed=0;
+                for(let cb of checkboxes){
+                    let studentId = cb.dataset.student;
+                    let isAbsent = cb.checked;
+                    let existing = await restFetch('attendance',`student_id=eq.${studentId}&date=eq.${date}`).catch(e=>[]);
+                    if(isAbsent){
+                        if(existing.length===0){ await restInsert('attendance',{school_id:SCHOOL_ID,student_id:studentId,date,status:'absent'}); saved++; }
                     } else {
-                        if (existing.length > 0) {
-                            await restDeleteFilter('attendance', 'id', existing[0].id);
-                            deleted++;
-                        }
+                        if(existing.length>0){ await restDeleteFilter('attendance','id',existing[0].id); removed++; }
                     }
                 }
-                showToast(`Saved ${saved} absent records, removed ${deleted}`);
-                await loadAttendance();
+                showToast(`✅ ${saved} absent recorded, ${removed} removed`);
                 await loadAll();
-                if (activeTab === 'dashboard') await renderDashboard();
+                await loadClass();
+                if(activeTab==='dashboard') renderDashboard();
             };
-            await loadAttendance();
+            document.getElementById('saveAttendanceBtn')?.addEventListener('click', saveAttendance);
+            if(classOptions.length) await loadClass();
         }
         
-        // ========== MARKS ==========
-        async function saveMark(markData){ 
-            let existing=await restFetch('marks',`student_id=eq.${markData.student_id}&subject=eq.${markData.subject}&term=eq.${markData.term}&exam_type=eq.${markData.exam_type}&school_id=eq.${SCHOOL_ID}`); 
-            if(existing.length) await restUpdate('marks',existing[0].id,{score:markData.score,grade:markData.grade}); 
-            else await restInsert('marks',markData); 
-        }
+        // MARKS: Select class first, then show students
         async function renderMarks() {
             let classOptions=[...new Set(students.map(s=>s.class).filter(Boolean))];
-            if(classOptions.length===0){ document.getElementById('tabContent').innerHTML='<div class="bg-white p-4 rounded-xl">No students</div>'; return; }
             document.getElementById('tabContent').innerHTML=`
-                <div class="bg-white rounded-xl p-4 mb-4"><h3 class="font-bold">Marks Entry</h3><div class="flex flex-wrap gap-2 my-4"><select id="marksClass">${classOptions.map(c=>`<option>${c}</option>`).join('')}</select><select id="marksTerm">${TERMS.map(t=>`<option>${t}</option>`).join('')}</select><select id="marksExam">${EXAM_TYPES.map(e=>`<option>${e}</option>`).join('')}</select><button class="btn" id="loadMarks">Load</button><button class="btn btn-gold" id="saveMarks">Save All Marks</button></div><div id="marksGrid" class="overflow-x-auto"></div></div>
-                <div class="bg-white rounded-xl p-4"><h3 class="font-bold">Cumulative Report</h3><div class="flex flex-wrap gap-2 mb-4"><select id="reportStudent">${students.map(s=>`<option value="${s.id}">${s.first_name} ${s.last_name}</option>`).join('')}</select><select id="reportTerm">${TERMS.map(t=>`<option>${t}</option>`).join('')}</select><select id="reportExam">${EXAM_TYPES.map(e=>`<option>${e}</option>`).join('')}</select><button class="btn" id="genReport">Generate</button><button class="btn btn-gold" id="printReport">Print</button></div><div id="reportPreview"></div></div>
+                <div class="bg-white rounded-2xl p-6">
+                    <h3 class="font-bold text-xl mb-4"><i class="fas fa-pen-ruler"></i> Marks Entry System</h3>
+                    <div class="class-selector-card">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <select id="marksClassSelect"><option value="">-- Select Class First --</option>${classOptions.map(c=>`<option value="${c}">${c}</option>`).join('')}</select>
+                            <select id="marksTermSelect">${TERMS.map(t=>`<option>${t}</option>`).join('')}</select>
+                            <select id="marksExamSelect">${EXAM_TYPES.map(e=>`<option>${e}</option>`).join('')}</select>
+                        </div>
+                        <button class="btn" id="loadClassForMarks"><i class="fas fa-sync-alt"></i> Load Class Students</button>
+                    </div>
+                    <div id="marksEntryContainer" style="display:none;" class="mt-5">
+                        <div class="overflow-x-auto"><table class="w-full border" id="marksTableBody"><thead><tr><th>Student</th>${CORE_SUBJECTS.map(s=>`<th>${s}</th>`).join('')}</tr></thead><tbody></tbody></table></div>
+                        <button class="btn btn-gold mt-4" id="saveAllMarksBtn">💾 Save All Marks</button>
+                    </div>
+                </div>
             `;
-            let loadGrid=async()=>{
-                let className=document.getElementById('marksClass').value;
-                let term=document.getElementById('marksTerm').value;
-                let examType=document.getElementById('marksExam').value;
-                let classStudents=students.filter(s=>s.class===className);
-                if(!classStudents.length){ document.getElementById('marksGrid').innerHTML='<div class="p-4 text-center">No students</div>'; return; }
-                let relevantMarks=marks.filter(m=>m.term===term&&m.exam_type===examType);
-                let markMap=new Map(); relevantMarks.forEach(m=>markMap.set(`${m.student_id}_${m.subject}`,m));
-                let html=`<table class="w-full border"><thead><tr><th>Student (LIN)</th>${CORE_SUBJECTS.map(s=>`<th>${s}</th>`).join('')}</thead><tbody>`;
+            let loadMarksUI = async () => {
+                let className = document.getElementById('marksClassSelect').value;
+                if(!className){ showToast("Please select a class", true); return; }
+                let term = document.getElementById('marksTermSelect').value;
+                let examType = document.getElementById('marksExamSelect').value;
+                let classStudents = students.filter(s => s.class === className);
+                if(classStudents.length===0){ showToast("No students", true); return; }
+                let relevantMarks = marks.filter(m=>m.term===term&&m.exam_type===examType);
+                let markMap = new Map(); relevantMarks.forEach(m=>markMap.set(`${m.student_id}_${m.subject}`,m));
+                let html = `<tbody>`;
                 for(let s of classStudents){
-                    html+=`</td><td class="p-2">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}<br><span class="text-xs">${s.lin}</span></td>`;
+                    html += `<tr><td class="font-semibold">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}<div class="text-xs">${s.lin}</div></td>`;
                     for(let sub of CORE_SUBJECTS){
-                        let existing=markMap.get(`${s.id}_${sub}`);
-                        let val=existing?existing.score:'';
-                        html+=`<td class="p-2"><input type="number" class="mark-input" data-student="${s.id}" data-subject="${sub}" value="${val}" min="0" max="100" style="width:80px;padding:6px;border-radius:12px;"> <span class="text-xs">${existing?existing.grade:''}</span></td>`;
+                        let existing = markMap.get(`${s.id}_${sub}`);
+                        let val = existing ? existing.score : '';
+                        html += `<td><input type="number" class="mark-input w-24 p-2 border rounded-xl" data-student="${s.id}" data-subject="${sub}" value="${val}" min="0" max="100" style="width:90px;"> <span class="text-xs">${existing?existing.grade:''}</span></td>`;
                     }
-                    html+=`</td>`;
+                    html += `</tr>`;
                 }
-                html+=`</tbody></td>`;
-                document.getElementById('marksGrid').innerHTML=html;
+                html += `</tbody>`;
+                document.querySelector('#marksTableBody').innerHTML = html;
+                document.getElementById('marksEntryContainer').style.display = 'block';
             };
-            document.getElementById('loadMarks').onclick=loadGrid;
-            document.getElementById('saveMarks').onclick=async()=>{
-                const term=document.getElementById('marksTerm').value;
-                const examType=document.getElementById('marksExam').value;
-                const inputs=document.querySelectorAll('.mark-input');
-                let saved=0, errors=0;
-                showToast("Saving marks...");
+            document.getElementById('loadClassForMarks').onclick = loadMarksUI;
+            document.getElementById('saveAllMarksBtn')?.addEventListener('click', async ()=>{
+                let term = document.getElementById('marksTermSelect').value;
+                let examType = document.getElementById('marksExamSelect').value;
+                let inputs = document.querySelectorAll('.mark-input');
+                let saved=0;
                 for(let inp of inputs){
-                    const raw=inp.value.trim();
-                    if(raw==="") continue;
-                    const studentId=inp.dataset.student;
-                    const subject=inp.dataset.subject;
-                    const score=parseInt(raw);
-                    if(isNaN(score)||score<0||score>100){ errors++; showToast(`Invalid score for ${subject}`,true); continue; }
-                    const grade=getGrade(score);
-                    try{
-                        await saveMark({school_id:SCHOOL_ID,student_id:studentId,subject,score,grade,term,exam_type:examType});
-                        saved++;
-                    } catch(e){ errors++; console.error(e); }
+                    let val = inp.value.trim();
+                    if(val==="") continue;
+                    let score = parseInt(val);
+                    if(isNaN(score)||score<0||score>100){ showToast(`Invalid score`,true); continue; }
+                    let grade = getGrade(score);
+                    let studentId = inp.dataset.student, subject = inp.dataset.subject;
+                    let existing = await restFetch('marks',`student_id=eq.${studentId}&subject=eq.${subject}&term=eq.${term}&exam_type=eq.${examType}&school_id=eq.${SCHOOL_ID}`).catch(e=>[]);
+                    if(existing.length) await restUpdate('marks',existing[0].id,{score,grade});
+                    else await restInsert('marks',{school_id:SCHOOL_ID,student_id:studentId,subject,score,grade,term,exam_type:examType});
+                    saved++;
                 }
-                if(saved>0) showToast(`✅ Saved ${saved} marks successfully`);
-                if(errors>0) showToast(`⚠️ ${errors} errors`, true);
+                showToast(`Saved ${saved} marks`);
                 await loadAll();
-                await loadGrid();
-            };
-            document.getElementById('genReport').onclick=async()=>{
-                let studentId=document.getElementById('reportStudent').value;
-                let term=document.getElementById('reportTerm').value;
-                let examTarget=document.getElementById('reportExam').value;
-                let student=students.find(s=>s.id===studentId);
-                if(!student) return;
-                let examsToShow=[];
-                if(examTarget==='Beginning of Term') examsToShow=['Beginning of Term'];
-                else if(examTarget==='Mid Term') examsToShow=['Beginning of Term','Mid Term'];
-                else examsToShow=['Beginning of Term','Mid Term','End of Term'];
-                let studentMarks=marks.filter(m=>m.student_id===studentId&&m.term===term);
-                let rows='', totals={}, points={};
-                for(let sub of CORE_SUBJECTS){
-                    rows+=`<tr><td class="p-2 font-bold">${sub}</td>`;
-                    for(let ex of examsToShow){
-                        let m=studentMarks.find(m=>m.subject===sub&&m.exam_type===ex);
-                        let score=m?m.score:'-';
-                        let grade=m?m.grade:'-';
-                        rows+=`<td class="p-2 text-center">${score}<br><small>${grade}</small></td>`;
-                        if(m){
-                            totals[ex]=(totals[ex]||0)+m.score;
-                            if(!points[ex]) points[ex]=[];
-                            points[ex].push(gradePoints(m.grade));
-                        }
-                    }
-                    rows+=`</tr>`;
-                }
-                let summary=`<tr class="bg-gray-100"><td class="p-2 font-bold">Total/Agg</td>`;
-                for(let ex of examsToShow){
-                    let total=totals[ex]||0;
-                    let agg=0;
-                    if(points[ex]){ let sorted=points[ex].sort((a,b)=>a-b); agg=sorted.slice(0,8).reduce((s,p)=>s+p,0); }
-                    summary+=`<td class="p-2 text-center">${total}/400<br><small>Agg: ${agg}</small></td>`;
-                }
-                summary+=`<tr><tr class="bg-gray-50"><td class="p-2 font-bold">Division</td>`;
-                for(let ex of examsToShow){
-                    let agg=0;
-                    if(points[ex]){ let sorted=points[ex].sort((a,b)=>a-b); agg=sorted.slice(0,8).reduce((s,p)=>s+p,0); }
-                    summary+=`<td class="p-2 text-center">${getDivision(agg)}</td>`;
-                }
-                summary+=`</tr>`;
-                let photo=student.photo_url?`<img src="${student.photo_url}" width="70" style="border-radius:50%;object-fit:cover;">`:'<div style="width:70px;height:70px;background:#eef;border-radius:50%;display:flex;align-items:center;justify-content:center;">📷</div>';
-                let html=`<div class="report-card"><div class="report-header"><h2>${escapeHtml(currentSchool.name)}</h2><p>${currentSchool.address} | ${SCHOOL_CONTACTS.join(', ')}</p><p>${term} | ${examTarget} Cumulative Report</p></div><div class="flex gap-3 items-center mb-3">${photo}<div><strong>${student.first_name} ${student.last_name}</strong><br>LIN: ${student.lin}<br>Class: ${student.class}</div></div><table class="w-full border"><thead><tr><th>Subject</th>${examsToShow.map(e=>`<th>${e}</th>`).join('')} </thead><tbody>${rows}${summary}</tbody>}94<div class="text-center text-xs mt-3">Generated: ${new Date().toLocaleString()}</div></div>`;
-                document.getElementById('reportPreview').innerHTML=html;
-            };
-            document.getElementById('printReport').onclick=()=>{ let preview=document.getElementById('reportPreview'); if(preview.innerHTML){ let win=window.open('','_blank'); win.document.write(`<html><head><title>Report</title><style>body{font-family:Inter;padding:20px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccc;padding:8px}</style></head><body>${preview.innerHTML}</body></html>`); win.document.close(); win.print(); } };
-            await loadGrid();
+                await loadMarksUI();
+            });
         }
         
-        // ========== FEES & EXPENSES ==========
+        // Fees & Expenses
         async function renderFees() {
             let totalIncome=payments.reduce((s,p)=>s+p.amount,0);
             let totalExpenses=expenses.reduce((s,e)=>s+e.amount,0);
             let expected=students.reduce((s,st)=>s+(st.total_fees||0),0);
             let outstanding=expected-totalIncome;
             document.getElementById('tabContent').innerHTML=`
-                <div class="finance-summary"><h4>Financial Summary</h4><div class="grid md:grid-cols-4 gap-3"><div>Income: ${formatMoney(totalIncome)}</div><div>Expenses: ${formatMoney(totalExpenses)}</div><div>Net: ${formatMoney(totalIncome-totalExpenses)}</div><div>Outstanding: ${formatMoney(outstanding)}</div></div></div>
-                <div class="bg-white p-4 rounded-xl shadow mb-4"><h3 class="font-bold">Record Payment</h3><select id="payStudent" class="border p-2 rounded mb-2">${students.map(s=>`<option value="${s.id}">${s.first_name} ${s.last_name} (${s.lin})</option>`).join('')}</select><input type="number" id="payAmount" placeholder="Amount (UGX)"><button class="btn mt-2" id="recordPayBtn">Record</button></div>
-                <div class="bg-white p-4 rounded-xl shadow"><h3 class="font-bold">Expenses</h3><div class="flex flex-wrap gap-2 mb-3"><input type="text" id="expCat" placeholder="Category"><input type="text" id="expDesc" placeholder="Description"><input type="number" id="expAmount" placeholder="Amount"><input type="date" id="expDate" value="${new Date().toISOString().slice(0,10)}"><button class="btn btn-gold" id="addExpenseBtn">Add Expense</button></div><div id="expenseList" class="space-y-2"></div></div>
+                <div class="finance-summary"><h4 class="font-bold">💰 Financial Dashboard</h4><div class="grid grid-cols-2 md:grid-cols-4 gap-3"><div>Income: ${formatMoney(totalIncome)}</div><div>Expenses: ${formatMoney(totalExpenses)}</div><div>Net: ${formatMoney(totalIncome-totalExpenses)}</div><div>Outstanding: ${formatMoney(outstanding)}</div></div></div>
+                <div class="bg-white p-5 rounded-2xl shadow mb-5"><h3 class="font-bold mb-2">💵 Record Payment</h3><select id="payStudent">${students.map(s=>`<option value="${s.id}">${s.first_name} ${s.last_name}</option>`).join('')}</select><input type="number" id="payAmount" placeholder="Amount (UGX)"><button class="btn mt-3" id="recordPayBtn">Record Payment</button></div>
+                <div class="bg-white p-5 rounded-2xl shadow"><h3 class="font-bold">📋 Expenses</h3><div class="flex flex-wrap gap-2 mb-3"><input id="expCat" placeholder="Category"><input id="expDesc" placeholder="Description"><input id="expAmount" type="number" placeholder="Amount"><input type="date" id="expDate" value="${new Date().toISOString().slice(0,10)}"><button class="btn-gold btn" id="addExpenseBtn">Add</button></div><div id="expenseList"></div></div>
             `;
-            document.getElementById('recordPayBtn').onclick=async()=>{
-                let sid=document.getElementById('payStudent').value;
-                let amt=parseFloat(document.getElementById('payAmount').value);
-                if(!sid||isNaN(amt)||amt<=0) return showToast("Invalid amount",true);
-                let student=students.find(s=>s.id===sid);
-                let newPaid=(student.fees_paid||0)+amt;
-                await restUpdate('students',sid,{fees_paid:newPaid});
-                await restInsert('payments',{school_id:SCHOOL_ID,student_id:sid,amount:amt,payment_date:new Date().toISOString().slice(0,10),receipt_number:`RCP-${Date.now()}`});
-                showToast(`Payment recorded for ${student.first_name}`);
-                await loadAll();
-                await renderFees();
-                if(activeTab==='students') await renderStudentList();
-            };
-            document.getElementById('addExpenseBtn').onclick=async()=>{
-                let cat=document.getElementById('expCat').value.trim();
-                let desc=document.getElementById('expDesc').value.trim();
-                let amt=parseFloat(document.getElementById('expAmount').value);
-                let date=document.getElementById('expDate').value;
-                if(!cat||!desc||isNaN(amt)) return showToast("All fields required",true);
-                await restInsert('expenses',{school_id:SCHOOL_ID,category:cat,description:desc,amount:amt,expense_date:date});
-                showToast("Expense added");
-                await loadAll();
-                await renderFees();
-            };
-            let expDiv=document.getElementById('expenseList');
-            expDiv.innerHTML=expenses.map(e=>`<div class="flex justify-between border-b py-2">${e.expense_date} ${e.category}: ${formatMoney(e.amount)} <button class="text-red-600" onclick="window.deleteExpense('${e.id}')">Delete</button></div>`).join('');
+            document.getElementById('recordPayBtn').onclick=async()=>{ let sid=document.getElementById('payStudent').value, amt=parseFloat(document.getElementById('payAmount').value); if(!sid||isNaN(amt)) return showToast("Invalid amount",true); await restInsert('payments',{school_id:SCHOOL_ID,student_id:sid,amount:amt,payment_date:new Date().toISOString().slice(0,10),receipt_number:`RCP-${Date.now()}`}); showToast("Payment saved"); await loadAll(); renderFees(); if(activeTab==='students') renderStudentList(); };
+            document.getElementById('addExpenseBtn').onclick=async()=>{ let cat=document.getElementById('expCat').value.trim(), desc=document.getElementById('expDesc').value.trim(), amt=parseFloat(document.getElementById('expAmount').value), date=document.getElementById('expDate').value; if(!cat||!desc||isNaN(amt)) return showToast("All fields required",true); await restInsert('expenses',{school_id:SCHOOL_ID,category:cat,description:desc,amount:amt,expense_date:date}); showToast("Expense added"); await loadAll(); renderFees(); };
+            document.getElementById('expenseList').innerHTML=expenses.map(e=>`<div class="flex justify-between border-b py-2">${e.expense_date} - ${e.category}: ${formatMoney(e.amount)} <button class="text-red-600" onclick="window.deleteExpense('${e.id}')">🗑️</button></div>`).join('');
         }
-        window.deleteExpense=async(id)=>{ if(confirm('Delete expense?')){ await restDeleteFilter('expenses','id',id); await loadAll(); if(activeTab==='fees') renderFees(); } };
+        window.deleteExpense=async(id)=>{ if(confirm('Delete?')){ await restDeleteFilter('expenses','id',id); await loadAll(); if(activeTab==='fees') renderFees(); } };
         
-        // ========== TOTAL EXPECTED ==========
         async function renderTotalExpected() {
-            let totalFeesExpected = students.reduce((sum, s) => sum + (s.total_fees || 0), 0);
-            let totalCollected = payments.reduce((sum, p) => sum + p.amount, 0);
-            let totalOutstanding = totalFeesExpected - totalCollected;
-            const classMap = new Map();
-            students.forEach(s => {
-                const cls = s.class;
-                if (!classMap.has(cls)) classMap.set(cls, { expected: 0, collected: 0, count: 0 });
-                const entry = classMap.get(cls);
-                entry.expected += s.total_fees || 0;
-                entry.count++;
-            });
-            payments.forEach(p => {
-                const student = students.find(s => s.id === p.student_id);
-                if (student) {
-                    const cls = student.class;
-                    if (classMap.has(cls)) classMap.get(cls).collected += p.amount;
-                }
-            });
-            const classRows = Array.from(classMap.entries()).map(([cls, data]) => {
-                const outstanding = data.expected - data.collected;
-                return `<tr><td class="p-2">${escapeHtml(cls)}</td><td class="p-2">${data.count}</td><td class="p-2">${formatMoney(data.expected)}</td><td class="p-2">${formatMoney(data.collected)}</td><td class="p-2 ${outstanding>0?'debt':''}">${formatMoney(outstanding)}</td></tr>`;
-            }).join('');
-            document.getElementById('tabContent').innerHTML=`
-                <div class="bg-white rounded-xl p-6 shadow">
-                    <h3 class="font-bold text-xl mb-4"><i class="fas fa-chart-line"></i> Total Expected Fees Summary</h3>
-                    <div class="finance-summary mb-6">
-                        <div class="grid md:grid-cols-3 gap-4">
-                            <div><strong>📊 Total Fees Expected:</strong><br>${formatMoney(totalFeesExpected)}</div>
-                            <div><strong>💰 Total Collected:</strong><br>${formatMoney(totalCollected)}</div>
-                            <div><strong>⚠️ Total Outstanding:</strong><br>${formatMoney(totalOutstanding)}</div>
-                        </div>
-                    </div>
-                    <h4 class="font-bold text-lg mb-3">Class-wise Breakdown</h4>
-                    <div class="overflow-x-auto">
-                        <table class="w-full border">
-                            <thead><tr class="bg-gray-100"><th class="p-2">Class</th><th class="p-2"># Students</th><th class="p-2">Total Expected (UGX)</th><th class="p-2">Total Collected (UGX)</th><th class="p-2">Outstanding (UGX)</th></tr></thead>
-                            <tbody>${classRows || '<tr><td colspan="5" class="p-4 text-center">No data available</td></tr>'}</tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
+            let totalExpected = students.reduce((s,st)=>s+(st.total_fees||0),0);
+            let totalCollected = payments.reduce((s,p)=>s+p.amount,0);
+            document.getElementById('tabContent').innerHTML=`<div class="bg-white rounded-2xl p-6"><h3 class="font-bold text-xl">📊 Fee Summary</h3><div class="grid grid-cols-3 gap-4 my-4"><div>Expected: ${formatMoney(totalExpected)}</div><div>Collected: ${formatMoney(totalCollected)}</div><div>Outstanding: ${formatMoney(totalExpected-totalCollected)}</div></div><table class="w-full border"><thead><tr><th>Class</th><th>Students</th><th>Expected</th><th>Outstanding</th></tr></thead><tbody>${[...new Map(students.map(s=>[s.class,{count:0,expected:0,paid:0}]))].map(([cls,data])=>{ let clsStudents=students.filter(s=>s.class===cls); let expectedSum=clsStudents.reduce((a,b)=>a+(b.total_fees||0),0); let paidSum=payments.filter(p=>clsStudents.some(s=>s.id===p.student_id)).reduce((a,b)=>a+b.amount,0); return `<tr><td>${cls}</td><td>${clsStudents.length}</td><td>${formatMoney(expectedSum)}</td><td class="debt">${formatMoney(expectedSum-paidSum)}</td></tr>`; }).join('')}</tbody></table></div>`;
         }
         
-        // ========== ID CARDS ==========
-        async function renderIdCards() {
-            if(students.length===0){ document.getElementById('tabContent').innerHTML='<div class="bg-white p-4 rounded-xl text-center">No students</div>'; return; }
-            document.getElementById('tabContent').innerHTML=`
-                <div class="bg-white rounded-xl p-6 shadow"><h3 class="font-bold text-xl mb-4">ID Card Generator</h3><div class="mb-4"><select id="idStudent" class="border rounded-lg p-2 w-full">${students.map(s=>`<option value="${s.id}">${s.first_name} ${s.last_name} (${s.class})</option>`).join('')}</select></div><div class="flex gap-3 mb-6"><button class="btn" id="previewIdBtn">Preview</button><button class="btn btn-gold" id="printIdBtn">Print ID</button></div><div id="idPreview" class="flex justify-center"></div></div>
-            `;
-            let preview=()=>{
-                let sid=document.getElementById('idStudent').value;
-                let s=students.find(st=>st.id===sid);
-                if(!s) return;
-                let photo=s.photo_url?`<img src="${s.photo_url}" class="id-card-photo">`:'<div class="id-card-photo" style="background:white;display:flex;align-items:center;justify-content:center;border:2px solid #D4A017;"><i class="fas fa-user-circle fa-4x" style="color:#003366;"></i></div>';
-                document.getElementById('idPreview').innerHTML=`
-                    <div class="id-card"><div class="id-card-header"><h3>${escapeHtml(currentSchool.name)}</h3><p>${escapeHtml(currentSchool.address||'')}</p></div><div class="id-card-left">${photo}</div><div class="id-card-right"><h2>${s.first_name} ${s.last_name}</h2><p><strong>LIN:</strong> ${s.lin}</p><p><strong>Class:</strong> ${s.class}</p><p><strong>Admission:</strong> ${s.admission_number||'N/A'}</p><p><strong>Parent:</strong> ${s.parent_name||'N/A'}</p><p><strong>WhatsApp:</strong> ${s.parent_whatsapp||'N/A'}</p></div></div>
-                `;
-            };
-            document.getElementById('previewIdBtn').onclick=preview;
-            document.getElementById('printIdBtn').onclick=()=>{ let sid=document.getElementById('idStudent').value; printIdCard(sid); };
-            preview();
-        }
-        
-        // ========== REPORTS ==========
-        async function renderReports() {
-            if(!canViewReports()){ document.getElementById('tabContent').innerHTML='<div class="bg-white p-4 rounded-xl text-red-600 text-center">Access denied. Only administrators can view reports.</div>'; return; }
-            await loadAll();
-            const classOptions = [...new Set(students.map(s => s.class).filter(Boolean))];
-            const reportHtml = `
-                <div class="bg-white rounded-xl p-6 shadow">
-                    <h3 class="font-bold text-xl mb-4"><i class="fas fa-file-alt"></i> Student Report Card (UNEB PLE System)</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <div><label class="block font-medium mb-1">Select Class</label><select id="reportClassSelect" class="border rounded-lg p-2 w-full"><option value="">-- Select Class --</option>${classOptions.map(c=>`<option value="${c}">${c}</option>`).join('')}</select></div>
-                        <div><label class="block font-medium mb-1">Select Student</label><select id="reportStudentSelect" class="border rounded-lg p-2 w-full"><option value="">-- First select a class --</option></select></div>
-                        <div><label class="block font-medium mb-1">Select Term</label><select id="reportTermSelect" class="border rounded-lg p-2 w-full">${TERMS.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div>
-                    </div>
-                    <div class="flex gap-3 mb-6"><button class="btn" id="generateReportBtn">Generate Report</button><button class="btn btn-gold" id="printReportBtn">Print / Download PDF</button></div>
-                    <div id="studentReportContainer" class="mt-4"></div>
-                </div>
-            `;
-            document.getElementById('tabContent').innerHTML = reportHtml;
-            const classSelect = document.getElementById('reportClassSelect');
-            const studentSelect = document.getElementById('reportStudentSelect');
-            classSelect.addEventListener('change', () => {
-                const selectedClass = classSelect.value;
-                if (!selectedClass) { studentSelect.innerHTML = '<option value="">-- First select a class --</option>'; return; }
-                const filtered = students.filter(s => s.class === selectedClass);
-                studentSelect.innerHTML = '<option value="">-- Select Student --</option>' + filtered.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.lin})</option>`).join('');
-            });
-            let currentReportHTML = '';
-            document.getElementById('generateReportBtn').onclick = async () => {
-                const studentId = studentSelect.value;
-                const term = document.getElementById('reportTermSelect').value;
-                if (!studentId) { showToast("Please select a student", true); return; }
-                const student = students.find(s => s.id === studentId);
-                if (!student) return;
-                await loadAll();
-                const studentMarks = marks.filter(m => m.student_id === studentId && m.term === term);
-                const exams = ['Beginning of Term', 'Mid Term', 'End of Term'];
-                let rows = '', totals = { 'Beginning of Term': 0, 'Mid Term': 0, 'End of Term': 0 }, points = { 'Beginning of Term': [], 'Mid Term': [], 'End of Term': [] };
-                for (let sub of CORE_SUBJECTS) {
-                    rows += `<tr><td style="text-align:left; font-weight:600;">${sub}</td>`;
-                    for (let ex of exams) {
-                        const mark = studentMarks.find(m => m.subject === sub && m.exam_type === ex);
-                        const score = mark ? mark.score : '-';
-                        const grade = mark ? mark.grade : '-';
-                        rows += `<td style="text-align:center;">${score}<br><small>${grade}</small></td>`;
-                        if (mark) { totals[ex] += mark.score; points[ex].push(gradePoints(mark.grade)); }
-                    }
-                    rows += `</tr>`;
-                }
-                let summaryRow = `<tr style="background:#f1f5f9;"><td style="font-weight:700;">Total / Aggregate</td>`;
-                let divisionRow = `<tr style="background:#eef2ff;"><td style="font-weight:700;">Division</td>`;
-                for (let ex of exams) {
-                    let total = totals[ex] || 0;
-                    let agg = 0;
-                    if (points[ex].length) { let sorted = [...points[ex]].sort((a,b)=>a-b); agg = sorted.slice(0,8).reduce((s,p)=>s+p,0); }
-                    summaryRow += `<td style="text-align:center;">${total}/400<br><small>Agg: ${agg}</small></td>`;
-                    divisionRow += `<td style="text-align:center;"><strong>${getDivision(agg)}</strong></td>`;
-                }
-                summaryRow += `</tr>`; divisionRow += `</tr>`;
-                const photoHtml = student.photo_url ? `<img src="${student.photo_url}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:2px solid #D4A017;background:white;">` : `<div style="width:100px;height:100px;background:#f1f5f9;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #D4A017;"><i class="fas fa-user-circle fa-4x" style="color:#003366;"></i></div>`;
-                currentReportHTML = `
-                    <div id="printableReport" class="student-report-card">
-                        <div class="report-header"><h2>${escapeHtml(currentSchool.name)}</h2><p>${escapeHtml(currentSchool.address || '')} | 📞 ${SCHOOL_CONTACTS.join(', ')}</p><p><strong>Academic Report</strong> – ${term}</p></div>
-                        <div class="report-student-info"><div>${photoHtml}</div><div style="flex:1;"><p><strong>Student Name:</strong> ${escapeHtml(student.first_name)} ${escapeHtml(student.last_name)}</p><p><strong>LIN:</strong> ${escapeHtml(student.lin)}</p><p><strong>Class:</strong> ${escapeHtml(student.class)}</p><p><strong>Admission:</strong> ${escapeHtml(student.admission_number || 'N/A')}</p><p><strong>Parent:</strong> ${escapeHtml(student.parent_name || 'N/A')} (${escapeHtml(student.parent_whatsapp || 'N/A')})</p></div></div>
-                        <table class="report-table"><thead><tr><th>Subject</th><th>Beginning of Term</th><th>Mid Term</th><th>End of Term</th></tr></thead><tbody>${rows}${summaryRow}${divisionRow}</tbody></table>
-                        <div class="report-summary"><div><strong>Grading Scale (UNEB PLE)</strong><br>D1 (90-100), D2 (80-89), C3 (70-79), C4 (60-69), C5 (50-59), C6 (40-49), P7 (35-39), P8 (30-34), F9 (below 30)</div><div><strong>Division Interpretation</strong><br>Div1 (1-12), Div2 (13-23), Div3 (24-29), Div4 (30-34), DivU (35+)</div></div>
-                        <div class="report-footer">Generated on ${new Date().toLocaleString()} | This is a computer-generated report.</div>
-                    </div>
-                `;
-                document.getElementById('studentReportContainer').innerHTML = currentReportHTML;
-            };
-            document.getElementById('printReportBtn').onclick = () => {
-                if (!currentReportHTML) { showToast("Please generate a report first", true); return; }
-                const win = window.open('', '_blank');
-                win.document.write(`<!DOCTYPE html><html><head><title>Student Report Card</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>${document.querySelector('style').innerHTML}</style></head><body>${currentReportHTML}<script>window.print();<\/script></body></html>`);
-                win.document.close();
-            };
-        }
-        
-        // ========== MAIN ==========
         function getAvailableTabs() {
-            if(currentUser?.role==='admin') return ['dashboard','students','attendance','marks','fees','totalexpected','idcards','reports'];
+            if(currentUser?.role==='admin') return ['dashboard','students','attendance','marks','fees','totalexpected','idcards'];
             if(currentUser?.role==='teacher') return ['dashboard','attendance','marks'];
             if(currentUser?.role==='finance') return ['dashboard','fees','totalexpected','students'];
             return ['dashboard'];
         }
+        
         async function renderMainApp() {
             await loadAll();
-            let now=new Date();
-            let app=document.getElementById('app');
-            if(!currentSchool){
-                await restInsert('schools',{id:SCHOOL_ID,name:'Progressive Mothers School',address:'Gayaza-Kijabijjo',phone:'0779585035'});
-                currentSchool={name:'Progressive Mothers School',address:'Gayaza-Kijabijjo',phone:'0779585035'};
-            }
             let availableTabs=getAvailableTabs();
             if(!availableTabs.includes(activeTab)) activeTab=availableTabs[0];
-            document.body.classList.remove('login-page');
-            app.innerHTML=`
-                <div style="position:fixed; top:10px; right:10px; z-index:1000;"><span class="role-badge">${currentUser.role.toUpperCase()} (${currentUser.username})</span><button class="btn logout-btn" onclick="window.logout()">Logout</button></div>
-                <div class="app-container">
-                    <div class="school-header">
-                        <div class="school-name">${escapeHtml(currentSchool.name)}</div>
-                        <div class="school-address">${escapeHtml(currentSchool.address)} | 📞 ${SCHOOL_CONTACTS.join(', ')}</div>
-                        <div class="datetime-row"><span>📅 ${now.toLocaleDateString('en-US',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</span><span>⏰ ${now.toLocaleTimeString()}</span><div class="global-search"><i class="fas fa-search"></i><input type="text" id="globalSearchInput" placeholder="Search..."></div></div>
-                    </div>
-                    <div class="action-buttons">${availableTabs.map(tab=>`<button class="action-btn ${activeTab===tab?'active':''}" data-tab="${tab}"><i class="fas ${tab==='dashboard'?'fa-tachometer-alt':tab==='students'?'fa-user-graduate':tab==='attendance'?'fa-calendar-check':tab==='marks'?'fa-chart-line':tab==='fees'?'fa-money-bill-wave':tab==='totalexpected'?'fa-chart-pie':tab==='idcards'?'fa-id-card':'fa-file-alt'}"></i> ${tab==='totalexpected'?'Total Expected':tab.charAt(0).toUpperCase()+tab.slice(1)}</button>`).join('')}</div>
-                    <div id="tabContent"></div>
-                </div>
-                <div class="support-badge" onclick="window.showSupportWhatsApp()"><i class="fab fa-whatsapp"></i> Eudes Media Support</div>
+            let now=new Date();
+            document.getElementById('app').innerHTML=`
+                <div style="position:fixed; top:14px; right:20px; z-index:1000; display:flex; gap:10px;"><span class="role-badge"><i class="fas fa-user-shield"></i> ${currentUser.role.toUpperCase()}</span><button class="btn logout-btn" onclick="window.logout()"><i class="fas fa-sign-out-alt"></i> Logout</button></div>
+                <div class="app-container"><div class="school-header"><div class="school-name">🏫 ${escapeHtml(currentSchool.name)}</div><div class="school-address">📍 ${currentSchool.address} | 📞 ${SCHOOL_CONTACTS.join(', ')}</div><div class="datetime-row"><span><i class="far fa-calendar-alt"></i> ${now.toLocaleDateString()}</span><span><i class="far fa-clock"></i> ${now.toLocaleTimeString()}</span><div class="global-search"><i class="fas fa-search"></i><input type="text" id="globalSearchInput" placeholder="Search students..."></div></div></div>
+                <div class="action-buttons">${availableTabs.map(tab=>`<button class="action-btn ${activeTab===tab?'active':''}" data-tab="${tab}"><i class="fas ${tab==='dashboard'?'fa-chart-simple':tab==='students'?'fa-user-graduate':tab==='attendance'?'fa-calendar-check':tab==='marks'?'fa-pen-ruler':tab==='fees'?'fa-coins':tab==='totalexpected'?'fa-chart-pie':'fa-id-card'}"></i> ${tab==='totalexpected'?'Fees Summary':tab.charAt(0).toUpperCase()+tab.slice(1)}</button>`).join('')}</div>
+                <div id="tabContent"></div></div><div class="support-badge" onclick="window.showSupportWhatsApp()"><i class="fab fa-whatsapp fa-lg"></i> Eudes Media Support</div>
             `;
-            document.getElementById('globalSearchInput').addEventListener('input',(e)=>{ globalSearchTerm=e.target.value; renderMainApp(); });
+            document.getElementById('globalSearchInput').addEventListener('input',(e)=>{ globalSearchTerm=e.target.value; if(activeTab==='students') renderStudentList(); });
             document.querySelectorAll('.action-btn').forEach(btn=>{ btn.onclick=()=>{ activeTab=btn.dataset.tab; renderMainApp(); }; });
             if(activeTab==='dashboard') await renderDashboard();
             else if(activeTab==='students') await renderStudents();
@@ -700,26 +395,24 @@
             else if(activeTab==='marks') await renderMarks();
             else if(activeTab==='fees') await renderFees();
             else if(activeTab==='totalexpected') await renderTotalExpected();
-            else if(activeTab==='idcards') await renderIdCards();
-            else if(activeTab==='reports') await renderReports();
+            else if(activeTab==='idcards') { document.getElementById('tabContent').innerHTML=`<div class="bg-white p-6 rounded-2xl"><select id="idStudentSelect">${students.map(s=>`<option value="${s.id}">${s.first_name} ${s.last_name}</option>`).join('')}</select><div class="flex gap-3 mt-4"><button class="btn" id="previewIdBtn">Preview ID</button><button class="btn btn-gold" id="printIdBtn">Print ID</button></div><div id="idPreviewArea" class="mt-6 flex justify-center"></div></div>`; document.getElementById('previewIdBtn').onclick=()=>{ let sid=document.getElementById('idStudentSelect').value; let s=students.find(st=>st.id===sid); if(s) window.printIdCard(s.id); }; document.getElementById('printIdBtn').onclick=()=>{ let sid=document.getElementById('idStudentSelect').value; window.printIdCard(sid); }; }
         }
-        window.showSupportWhatsApp=()=>{ SUPPORT_CONTACTS.forEach(c=>sendWhatsApp(c.whatsapp,`Support for ${currentSchool?.name}`)); };
+        
+        window.showSupportWhatsApp=()=>{ SUPPORT_CONTACTS.forEach(c=>window.open(`https://wa.me/${c.whatsapp}?text=Hello%20${encodeURIComponent(c.name)}%2C%20I%20need%20support`,'_blank')); };
         window.logout=logout;
+        
         function renderLogin() {
-            document.body.classList.add('login-page');
             document.getElementById('app').innerHTML=`
-                <div class="login-container">
-                    <div class="login-header"><i class="fas fa-school"></i><h2>Welcome Back</h2><p>Sign in to continue</p></div>
-                    <form id="loginForm">
-                        <div class="input-group"><div class="input-icon"><i class="fas fa-user"></i><input type="text" id="username" placeholder="Username" required></div></div>
-                        <div class="input-group"><div class="input-icon"><i class="fas fa-lock"></i><input type="password" id="password" placeholder="Password" required></div></div>
-                        <button type="submit" class="login-btn">Login <i class="fas fa-arrow-right"></i></button>
-                    </form>
-                    <div class="login-footer"><p>Progressive Mothers School</p></div>
-                </div>
+                <div class="login-container"><div class="login-header"><div class="logo-icon"><i class="fas fa-graduation-cap"></i></div><h2>Progressive Mothers</h2><p>School Management Portal</p></div>
+                <form id="loginForm"><div class="input-group"><div class="input-icon"><i class="fas fa-user"></i><input type="text" id="username" placeholder="Username" required></div></div>
+                <div class="input-group"><div class="input-icon"><i class="fas fa-lock"></i><input type="password" id="password" placeholder="Password" required></div></div>
+                <button type="submit" class="login-btn"><i class="fas fa-arrow-right-to-bracket"></i> Login to Dashboard</button></form>
+                <div class="support-contacts"><p><i class="fas fa-headset"></i> Need help? Contact support:</p><div class="support-numbers"><a href="https://wa.me/0762992440" target="_blank"><i class="fab fa-whatsapp"></i> 0762992440</a><a href="https://wa.me/0794423143" target="_blank"><i class="fab fa-whatsapp"></i> 0794423143</a></div><p class="text-xs mt-3">📞 School: ${SCHOOL_CONTACTS.join(' | ')}</p></div>
+                <div class="text-center text-xs mt-5 text-gray-400">Demo: admin/admin123 | teacher/teacher123 | finance/finance123</div></div>
             `;
             document.getElementById('loginForm').onsubmit=(e)=>{ e.preventDefault(); if(login(document.getElementById('username').value,document.getElementById('password').value)) init(); else alert('Invalid credentials'); };
         }
+        
         async function init() {
             if(!checkAuth()){ renderLogin(); return; }
             try{
@@ -727,7 +420,7 @@
                 if(!schools.length){ await restInsert('schools',{id:SCHOOL_ID,name:'Progressive Mothers School',address:'Gayaza-Kijabijjo',phone:'0779585035'}); currentSchool={name:'Progressive Mothers School',address:'Gayaza-Kijabijjo',phone:'0779585035'}; }
                 else currentSchool=schools[0];
                 await renderMainApp();
-            }catch(err){ document.getElementById('app').innerHTML=`<div class="bg-red-100 p-4 rounded-xl">Error: ${err.message}</div>`; }
+            }catch(err){ document.getElementById('app').innerHTML=`<div class="text-center p-8 text-red-600">⚠️ Error: ${err.message}</div>`; }
         }
         init();
     })();
