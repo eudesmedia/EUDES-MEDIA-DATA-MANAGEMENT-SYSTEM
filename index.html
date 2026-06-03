@@ -82,8 +82,7 @@
             .student-report-card { box-shadow: none; padding: 0; }
         }
         .absent-checkbox { width: 20px; height: 20px; margin: 0; cursor: pointer; }
-        .performance-card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .performance-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 16px; color: #003366; border-left: 4px solid #D4A017; padding-left: 12px; }
+        .chart-container { background: white; border-radius: 20px; padding: 20px; margin-top: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
@@ -107,6 +106,7 @@
         let activeTab = 'dashboard';
         let currentUser = null;
         let globalSearchTerm = '';
+        let gradeChart = null;
         
         // ---------- AUTH ----------
         const USERS = { admin: { password: 'admin123', role: 'admin' }, teacher: { password: 'teacher123', role: 'teacher' }, finance: { password: 'finance123', role: 'finance' } };
@@ -177,7 +177,7 @@
         function escapeHtml(str) { return str?String(str).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]):''; }
         function showToast(msg,isErr=false) { let t=document.createElement('div'); t.className=`toast ${isErr?'error':''}`; t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3000); }
         
-        // ========== DASHBOARD (includes performance graphs) ==========
+        // ========== DASHBOARD (with Grade Distribution Chart) ==========
         async function renderDashboard() {
             let totalIncome=payments.reduce((s,p)=>s+p.amount,0);
             let totalExpenses=expenses.reduce((s,e)=>s+e.amount,0);
@@ -187,29 +187,10 @@
             let absentToday=attendance.filter(a=>a.date===today&&a.status==='absent').length;
             let presentToday=students.length-absentToday;
             
-            // Calculate best performed subject per class and whole school
-            // Using average scores per subject across all exams and terms
-            const subjectScores = {}; // { subject: [scores array] }
-            const classSubjectScores = {}; // { class: { subject: [scores] } }
-            marks.forEach(m => {
-                if (!subjectScores[m.subject]) subjectScores[m.subject] = [];
-                subjectScores[m.subject].push(m.score);
-                const student = students.find(s => s.id === m.student_id);
-                if (student) {
-                    const cls = student.class;
-                    if (!classSubjectScores[cls]) classSubjectScores[cls] = {};
-                    if (!classSubjectScores[cls][m.subject]) classSubjectScores[cls][m.subject] = [];
-                    classSubjectScores[cls][m.subject].push(m.score);
-                }
-            });
-            const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
-            const bestSubjectOverall = Object.entries(subjectScores).map(([sub, scores]) => ({ subject: sub, avg: avg(scores) })).sort((a,b)=>b.avg - a.avg)[0];
-            const bestSubjectByClass = Object.entries(classSubjectScores).map(([cls, subjects]) => {
-                const best = Object.entries(subjects).map(([sub, scores]) => ({ subject: sub, avg: avg(scores) })).sort((a,b)=>b.avg - a.avg)[0];
-                return { class: cls, subject: best?.subject || 'N/A', avg: best?.avg || 0 };
-            });
+            const gradeLabels = ['D1','D2','C3','C4','C5','C6','P7','P8','F9'];
+            const gradeCounts = gradeLabels.map(g => marks.filter(m => m.grade === g).length);
             
-            document.getElementById('tabContent').innerHTML = `
+            document.getElementById('tabContent').innerHTML=`
                 <div class="stats-grid">
                     <div class="stat-card"><div class="stat-number">${students.length}</div><div class="stat-label">STUDENTS</div></div>
                     <div class="stat-card"><div class="stat-number">${formatMoney(totalIncome)}</div><div class="stat-label">INCOME</div></div>
@@ -218,43 +199,33 @@
                     <div class="stat-card"><div class="stat-number">${presentToday}</div><div class="stat-label">PRESENT TODAY</div></div>
                     <div class="stat-card"><div class="stat-number">${absentToday}</div><div class="stat-label">ABSENT TODAY</div></div>
                 </div>
-                <div class="performance-card">
-                    <div class="performance-title"><i class="fas fa-trophy"></i> Whole School Best Performed Subject</div>
-                    <div style="font-size:1.5rem; font-weight:700; color:#003366;">${bestSubjectOverall?.subject || 'N/A'}</div>
-                    <div>Average Score: ${bestSubjectOverall?.avg ? bestSubjectOverall.avg.toFixed(1) : 0}%</div>
-                    <canvas id="overallSubjectChart" height="150" style="max-height:200px; margin-top:16px;"></canvas>
+                <div class="chart-container">
+                    <h3 class="font-bold text-lg mb-3"><i class="fas fa-chart-bar"></i> Grade Distribution (All Marks)</h3>
+                    <canvas id="gradeDistributionChart" height="200"></canvas>
                 </div>
-                <div class="performance-card">
-                    <div class="performance-title"><i class="fas fa-chalkboard"></i> Best Performed Subject by Class</div>
-                    <canvas id="classSubjectChart" height="250"></canvas>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow text-center">Welcome to Progressive Mothers School Management System</div>
+                <div class="bg-white p-6 rounded-xl shadow text-center mt-4">Welcome to Progressive Mothers School Management System</div>
             `;
             
-            // Chart: overall subject averages
-            const overallLabels = Object.keys(subjectScores);
-            const overallData = overallLabels.map(sub => avg(subjectScores[sub]));
-            const overallCtx = document.getElementById('overallSubjectChart')?.getContext('2d');
-            if (window.overallChart) window.overallChart.destroy();
-            if (overallCtx) window.overallChart = new Chart(overallCtx, {
-                type: 'bar',
-                data: { labels: overallLabels, datasets: [{ label: 'Average Score (%)', data: overallData, backgroundColor: '#003366', borderRadius: 6 }] },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } } }
-            });
-            
-            // Chart: best subject per class (show class name and best subject average)
-            const classLabels = bestSubjectByClass.map(c => `${c.class}\n(${c.subject})`);
-            const classData = bestSubjectByClass.map(c => c.avg);
-            const classCtx = document.getElementById('classSubjectChart')?.getContext('2d');
-            if (window.classChart) window.classChart.destroy();
-            if (classCtx) window.classChart = new Chart(classCtx, {
-                type: 'bar',
-                data: { labels: classLabels, datasets: [{ label: 'Average Score (%)', data: classData, backgroundColor: '#D4A017', borderRadius: 6 }] },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } } }
-            });
+            const ctx = document.getElementById('gradeDistributionChart')?.getContext('2d');
+            if (gradeChart) gradeChart.destroy();
+            if (ctx) {
+                gradeChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: gradeLabels,
+                        datasets: [{
+                            label: 'Number of Marks',
+                            data: gradeCounts,
+                            backgroundColor: '#003366',
+                            borderRadius: 8,
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: true }
+                });
+            }
         }
         
-        // ========== STUDENTS (full CRUD with photo) ==========
+        // ========== STUDENTS (simplified but functional) ==========
         async function renderStudents() {
             document.getElementById('tabContent').innerHTML=`
                 <div class="flex flex-wrap justify-between gap-3 mb-4"><div class="flex gap-2"><button class="btn" id="addStudentBtn"><i class="fas fa-plus"></i> Add Student</button><button class="btn btn-gold" id="exportBtn">Export Excel</button></div></div>
@@ -275,7 +246,7 @@
                     <td class="p-2"><button class="btn-sm" onclick="editStudent('${s.id}')">Edit</button> <button class="btn-sm text-red-600" onclick="deleteStudent('${s.id}')">Del</button> <button class="btn-sm btn-gold" onclick="printIdCard('${s.id}')">ID</button> <button class="btn-sm" onclick="quickPayment('${s.id}')">Pay</button> <button class="btn-sm" onclick="showStudentReport('${s.id}')">Report</button></td>
                 `;
             }
-            html+='</tbody></table>';
+            html+='</tbody><table>';
             document.getElementById('studentTableContainer').innerHTML=html;
         }
         window.editStudent=async(id)=>{ let s=students.find(st=>st.id===id); let newName=prompt('New full name',`${s.first_name} ${s.last_name}`); if(newName){ let parts=newName.split(' '); await restUpdate('students',id,{first_name:parts[0],last_name:parts.slice(1).join(' ')}); await loadAll(); await renderStudentList(); } };
@@ -422,15 +393,15 @@
                 let markMap=new Map(); relevantMarks.forEach(m=>markMap.set(`${m.student_id}_${m.subject}`,m));
                 let html=`<table class="w-full border"><thead><tr><th>Student (LIN)</th>${CORE_SUBJECTS.map(s=>`<th>${s}</th>`).join('')}</thead><tbody>`;
                 for(let s of classStudents){
-                    html+=`<tr><td class="p-2">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}<br><span class="text-xs">${s.lin}</span></td>`;
+                    html+=`</td><td class="p-2">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}<br><span class="text-xs">${s.lin}</span></td>`;
                     for(let sub of CORE_SUBJECTS){
                         let existing=markMap.get(`${s.id}_${sub}`);
                         let val=existing?existing.score:'';
                         html+=`<td class="p-2"><input type="number" class="mark-input" data-student="${s.id}" data-subject="${sub}" value="${val}" min="0" max="100" style="width:80px;padding:6px;border-radius:12px;"> <span class="text-xs">${existing?existing.grade:''}</span></td>`;
                     }
-                    html+=`</tr>`;
+                    html+=`</td>`;
                 }
-                html+=`</tbody></table>`;
+                html+=`</tbody></td>`;
                 document.getElementById('marksGrid').innerHTML=html;
             };
             document.getElementById('loadMarks').onclick=loadGrid;
@@ -569,7 +540,7 @@
             });
             const classRows = Array.from(classMap.entries()).map(([cls, data]) => {
                 const outstanding = data.expected - data.collected;
-                return `<tr><td class="p-2">${escapeHtml(cls)}</td><td class="p-2">${data.count}</td><td class="p-2">${formatMoney(data.expected)}</td><td class="p-2">${formatMoney(data.collected)}</td><td class="p-2 ${outstanding>0?'debt':''}">${formatMoney(outstanding)}</td>`);
+                return `<tr><td class="p-2">${escapeHtml(cls)}</td><td class="p-2">${data.count}</td><td class="p-2">${formatMoney(data.expected)}</td><td class="p-2">${formatMoney(data.collected)}</td><td class="p-2 ${outstanding>0?'debt':''}">${formatMoney(outstanding)}</td></tr>`;
             }).join('');
             document.getElementById('tabContent').innerHTML=`
                 <div class="bg-white rounded-xl p-6 shadow">
