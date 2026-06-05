@@ -17,7 +17,6 @@
         .datetime-row { display: flex; justify-content: space-between; margin-top: 12px; background: rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 40px; font-size: 0.75rem; flex-wrap: wrap; gap: 10px; }
         .global-search { background: white; border-radius: 40px; padding: 6px 16px; display: flex; align-items: center; gap: 8px; }
         .global-search input { border: none; outline: none; background: transparent; width: 250px; color: #003366; }
-        .global-search input::placeholder { color: #94a3b8; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
         .stat-card { background: white; border-radius: 24px; padding: 16px; text-align: center; border-top: 4px solid #D4A017; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.2s; cursor: pointer; }
         .stat-card:hover { transform: translateY(-4px); }
@@ -40,7 +39,7 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(2px); }
         .modal-content { background: white; border-radius: 32px; padding: 24px; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; }
         input, select, textarea { width: 100%; padding: 10px 12px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 16px; background: white; }
-        .student-photo { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: #f1f5f9; }
+        .student-photo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #f1f5f9; }
         .debt { color: #dc2626; font-weight: 700; }
         .paid-text { color: #10b981; font-weight: 500; }
         .toast { position: fixed; bottom: 80px; right: 20px; background: #10b981; color: white; padding: 12px 20px; border-radius: 40px; z-index: 2000; font-weight: 500; animation: fadeOut 3s forwards; }
@@ -60,8 +59,6 @@
         .photo-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; background: white; margin-top: 8px; border: 1px solid #e2e8f0; }
         .filter-bar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
         .filter-bar select { width: auto; min-width: 150px; }
-        .student-name { font-weight: 600; color: #1e293b; }
-        .student-lin { font-size: 11px; color: #64748b; margin-top: 2px; }
         .action-buttons-cell { display: flex; gap: 6px; flex-wrap: wrap; }
         .whatsapp-btn { background: #25D366; color: white; }
         .id-card { width: 640px; margin: 0 auto; background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); overflow: hidden; display: flex; flex-direction: row; flex-wrap: wrap; }
@@ -84,10 +81,15 @@
         .report-student-info { display: flex; gap: 25px; margin-bottom: 25px; padding: 20px; background: #f8fafc; border-radius: 20px; flex-wrap: wrap; align-items: center; }
         .report-student-photo { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #D4A017; }
         .report-footer { margin-top: 25px; text-align: center; font-size: 0.7rem; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+        .history-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .history-table th, .history-table td { border: 1px solid #e2e8f0; padding: 10px; text-align: left; }
+        .history-table th { background: #003366; color: white; }
+        .payment-row { border-bottom: 1px solid #e2e8f0; padding: 10px; }
         @media print {
             body { background: white; padding: 0; }
             .action-buttons, .global-search, .role-badge, .logout-btn, .support-badge, .btn, .action-btn { display: none !important; }
         }
+        .history-card { background: white; border-radius: 20px; padding: 20px; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -105,9 +107,10 @@
         const EXAM_TYPES = ['Beginning of Term', 'Mid Term', 'End of Term'];
         const CORE_SUBJECTS = ['English', 'Science', 'Social Studies', 'Mathematics'];
         const CLASS_ORDER = ['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'];
+        const ACADEMIC_YEARS = ['2026', '2027', '2028', '2029', '2030'];
         
         let currentSchool = null;
-        let students = [], marks = [], attendance = [], payments = [], expenses = [];
+        let students = [], marks = [], attendance = [], payments = [], expenses = [], transactions = [];
         let activeTab = 'dashboard';
         let currentUser = null;
         let globalSearchTerm = '';
@@ -175,7 +178,8 @@
             attendance = await restFetch('attendance', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
             payments = await restFetch('payments', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
             expenses = await restFetch('expenses', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
-            // Sort students alphabetically by name
+            transactions = await restFetch('transactions', `school_id=eq.${SCHOOL_ID}`).catch(e => []);
+            // Sort students alphabetically
             students.sort((a,b) => {
                 let nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
                 let nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
@@ -241,7 +245,7 @@
             document.getElementById('tabContent').innerHTML = `${statsHtml}<div class="bg-white p-6 rounded-xl shadow text-center">Welcome to Progressive Mothers School Management System</div>`;
         }
         
-        // ---------- STUDENTS (Complete with all information) ----------
+        // ---------- STUDENTS with History Button ----------
         async function renderStudents() {
             if (!canManageStudents() && currentUser?.role !== 'finance') {
                 document.getElementById('tabContent').innerHTML = '<div class="bg-white p-4 rounded-xl text-center text-red-600">Access denied</div>';
@@ -286,6 +290,52 @@
             await renderStudentList();
         }
         
+        // Fee History Modal
+        window.showFeeHistory = async (studentId) => {
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+            const studentPayments = payments.filter(p => p.student_id === studentId).sort((a,b) => new Date(b.payment_date) - new Date(a.payment_date));
+            const totalPaid = studentPayments.reduce((a,b) => a + b.amount, 0);
+            const balance = (student.total_fees || 0) - totalPaid;
+            
+            let historyHtml = `
+                <div class="history-card">
+                    <h3 style="color:#003366; margin-bottom:15px;">Fee Payment History - ${escapeHtml(student.first_name)} ${escapeHtml(student.last_name)}</h3>
+                    <p><strong>LIN:</strong> ${escapeHtml(student.lin)} | <strong>Class:</strong> ${escapeHtml(student.class)}</p>
+                    <p><strong>Total Fees:</strong> ${formatMoney(student.total_fees || 0)} | <strong>Total Paid:</strong> ${formatMoney(totalPaid)} | <strong>Balance:</strong> <span class="${balance > 0 ? 'debt' : ''}">${formatMoney(balance)}</span></p>
+                    ${studentPayments.length === 0 ? '<p class="text-center text-gray-500 mt-4">No payment records found</p>' : `
+                        <table class="history-table">
+                            <thead>
+                                <tr><th>Date</th><th>Amount</th><th>Receipt No.</th><th>Payment Code</th><th>Year</th><th>Term</th></tr>
+                            </thead>
+                            <tbody>
+                                ${studentPayments.map(p => {
+                                    const date = new Date(p.payment_date);
+                                    return `<tr><td>${date.toLocaleDateString()}</td><td>${formatMoney(p.amount)}</td><td>${escapeHtml(p.receipt_number || 'N/A')}</td><td>${escapeHtml(p.payment_code || 'MANUAL')}</td><td>${escapeHtml(p.academic_year || date.getFullYear())}</td><td>${escapeHtml(p.term || 'N/A')}</td></tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    `}
+                    <div class="flex justify-end gap-2 mt-4">
+                        <button class="btn btn-gold" id="printHistoryBtn"><i class="fas fa-print"></i> Print History</button>
+                        <button class="btn" onclick="this.closest('.modal').remove()">Close</button>
+                    </div>
+                </div>
+            `;
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'flex';
+            modal.innerHTML = `<div class="modal-content" style="max-width: 900px;">${historyHtml}</div>`;
+            document.body.appendChild(modal);
+            
+            document.getElementById('printHistoryBtn').onclick = () => {
+                const win = window.open('', '_blank');
+                win.document.write(`<!DOCTYPE html><html><head><title>Fee History - ${student.first_name} ${student.last_name}</title><style>body{font-family:Inter;padding:20px}.history-table{width:100%;border-collapse:collapse}.history-table th,.history-table td{border:1px solid #ccc;padding:8px;text-align:left}.debt{color:#dc2626}</style></head><body>${historyHtml}<script>window.print();<\/script></body></html>`);
+                win.document.close();
+            };
+        };
+        
         async function renderStudentList() {
             let filtered = filterStudents(students);
             let html = `<table class="w-full">
@@ -324,6 +374,7 @@
                             ${canEditTotalFees() ? `<button class="btn-sm" onclick="editTotalFees('${s.id}')"><i class="fas fa-coins"></i> Fees</button>` : ''}
                             <button class="btn-sm btn-gold" onclick="printIdCard('${s.id}')"><i class="fas fa-id-card"></i> ID</button>
                             <button class="btn-sm" onclick="quickPayment('${s.id}')"><i class="fas fa-money-bill-wave"></i> Pay</button>
+                            <button class="btn-sm" onclick="showFeeHistory('${s.id}')"><i class="fas fa-history"></i> History</button>
                             <button class="btn-sm" onclick="showStudentReport('${s.id}')"><i class="fas fa-file-alt"></i> Report</button>
                             ${currentUser?.role === 'finance' ? `<button class="btn-sm whatsapp-btn" onclick="sendDebtReminder('${s.id}')"><i class="fab fa-whatsapp"></i> Notify</button>` : ''}
                         </div></td>
@@ -396,15 +447,21 @@
             let s = students.find(st => st.id === id);
             let amt = prompt(`Payment for ${s.first_name} ${s.last_name}\nBalance: ${formatMoney((s.total_fees || 0) - payments.filter(p => p.student_id === id).reduce((a,b) => a + b.amount, 0))}\nEnter amount (UGX):`);
             if (amt && !isNaN(parseFloat(amt))) {
-                let newPaid = (s.fees_paid || 0) + parseFloat(amt);
-                await restUpdate('students', id, { fees_paid: newPaid });
-                await restInsert('payments', {
+                let receipt = `RCP-${Date.now()}`;
+                let paymentData = {
                     school_id: SCHOOL_ID,
                     student_id: id,
                     amount: parseFloat(amt),
                     payment_date: new Date().toISOString().slice(0,10),
-                    receipt_number: `RCP-${Date.now()}`
-                });
+                    receipt_number: receipt,
+                    payment_code: `MANUAL-${Date.now()}`,
+                    academic_year: new Date().getFullYear().toString(),
+                    term: 'Term I'
+                };
+                let newPaid = (s.fees_paid || 0) + parseFloat(amt);
+                await restUpdate('students', id, { fees_paid: newPaid });
+                await restInsert('payments', paymentData);
+                await restInsert('transactions', { ...paymentData, receipt: receipt });
                 showToast(`Payment of ${formatMoney(parseFloat(amt))} recorded for ${s.first_name}`);
                 await loadAll();
                 await renderStudentList();
@@ -651,9 +708,9 @@
                         const disabledAttr = isLocked ? 'disabled' : '';
                         html += `<td class="p-2"><input type="number" class="mark-input" data-mark-id="${existing?.id || ''}" data-student="${s.id}" data-subject="${sub}" value="${val}" min="0" max="100" ${disabledAttr}> <span class="text-xs">${existing ? existing.grade : ''}</span>${isLocked ? ' <span class="lock-info" title="Locked after 1 minute">🔒</span>' : ''}</td>`;
                     }
-                    html += `<tr>`;
+                    html += `</tr>`;
                 }
-                html += '</tbody></td>';
+                html += '</tbody></table>';
                 document.getElementById('marksGrid').innerHTML = html;
             };
             document.getElementById('loadMarksBtn').onclick = loadMarksGrid;
@@ -697,7 +754,7 @@
             await loadMarksGrid();
         }
         
-        // -------- FEES --------
+        // -------- FEES with Debtors List and WhatsApp --------
         async function renderFees() {
             if (!canManageFees()) {
                 document.getElementById('tabContent').innerHTML = '<div class="bg-white p-4 rounded-xl text-red-600">Access denied</div>';
@@ -715,8 +772,8 @@
                     ${showIncome ? `<div>Net: ${formatMoney(totalIncome - totalExpenses)}</div>` : ''}
                     ${showIncome ? `<div>Outstanding: ${formatMoney(outstanding)}</div>` : ''}
                 </div></div>
-                <div class="bg-white p-4 rounded-xl shadow mb-4"><h3 class="font-bold">Record Payment</h3><select id="payStudent" class="border p-2 rounded mb-2"><option value="">Select Student</option>${students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.lin})</option>`).join('')}</select><input type="number" id="payAmount" placeholder="Amount (UGX)"><button class="btn mt-2" id="recordPayBtn">Record Payment</button></div>
-                <div class="bg-white p-4 rounded-xl shadow mb-4"><h3 class="font-bold">Student Balances</h3><div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Student</th><th>LIN</th><th>Total Fees</th><th>Paid</th><th>Balance</th><th>Action</th></tr></thead><tbody id="balanceTableBody"></tbody></table></div><button class="btn btn-gold mt-3" id="printDebtorsBtn"><i class="fas fa-print"></i> Print Debtors List</button></div>
+                <div class="bg-white p-4 rounded-xl shadow mb-4"><h3 class="font-bold">Record Payment</h3><select id="payStudent" class="border p-2 rounded mb-2"><option value="">Select Student</option>${students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.lin})</option>`).join('')}</select><input type="number" id="payAmount" placeholder="Amount (UGX)"><input type="text" id="payCode" placeholder="Payment Code (optional)"><input type="date" id="payDate" value="${new Date().toISOString().slice(0,10)}"><select id="payYear"><option value="">Year</option>${ACADEMIC_YEARS.map(y => `<option>${y}</option>`).join('')}</select><select id="payTerm"><option value="">Term</option>${TERMS.map(t => `<option>${t}</option>`).join('')}</select><button class="btn mt-2" id="recordPayBtn">Record Payment</button></div>
+                <div class="bg-white p-4 rounded-xl shadow mb-4"><h3 class="font-bold">Student Balances</h3><div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Student</th><th>LIN</th><th>Total Fees</th><th>Paid</th><th>Balance</th><th>Actions</th><tr></thead><tbody id="balanceTableBody"></tbody></table></div><div class="flex gap-2 mt-3"><button class="btn btn-gold" id="printDebtorsBtn"><i class="fas fa-print"></i> Print Debtors List</button><button class="btn whatsapp-btn" id="notifyAllDebtorsBtn"><i class="fab fa-whatsapp"></i> WhatsApp All Debtors</button></div></div>
                 <div class="bg-white p-4 rounded-xl shadow"><h3 class="font-bold">Expenses</h3><div class="flex flex-wrap gap-2 mb-3"><input type="text" id="expCat" placeholder="Category"><input type="text" id="expDesc" placeholder="Description"><input type="number" id="expAmount" placeholder="Amount"><input type="date" id="expDate" value="${new Date().toISOString().slice(0,10)}"><button class="btn btn-gold" id="addExpenseBtn">Add Expense</button></div><div id="expenseList" class="space-y-2"></div></div>
             `;
             const renderBalances = () => {
@@ -724,26 +781,46 @@
                 tbody.innerHTML = students.map(s => {
                     const paid = payments.filter(p => p.student_id === s.id).reduce((a,b) => a + b.amount, 0);
                     const bal = (s.total_fees || 0) - paid;
-                    return `<tr><td class="p-2"><strong>${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</strong><br><span class="text-xs">${escapeHtml(s.class)}</span></td><td class="p-2">${escapeHtml(s.lin)}</td><td class="p-2">${formatMoney(s.total_fees)}</td><td class="p-2 paid-text">${formatMoney(paid)}</td><td class="p-2 ${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td class="p-2"><button class="btn-sm" onclick="quickPayment('${s.id}')">Pay</button><button class="btn-sm whatsapp-btn" onclick="sendDebtReminder('${s.id}')">Notify</button></td></tr>`;
+                    return `<tr><td class="p-2"><strong>${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</strong><br><span class="text-xs">${escapeHtml(s.class)}</span></td><td class="p-2">${escapeHtml(s.lin)}</td><td class="p-2">${formatMoney(s.total_fees)}</td><td class="p-2 paid-text">${formatMoney(paid)}</td><td class="p-2 ${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td class="p-2"><button class="btn-sm" onclick="quickPayment('${s.id}')">Pay</button><button class="btn-sm whatsapp-btn" onclick="sendDebtReminder('${s.id}')">Notify</button><button class="btn-sm" onclick="showFeeHistory('${s.id}')">History</button></td></tr>`;
                 }).join('');
             };
             renderBalances();
+            
             document.getElementById('printDebtorsBtn').onclick = () => {
                 const debtors = students.filter(s => (s.total_fees || 0) - payments.filter(p => p.student_id === s.id).reduce((a,b) => a + b.amount, 0) > 0);
                 if (debtors.length === 0) { alert('No debtors'); return; }
                 let win = window.open('', '_blank');
-                win.document.write(`<html><head><title>Debtors List</title><style>body{font-family:Inter;padding:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:8px}</style></head><body><h2>${escapeHtml(currentSchool.name)} - Debtors List</h2><p>${new Date().toLocaleDateString()}</p><td><thead><tr><th>Name</th><th>LIN</th><th>Class</th><th>Balance</th><th>Parent WhatsApp</th></tr></thead><tbody>${debtors.map(s => { let bal = (s.total_fees || 0) - payments.filter(p => p.student_id === s.id).reduce((a,b) => a + b.amount, 0); return `<tr><td class="p-2">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</td><td class="p-2">${escapeHtml(s.lin)}</td><td class="p-2">${escapeHtml(s.class)}</td><td class="p-2 ${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td class="p-2">${escapeHtml(s.parent_whatsapp || '')}</td>`; }).join('')}</tbody></table></body></html>`);
+                win.document.write(`<html><head><title>Debtors List</title><style>body{font-family:Inter;padding:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:8px}</style></head><body><h2>${escapeHtml(currentSchool.name)} - Debtors List</h2><p>Date: ${new Date().toLocaleDateString()}</p><table><thead><tr><th>Name</th><th>LIN</th><th>Class</th><th>Total Fees</th><th>Paid</th><th>Balance</th><th>Parent WhatsApp</th></tr></thead><tbody>${debtors.map(s => { let paid = payments.filter(p => p.student_id === s.id).reduce((a,b) => a + b.amount, 0); let bal = (s.total_fees || 0) - paid; return `<tr><td class="p-2">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</td><td class="p-2">${escapeHtml(s.lin)}</td><td class="p-2">${escapeHtml(s.class)}</td><td class="p-2">${formatMoney(s.total_fees)}</td><td class="p-2">${formatMoney(paid)}</td><td class="p-2 ${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td class="p-2">${escapeHtml(s.parent_whatsapp || '')}</td>`; }).join('')}</tbody></table></body></html>`);
                 win.document.close();
                 win.print();
             };
+            
+            document.getElementById('notifyAllDebtorsBtn').onclick = () => {
+                const debtors = students.filter(s => (s.total_fees || 0) - payments.filter(p => p.student_id === s.id).reduce((a,b) => a + b.amount, 0) > 0 && s.parent_whatsapp);
+                if (debtors.length === 0) { showToast("No debtors with WhatsApp numbers", true); return; }
+                debtors.forEach(s => {
+                    const paid = payments.filter(p => p.student_id === s.id).reduce((a,b) => a + b.amount, 0);
+                    const bal = (s.total_fees || 0) - paid;
+                    const msg = `Dear Parent, fee balance for ${s.first_name} ${s.last_name} (${s.lin}) is ${formatMoney(bal)}. Please clear. - ${currentSchool.name}`;
+                    sendWhatsApp(s.parent_whatsapp, msg);
+                });
+                showToast(`WhatsApp reminders sent to ${debtors.length} parents`);
+            };
+            
             document.getElementById('recordPayBtn').onclick = async () => {
                 let sid = document.getElementById('payStudent').value;
                 let amt = parseFloat(document.getElementById('payAmount').value);
                 if (!sid || isNaN(amt) || amt <= 0) return showToast("Select student and valid amount", true);
+                let code = document.getElementById('payCode').value.trim() || `MANUAL-${Date.now()}`;
+                let date = document.getElementById('payDate').value;
+                let year = document.getElementById('payYear').value || new Date().getFullYear().toString();
+                let term = document.getElementById('payTerm').value || 'Term I';
+                let receipt = `RCP-${Date.now()}`;
                 let student = students.find(s => s.id === sid);
                 let newPaid = (student.fees_paid || 0) + amt;
                 await restUpdate('students', sid, { fees_paid: newPaid });
-                await restInsert('payments', { school_id: SCHOOL_ID, student_id: sid, amount: amt, payment_date: new Date().toISOString().slice(0,10), receipt_number: `RCP-${Date.now()}` });
+                await restInsert('payments', { school_id: SCHOOL_ID, student_id: sid, amount: amt, payment_date: date, receipt_number: receipt, payment_code: code, academic_year: year, term });
+                await restInsert('transactions', { school_id: SCHOOL_ID, student_id: sid, amount: amt, payment_date: date, receipt: receipt, payment_code: code, academic_year: year, term });
                 showToast(`Payment of ${formatMoney(amt)} recorded for ${student.first_name}`);
                 await loadAll();
                 await renderFees();
@@ -792,7 +869,7 @@
                 const outstanding = data.expected - data.collected;
                 return `<tr><td class="p-2">${escapeHtml(cls)}</td><td class="p-2">${data.count}</td><td class="p-2">${formatMoney(data.expected)}</td><td class="p-2">${formatMoney(data.collected)}</td><td class="p-2 ${outstanding > 0 ? 'debt' : ''}">${formatMoney(outstanding)}</td></tr>`;
             }).join('');
-            document.getElementById('tabContent').innerHTML = `<div class="bg-white rounded-xl p-6 shadow"><h3 class="font-bold text-xl mb-4"><i class="fas fa-chart-line"></i> Total Expected Fees Summary</h3><div class="finance-summary mb-6"><div class="grid md:grid-cols-3 gap-4"><div><strong>Total Fees Expected:</strong><br>${formatMoney(totalFeesExpected)}</div><div><strong>Total Collected:</strong><br>${formatMoney(totalCollected)}</div><div><strong>Total Outstanding:</strong><br>${formatMoney(totalOutstanding)}</div></div></div><h4 class="font-bold text-lg mb-3">Class-wise Breakdown</h4><div class="overflow-x-auto"><table class="w-full border"><thead><tr class="bg-gray-100"><th class="p-2">Class</th><th class="p-2"># Students</th><th class="p-2">Expected (UGX)</th><th class="p-2">Collected (UGX)</th><th class="p-2">Outstanding (UGX)</th></tr></thead><tbody>${classRows || '<tr><td colspan="5" class="p-4 text-center">No data available</td></tr>'}</tbody></table></div></div>`;
+            document.getElementById('tabContent').innerHTML = `<div class="bg-white rounded-xl p-6 shadow"><h3 class="font-bold text-xl mb-4"><i class="fas fa-chart-line"></i> Total Expected Fees Summary</h3><div class="finance-summary mb-6"><div class="grid md:grid-cols-3 gap-4"><div><strong>Total Fees Expected:</strong><br>${formatMoney(totalFeesExpected)}</div><div><strong>Total Collected:</strong><br>${formatMoney(totalCollected)}</div><div><strong>Total Outstanding:</strong><br>${formatMoney(totalOutstanding)}</div></div></div><h4 class="font-bold text-lg mb-3">Class-wise Breakdown</h4><div class="overflow-x-auto"><table class="w-full border"><thead><tr class="bg-gray-100"><th class="p-2">Class</th><th class="p-2"># Students</th><th class="p-2">Expected (UGX)</th><th class="p-2">Collected (UGX)</th><th class="p-2">Outstanding (UGX)</th></tr></thead><tbody>${classRows || '<tr><td colspan="5" class="p-4 text-center">No data available</td>'}</tbody></table></div></div>`;
         }
         
         async function renderIdCards() {
@@ -860,7 +937,7 @@
                     rows += `</tr>`;
                 }
                 let summaryRow = `<tr style="background:#f1f5f9;"><td style="font-weight:700;">Total / Aggregate</td>`;
-                let divisionRow = `<tr style="background:#eef2ff;"><td style="font-weight:700;">Division</td>`;
+                let divisionRow = `<tr style="background:#eef2ff;"><td style="font-weight:700;">Division<td>`;
                 for (let ex of exams) {
                     let total = totals[ex] || 0;
                     let agg = 0;
@@ -874,7 +951,7 @@
                 summaryRow += `</tr>`;
                 divisionRow += `</tr>`;
                 const photoHtml = student.photo_url ? `<img src="${student.photo_url}" class="report-student-photo">` : `<div class="report-student-photo" style="display:flex;align-items:center;justify-content:center;background:#f1f5f9;"><i class="fas fa-user-graduate fa-3x" style="color:#003366;"></i></div>`;
-                currentReportHTML = `<div id="printableReport" class="student-report-card"><div class="report-header"><h2>${escapeHtml(currentSchool.name)}</h2><p>${escapeHtml(currentSchool.address || '')} | 📞 ${SCHOOL_CONTACTS.join(', ')}</p><p><strong>Academic Report – ${term}</strong></p></div><div class="report-student-info"><div>${photoHtml}</div><div><p><strong>Name:</strong> ${escapeHtml(student.first_name)} ${escapeHtml(student.last_name)}</p><p><strong>LIN:</strong> ${escapeHtml(student.lin)}</p><p><strong>Class:</strong> ${escapeHtml(student.class)}</p><p><strong>Parent:</strong> ${escapeHtml(student.parent_name || 'N/A')} (${escapeHtml(student.parent_whatsapp || 'N/A')})</p></div></div><table class="report-table"><thead><tr><th>Subject</th><th>Beginning of Term</th><th>Mid Term</th><th>End of Term</th></tr></thead><tbody>${rows}${summaryRow}${divisionRow}</tbody></table><div class="report-summary"><div><strong>Grading Scale (UNEB PLE)</strong><br>D1 (90-100), D2 (80-89), C3 (70-79), C4 (60-69), C5 (50-59), C6 (40-49), P7 (35-39), P8 (30-34), F9 (below 30)</div><div><strong>Division</strong><br>Div1 (1-12), Div2 (13-23), Div3 (24-29), Div4 (30-34), DivU (35+)</div></div><div class="report-footer">Generated on ${new Date().toLocaleString()}</div></div>`;
+                currentReportHTML = `<div id="printableReport" class="student-report-card"><div class="report-header"><h2>${escapeHtml(currentSchool.name)}</h2><p>${escapeHtml(currentSchool.address || '')} | 📞 ${SCHOOL_CONTACTS.join(', ')}</p><p><strong>Academic Report – ${term}</strong></p></div><div class="report-student-info"><div>${photoHtml}</div><div><p><strong>Name:</strong> ${escapeHtml(student.first_name)} ${escapeHtml(student.last_name)}</p><p><strong>LIN:</strong> ${escapeHtml(student.lin)}</p><p><strong>Class:</strong> ${escapeHtml(student.class)}</p><p><strong>Parent:</strong> ${escapeHtml(student.parent_name || 'N/A')} (${escapeHtml(student.parent_whatsapp || 'N/A')})</p></div></div><table class="report-table"><thead><tr><th>Subject</th><th>Beginning of Term</th><th>Mid Term</th><th>End of Term</th></tr></thead><tbody>${rows}${summaryRow}${divisionRow}</tbody><tr><div class="report-summary"><div><strong>Grading Scale (UNEB PLE)</strong><br>D1 (90-100), D2 (80-89), C3 (70-79), C4 (60-69), C5 (50-59), C6 (40-49), P7 (35-39), P8 (30-34), F9 (below 30)</div><div><strong>Division</strong><br>Div1 (1-12), Div2 (13-23), Div3 (24-29), Div4 (30-34), DivU (35+)</div></div><div class="report-footer">Generated on ${new Date().toLocaleString()}</div></div>`;
                 document.getElementById('studentReportContainer').innerHTML = currentReportHTML;
             };
             document.getElementById('printReportBtn').onclick = () => {
