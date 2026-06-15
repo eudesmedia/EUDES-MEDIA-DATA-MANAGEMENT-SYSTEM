@@ -28,6 +28,7 @@
         .form-control { width: 100%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 40px; font-size: 14px; background: white; }
         .form-control:focus { outline: none; border-color: #d4a017; }
         .search-bar { background: #f8fafc; border-radius: 60px; padding: 8px 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 24px; border: 1px solid #e2e8f0; }
+        .search-bar i { color: #94a3b8; font-size: 18px; }
         .search-bar input { flex: 1; border: none; background: transparent; padding: 12px 0; font-size: 15px; outline: none; }
         .btn { padding: 10px 22px; border-radius: 40px; border: none; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
         .btn-primary { background: #0b2b5c; color: white; }
@@ -61,17 +62,26 @@
         .selection-toolbar { background: #eef2ff; border-radius: 20px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-top: 20px; }
         .whatsapp-preview { background: #eaf9ed; padding: 18px; border-radius: 20px; margin: 20px 0; border-left: 5px solid #25D366; }
         .whatsapp-preview pre { background: white; padding: 14px; border-radius: 16px; white-space: pre-wrap; font-family: monospace; margin-top: 12px; font-size: 13px; }
-        .loading-spinner { text-align: center; padding: 50px; color: #0b2b5c; }
-        @media print { .no-print { display: none; } }
+        .report-card { background: white; border-radius: 28px; padding: 32px; margin-bottom: 32px; page-break-after: always; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .report-header { text-align: center; border-bottom: 3px solid #d4a017; padding-bottom: 20px; margin-bottom: 24px; }
+        .report-header h2 { color: #0b2b5c; }
+        .report-student-info { background: #f8fafc; padding: 20px; border-radius: 20px; display: flex; gap: 24px; flex-wrap: wrap; align-items: center; margin-bottom: 24px; }
+        .report-photo { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #d4a017; background: #e2e8f0; display: flex; align-items: center; justify-content: center; }
+        .grade-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .grade-table th, .grade-table td { border: 1px solid #e2e8f0; padding: 12px; text-align: center; }
+        .grade-table th { background: #0b2b5c; color: white; }
+        .comment-panel { display: flex; gap: 30px; margin-top: 30px; flex-wrap: wrap; }
+        .comment-card { flex: 1; border-top: 2px dashed #cbd5e1; padding-top: 18px; }
+        @media print { .no-print { display: none; } .report-card { page-break-after: always; } }
     </style>
 </head>
 <body>
-<div id="root">Connecting to Supabase...</div>
+<div id="root">Loading system...</div>
 
 <script>
 // ============================================================
-// PROGRESSIVE MOTHERS SCHOOL - SUPABASE VERSION
-// FIXED JSON PARSING ERROR
+// PROGRESSIVE MOTHERS SCHOOL - OPTIMIZED VERSION
+// NO RE-RENDERING ON SEARCH TYPING
 // ============================================================
 
 const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
@@ -102,40 +112,22 @@ const ROLE_PERMISSIONS = {
     finance: { students: true, attendance: false, marks: false, fees: true, reports: false, viewFinance: true }
 };
 
-let students = [];
-let marks = [];
-let attendance = [];
-let payments = [];
-let currentUser = null;
-let activeView = 'dashboard';
-let selectedStudentIds = new Set();
-let searchTerm = '';
+let students = [], marks = [], attendance = [], payments = [];
+let currentUser = null, activeView = 'dashboard', selectedStudentIds = new Set();
+let searchTerm = '', attendanceSearchTerm = '', feesSearchTerm = '';
 
 function formatMoney(amt) { return 'UGX ' + (amt || 0).toLocaleString(); }
 function escapeHtml(str) { return str ? String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]) : ''; }
+function showToast(msg, isErr) { let t = document.createElement('div'); t.className = `toast-msg ${isErr ? 'error' : ''}`; t.innerText = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); }
+function sendWhatsApp(phone, message) { if (!phone) { showToast('No WhatsApp number', true); return; } let clean = phone.replace(/\D/g, ''); if (clean.startsWith('0')) clean = '256' + clean.slice(1); window.open(`https://wa.me/${clean}?text=${encodeURIComponent(message)}`, '_blank'); }
 
-function showToast(msg, isErr) {
-    let t = document.createElement('div');
-    t.className = `toast-msg ${isErr ? 'error' : ''}`;
-    t.innerText = msg;
-    document.body.appendChild(t);
-    setTimeout(() => t.remove(), 3000);
-}
-
-function sendWhatsApp(phone, message) {
-    if (!phone) { showToast('No WhatsApp number', true); return; }
-    let clean = phone.replace(/\D/g, '');
-    if (clean.startsWith('0')) clean = '256' + clean.slice(1);
-    window.open(`https://wa.me/${clean}?text=${encodeURIComponent(message)}`, '_blank');
-}
+function getStandardGrade(score) { if(score>=90) return 'D1'; if(score>=80) return 'D2'; if(score>=70) return 'C3'; if(score>=60) return 'C4'; if(score>=50) return 'C5'; if(score>=40) return 'C6'; if(score>=35) return 'P7'; if(score>=30) return 'P8'; return 'F9'; }
+function getGradePoints(grade) { const p = { D1:1, D2:2, C3:3, C4:4, C5:5, C6:6, P7:7, P8:8, F9:9 }; return p[grade] || 9; }
+function getDivision(agg) { if(agg<=12) return 'Division 1'; if(agg<=23) return 'Division 2'; if(agg<=29) return 'Division 3'; if(agg<=34) return 'Division 4'; return 'Division U'; }
 
 function generateUniqueLIN(firstName, existingLINs) {
-    let prefix = 'PM';
-    let firstLetter = firstName ? firstName.charAt(0).toUpperCase() : 'X';
-    let baseLIN = prefix + firstLetter;
-    let newLIN = '';
-    let isUnique = false;
-    let attempts = 0;
+    let prefix = 'PM', firstLetter = firstName ? firstName.charAt(0).toUpperCase() : 'X', baseLIN = prefix + firstLetter;
+    let newLIN = '', isUnique = false, attempts = 0;
     while (!isUnique && attempts < 100) {
         let randomNum = Math.floor(1000 + Math.random() * 9000);
         newLIN = baseLIN + randomNum;
@@ -145,153 +137,90 @@ function generateUniqueLIN(firstName, existingLINs) {
     return newLIN;
 }
 
-function isDuplicateStudent(firstName, lastName, parentWhatsapp, excludeId = null) {
-    return students.some(s => {
-        if (excludeId && s.id === excludeId) return false;
-        return s.first_name?.toLowerCase() === firstName.toLowerCase() &&
-               s.last_name?.toLowerCase() === lastName.toLowerCase() &&
-               s.parent_whatsapp === parentWhatsapp;
-    });
-}
-
-function filterStudents(list) {
-    if (!searchTerm.trim()) return list;
-    const term = searchTerm.toLowerCase().trim();
-    return list.filter(s =>
-        `${s.first_name} ${s.last_name}`.toLowerCase().includes(term) ||
-        (s.lin || '').toLowerCase().includes(term) ||
-        (s.payment_code || '').toLowerCase().includes(term) ||
-        (s.class || '').toLowerCase().includes(term) ||
-        (s.parent_name || '').toLowerCase().includes(term)
-    );
-}
-
-// Supabase API with better error handling
+// Supabase API - SILENT LOADING (no messages)
 async function supabaseFetch(table, filter = '') {
     try {
         let url = `${SUPABASE_URL}/rest/v1/${table}?select=*${filter}`;
-        let res = await fetch(url, {
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-        });
+        let res = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
         if (!res.ok) return [];
         let text = await res.text();
-        if (!text) return [];
-        return JSON.parse(text);
-    } catch (e) {
-        console.error(`Error fetching ${table}:`, e);
-        return [];
-    }
+        return text ? JSON.parse(text) : [];
+    } catch(e) { return []; }
 }
-
 async function supabaseInsert(table, data) {
     try {
-        let res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
-            method: 'POST',
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
+        let res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, { method: 'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         let text = await res.text();
-        if (!text) return true;
-        return JSON.parse(text);
-    } catch (e) {
-        console.error(`Insert error:`, e);
-        showToast(`Error saving: ${e.message}`, true);
-        return null;
-    }
+        return text ? JSON.parse(text) : true;
+    } catch(e) { showToast(`Error: ${e.message}`, true); return null; }
 }
-
 async function supabaseUpdate(table, id, data) {
     try {
-        let res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
-            method: 'PATCH',
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        if (!res.ok) {
-            let errorText = await res.text();
-            console.error('Update error response:', errorText);
-            throw new Error(`HTTP ${res.status}: ${errorText}`);
-        }
-        // Try to parse response, but if empty, return success
+        let res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, { method: 'PATCH', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         let text = await res.text();
-        if (!text) return true;
-        return JSON.parse(text);
-    } catch (e) {
-        console.error(`Update error:`, e);
-        showToast(`Error updating: ${e.message}`, true);
-        return null;
-    }
+        return text ? JSON.parse(text) : true;
+    } catch(e) { showToast(`Error updating: ${e.message}`, true); return null; }
 }
-
 async function supabaseDelete(table, id) {
-    try {
-        let res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
-            method: 'DELETE',
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-        });
-        if (!res.ok) throw new Error(await res.text());
-        return true;
-    } catch (e) {
-        console.error(`Delete error:`, e);
-        return false;
-    }
+    try { await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, { method: 'DELETE', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }); return true; } catch(e) { return false; }
 }
 
 async function loadAllData() {
-    document.getElementById('root').innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading data from Supabase...</div>';
-    
     students = await supabaseFetch('students', `&school_id=eq.${SCHOOL_ID}`);
     marks = await supabaseFetch('marks', `&school_id=eq.${SCHOOL_ID}`);
     attendance = await supabaseFetch('attendance', `&school_id=eq.${SCHOOL_ID}`);
     payments = await supabaseFetch('payments', `&school_id=eq.${SCHOOL_ID}`);
-    
-    console.log('Loaded students:', students.length);
+    if (students.length === 0) await createDemoData();
+    students = await supabaseFetch('students', `&school_id=eq.${SCHOOL_ID}`);
+    marks = await supabaseFetch('marks', `&school_id=eq.${SCHOOL_ID}`);
     return true;
 }
 
+async function createDemoData() {
+    let demo = [
+        { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: 'Ssengo', last_name: 'Emmanuel', lin: 'PME1001', payment_code: 'PAY001', class: 'Baby', parent_name: 'Mr. Ssengo', parent_whatsapp: '0756000010', total_fees: 250000, academic_year: '2026', photo_url: '' },
+        { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: 'Nakato', last_name: 'Sarah', lin: 'PMS1002', payment_code: 'PAY002', class: 'Middle', parent_name: 'Mrs. Nakato', parent_whatsapp: '0756000011', total_fees: 250000, academic_year: '2026', photo_url: '' },
+        { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: 'Okello', last_name: 'Peter', lin: 'PMO1003', payment_code: 'PAY003', class: 'P.4', parent_name: 'Mr. Okello', parent_whatsapp: '0756000012', total_fees: 350000, academic_year: '2026', photo_url: '' },
+        { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: 'Mukasa', last_name: 'John', lin: 'PMJ1004', payment_code: 'PAY004', class: 'P.4', parent_name: 'James Mukasa', parent_whatsapp: '0756000001', total_fees: 350000, academic_year: '2026', photo_url: '' }
+    ];
+    for (let s of demo) await supabaseInsert('students', s);
+    for (let s of demo.slice(2,4)) {
+        let subs = SUBJECT_MAP['P.4'], scores = [78, 82, 75, 68];
+        for (let i = 0; i < subs.length; i++) {
+            await supabaseInsert('marks', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: s.id, subject: subs[i], score: scores[i], term: 'Term I', exam_type: 'Beginning of Term', academic_year: '2026' });
+            await supabaseInsert('marks', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: s.id, subject: subs[i], score: scores[i]+5, term: 'Term I', exam_type: 'Mid Term', academic_year: '2026' });
+            await supabaseInsert('marks', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: s.id, subject: subs[i], score: scores[i]+10, term: 'Term I', exam_type: 'End of Term', academic_year: '2026' });
+        }
+    }
+}
+
+// Filter functions
+function filterStudents(list) { if (!searchTerm.trim()) return list; const term = searchTerm.toLowerCase().trim(); return list.filter(s => `${s.first_name} ${s.last_name}`.toLowerCase().includes(term) || (s.lin || '').toLowerCase().includes(term) || (s.payment_code || '').toLowerCase().includes(term) || (s.class || '').toLowerCase().includes(term) || (s.parent_name || '').toLowerCase().includes(term)); }
+function filterAttendance(list) { if (!attendanceSearchTerm.trim()) return list; const term = attendanceSearchTerm.toLowerCase().trim(); return list.filter(s => `${s.first_name} ${s.last_name}`.toLowerCase().includes(term) || (s.lin || '').toLowerCase().includes(term)); }
+function filterFees(list) { if (!feesSearchTerm.trim()) return list; const term = feesSearchTerm.toLowerCase().trim(); return list.filter(s => `${s.first_name} ${s.last_name}`.toLowerCase().includes(term) || (s.lin || '').toLowerCase().includes(term)); }
+
 // Dashboard
 async function renderDashboard() {
-    let today = new Date().toISOString().slice(0, 10);
-    let absentToday = attendance.filter(a => a.date === today && a.status === 'absent').length;
-    let presentToday = students.length - absentToday;
+    let today = new Date().toISOString().slice(0, 10), absentToday = attendance.filter(a => a.date === today && a.status === 'absent').length, presentToday = students.length - absentToday;
     let viewFinance = ROLE_PERMISSIONS[currentUser?.role]?.viewFinance || false;
-    
-    let statsHtml = '';
-    if (viewFinance) {
-        let totalInc = payments.reduce((a, b) => a + (b.amount || 0), 0);
-        let totalExp = students.reduce((a, b) => a + (b.total_fees || 0), 0);
-        statsHtml = `
-            <div class="stat-tile"><div class="stat-digit">${students.length}</div><div class="stat-caption">Total Students</div></div>
-            <div class="stat-tile"><div class="stat-digit">${formatMoney(totalInc)}</div><div class="stat-caption">Revenue</div></div>
-            <div class="stat-tile"><div class="stat-digit">${formatMoney(totalExp - totalInc)}</div><div class="stat-caption">Outstanding</div></div>
-            <div class="stat-tile"><div class="stat-digit">${presentToday}</div><div class="stat-caption">Present Today</div></div>
-            <div class="stat-tile"><div class="stat-digit">${absentToday}</div><div class="stat-caption">Absent Today</div></div>
-        `;
-    } else {
-        statsHtml = `
-            <div class="stat-tile"><div class="stat-digit">${students.length}</div><div class="stat-caption">Total Students</div></div>
-            <div class="stat-tile"><div class="stat-digit">${presentToday}</div><div class="stat-caption">Present Today</div></div>
-            <div class="stat-tile"><div class="stat-digit">${absentToday}</div><div class="stat-caption">Absent Today</div></div>
-        `;
-    }
-    
-    document.getElementById('mainContent').innerHTML = `
-        <div class="stat-panel">${statsHtml}</div>
-        <div class="card-modern">
-            <div class="section-title"><i class="fas fa-chalkboard"></i> Quick Navigation</div>
-            <div class="flex-row">${getQuickNavButtons()}</div>
-        </div>
-        <div class="card-modern">
-            <div class="section-title"><i class="fas fa-calendar-alt"></i> Academic Year</div>
-            <div class="year-badge" style="font-size: 16px; padding: 8px 20px; background: #d4a017; color: #0b2b5c; border-radius: 20px; display: inline-block;"><i class="fas fa-calendar"></i> Current: ${CURRENT_ACADEMIC_YEAR}</div>
-        </div>
+    let statsHtml = viewFinance ? `
+        <div class="stat-tile"><div class="stat-digit">${students.length}</div><div class="stat-caption">Total Students</div></div>
+        <div class="stat-tile"><div class="stat-digit">${formatMoney(payments.reduce((a,b)=>a+(b.amount||0),0))}</div><div class="stat-caption">Revenue</div></div>
+        <div class="stat-tile"><div class="stat-digit">${formatMoney(students.reduce((a,b)=>a+(b.total_fees||0),0) - payments.reduce((a,b)=>a+(b.amount||0),0))}</div><div class="stat-caption">Outstanding</div></div>
+        <div class="stat-tile"><div class="stat-digit">${presentToday}</div><div class="stat-caption">Present Today</div></div>
+        <div class="stat-tile"><div class="stat-digit">${absentToday}</div><div class="stat-caption">Absent Today</div></div>
+    ` : `
+        <div class="stat-tile"><div class="stat-digit">${students.length}</div><div class="stat-caption">Total Students</div></div>
+        <div class="stat-tile"><div class="stat-digit">${presentToday}</div><div class="stat-caption">Present Today</div></div>
+        <div class="stat-tile"><div class="stat-digit">${absentToday}</div><div class="stat-caption">Absent Today</div></div>
     `;
+    document.getElementById('mainContent').innerHTML = `<div class="stat-panel">${statsHtml}</div><div class="card-modern"><div class="section-title"><i class="fas fa-chalkboard"></i> Quick Navigation</div><div class="flex-row">${getQuickNavButtons()}</div></div>`;
 }
 
 function getQuickNavButtons() {
-    let perms = ROLE_PERMISSIONS[currentUser?.role];
-    let btns = [];
+    let perms = ROLE_PERMISSIONS[currentUser?.role], btns = [];
     if (perms?.students) btns.push(`<button class="btn btn-primary" onclick="switchView('students')"><i class="fas fa-users"></i> Students</button>`);
     if (perms?.attendance) btns.push(`<button class="btn btn-primary" onclick="switchView('attendance')"><i class="fas fa-calendar-check"></i> Attendance</button>`);
     if (perms?.marks) btns.push(`<button class="btn btn-primary" onclick="switchView('marks')"><i class="fas fa-chart-line"></i> Marks</button>`);
@@ -300,631 +229,316 @@ function getQuickNavButtons() {
     return btns.join('');
 }
 
-// Students Module
-async function renderStudents() {
-    let filteredStudents = filterStudents(students);
-    let viewFinance = ROLE_PERMISSIONS[currentUser?.role]?.viewFinance || false;
-    
+// Students - NO RE-RENDER ON SEARCH
+function renderStudents() {
+    let filtered = filterStudents(students), viewFinance = ROLE_PERMISSIONS[currentUser?.role]?.viewFinance || false;
     let html = `
-        <div class="card-modern">
-            <div class="flex-row" style="justify-content: space-between; align-items: center;">
-                <div class="section-title" style="margin-bottom: 0;"><i class="fas fa-user-graduate"></i> Student Register (${students.length} students)</div>
-                <button class="btn btn-primary" onclick="showAddStudentModal()"><i class="fas fa-plus"></i> Add New Student</button>
-            </div>
-            <div class="search-bar">
-                <i class="fas fa-search"></i>
-                <input type="text" id="studentSearchInput" placeholder="Search by Name, LIN, Payment Code, Class, or Parent Name..." value="${escapeHtml(searchTerm)}">
-                <i class="fas fa-times" id="clearSearchBtn" style="cursor: pointer; display: ${searchTerm ? 'block' : 'none'};"></i>
-            </div>
-            <div class="data-wrapper">
-                <table class="data-table">
-                    <thead>
-                        <tr><th>Photo</th><th>Name</th><th>LIN</th><th>Payment Code</th><th>Class</th>${viewFinance ? '<th>Total Fees</th><th>Paid</th><th>Balance</th>' : ''}<th>Parent</th><th>WhatsApp</th><th>Year</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody id="studentsTableBody"></tbody>
-                </table>
-                ${filteredStudents.length === 0 ? '<div class="no-results"><i class="fas fa-search"></i> No students match</div>' : ''}
-            </div>
-        </div>
-    `;
+        <div class="card-modern"><div class="flex-row" style="justify-content: space-between;"><div class="section-title" style="margin-bottom:0;"><i class="fas fa-user-graduate"></i> Student Register (${students.length})</div><button class="btn btn-primary" onclick="showAddStudentModal()"><i class="fas fa-plus"></i> Add Student</button></div>
+        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="studentSearch" placeholder="Search by Name, LIN, Payment Code, Class, Parent..." value="${escapeHtml(searchTerm)}"><i class="fas fa-times" id="clearSearch" style="cursor:pointer; display:${searchTerm?'block':'none'};"></i></div>
+        <div class="data-wrapper"><table class="data-table"><thead><tr><th>Photo</th><th>Name</th><th>Class</th><th>LIN</th><th>Payment Code</th>${viewFinance?'<th>Total Fees</th><th>Paid</th><th>Balance</th>':''}<th>Parent</th><th>WhatsApp</th><th>Year</th><th>Actions</th></tr></thead><tbody id="studentsBody"></tbody>}</div>${filtered.length===0?'<div class="no-results">No students match</div>':''}</div>`;
     document.getElementById('mainContent').innerHTML = html;
     
-    let searchInput = document.getElementById('studentSearchInput');
-    let clearBtn = document.getElementById('clearSearchBtn');
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => { searchTerm = e.target.value; renderStudents(); });
+    // Attach search event without re-rendering the whole page
+    let searchInput = document.getElementById('studentSearch');
+    if(searchInput) {
+        searchInput.addEventListener('input', (e) => { searchTerm = e.target.value; renderStudentsTableOnly(); });
+        document.getElementById('clearSearch')?.addEventListener('click', () => { searchTerm = ''; searchInput.value = ''; renderStudentsTableOnly(); });
     }
-    if (clearBtn) {
-        clearBtn.addEventListener('click', () => { searchTerm = ''; renderStudents(); });
-    }
-    
-    await renderStudentsTable(filteredStudents, viewFinance);
+    renderStudentsTableOnly();
 }
 
-async function renderStudentsTable(filteredList, viewFinance) {
-    let tbody = document.getElementById('studentsTableBody');
-    if (!tbody) return;
+function renderStudentsTableOnly() {
+    let tbody = document.getElementById('studentsBody');
+    if(!tbody) return;
+    let filtered = filterStudents(students);
+    let viewFinance = ROLE_PERMISSIONS[currentUser?.role]?.viewFinance || false;
     tbody.innerHTML = '';
-    let listToRender = filteredList || filterStudents(students);
-    
-    for (let s of listToRender) {
-        let paid = payments.filter(p => p.student_id === s.id && p.academic_year === CURRENT_ACADEMIC_YEAR).reduce((a, b) => a + (b.amount || 0), 0);
-        let bal = (s.total_fees || 0) - paid;
-        let actionsHtml = `
-            <button class="btn btn-sm btn-edit" onclick="editStudent('${s.id}')"><i class="fas fa-edit"></i> Edit</button>
-            <button class="btn btn-sm btn-delete" onclick="deleteStudent('${s.id}')"><i class="fas fa-trash"></i> Delete</button>
-        `;
-        
+    for (let s of filtered) {
+        let paid = payments.filter(p => p.student_id === s.id && p.academic_year === CURRENT_ACADEMIC_YEAR).reduce((a,b)=>a+(b.amount||0),0), bal = (s.total_fees||0)-paid;
         let row = tbody.insertRow();
-        if (viewFinance) {
-            row.innerHTML = `
-                <td class="student-photo-cell"><div class="student-photo-img">${s.photo_url ? `<img src="${s.photo_url}" style="width:45px;height:45px;border-radius:50%;">` : `<i class="fas fa-user-circle fa-2x"></i>`}</div></td>
-                <td><strong>${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</strong></td>
-                <td>${s.lin || 'N/A'}</td>
-                <td>${s.payment_code || 'Not set'}</td>
-                <td>${s.class}</td>
-                <td>${formatMoney(s.total_fees || 0)}</td>
-                <td class="paid">${formatMoney(paid)}</td>
-                <td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td>
-                <td>${escapeHtml(s.parent_name || '')}</td>
-                <td>${escapeHtml(s.parent_whatsapp || '')}</td>
-                <td>${s.academic_year || CURRENT_ACADEMIC_YEAR}</td>
-                <td>${actionsHtml}</td>
-            `;
-        } else {
-            row.innerHTML = `
-                <td class="student-photo-cell"><div class="student-photo-img">${s.photo_url ? `<img src="${s.photo_url}" style="width:45px;height:45px;border-radius:50%;">` : `<i class="fas fa-user-circle fa-2x"></i>`}</div></td>
-                <td><strong>${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</strong></td>
-                <td>${s.lin || 'N/A'}</td>
-                <td>${s.payment_code || 'Not set'}</td>
-                <td>${s.class}</td>
-                <td>${escapeHtml(s.parent_name || '')}</td>
-                <td>${escapeHtml(s.parent_whatsapp || '')}</td>
-                <td>${s.academic_year || CURRENT_ACADEMIC_YEAR}</td>
-                <td>${actionsHtml}</td>
-            `;
-        }
+        if (viewFinance) row.innerHTML = `<td><div class="student-photo-img">${s.photo_url?`<img src="${s.photo_url}" style="width:45px;height:45px;border-radius:50%;">`:'<i class="fas fa-user-circle fa-2x"></i>'}</div></td><td><strong>${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</strong></td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code||'Not set'}</td><td>${formatMoney(s.total_fees||0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal>0?'debt':''}">${formatMoney(bal)}</td><td>${escapeHtml(s.parent_name||'')}</td><td>${escapeHtml(s.parent_whatsapp||'')}</td><td>${s.academic_year||CURRENT_ACADEMIC_YEAR}</td><td><button class="btn btn-sm btn-edit" onclick="editStudent('${s.id}')">Edit</button> <button class="btn btn-sm btn-delete" onclick="deleteStudent('${s.id}')">Delete</button></tr>`;
+        else row.innerHTML = `<td><div class="student-photo-img">${s.photo_url?`<img src="${s.photo_url}" style="width:45px;height:45px;border-radius:50%;">`:'<i class="fas fa-user-circle fa-2x"></i>'}</div><td><td><strong>${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</strong></td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code||'Not set'}</td><td>${escapeHtml(s.parent_name||'')}</td><td>${escapeHtml(s.parent_whatsapp||'')}</td><td>${s.academic_year||CURRENT_ACADEMIC_YEAR}</td><td><button class="btn btn-sm btn-edit" onclick="editStudent('${s.id}')">Edit</button> <button class="btn btn-sm btn-delete" onclick="deleteStudent('${s.id}')">Delete</button></td>`;
     }
 }
 
-// Add Student Modal
+// Add/Edit/Delete Students
 function showAddStudentModal() {
-    let existingLINs = students.map(s => s.lin);
-    let suggestedLIN = generateUniqueLIN('', existingLINs);
-    
-    let modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.style.display = 'flex';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-user-plus"></i> Add New Student</h3>
-                <button class="close-modal" onclick="this.closest('.modal').remove()">&times;</button>
-            </div>
-            <div class="form-group"><label>First Name *</label><input type="text" id="newFirstName" class="form-control" placeholder="First Name" oninput="updateSuggestedLIN()"></div>
-            <div class="form-group"><label>Last Name *</label><input type="text" id="newLastName" class="form-control" placeholder="Last Name"></div>
-            <div class="form-group"><label>LIN Number</label><input type="text" id="newLin" class="form-control" value="${suggestedLIN}" readonly style="background:#f0f2f5;"><small>Auto-generated</small></div>
-            <div class="form-group"><label>Payment Code *</label><input type="text" id="newPaymentCode" class="form-control" placeholder="e.g., PAY001"></div>
-            <div class="form-group"><label>Class</label><select id="newClass" class="form-control">${CLASSES.map(c => `<option>${c}</option>`).join('')}</select></div>
-            <div class="form-group"><label>Parent Name</label><input type="text" id="newParentName" class="form-control"></div>
-            <div class="form-group"><label>Parent WhatsApp</label><input type="text" id="newParentWhatsapp" class="form-control" placeholder="0756XXXXXX"></div>
-            <div class="form-group"><label>Total Fees (UGX)</label><input type="number" id="newTotalFees" class="form-control" value="0"></div>
-            <div class="form-group"><label>Academic Year</label><select id="newAcademicYear" class="form-control">${ACADEMIC_YEARS.map(y => `<option ${y === CURRENT_ACADEMIC_YEAR ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
-            <div class="flex-row" style="justify-content: flex-end; margin-top: 20px;">
-                <button class="btn btn-primary" onclick="saveNewStudent()">Save Student</button>
-                <button class="btn" style="background:#ccc;" onclick="this.closest('.modal').remove()">Cancel</button>
-            </div>
-        </div>
-    `;
+    let suggestedLIN = generateUniqueLIN('', students.map(s=>s.lin));
+    let modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
+    modal.innerHTML = `<div class="modal-content"><div class="modal-header"><h3>Add New Student</h3><button class="close-modal" onclick="this.closest('.modal').remove()">&times;</button></div>
+        <div class="form-group"><label>First Name *</label><input type="text" id="newFirstName" class="form-control" oninput="updateSuggestedLIN()"></div>
+        <div class="form-group"><label>Last Name *</label><input type="text" id="newLastName" class="form-control"></div>
+        <div class="form-group"><label>LIN</label><input type="text" id="newLin" class="form-control" value="${suggestedLIN}" readonly style="background:#f0f2f5;"><small>Auto-generated</small></div>
+        <div class="form-group"><label>Payment Code</label><input type="text" id="newPaymentCode" class="form-control" placeholder="e.g., PAY001"></div>
+        <div class="form-group"><label>Class</label><select id="newClass" class="form-control">${CLASSES.map(c=>`<option>${c}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Parent Name</label><input type="text" id="newParentName" class="form-control"></div>
+        <div class="form-group"><label>Parent WhatsApp</label><input type="text" id="newParentWhatsapp" class="form-control"></div>
+        <div class="form-group"><label>Total Fees</label><input type="number" id="newTotalFees" class="form-control" value="0"></div>
+        <div class="form-group"><label>Academic Year</label><select id="newAcademicYear" class="form-control">${ACADEMIC_YEARS.map(y=>`<option ${y===CURRENT_ACADEMIC_YEAR?'selected':''}>${y}</option>`).join('')}</select></div>
+        <div class="flex-row"><button class="btn btn-primary" onclick="saveNewStudent()">Save</button><button class="btn" style="background:#ccc;" onclick="this.closest('.modal').remove()">Cancel</button></div></div>`;
     document.body.appendChild(modal);
-    
-    window.updateSuggestedLIN = function() {
-        let firstName = document.getElementById('newFirstName').value.trim();
-        let existingLINs = students.map(s => s.lin);
-        if (firstName) {
-            let newLIN = generateUniqueLIN(firstName, existingLINs);
-            document.getElementById('newLin').value = newLIN;
-        }
-    };
+    window.updateSuggestedLIN = function() { let fn = document.getElementById('newFirstName').value.trim(); if(fn) document.getElementById('newLin').value = generateUniqueLIN(fn, students.map(s=>s.lin)); };
 }
-
 window.saveNewStudent = async function() {
-    let first = document.getElementById('newFirstName').value.trim();
-    let last = document.getElementById('newLastName').value.trim();
-    let lin = document.getElementById('newLin').value.trim().toUpperCase();
-    let paymentCode = document.getElementById('newPaymentCode').value.trim().toUpperCase();
-    let parentWhatsapp = document.getElementById('newParentWhatsapp').value.trim();
-    
+    let first = document.getElementById('newFirstName').value.trim(), last = document.getElementById('newLastName').value.trim(), lin = document.getElementById('newLin').value.trim().toUpperCase(), paymentCode = document.getElementById('newPaymentCode').value.trim().toUpperCase();
     if (!first || !last) { showToast('First and Last name required', true); return; }
-    if (!paymentCode) paymentCode = `PAY${Math.floor(1000 + Math.random() * 9000)}`;
-    
-    if (isDuplicateStudent(first, last, parentWhatsapp)) {
-        showToast(`Student ${first} ${last} with same parent WhatsApp already exists!`, true);
-        return;
-    }
-    
-    let newStudent = {
-        id: crypto.randomUUID(),
-        school_id: SCHOOL_ID,
-        first_name: first,
-        last_name: last,
-        lin: lin,
-        payment_code: paymentCode,
-        class: document.getElementById('newClass').value,
-        parent_name: document.getElementById('newParentName').value,
-        parent_whatsapp: parentWhatsapp,
-        total_fees: parseFloat(document.getElementById('newTotalFees').value) || 0,
-        academic_year: document.getElementById('newAcademicYear').value,
-        photo_url: ''
-    };
-    
-    let result = await supabaseInsert('students', newStudent);
-    if (result !== null) {
-        await loadAllData();
-        await renderStudents();
-        document.querySelector('.modal')?.remove();
-        showToast('Student added successfully');
-    }
+    if (!paymentCode) paymentCode = `PAY${Math.floor(1000+Math.random()*9000)}`;
+    let newStudent = { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: first, last_name: last, lin: lin, payment_code: paymentCode, class: document.getElementById('newClass').value, parent_name: document.getElementById('newParentName').value, parent_whatsapp: document.getElementById('newParentWhatsapp').value, total_fees: parseFloat(document.getElementById('newTotalFees').value)||0, academic_year: document.getElementById('newAcademicYear').value, photo_url: '' };
+    await supabaseInsert('students', newStudent); await loadAllData(); renderStudents(); document.querySelector('.modal')?.remove(); showToast('Student added');
 };
-
 window.editStudent = async function(id) {
-    let s = students.find(st => st.id === id);
-    if (!s) return;
-    let modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.style.display = 'flex';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-header"><h3><i class="fas fa-edit"></i> Edit Student</h3><button class="close-modal" onclick="this.closest('.modal').remove()">&times;</button></div>
-            <div class="form-group"><label>First Name</label><input type="text" id="editFirstName" class="form-control" value="${escapeHtml(s.first_name)}"></div>
-            <div class="form-group"><label>Last Name</label><input type="text" id="editLastName" class="form-control" value="${escapeHtml(s.last_name)}"></div>
-            <div class="form-group"><label>LIN Number</label><input type="text" id="editLin" class="form-control" value="${s.lin}" readonly style="background:#f0f2f5;"></div>
-            <div class="form-group"><label>Payment Code</label><input type="text" id="editPaymentCode" class="form-control" value="${s.payment_code || ''}"></div>
-            <div class="form-group"><label>Class</label><select id="editClass" class="form-control">${CLASSES.map(c => `<option ${s.class === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
-            <div class="form-group"><label>Parent Name</label><input type="text" id="editParentName" class="form-control" value="${escapeHtml(s.parent_name || '')}"></div>
-            <div class="form-group"><label>Parent WhatsApp</label><input type="text" id="editParentWhatsapp" class="form-control" value="${escapeHtml(s.parent_whatsapp || '')}"></div>
-            <div class="form-group"><label>Total Fees (UGX)</label><input type="number" id="editTotalFees" class="form-control" value="${s.total_fees || 0}"></div>
-            <div class="form-group"><label>Academic Year</label><select id="editAcademicYear" class="form-control">${ACADEMIC_YEARS.map(y => `<option ${(s.academic_year || CURRENT_ACADEMIC_YEAR) === y ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
-            <div class="flex-row" style="justify-content: flex-end; margin-top: 20px;">
-                <button class="btn btn-primary" onclick="updateStudent('${s.id}')">Update Student</button>
-                <button class="btn" style="background:#ccc;" onclick="this.closest('.modal').remove()">Cancel</button>
-            </div>
-        </div>
-    `;
+    let s = students.find(st=>st.id===id); if(!s) return;
+    let modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
+    modal.innerHTML = `<div class="modal-content"><div class="modal-header"><h3>Edit Student</h3><button class="close-modal" onclick="this.closest('.modal').remove()">&times;</button></div>
+        <div class="form-group"><label>First Name</label><input type="text" id="editFirstName" value="${escapeHtml(s.first_name)}" class="form-control"></div>
+        <div class="form-group"><label>Last Name</label><input type="text" id="editLastName" value="${escapeHtml(s.last_name)}" class="form-control"></div>
+        <div class="form-group"><label>LIN</label><input type="text" id="editLin" value="${s.lin}" class="form-control" readonly style="background:#f0f2f5;"></div>
+        <div class="form-group"><label>Payment Code</label><input type="text" id="editPaymentCode" value="${s.payment_code||''}" class="form-control"></div>
+        <div class="form-group"><label>Class</label><select id="editClass" class="form-control">${CLASSES.map(c=>`<option ${s.class===c?'selected':''}>${c}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Parent Name</label><input type="text" id="editParentName" value="${escapeHtml(s.parent_name||'')}" class="form-control"></div>
+        <div class="form-group"><label>Parent WhatsApp</label><input type="text" id="editParentWhatsapp" value="${escapeHtml(s.parent_whatsapp||'')}" class="form-control"></div>
+        <div class="form-group"><label>Total Fees</label><input type="number" id="editTotalFees" value="${s.total_fees||0}" class="form-control"></div>
+        <div class="form-group"><label>Academic Year</label><select id="editAcademicYear" class="form-control">${ACADEMIC_YEARS.map(y=>`<option ${(s.academic_year||CURRENT_ACADEMIC_YEAR)===y?'selected':''}>${y}</option>`).join('')}</select></div>
+        <div class="flex-row"><button class="btn btn-primary" onclick="updateStudent('${s.id}')">Update</button><button class="btn" style="background:#ccc;" onclick="this.closest('.modal').remove()">Cancel</button></div></div>`;
     document.body.appendChild(modal);
 };
-
 window.updateStudent = async function(id) {
-    let updates = {
-        first_name: document.getElementById('editFirstName').value,
-        last_name: document.getElementById('editLastName').value,
-        payment_code: document.getElementById('editPaymentCode').value.trim().toUpperCase(),
-        class: document.getElementById('editClass').value,
-        parent_name: document.getElementById('editParentName').value,
-        parent_whatsapp: document.getElementById('editParentWhatsapp').value,
-        total_fees: parseFloat(document.getElementById('editTotalFees').value) || 0,
-        academic_year: document.getElementById('editAcademicYear').value
-    };
-    
-    // Remove undefined fields
-    Object.keys(updates).forEach(key => updates[key] === undefined && delete updates[key]);
-    
-    console.log('Updating student with data:', updates);
-    
-    let result = await supabaseUpdate('students', id, updates);
-    if (result !== null) {
-        await loadAllData();
-        await renderStudents();
-        document.querySelector('.modal')?.remove();
-        showToast('Student updated successfully');
-    }
+    let updates = { first_name: document.getElementById('editFirstName').value, last_name: document.getElementById('editLastName').value, payment_code: document.getElementById('editPaymentCode').value.trim().toUpperCase(), class: document.getElementById('editClass').value, parent_name: document.getElementById('editParentName').value, parent_whatsapp: document.getElementById('editParentWhatsapp').value, total_fees: parseFloat(document.getElementById('editTotalFees').value)||0, academic_year: document.getElementById('editAcademicYear').value };
+    await supabaseUpdate('students', id, updates); await loadAllData(); renderStudents(); document.querySelector('.modal')?.remove(); showToast('Student updated');
 };
+window.deleteStudent = async function(id) { if(confirm('Delete this student?')) { await supabaseDelete('students', id); await loadAllData(); renderStudents(); showToast('Student deleted'); } };
 
-window.deleteStudent = async function(id) {
-    if (confirm('Are you sure you want to delete this student? This action cannot be undone.')) {
-        let studentMarks = marks.filter(m => m.student_id === id);
-        for (let m of studentMarks) await supabaseDelete('marks', m.id);
-        let studentAttendance = attendance.filter(a => a.student_id === id);
-        for (let a of studentAttendance) await supabaseDelete('attendance', a.id);
-        let studentPayments = payments.filter(p => p.student_id === id);
-        for (let p of studentPayments) await supabaseDelete('payments', p.id);
-        await supabaseDelete('students', id);
-        await loadAllData();
-        await renderStudents();
-        showToast('Student deleted');
-    }
-};
-
-// ==================== ATTENDANCE MODULE ====================
+// Attendance with Search - NO RE-RENDER
 async function renderAttendance() {
-    let opts = [...new Set(students.map(s => s.class))];
-    document.getElementById('mainContent').innerHTML = `
-        <div class="card-modern">
-            <div class="section-title"><i class="fas fa-calendar-alt"></i> Attendance Tracker</div>
-            <div class="flex-row">
-                <select id="attClass" class="form-control">${opts.map(c => `<option>${c}</option>`).join('')}</select>
-                <input type="date" id="attDate" value="${new Date().toISOString().slice(0, 10)}" class="form-control">
-                <button class="btn btn-primary" id="loadAttBtn">Load</button>
-                <button class="btn btn-gold" id="saveAttBtn">Save</button>
-            </div>
-            <div id="attList"></div>
-        </div>
-    `;
-    
-    document.getElementById('loadAttBtn').onclick = async () => {
-        let cls = document.getElementById('attClass').value;
-        let date = document.getElementById('attDate').value;
-        let classStd = students.filter(s => s.class === cls);
-        let existing = await supabaseFetch('attendance', `&date=eq.${date}&status=eq.absent&school_id=eq.${SCHOOL_ID}`);
-        let absentSet = new Set(existing.map(a => a.student_id));
-        let tbl = `<table class="data-table"><thead><tr><th>Photo</th><th>Student</th><th>LIN</th><th>Payment Code</th><th>Mark Absent</th></tr></thead><tbody>`;
-        for (let s of classStd) {
-            tbl += `<tr><td class="student-photo-cell"><div class="student-photo-img">${s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;">` : `<i class="fas fa-user-circle"></i>`}</div></td>
-                    <td>${s.first_name} ${s.last_name}</td>
-                    <td>${s.lin}</td>
-                    <td>${s.payment_code || s.lin}</td>
-                    <td><input type="checkbox" class="absent-cb" data-id="${s.id}" ${absentSet.has(s.id) ? 'checked' : ''}></td>
-                </tr>`;
-        }
-        tbl += `</tbody><tr>`;
-        document.getElementById('attList').innerHTML = tbl;
-    };
-    
-    document.getElementById('saveAttBtn').onclick = async () => {
-        let date = document.getElementById('attDate').value;
-        let cbs = document.querySelectorAll('.absent-cb');
-        for (let cb of cbs) {
-            let sid = cb.dataset.id;
-            let exist = await supabaseFetch('attendance', `&student_id=eq.${sid}&date=eq.${date}`);
-            if (cb.checked) {
-                if (!exist.length) await supabaseInsert('attendance', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: sid, date, status: 'absent', academic_year: CURRENT_ACADEMIC_YEAR });
-            } else {
-                if (exist.length) await supabaseDelete('attendance', exist[0].id);
-            }
-        }
-        showToast('Attendance saved');
-        await loadAllData();
-    };
-    document.getElementById('loadAttBtn').click();
+    let opts = [...new Set(students.map(s=>s.class))];
+    let html = `<div class="card-modern"><div class="section-title"><i class="fas fa-calendar-alt"></i> Attendance Tracker</div>
+        <div class="flex-row"><select id="attClass" class="form-control">${opts.map(c=>`<option>${c}</option>`).join('')}</select><input type="date" id="attDate" value="${new Date().toISOString().slice(0,10)}" class="form-control"><button class="btn btn-primary" id="loadAttBtn">Load</button><button class="btn btn-gold" id="saveAttBtn">Save</button></div>
+        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="attSearch" placeholder="Search student..."><i class="fas fa-times" id="clearAttSearch" style="cursor:pointer; display:none;"></i></div>
+        <div id="attList"></div></div>`;
+    document.getElementById('mainContent').innerHTML = html;
+    document.getElementById('loadAttBtn').onclick = loadAttendanceList;
+    document.getElementById('saveAttBtn').onclick = saveAttendance;
+    let searchInput = document.getElementById('attSearch');
+    searchInput.addEventListener('input', (e) => { attendanceSearchTerm = e.target.value; if(attendanceSearchTerm) document.getElementById('clearAttSearch').style.display='block'; else document.getElementById('clearAttSearch').style.display='none'; loadAttendanceList(); });
+    document.getElementById('clearAttSearch')?.addEventListener('click', () => { attendanceSearchTerm = ''; searchInput.value = ''; document.getElementById('clearAttSearch').style.display='none'; loadAttendanceList(); });
+    await loadAttendanceList();
+}
+async function loadAttendanceList() {
+    let cls = document.getElementById('attClass').value, date = document.getElementById('attDate').value, classStd = students.filter(s=>s.class===cls);
+    let filtered = filterAttendance(classStd);
+    let existing = await supabaseFetch('attendance', `&date=eq.${date}&status=eq.absent&school_id=eq.${SCHOOL_ID}`);
+    let absentSet = new Set(existing.map(a=>a.student_id));
+    let tbl = `<table class="data-table"><thead><tr><th>Photo</th><th>Student</th><th>LIN</th><th>Payment Code</th><th>Mark Absent</th></tr></thead><tbody>`;
+    for (let s of filtered) tbl += `<tr><td class="student-photo-cell"><div class="student-photo-img">${s.photo_url?`<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;">`:'<i class="fas fa-user-circle"></i>'}</div></td><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td>${s.payment_code||s.lin}</td><td><input type="checkbox" class="absent-cb" data-id="${s.id}" ${absentSet.has(s.id)?'checked':''}></td></tr>`;
+    tbl += `</tbody></tr>`;
+    document.getElementById('attList').innerHTML = tbl;
+}
+async function saveAttendance() {
+    let date = document.getElementById('attDate').value, cbs = document.querySelectorAll('.absent-cb');
+    for (let cb of cbs) {
+        let sid = cb.dataset.id, exist = await supabaseFetch('attendance', `&student_id=eq.${sid}&date=eq.${date}`);
+        if (cb.checked) { if (!exist.length) await supabaseInsert('attendance', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: sid, date, status: 'absent', academic_year: CURRENT_ACADEMIC_YEAR }); }
+        else { if (exist.length) await supabaseDelete('attendance', exist[0].id); }
+    }
+    showToast('Attendance saved'); await loadAllData();
 }
 
-// ==================== MARKS MODULE ====================
+// Marks
 async function renderMarks() {
-    let opts = [...new Set(students.map(s => s.class))];
-    document.getElementById('mainContent').innerHTML = `
-        <div class="card-modern">
-            <div class="section-title"><i class="fas fa-chart-simple"></i> Marks Entry</div>
-            <div class="flex-row">
-                <select id="marksClass" class="form-control">${opts.map(c => `<option>${c}</option>`).join('')}</select>
-                <select id="marksTerm" class="form-control">${TERMS.map(t => `<option>${t}</option>`).join('')}</select>
-                <select id="marksExam" class="form-control">${EXAM_TYPES.map(e => `<option>${e}</option>`).join('')}</select>
-                <button class="btn btn-primary" id="loadMarks">Load</button>
-                <button class="btn btn-gold" id="saveMarks">Save</button>
-            </div>
-            <div id="marksGrid"></div>
-        </div>
-    `;
-    
+    let opts = [...new Set(students.map(s=>s.class))];
+    document.getElementById('mainContent').innerHTML = `<div class="card-modern"><div class="section-title"><i class="fas fa-chart-simple"></i> Marks Entry</div><div class="flex-row"><select id="marksClass" class="form-control">${opts.map(c=>`<option>${c}</option>`).join('')}</select><select id="marksTerm" class="form-control">${TERMS.map(t=>`<option>${t}</option>`).join('')}</select><select id="marksExam" class="form-control">${EXAM_TYPES.map(e=>`<option>${e}</option>`).join('')}</select><button class="btn btn-primary" id="loadMarks">Load</button><button class="btn btn-gold" id="saveMarks">Save</button></div><div id="marksGrid"></div></div>`;
     document.getElementById('loadMarks').onclick = async () => {
-        let cls = document.getElementById('marksClass').value;
-        let term = document.getElementById('marksTerm').value;
-        let exam = document.getElementById('marksExam').value;
-        let classStd = students.filter(s => s.class === cls);
-        let subs = SUBJECT_MAP[cls] || [];
-        let relMarks = marks.filter(m => m.term === term && m.exam_type === exam && m.academic_year === CURRENT_ACADEMIC_YEAR);
-        let grid = `<table class="data-table"><thead><tr><th>Student</th><th>Photo</th><th>Payment Code</th>${subs.map(s => `<th>${s}</th>`).join('')}</thead><tbody>`;
+        let cls = document.getElementById('marksClass').value, term = document.getElementById('marksTerm').value, exam = document.getElementById('marksExam').value;
+        let classStd = students.filter(s=>s.class===cls), subs = SUBJECT_MAP[cls] || [], relMarks = marks.filter(m=>m.term===term && m.exam_type===exam && m.academic_year===CURRENT_ACADEMIC_YEAR);
+        let grid = `<table class="data-table"><thead><tr><th>Student</th><th>Photo</th><th>Payment Code</th>${subs.map(s=>`<th>${s}</th>`).join('')}</thead><tbody>`;
         for (let s of classStd) {
-            grid += `<tr>
-                <td><strong>${s.first_name} ${s.last_name}</strong></td>
-                <td class="student-photo-cell"><div class="student-photo-img">${s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;">` : `<i class="fas fa-user-circle"></i>`}</div></td>
-                <td>${s.payment_code || s.lin}</td>`;
+            grid += `<tr><td><strong>${s.first_name} ${s.last_name}</strong></td><td class="student-photo-cell"><div class="student-photo-img">${s.photo_url?`<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;">`:'<i class="fas fa-user-circle"></i>'}</div></td><td>${s.payment_code||s.lin}</td>`;
             for (let sub of subs) {
-                let mk = relMarks.find(m => m.student_id === s.id && m.subject === sub);
-                grid += `<td><input type="number" class="mark-input" data-student="${s.id}" data-subject="${sub}" value="${mk ? mk.score : ''}" style="width:75px;"></td>`;
+                let mk = relMarks.find(m=>m.student_id===s.id && m.subject===sub);
+                grid += `<td><input type="number" class="mark-input" data-student="${s.id}" data-subject="${sub}" value="${mk?mk.score:''}" style="width:75px;"></td>`;
             }
             grid += `</tr>`;
         }
         grid += `</tbody></table>`;
         document.getElementById('marksGrid').innerHTML = grid;
     };
-    
     document.getElementById('saveMarks').onclick = async () => {
-        let term = document.getElementById('marksTerm').value;
-        let exam = document.getElementById('marksExam').value;
-        let inputs = document.querySelectorAll('.mark-input');
+        let term = document.getElementById('marksTerm').value, exam = document.getElementById('marksExam').value, inputs = document.querySelectorAll('.mark-input');
         for (let inp of inputs) {
             let score = parseInt(inp.value);
-            if (!isNaN(score) && score >= 0 && score <= 100) {
-                let sid = inp.dataset.student;
-                let subj = inp.dataset.subject;
-                let existing = marks.find(m => m.student_id === sid && m.subject === subj && m.term === term && m.exam_type === exam && m.academic_year === CURRENT_ACADEMIC_YEAR);
+            if (!isNaN(score) && score>=0 && score<=100) {
+                let sid = inp.dataset.student, subj = inp.dataset.subject, existing = marks.find(m=>m.student_id===sid && m.subject===subj && m.term===term && m.exam_type===exam && m.academic_year===CURRENT_ACADEMIC_YEAR);
                 if (existing) await supabaseUpdate('marks', existing.id, { score });
                 else await supabaseInsert('marks', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: sid, subject: subj, score, term, exam_type: exam, academic_year: CURRENT_ACADEMIC_YEAR });
             }
         }
-        showToast('Marks saved');
-        await loadAllData();
+        showToast('Marks saved'); await loadAllData();
     };
     document.getElementById('loadMarks').click();
 }
 
-// ==================== FEES MODULE ====================
+// Fees with Search - NO RE-RENDER
 async function renderFees() {
-    let totalInc = payments.reduce((a, b) => a + (b.amount || 0), 0);
-    let totalExp = students.reduce((a, b) => a + (b.total_fees || 0), 0);
-    let balHtml = `<table class="data-table"><thead><tr><th>Photo</th><th>Student</th><th>LIN</th><th>Payment Code</th><th>Total</th><th>Paid</th><th>Balance</th><th>WhatsApp</th><th>Action</th></tr></thead><tbody>`;
-    for (let s of students) {
-        let paid = payments.filter(p => p.student_id === s.id && p.academic_year === CURRENT_ACADEMIC_YEAR).reduce((a, b) => a + (b.amount || 0), 0);
-        let bal = (s.total_fees || 0) - paid;
-        balHtml += `<tr>
-            <td class="student-photo-cell"><div class="student-photo-img">${s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;">` : `<i class="fas fa-user-circle"></i>`}</div></td>
-            <td>${s.first_name} ${s.last_name}</td>
-            <td>${s.lin}</td>
-            <td>${s.payment_code || s.lin}</td>
-            <td>${formatMoney(s.total_fees || 0)}</td>
-            <td class="paid">${formatMoney(paid)}</td>
-            <td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td>
-            <td>${escapeHtml(s.parent_whatsapp || '')}</td>
-            <td>
-                <button class="btn btn-sm btn-whatsapp" onclick="sendSingleFeeReminder('${s.id}')"><i class="fab fa-whatsapp"></i> Remind</button>
-                <button class="btn btn-sm btn-primary" onclick="recordPayment('${s.id}')"><i class="fas fa-money-bill"></i> Pay</button>
-            </td>
-        </tr>`;
+    let totalInc = payments.reduce((a,b)=>a+(b.amount||0),0), totalExp = students.reduce((a,b)=>a+(b.total_fees||0),0);
+    let html = `<div class="card-modern"><div class="section-title"><i class="fas fa-chart-pie"></i> Financial Overview</div><div class="stat-panel" style="grid-template-columns:repeat(3,1fr);"><div class="stat-tile"><div class="stat-digit">${formatMoney(totalInc)}</div><div class="stat-caption">Income</div></div><div class="stat-tile"><div class="stat-digit">${formatMoney(totalExp)}</div><div class="stat-caption">Expected</div></div><div class="stat-tile"><div class="stat-digit">${formatMoney(totalExp-totalInc)}</div><div class="stat-caption">Outstanding</div></div></div></div>
+        <div class="card-modern"><div class="section-title"><i class="fab fa-whatsapp"></i> Bulk Reminder</div><div class="whatsapp-preview"><pre>Good evening parents... Please clear fees tomorrow.</pre></div><button class="btn btn-whatsapp" id="sendAllReminderBtn">Send to ALL Parents</button></div>
+        <div class="card-modern"><div class="section-title"><i class="fas fa-list-ul"></i> Student Balances</div>
+        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="feesSearch" placeholder="Search student..."><i class="fas fa-times" id="clearFeesSearch" style="cursor:pointer; display:none;"></i></div>
+        <div class="data-wrapper"><table class="data-table"><thead><tr><th>Photo</th><th>Student</th><th>LIN</th><th>Payment Code</th><th>Total</th><th>Paid</th><th>Balance</th><th>WhatsApp</th><th>Action</th></tr></thead><tbody id="feesBody"></tbody>}</div></div>`;
+    document.getElementById('mainContent').innerHTML = html;
+    let searchInput = document.getElementById('feesSearch');
+    searchInput.addEventListener('input', (e) => { feesSearchTerm = e.target.value; if(feesSearchTerm) document.getElementById('clearFeesSearch').style.display='block'; else document.getElementById('clearFeesSearch').style.display='none'; renderFeesTable(); });
+    document.getElementById('clearFeesSearch')?.addEventListener('click', () => { feesSearchTerm = ''; searchInput.value = ''; document.getElementById('clearFeesSearch').style.display='none'; renderFeesTable(); });
+    document.getElementById('sendAllReminderBtn').onclick = () => { let sent=0; for(let s of students) if(s.parent_whatsapp){ sendWhatsApp(s.parent_whatsapp, "Good evening parents... Please clear fees tomorrow."); sent++; } showToast(`Sent to ${sent} parents`); };
+    renderFeesTable();
+}
+function renderFeesTable() {
+    let tbody = document.getElementById('feesBody'); if(!tbody) return;
+    let filtered = filterFees(students);
+    tbody.innerHTML = '';
+    for (let s of filtered) {
+        let paid = payments.filter(p=>p.student_id===s.id && p.academic_year===CURRENT_ACADEMIC_YEAR).reduce((a,b)=>a+(b.amount||0),0), bal = (s.total_fees||0)-paid;
+        let row = tbody.insertRow();
+        row.innerHTML = `<td><div class="student-photo-img">${s.photo_url?`<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;">`:'<i class="fas fa-user-circle"></i>'}</div></td><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td>${s.payment_code||s.lin}</td><td>${formatMoney(s.total_fees||0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal>0?'debt':''}">${formatMoney(bal)}</td><td>${escapeHtml(s.parent_whatsapp||'')}</td><td><button class="btn btn-sm btn-whatsapp" onclick="sendSingleFeeReminder('${s.id}')"><i class="fab fa-whatsapp"></i> Remind</button> <button class="btn btn-sm btn-primary" onclick="recordPayment('${s.id}')"><i class="fas fa-money-bill"></i> Pay</button></td>`;
     }
-    balHtml += `</tbody></table>`;
-    
-    const generalMsg = `Good evening parents and thank you for your daily endeavors.\n\nThis is from the accounts section. We are requesting all parents who have not yet cleared fees to do so tomorrow to avoid inconveniencing our learners in the teaching and learning process.\n\nIf you have cleared, please ignore this message.\n\nWishing you a bright evening and a brand new day tomorrow.\n\nAccounts Department\nProgressive Mother's Nursery and Primary School`;
-    
-    document.getElementById('mainContent').innerHTML = `
-        <div class="card-modern">
-            <div class="section-title"><i class="fas fa-chart-pie"></i> Financial Overview</div>
-            <div class="stat-panel" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 0;">
-                <div class="stat-tile"><div class="stat-digit">${formatMoney(totalInc)}</div><div class="stat-caption">Income (${CURRENT_ACADEMIC_YEAR})</div></div>
-                <div class="stat-tile"><div class="stat-digit">${formatMoney(totalExp)}</div><div class="stat-caption">Expected</div></div>
-                <div class="stat-tile"><div class="stat-digit">${formatMoney(totalExp - totalInc)}</div><div class="stat-caption">Outstanding</div></div>
-            </div>
-        </div>
-        <div class="card-modern">
-            <div class="section-title"><i class="fab fa-whatsapp"></i> Bulk Fee Reminder (All Parents)</div>
-            <div class="whatsapp-preview"><i class="fab fa-whatsapp"></i> <strong>Message Preview</strong><pre>${generalMsg}</pre></div>
-            <button class="btn btn-whatsapp" id="sendAllReminderBtn" style="width: 100%;"><i class="fab fa-whatsapp"></i> Send to ALL Parents</button>
-        </div>
-        <div class="card-modern">
-            <div class="section-title"><i class="fas fa-list-ul"></i> Student Balances (${CURRENT_ACADEMIC_YEAR})</div>
-            <div class="data-wrapper">${balHtml}</div>
-        </div>
-    `;
-    
-    document.getElementById('sendAllReminderBtn').onclick = () => {
-        let sent = 0, fail = 0;
-        for (let s of students) {
-            if (s.parent_whatsapp) { sendWhatsApp(s.parent_whatsapp, generalMsg); sent++; }
-            else fail++;
-        }
-        showToast(`Sent to ${sent} parents${fail ? `, ${fail} no WhatsApp` : ''}`);
-    };
 }
+window.recordPayment = async (sid) => { let amt = prompt('Enter amount (UGX):'); if(amt && !isNaN(parseFloat(amt)) && parseFloat(amt)>0) { await supabaseInsert('payments', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: sid, amount: parseFloat(amt), payment_date: new Date().toISOString().slice(0,10), receipt_number: `RCP-${Date.now()}`, term: 'Term I', academic_year: CURRENT_ACADEMIC_YEAR }); await loadAllData(); renderFees(); showToast('Payment recorded'); } };
+window.sendSingleFeeReminder = (sid) => { let s = students.find(st=>st.id===sid); if(!s) return; let paid = payments.filter(p=>p.student_id===sid && p.academic_year===CURRENT_ACADEMIC_YEAR).reduce((a,b)=>a+(b.amount||0),0); let bal = (s.total_fees||0)-paid; sendWhatsApp(s.parent_whatsapp, `Good evening ${s.parent_name}, your child ${s.first_name} ${s.last_name} has balance ${formatMoney(bal)}. Please clear.`); };
 
-window.recordPayment = async (sid) => {
-    let amt = prompt('Enter payment amount (UGX):');
-    if (amt && !isNaN(parseFloat(amt)) && parseFloat(amt) > 0) {
-        await supabaseInsert('payments', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: sid, amount: parseFloat(amt), payment_date: new Date().toISOString().slice(0, 10), receipt_number: `RCP-${Date.now()}`, term: 'Term I', academic_year: CURRENT_ACADEMIC_YEAR });
-        await loadAllData();
-        await renderFees();
-        showToast('Payment recorded');
-    } else showToast('Invalid amount', true);
-};
-
-window.sendSingleFeeReminder = (sid) => {
-    let s = students.find(st => st.id === sid);
-    if (!s) return;
-    let paid = payments.filter(p => p.student_id === sid && p.academic_year === CURRENT_ACADEMIC_YEAR).reduce((a, b) => a + (b.amount || 0), 0);
-    let bal = (s.total_fees || 0) - paid;
-    let msg = `Good evening ${s.parent_name || 'Parent'},\n\nYour child ${s.first_name} ${s.last_name} (LIN: ${s.lin}) has a fee balance of ${formatMoney(bal)} for ${CURRENT_ACADEMIC_YEAR}.\n\nPlease clear tomorrow.\nAccounts Department.`;
-    if (s.parent_whatsapp) sendWhatsApp(s.parent_whatsapp, msg);
-    else showToast('No WhatsApp', true);
-};
-
-// ==================== REPORTS MODULE ====================
+// Reports
 async function renderReports() {
-    let classOpts = [...new Set(students.map(s => s.class))];
+    let classOpts = [...new Set(students.map(s=>s.class))];
     document.getElementById('mainContent').innerHTML = `
-        <div class="card-modern">
-            <div class="section-title"><i class="fas fa-print"></i> Report Center (${CURRENT_ACADEMIC_YEAR})</div>
-            <div class="flex-row">
-                <select id="reportClass" class="form-control">${classOpts.map(c => `<option>${c}</option>`).join('')}</select>
-                <select id="reportTerm" class="form-control">${TERMS.map(t => `<option>${t}</option>`).join('')}</select>
-                <select id="reportExamScope" class="form-control">
-                    <option value="end">Full Term (Beg+Mid+End)</option>
-                    <option value="mid">Beginning + Mid Term</option>
-                    <option value="beginning">Beginning only</option>
-                </select>
-            </div>
-            <div id="studentReportList"></div>
-            <div id="selectionToolbar" class="selection-toolbar" style="display: none;">
-                <span><i class="fas fa-check-circle"></i> <span id="selectedCount">0</span> selected</span>
-                <div class="flex-row" style="margin-bottom: 0;">
-                    <button class="btn btn-primary" id="printSelectedReportBtn">Print Selected</button>
-                    <button class="btn btn-outline" id="selectAllReportBtn">Select All</button>
-                    <button class="btn btn-outline" id="deselectAllReportBtn">Deselect All</button>
-                </div>
-            </div>
-            <button class="btn btn-gold" id="printWholeClassBtn" style="width: 100%; margin-top: 20px;">Print Whole Class</button>
-        </div>
-    `;
+        <div class="card-modern"><div class="section-title"><i class="fas fa-print"></i> Report Center</div>
+        <div class="flex-row"><select id="reportClass" class="form-control">${classOpts.map(c=>`<option>${c}</option>`).join('')}</select><select id="reportTerm" class="form-control">${TERMS.map(t=>`<option>${t}</option>`).join('')}</select><select id="reportExamScope" class="form-control"><option value="end">Full Term</option><option value="mid">Beginning + Mid</option><option value="beginning">Beginning only</option></select></div>
+        <div id="studentReportList"></div><div id="selectionToolbar" class="selection-toolbar" style="display:none"><span><i class="fas fa-check-circle"></i> <span id="selectedCount">0</span> selected</span><div class="flex-row"><button class="btn btn-primary" id="printSelectedBtn">Print Selected</button><button class="btn btn-outline" id="selectAllBtn">Select All</button><button class="btn btn-outline" id="deselectAllBtn">Deselect All</button></div></div>
+        <button class="btn btn-gold" id="printWholeClassBtn" style="width:100%;margin-top:20px">Print Whole Class</button></div>`;
     
-    const loadStudentChecklist = () => {
-        let cls = document.getElementById('reportClass').value;
-        if (!cls) return;
-        let classStd = students.filter(s => s.class === cls);
+    const loadList = () => {
+        let cls = document.getElementById('reportClass').value; if(!cls) return;
+        let classStd = students.filter(s=>s.class===cls);
         selectedStudentIds.clear();
-        document.getElementById('studentReportList').innerHTML = `
-            <table class="data-table">
-                <thead><tr><th><input type="checkbox" id="headerCheckAll"></th><th>Photo</th><th>Name</th><th>LIN</th><th>Payment Code</th><th>Parent</th><th></th></tr></thead>
-                <tbody>${classStd.map(s => `
-                    <tr>
-                        <td><input type="checkbox" class="student-chk" data-id="${s.id}"></td>
-                        <td class="student-photo-cell"><div class="student-photo-img">${s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;">` : `<i class="fas fa-user-circle"></i>`}</div></td>
-                        <td><strong>${s.first_name} ${s.last_name}</strong></td>
-                        <td>${s.lin}</td>
-                        <td>${s.payment_code || s.lin}</td>
-                        <td>${s.parent_name || ''}</td>
-                        <td><button class="btn btn-sm btn-gold" onclick="printSingleStudent('${s.id}')"><i class="fas fa-print"></i> Print</button></td>
-                    </tr>
-                `).join('')}</tbody>
-            </table>
-        `;
+        document.getElementById('studentReportList').innerHTML = `<table class="data-table"><thead><tr><th><input type="checkbox" id="headerChk"></th><th>Photo</th><th>Name</th><th>LIN</th><th>Payment Code</th><th>Parent</th><th></th></tr></thead><tbody>${classStd.map(s=>`<tr><td><input type="checkbox" class="student-chk" data-id="${s.id}"></td><td class="student-photo-cell"><div class="student-photo-img">${s.photo_url?`<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;">`:'<i class="fas fa-user-circle"></i>'}</div></td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td>${s.payment_code||s.lin}</td><td>${s.parent_name||''}</td><td><button class="btn btn-sm btn-gold" onclick="printSingleStudentReport('${s.id}')">Print</button></td></tr>`).join('')}</tbody></table>`;
         document.getElementById('selectionToolbar').style.display = 'flex';
-        document.querySelectorAll('.student-chk').forEach(cb => cb.addEventListener('change', function() {
-            if (this.checked) selectedStudentIds.add(this.dataset.id);
-            else selectedStudentIds.delete(this.dataset.id);
-            document.getElementById('selectedCount').innerText = selectedStudentIds.size;
-        }));
-        let headerChk = document.getElementById('headerCheckAll');
-        if (headerChk) headerChk.onchange = function() {
-            document.querySelectorAll('.student-chk').forEach(c => {
-                c.checked = this.checked;
-                if (this.checked) selectedStudentIds.add(c.dataset.id);
-                else selectedStudentIds.delete(c.dataset.id);
-            });
-            document.getElementById('selectedCount').innerText = selectedStudentIds.size;
-        };
+        document.querySelectorAll('.student-chk').forEach(cb=>cb.addEventListener('change',function(){ if(this.checked) selectedStudentIds.add(this.dataset.id); else selectedStudentIds.delete(this.dataset.id); document.getElementById('selectedCount').innerText = selectedStudentIds.size; }));
+        let header = document.getElementById('headerChk'); if(header) header.onchange = function(){ document.querySelectorAll('.student-chk').forEach(c=>{ c.checked=this.checked; if(this.checked) selectedStudentIds.add(c.dataset.id); else selectedStudentIds.delete(c.dataset.id); }); document.getElementById('selectedCount').innerText=selectedStudentIds.size; };
     };
-    
-    document.getElementById('reportClass').addEventListener('change', loadStudentChecklist);
-    document.getElementById('printSelectedReportBtn').onclick = () => printReports(Array.from(selectedStudentIds));
-    document.getElementById('selectAllReportBtn').onclick = () => {
-        document.querySelectorAll('.student-chk').forEach(c => { c.checked = true; selectedStudentIds.add(c.dataset.id); });
-        document.getElementById('selectedCount').innerText = selectedStudentIds.size;
-        let h = document.getElementById('headerCheckAll');
-        if (h) h.checked = true;
-    };
-    document.getElementById('deselectAllReportBtn').onclick = () => {
-        document.querySelectorAll('.student-chk').forEach(c => { c.checked = false; selectedStudentIds.delete(c.dataset.id); });
-        document.getElementById('selectedCount').innerText = 0;
-        let h = document.getElementById('headerCheckAll');
-        if (h) h.checked = false;
-    };
-    document.getElementById('printWholeClassBtn').onclick = () => {
-        let cls = document.getElementById('reportClass').value;
-        let allIds = students.filter(s => s.class === cls).map(s => s.id);
-        printReports(allIds);
-    };
-    loadStudentChecklist();
+    document.getElementById('reportClass').addEventListener('change', loadList);
+    document.getElementById('printSelectedBtn').onclick = () => printReports(Array.from(selectedStudentIds));
+    document.getElementById('selectAllBtn').onclick = () => { document.querySelectorAll('.student-chk').forEach(c=>{ c.checked=true; selectedStudentIds.add(c.dataset.id); }); document.getElementById('selectedCount').innerText=selectedStudentIds.size; let h=document.getElementById('headerChk'); if(h) h.checked=true; };
+    document.getElementById('deselectAllBtn').onclick = () => { document.querySelectorAll('.student-chk').forEach(c=>{ c.checked=false; selectedStudentIds.delete(c.dataset.id); }); document.getElementById('selectedCount').innerText=0; let h=document.getElementById('headerChk'); if(h) h.checked=false; };
+    document.getElementById('printWholeClassBtn').onclick = () => { let cls = document.getElementById('reportClass').value; let ids = students.filter(s=>s.class===cls).map(s=>s.id); printReports(ids); };
+    loadList();
 }
+window.printSingleStudentReport = (id) => printReports([id]);
 
-window.printSingleStudent = (sid) => printReports([sid]);
-
-function printReports(ids) {
-    if (!ids.length) { showToast('No student selected', true); return; }
-    let term = document.getElementById('reportTerm').value;
-    let selected = students.filter(s => ids.includes(s.id));
-    let html = `<!DOCTYPE html><html><head><title>Student Reports</title><style>body{font-family:Arial;padding:30px}.report-card{max-width:900px;margin:0 auto 30px;padding:25px;border:1px solid #ddd;page-break-after:all}</style></head><body>`;
-    for (let s of selected) {
-        let paid = payments.filter(p => p.student_id === s.id && p.academic_year === CURRENT_ACADEMIC_YEAR).reduce((a, b) => a + (b.amount || 0), 0);
-        let bal = (s.total_fees || 0) - paid;
-        html += `
-            <div class="report-card">
-                <h2 style="text-align:center">PROGRESSIVE MOTHERS SCHOOL</h2>
-                <p style="text-align:center">P.O BOX ......, KAMPALA | Tel: 0756 585035</p>
-                <h3 style="text-align:center">STUDENT REPORT - ${term} (${CURRENT_ACADEMIC_YEAR})</h3>
-                <div style="display:flex; gap:20px; margin:20px 0">
-                    <div style="width:100px;height:100px;background:#eee;border-radius:50%;display:flex;align-items:center;justify-content:center"><i class="fas fa-user-graduate fa-3x"></i></div>
-                    <div>
-                        <p><strong>Name:</strong> ${s.first_name} ${s.last_name}</p>
-                        <p><strong>LIN:</strong> ${s.lin}</p>
-                        <p><strong>Payment Code:</strong> ${s.payment_code || s.lin}</p>
-                        <p><strong>Class:</strong> ${s.class}</p>
-                        <p><strong>Parent:</strong> ${s.parent_name || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <p><strong>Total Fees:</strong> ${formatMoney(s.total_fees || 0)}</p>
-                        <p><strong>Paid:</strong> ${formatMoney(paid)}</p>
-                        <p><strong>Balance:</strong> ${formatMoney(bal)}</p>
-                    </div>
-                </div>
-                <div class="comment-panel" style="display:flex; gap:30px; margin-top:30px">
-                    <div style="flex:1; border-top:1px dashed #ccc; padding-top:15px"><strong>CLASS TEACHER'S COMMENT</strong><div style="height:40px"></div>Signature: _______________</div>
-                    <div style="flex:1; border-top:1px dashed #ccc; padding-top:15px"><strong>HEAD TEACHER'S COMMENT</strong><div style="height:40px"></div>Signature: _______________</div>
-                </div>
-                <div style="text-align:center; margin-top:20px">Generated on ${new Date().toLocaleString()}</div>
-            </div>
-        `;
+async function printReports(ids) {
+    if(!ids.length){ showToast('No student selected',true); return; }
+    let term = document.getElementById('reportTerm').value, scope = document.getElementById('reportExamScope').value;
+    let selected = students.filter(s=>ids.includes(s.id));
+    let html = `<!DOCTYPE html><html><head><title>Student Reports</title><style>
+        body{font-family:Arial;padding:30px;background:white}.report-card{max-width:1000px;margin:0 auto 30px;padding:30px;border:1px solid #ddd;page-break-after:all;border-radius:20px}
+        .report-header{text-align:center;border-bottom:3px solid #d4a017;padding-bottom:20px;margin-bottom:20px}.report-header h2{color:#0b2b5c}
+        .student-info{background:#f8fafc;padding:20px;border-radius:20px;display:flex;gap:24px;flex-wrap:wrap;margin-bottom:24px;align-items:center}
+        .student-photo{width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #d4a017;background:#e2e8f0;display:flex;align-items:center;justify-content:center}
+        .grade-table{width:100%;border-collapse:collapse;margin:20px 0}.grade-table th,.grade-table td{border:1px solid #e2e8f0;padding:12px;text-align:center}.grade-table th{background:#0b2b5c;color:white}
+        .comment-section{display:flex;gap:30px;margin-top:30px;flex-wrap:wrap}.comment-box{flex:1;border-top:2px dashed #ccc;padding-top:15px}
+        @media print{body{padding:0}.report-card{page-break-after:always;margin:0}}
+    </style></head><body>`;
+    
+    for(let s of selected){
+        let studentMarks = marks.filter(m=>m.student_id===s.id && m.term===term);
+        let subjects = SUBJECT_MAP[s.class] || ['English','Mathematics','Science','Social Studies'];
+        let exams = scope==='beginning'?['Beginning of Term']:scope==='mid'?['Beginning of Term','Mid Term']:['Beginning of Term','Mid Term','End of Term'];
+        let rows = '', totals = {}, points = {};
+        exams.forEach(e=>{ totals[e]=0; points[e]=[]; });
+        for(let sub of subjects){
+            rows += `<tr><td style="font-weight:600">${sub}</td>`;
+            for(let ex of exams){
+                let mk = studentMarks.find(m=>m.subject===sub && m.exam_type===ex);
+                let score = mk ? mk.score : '-';
+                let grade = score !== '-' ? getStandardGrade(score) : '-';
+                rows += `<td><strong>${score}</strong><br><small>${grade}</small></td>`;
+                if(mk){
+                    totals[ex] += mk.score;
+                    if(grade!=='-') points[ex].push(getGradePoints(grade));
+                }
+            }
+            rows += `</tr>`;
+        }
+        let summaryRow = `<tr style="background:#f1f5f9"><td style="font-weight:700">Total / Aggregate</td>`;
+        let divisionRow = `<tr style="background:#eef2ff"><td style="font-weight:700">Division</td>`;
+        for(let ex of exams){
+            let total = totals[ex] || 0;
+            let agg = 0;
+            if(points[ex].length){
+                points[ex].sort((a,b)=>a-b);
+                agg = points[ex].slice(0,4).reduce((s,p)=>s+p,0);
+            }
+            summaryRow += `<td>${total}/${subjects.length*100}<br><small>Agg: ${agg}</small></td>`;
+            divisionRow += `<td><strong>${getDivision(agg)}</strong></td>`;
+        }
+        summaryRow += `</tr>`; divisionRow += `</tr>`;
+        rows += summaryRow + divisionRow;
+        
+        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="student-photo">` : `<div class="student-photo"><i class="fas fa-user-graduate fa-3x" style="color:#0b2b5c"></i></div>`;
+        
+        html += `<div class="report-card">
+            <div class="report-header"><h2>PROGRESSIVE MOTHERS NUR. & PRIMARY SCHOOL</h2><p>P.O BOX ......, KAMPALA | Tel: 0756 585035</p></div>
+            <h3 style="text-align:center">ACADEMIC REPORT - ${term}</h3>
+            <div class="student-info">${photoHtml}<div><p><strong>Name:</strong> ${s.first_name} ${s.last_name}</p><p><strong>LIN:</strong> ${s.lin}</p><p><strong>Payment Code:</strong> ${s.payment_code||s.lin}</p><p><strong>Class:</strong> ${s.class}</p><p><strong>Parent:</strong> ${s.parent_name||'N/A'}</p></div></div>
+            <table class="grade-table"><thead><tr><th>SUBJECT</th>${exams.map(e=>`<th>${e}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
+            <div class="comment-section"><div class="comment-box"><strong>CLASS TEACHER'S COMMENT</strong><div style="height:50px;border-bottom:1px solid #000;margin:12px 0"></div>Signature: ____________________<br>Date: ___________</div>
+            <div class="comment-box"><strong>HEAD TEACHER'S COMMENT</strong><div style="height:50px;border-bottom:1px solid #000;margin:12px 0"></div>Signature: ____________________<br>Date: ___________</div></div>
+            <div style="text-align:center;margin-top:20px">Generated on ${new Date().toLocaleString()}</div>
+        </div>`;
     }
     html += `</body></html>`;
-    let win = window.open('', '_blank');
+    let win = window.open('','_blank');
     win.document.write(html);
     win.document.close();
     win.print();
     showToast(`Printed ${selected.length} report(s)`);
 }
 
-// ==================== MAIN APPLICATION ====================
+// Main App
 async function renderMainApp() {
     await loadAllData();
-    
     let perms = ROLE_PERMISSIONS[currentUser?.role];
     let availableViews = ['dashboard'];
-    if (perms?.students) availableViews.push('students');
-    if (perms?.attendance) availableViews.push('attendance');
-    if (perms?.marks) availableViews.push('marks');
-    if (perms?.fees) availableViews.push('fees');
-    if (perms?.reports) availableViews.push('reports');
-    if (!availableViews.includes(activeView)) activeView = 'dashboard';
+    if(perms?.students) availableViews.push('students');
+    if(perms?.attendance) availableViews.push('attendance');
+    if(perms?.marks) availableViews.push('marks');
+    if(perms?.fees) availableViews.push('fees');
+    if(perms?.reports) availableViews.push('reports');
+    if(!availableViews.includes(activeView)) activeView = 'dashboard';
     
-    const appDiv = document.getElementById('root');
-    appDiv.innerHTML = `
-        <div class="role-badge"><i class="fas fa-user-tag"></i> ${currentUser.role.toUpperCase()} <button class="logout-icon" onclick="logoutApp()"><i class="fas fa-sign-out-alt"></i> Exit</button></div>
-        <div class="app-wrapper">
-            <div class="hero-header">
-                <div class="school-title"><i class="fas fa-school"></i> PROGRESSIVE MOTHERS NUR. & PRIMARY SCHOOL</div>
-                <div class="school-motto"><i class="fas fa-map-marker-alt"></i> Gayaza-Kijabijjo, Kampala | 📞 0756 585035 / 0779 585035</div>
-            </div>
-            <div class="nav-ribbon">
-                ${availableViews.map(v => `<button class="nav-pill ${activeView === v ? 'active' : ''}" onclick="switchView('${v}')"><i class="fas ${v === 'dashboard' ? 'fa-tachometer-alt' : v === 'students' ? 'fa-user-graduate' : v === 'attendance' ? 'fa-calendar-check' : v === 'marks' ? 'fa-chart-line' : v === 'fees' ? 'fa-coins' : 'fa-print'}"></i> ${v.charAt(0).toUpperCase() + v.slice(1)}</button>`).join('')}
-            </div>
-            <div id="mainContent"></div>
-        </div>
-    `;
-    
-    if (activeView === 'dashboard') await renderDashboard();
-    else if (activeView === 'students') await renderStudents();
-    else if (activeView === 'attendance') await renderAttendance();
-    else if (activeView === 'marks') await renderMarks();
-    else if (activeView === 'fees') await renderFees();
-    else if (activeView === 'reports') await renderReports();
+    document.getElementById('root').innerHTML = `
+        <div class="role-badge"><i class="fas fa-user-tag"></i> ${currentUser.role.toUpperCase()} <button class="logout-icon" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Exit</button></div>
+        <div class="app-wrapper"><div class="hero-header"><div class="school-title"><i class="fas fa-school"></i> PROGRESSIVE MOTHERS NUR. & PRIMARY SCHOOL</div><div class="school-motto">Gayaza-Kijabijjo, Kampala | 📞 0756 585035 / 0779 585035</div></div>
+        <div class="nav-ribbon">${availableViews.map(v=>`<button class="nav-pill ${activeView===v?'active':''}" onclick="switchView('${v}')"><i class="fas ${v==='dashboard'?'fa-tachometer-alt':v==='students'?'fa-user-graduate':v==='attendance'?'fa-calendar-check':v==='marks'?'fa-chart-line':v==='fees'?'fa-coins':'fa-print'}"></i> ${v.charAt(0).toUpperCase()+v.slice(1)}</button>`).join('')}</div>
+        <div id="mainContent"></div></div>`;
+    if(activeView==='dashboard') await renderDashboard();
+    else if(activeView==='students') renderStudents();
+    else if(activeView==='attendance') await renderAttendance();
+    else if(activeView==='marks') await renderMarks();
+    else if(activeView==='fees') await renderFees();
+    else if(activeView==='reports') await renderReports();
 }
 
 function switchView(view) { activeView = view; renderMainApp(); }
-function logoutApp() { currentUser = null; sessionStorage.removeItem('progressive_user'); showLogin(); }
-
+function logout() { currentUser = null; sessionStorage.removeItem('progressive_user'); showLogin(); }
 function showLogin() {
-    document.getElementById('root').innerHTML = `
-        <div class="login-screen">
-            <i class="fas fa-school fa-3x" style="color:#0b2b5c"></i>
-            <h2 style="margin:20px 0">Progressive Mothers School</h2>
-            <p style="margin-bottom:25px">Complete Management System</p>
-            <input type="text" id="loginUsername" placeholder="Username">
-            <input type="password" id="loginPassword" placeholder="Password">
-            <button onclick="doLogin()"><i class="fas fa-arrow-right"></i> Login</button>
-        </div>
-    `;
+    document.getElementById('root').innerHTML = `<div class="login-screen"><i class="fas fa-school fa-3x" style="color:#0b2b5c"></i><h2>Progressive Mothers School</h2><p>Complete Management System</p><input type="text" id="loginUsername" placeholder="Username"><input type="password" id="loginPassword" placeholder="Password"><button onclick="doLogin()">Login</button></div>`;
 }
-
 function doLogin() {
-    let u = document.getElementById('loginUsername').value;
-    let p = document.getElementById('loginPassword').value;
-    if (u === 'admin' && p === 'admin123') { currentUser = { username: 'admin', role: 'admin' }; sessionStorage.setItem('progressive_user', JSON.stringify(currentUser)); renderMainApp(); }
-    else if (u === 'teacher' && p === 'teacher123') { currentUser = { username: 'teacher', role: 'teacher' }; sessionStorage.setItem('progressive_user', JSON.stringify(currentUser)); renderMainApp(); }
-    else if (u === 'finance' && p === 'finance123') { currentUser = { username: 'finance', role: 'finance' }; sessionStorage.setItem('progressive_user', JSON.stringify(currentUser)); renderMainApp(); }
-    else alert('Invalid credentials. Use admin/admin123, teacher/teacher123, finance/finance123');
+    let u = document.getElementById('loginUsername').value, p = document.getElementById('loginPassword').value;
+    if(u==='admin' && p==='admin123') { currentUser={username:'admin',role:'admin'}; sessionStorage.setItem('progressive_user',JSON.stringify(currentUser)); renderMainApp(); }
+    else if(u==='teacher' && p==='teacher123') { currentUser={username:'teacher',role:'teacher'}; sessionStorage.setItem('progressive_user',JSON.stringify(currentUser)); renderMainApp(); }
+    else if(u==='finance' && p==='finance123') { currentUser={username:'finance',role:'finance'}; sessionStorage.setItem('progressive_user',JSON.stringify(currentUser)); renderMainApp(); }
+    else alert('Invalid credentials');
 }
-
-function init() {
-    let saved = sessionStorage.getItem('progressive_user');
-    if (saved) { currentUser = JSON.parse(saved); renderMainApp(); }
-    else showLogin();
-}
+function init() { let saved = sessionStorage.getItem('progressive_user'); if(saved){ currentUser=JSON.parse(saved); renderMainApp(); } else showLogin(); }
 init();
 </script>
 </body>
