@@ -30,7 +30,6 @@
         .btn-sm { padding: 3px 10px; font-size: 0.7rem; border-radius: 20px; }
         .btn-whatsapp { background: #25D366; color: white; }
         .btn-outline { background: transparent; border: 1px solid #003366; color: #003366; }
-        .btn-green { background: #10b981; color: white; }
         .card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
         .flex { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 14px; }
         select, input { padding: 8px 14px; border-radius: 30px; border: 1px solid #cbd5e1; font-size: 0.85rem; background: white; min-width: 100px; }
@@ -97,12 +96,9 @@
         .btn-whatsapp:hover { opacity: 0.9; }
         .loading-spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: #003366; animation: spin 0.8s ease infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .error-box { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0; }
-        .error-box i { font-size: 2rem; color: #dc2626; display: block; margin-bottom: 10px; }
-        .error-box h4 { color: #991b1b; margin-bottom: 8px; }
-        .error-box p { color: #666; font-size: 0.9rem; }
-        .repair-btn { background: #D4A017; color: #003366; border: none; padding: 8px 20px; border-radius: 30px; font-weight: 600; cursor: pointer; margin-top: 10px; }
-        .repair-btn:hover { opacity: 0.9; }
+        .term-badge { background: #D4A017; color: #003366; padding: 2px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+        .supabase-status { background: #10b981; color: white; padding: 2px 12px; border-radius: 20px; font-size: 0.6rem; display: inline-block; }
+        .supabase-status.error { background: #ef4444; }
     </style>
 </head>
 <body>
@@ -124,6 +120,7 @@ const ACADEMIC_YEARS = ['2026', '2027', '2028', '2029', '2030'];
 const CURRENT_ACADEMIC_YEAR = '2026';
 const PAYMENT_METHODS = ['Cash', 'Mobile Money', 'Bank Transfer', 'School Pay'];
 
+// Cache
 let cache = { students: [], marks: [], attendance: [], payments: [] };
 let dataLoaded = false;
 let currentUser = null, activeTab = 'dashboard';
@@ -132,7 +129,7 @@ let selectedStudentIds = new Set();
 let filterTerm = 'Term I';
 let filterYear = CURRENT_ACADEMIC_YEAR;
 let debounceTimers = {};
-let repairAttempted = false;
+let supabaseConnected = false;
 
 function getUgandaTime() {
     const now = new Date();
@@ -212,23 +209,27 @@ function debounce(key, fn, delay = 150) {
     debounceTimers[key] = setTimeout(fn, delay);
 }
 
-// Supabase API with retry and error handling
-async function fetchDB(table, filter = '', retries = 2) {
+// Supabase API
+async function fetchDB(table, filter = '', retries = 3) {
     for (let i = 0; i < retries; i++) {
         try {
             let res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=*${filter}`, {
                 headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
             });
             if (!res.ok) {
+                console.warn(`Fetch ${table} attempt ${i+1} failed:`, res.status);
                 if (i === retries - 1) return [];
-                await new Promise(r => setTimeout(r, 300 * (i + 1)));
+                await new Promise(r => setTimeout(r, 500 * (i + 1)));
                 continue;
             }
             let text = await res.text();
-            return text ? JSON.parse(text) : [];
+            let data = text ? JSON.parse(text) : [];
+            supabaseConnected = true;
+            return data;
         } catch (e) {
+            console.warn(`Fetch ${table} attempt ${i+1} error:`, e);
             if (i === retries - 1) return [];
-            await new Promise(r => setTimeout(r, 300 * (i + 1)));
+            await new Promise(r => setTimeout(r, 500 * (i + 1)));
         }
     }
     return [];
@@ -243,14 +244,17 @@ async function insertDB(table, data) {
         });
         if (!res.ok) {
             let errorText = await res.text();
+            console.error('Insert error:', errorText);
             if (errorText.includes('duplicate key')) {
                 showToast('Duplicate entry - record already exists', true);
+            } else {
+                showToast(`Error: ${errorText.substring(0, 80)}`, true);
             }
             return null;
         }
         let text = await res.text();
         return text ? JSON.parse(text) : true;
-    } catch (e) { return null; }
+    } catch (e) { showToast(`Error: ${e.message}`, true); return null; }
 }
 
 async function updateDB(table, id, data) {
@@ -260,10 +264,15 @@ async function updateDB(table, id, data) {
             headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-        if (!res.ok) return null;
+        if (!res.ok) {
+            let errorText = await res.text();
+            console.error('Update error:', errorText);
+            showToast(`Update failed: ${errorText.substring(0, 80)}`, true);
+            return null;
+        }
         let text = await res.text();
         return text ? JSON.parse(text) : true;
-    } catch (e) { return null; }
+    } catch (e) { showToast(`Error: ${e.message}`, true); return null; }
 }
 
 async function deleteDB(table, id) {
@@ -272,71 +281,7 @@ async function deleteDB(table, id) {
             method: 'DELETE',
             headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
         });
-    } catch (e) {}
-}
-
-// REPAIR FUNCTION - Cleans up orphaned records
-async function repairDatabase() {
-    try {
-        showToast('🔧 Repairing database... Please wait');
-        let students = await fetchDB('students', `&school_id=eq.${SCHOOL_ID}`);
-        let studentIds = new Set(students.map(s => s.id));
-        
-        if (students.length === 0) {
-            // Create fresh data
-            await createDemoData();
-            students = await fetchDB('students', `&school_id=eq.${SCHOOL_ID}`);
-            studentIds = new Set(students.map(s => s.id));
-        }
-        
-        // Clean orphaned payments
-        let payments = await fetchDB('payments', `&school_id=eq.${SCHOOL_ID}`);
-        let orphanedPayments = payments.filter(p => !studentIds.has(p.student_id));
-        for (let p of orphanedPayments) {
-            await deleteDB('payments', p.id);
-        }
-        
-        // Clean orphaned marks
-        let marks = await fetchDB('marks', `&school_id=eq.${SCHOOL_ID}`);
-        let orphanedMarks = marks.filter(m => !studentIds.has(m.student_id));
-        for (let m of orphanedMarks) {
-            await deleteDB('marks', m.id);
-        }
-        
-        // Clean orphaned attendance
-        let attendance = await fetchDB('attendance', `&school_id=eq.${SCHOOL_ID}`);
-        let orphanedAtt = attendance.filter(a => !studentIds.has(a.student_id));
-        for (let a of orphanedAtt) {
-            await deleteDB('attendance', a.id);
-        }
-        
-        // Reload fresh data
-        let [s, m, a, p] = await Promise.all([
-            fetchDB('students', `&school_id=eq.${SCHOOL_ID}`),
-            fetchDB('marks', `&school_id=eq.${SCHOOL_ID}`),
-            fetchDB('attendance', `&school_id=eq.${SCHOOL_ID}`),
-            fetchDB('payments', `&school_id=eq.${SCHOOL_ID}`)
-        ]);
-        
-        cache.students = s || [];
-        cache.marks = m || [];
-        cache.attendance = a || [];
-        cache.payments = p || [];
-        
-        cache.students.sort((a, b) => {
-            let nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
-            let nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
-            return nameA < nameB ? -1 : nameA > nameB ? 1 : 0;
-        });
-        
-        dataLoaded = true;
-        repairAttempted = true;
-        showToast(`✅ Database repaired! Loaded ${cache.students.length} students`);
-        return true;
-    } catch (e) {
-        showToast('Repair failed: ' + e.message, true);
-        return false;
-    }
+    } catch (e) { console.error('Delete error:', e); }
 }
 
 async function loadAllData(force = false) {
@@ -353,9 +298,12 @@ async function loadAllData(force = false) {
         cache.attendance = a || [];
         cache.payments = p || [];
         
-        if (cache.students.length === 0 && !repairAttempted) {
-            await repairDatabase();
-            return;
+        if (cache.students.length === 0) {
+            await createDemoData();
+            cache.students = await fetchDB('students', `&school_id=eq.${SCHOOL_ID}`);
+            cache.marks = await fetchDB('marks', `&school_id=eq.${SCHOOL_ID}`);
+            cache.attendance = await fetchDB('attendance', `&school_id=eq.${SCHOOL_ID}`);
+            cache.payments = await fetchDB('payments', `&school_id=eq.${SCHOOL_ID}`);
         }
         
         cache.students.sort((a, b) => {
@@ -364,11 +312,10 @@ async function loadAllData(force = false) {
             return nameA < nameB ? -1 : nameA > nameB ? 1 : 0;
         });
         dataLoaded = true;
+        supabaseConnected = true;
     } catch (e) {
-        console.error('Load error:', e);
-        if (!repairAttempted) {
-            await repairDatabase();
-        }
+        console.error('Load data error:', e);
+        showToast('Error loading data. Please refresh.', true);
     }
 }
 
@@ -433,24 +380,11 @@ async function renderDashboard() {
     let totalInc = payments.reduce((a, b) => a + (b.amount || 0), 0);
     let totalExp = students.reduce((a, b) => a + (b.total_fees || 0), 0);
     let viewFinance = currentUser?.role === 'admin' || currentUser?.role === 'finance';
-    
-    if (students.length === 0) {
-        document.getElementById('tabContent').innerHTML = `
-            <div class="error-box">
-                <i class="fas fa-exclamation-triangle"></i>
-                <h4>No Data Found</h4>
-                <p>Your database appears to be empty or has connection issues.</p>
-                <button class="repair-btn" onclick="repairAndReload()"><i class="fas fa-wrench"></i> Repair Database</button>
-                <button class="btn btn-primary btn-sm" onclick="refreshData()" style="margin-left:10px;"><i class="fas fa-sync"></i> Refresh</button>
-            </div>
-        `;
-        return;
-    }
-    
+    let statusClass = supabaseConnected ? '' : 'error';
     document.getElementById('tabContent').innerHTML = `
-        <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+            <span class="supabase-status ${statusClass}">${supabaseConnected ? '✅ Supabase Connected' : '⚠️ Supabase Error'}</span>
             <button class="btn btn-sm btn-gold" onclick="refreshData()"><i class="fas fa-sync"></i> Refresh Data</button>
-            <button class="btn btn-sm btn-green" onclick="repairAndReload()" style="margin-left:8px;"><i class="fas fa-wrench"></i> Repair</button>
         </div>
         <div class="stats-grid">
             <div class="stat-card"><div class="stat-number">${students.length}</div><div class="stat-label">Total Students</div></div>
@@ -463,14 +397,8 @@ async function renderDashboard() {
     `;
 }
 
-window.repairAndReload = async function() {
-    showToast('🔧 Repairing database...');
-    await repairDatabase();
-    renderMainApp();
-};
-
 window.refreshData = async function() {
-    showToast('Refreshing data...');
+    showToast('Refreshing data from Supabase...');
     dataLoaded = false;
     await loadAllData(true);
     renderMainApp();
@@ -491,18 +419,6 @@ function getNavButtons() {
 // ============= STUDENTS =============
 async function renderStudents() {
     let students = getStudents(), payments = getPayments();
-    if (students.length === 0) {
-        document.getElementById('tabContent').innerHTML = `
-            <div class="error-box">
-                <i class="fas fa-exclamation-triangle"></i>
-                <h4>No Students Found</h4>
-                <p>Click the Repair button to fix database issues.</p>
-                <button class="repair-btn" onclick="repairAndReload()"><i class="fas fa-wrench"></i> Repair Database</button>
-            </div>
-        `;
-        return;
-    }
-    
     let perms = ROLE_PERMS[currentUser?.role];
     let filtered = students.filter(s => {
         if (!globalSearch) return true;
@@ -540,6 +456,10 @@ async function renderStudents() {
     let tbody = document.getElementById('studentsBody');
     if (!tbody) return;
     tbody.innerHTML = '';
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:20px;color:#666;">No students found. Click Refresh to load data.</td></tr>';
+        return;
+    }
     for (let s of filtered) {
         let paid = payments.filter(p => p.student_id === s.id).reduce((a, b) => a + (b.amount || 0), 0);
         let bal = (s.total_fees || 0) - paid;
@@ -558,8 +478,1026 @@ async function renderStudents() {
     }
 }
 
-// [Rest of the functions remain the same - I'll keep the essential ones and trim for space]
-// The full code with all functions would be included here.
+// ============= STUDENT FINANCIAL HISTORY =============
+window.showStudentFinancialHistory = (studentId) => {
+    let students = getStudents(), payments = getPayments();
+    let student = students.find(s => s.id === studentId);
+    if (!student) return;
+    let studentPayments = payments.filter(p => p.student_id === studentId).sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+    let totalPaid = studentPayments.reduce((a, b) => a + (b.amount || 0), 0);
+    let balance = (student.total_fees || 0) - totalPaid;
+    let groupedPayments = {};
+    for (let p of studentPayments) {
+        let key = `${p.term} ${p.academic_year}`;
+        if (!groupedPayments[key]) groupedPayments[key] = [];
+        groupedPayments[key].push(p);
+    }
+    let modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                <h3 style="color:#003366;">💰 Financial History</h3>
+                <button onclick="this.closest('.modal').remove()" style="background:none; border:none; font-size:22px; cursor:pointer;">&times;</button>
+            </div>
+            <div style="display:flex; gap:12px; flex-wrap:wrap; background:#f8fafc; padding:14px; border-radius:14px; margin-bottom:14px; font-size:0.85rem;">
+                <div><strong>Student:</strong> ${student.first_name} ${student.last_name}</div>
+                <div><strong>LIN:</strong> ${student.lin}</div>
+                <div><strong>Class:</strong> ${student.class}</div>
+                <div><strong>Payment Code:</strong> ${student.payment_code || 'N/A'}</div>
+            </div>
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
+                <div style="background:#eef2ff; padding:12px 16px; border-radius:12px; flex:1; text-align:center;"><div style="font-weight:bold;">${formatMoney(student.total_fees || 0)}</div><div style="font-size:0.7rem;">Total Fees</div></div>
+                <div style="background:#d1fae5; padding:12px 16px; border-radius:12px; flex:1; text-align:center;"><div style="font-weight:bold;color:#065f46;">${formatMoney(totalPaid)}</div><div style="font-size:0.7rem;">Paid</div></div>
+                <div style="background:${balance > 0 ? '#fef2f2' : '#d1fae5'}; padding:12px 16px; border-radius:12px; flex:1; text-align:center;"><div style="font-weight:bold;${balance > 0 ? 'color:#dc2626;' : 'color:#065f46;'}">${formatMoney(balance)}</div><div style="font-size:0.7rem;">Balance</div></div>
+            </div>
+            ${Object.keys(groupedPayments).length === 0 ? '<div style="text-align:center;padding:20px;color:#666;">No payment records</div>' : `
+            <div style="max-height:350px;overflow-y:auto;">
+                ${Object.keys(groupedPayments).sort().reverse().map(key => {
+                    let list = groupedPayments[key];
+                    let total = list.reduce((a,b) => a + (b.amount || 0), 0);
+                    return `<div style="margin-bottom:12px;"><div style="background:#003366;color:white;padding:4px 12px;border-radius:10px;display:flex;justify-content:space-between;font-size:0.8rem;"><strong>${key}</strong><span>${formatMoney(total)}</span></div>
+                    <table class="history-table"><thead><tr><th>Date & Time</th><th>Amount</th><th>Method</th><th>Receipt</th></tr></thead><tbody>
+                    ${list.map(p => `<tr><td>${formatUgandaDateTime(p.payment_date)}</td><td class="paid">${formatMoney(p.amount)}</td><td>${getPaymentMethodBadge(p.payment_method)}</td><td>${p.receipt_number || 'N/A'}</td></tr>`).join('')}
+                    </tbody></table></div>`;
+                }).join('')}
+            </div>
+            <div style="margin-top:10px;text-align:right;"><button class="btn btn-gold btn-sm" onclick="printStudentFinancialHistory('${student.id}')"><i class="fas fa-print"></i> Print</button></div>`}
+        </div>`;
+    document.body.appendChild(modal);
+};
+
+window.printStudentFinancialHistory = (studentId) => {
+    let students = getStudents(), payments = getPayments();
+    let student = students.find(s => s.id === studentId);
+    if (!student) return;
+    let studentPayments = payments.filter(p => p.student_id === studentId).sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+    let totalPaid = studentPayments.reduce((a, b) => a + (b.amount || 0), 0);
+    let balance = (student.total_fees || 0) - totalPaid;
+    let win = window.open('', '_blank');
+    win.document.write(`<html><head><title>Financial History - ${student.first_name} ${student.last_name}</title>
+        <style>body{font-family:Arial;padding:20px;}h1{color:#003366;}table{width:100%;border-collapse:collapse;margin-top:10px;}th,td{border:1px solid #ccc;padding:6px;text-align:left;}th{background:#003366;color:white;}.paid{color:#10b981;font-weight:bold;}.method-cash{background:#dbeafe;padding:2px 8px;border-radius:12px;}.method-mobile{background:#d1fae5;padding:2px 8px;border-radius:12px;}.method-bank{background:#fef3c7;padding:2px 8px;border-radius:12px;}.method-schoolpay{background:#e0e7ff;padding:2px 8px;border-radius:12px;}</style></head><body>
+        <h1>PROGRESSIVE MOTHERS SCHOOL</h1><h2>Financial History - ${student.first_name} ${student.last_name}</h2>
+        <div style="display:flex;gap:15px;flex-wrap:wrap;background:#f8fafc;padding:12px;border-radius:12px;margin-bottom:12px;">
+            <div><strong>LIN:</strong> ${student.lin}</div><div><strong>Class:</strong> ${student.class}</div><div><strong>Payment Code:</strong> ${student.payment_code || 'N/A'}</div>
+        </div>
+        <div style="display:flex;gap:15px;flex-wrap:wrap;margin-bottom:12px;">
+            <div><strong>Total Fees:</strong> ${formatMoney(student.total_fees || 0)}</div>
+            <div><strong>Total Paid:</strong> ${formatMoney(totalPaid)}</div>
+            <div><strong>Balance:</strong> ${formatMoney(balance)}</div>
+        </div>
+        ${studentPayments.length === 0 ? '<p>No payment records</p>' : `
+        <table><thead><tr><th>Date & Time</th><th>Amount</th><th>Method</th><th>Receipt No</th><th>Term</th><th>Year</th></tr></thead><tbody>
+        ${studentPayments.map(p => `<tr><td>${formatUgandaDateTime(p.payment_date)}</td><td class="paid">${formatMoney(p.amount)}</td><td><span class="${p.payment_method === 'Cash' ? 'method-cash' : p.payment_method === 'Mobile Money' ? 'method-mobile' : p.payment_method === 'Bank Transfer' ? 'method-bank' : 'method-schoolpay'}">${p.payment_method || 'Cash'}</span></td><td>${p.receipt_number || 'N/A'}</td><td>${p.term || 'Term I'}</td><td>${p.academic_year || CURRENT_ACADEMIC_YEAR}</td></tr>`).join('')}
+        </tbody></table>`}
+        <p style="margin-top:20px;font-size:10px;">Generated on ${formatUgandaDateTime(getUgandaTime())}</p>
+    </body></html>`);
+    win.document.close();
+    win.print();
+};
+
+// ============= FEES =============
+async function renderFees() {
+    if (!ROLE_PERMS[currentUser?.role]?.fees) {
+        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3></div>';
+        return;
+    }
+    let students = getStudents(), payments = getPayments();
+    let perms = ROLE_PERMS[currentUser?.role];
+    document.getElementById('tabContent').innerHTML = `
+        <div class="card"><h3 style="font-size:1rem;">Financial Summary</h3><div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+            <div class="stat-card"><div class="stat-number">${formatMoney(payments.reduce((a, b) => a + (b.amount || 0), 0))}</div><div class="stat-label">Income</div></div>
+            <div class="stat-card"><div class="stat-number">${formatMoney(students.reduce((a, b) => a + (b.total_fees || 0), 0))}</div><div class="stat-label">Expected</div></div>
+            <div class="stat-card"><div class="stat-number">${formatMoney(students.reduce((a, b) => a + (b.total_fees || 0), 0) - payments.reduce((a, b) => a + (b.amount || 0), 0))}</div><div class="stat-label">Outstanding</div></div>
+        </div></div>
+        ${perms.editFees ? `
+        <div class="card"><h3 style="font-size:1rem;">Record Payment</h3>
+        <div class="flex">
+            <div style="flex:2;min-width:120px;"><select id="payStudent" class="form-control">${students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name}</option>`).join('')}</select></div>
+            <div style="flex:1;min-width:100px;"><input type="number" id="payAmount" placeholder="Amount (UGX)" class="form-control"></div>
+            <div style="flex:1;min-width:100px;"><select id="payMethod" class="form-control">${PAYMENT_METHODS.map(m => `<option value="${m}">${m}</option>`).join('')}</select></div>
+            <div style="flex:1;min-width:100px;"><select id="payTerm" class="form-control">${TERMS.map(t => `<option value="${t}" ${t === filterTerm ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+            <div style="flex:1;min-width:100px;"><select id="payYear" class="form-control">${ACADEMIC_YEARS.map(y => `<option value="${y}" ${y === filterYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+            <button class="btn btn-primary btn-sm" id="recordPay">Record</button>
+            <button class="btn btn-whatsapp btn-sm" id="sendReminder">Remind</button>
+        </div></div>` : ''}
+        <div class="card"><h3 style="font-size:1rem;">Class Summary</h3>
+        <div class="filter-section"><div class="flex">
+            <div><label>Term</label><select id="classSummaryTerm" class="form-control">${TERMS.map(t => `<option value="${t}" ${t === filterTerm ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+            <div><label>Year</label><select id="classSummaryYear" class="form-control">${ACADEMIC_YEARS.map(y => `<option value="${y}" ${y === filterYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+            <button class="btn btn-sm btn-primary" id="updateClassSummary">Update</button>
+            <button class="btn btn-sm btn-gold" id="printClassSummary"><i class="fas fa-print"></i> Print</button>
+        </div></div>
+        <div id="classSummaryContainer"></div></div>
+        <div class="card"><h3 style="font-size:1rem;">Student Balances</h3>
+        <div class="filter-section"><div class="flex">
+            <div><label>Term</label><select id="feeTermFilter" class="form-control">${TERMS.map(t => `<option value="${t}" ${t === filterTerm ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+            <div><label>Year</label><select id="feeYearFilter" class="form-control">${ACADEMIC_YEARS.map(y => `<option value="${y}" ${y === filterYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+            <button class="btn btn-sm btn-primary" id="applyFeeFilter">Apply</button>
+        </div></div>
+        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="feesSearch" placeholder="Search student..."></div>
+        <div class="data-table"><table><thead><tr><th>Photo</th><th>Student</th><th>LIN</th>${perms.editFees ? '<th>Total</th><th>Paid</th><th>Balance</th>' : ''}<th>Action</th></tr></thead><tbody id="feesBody"></tbody></table></div>
+        ${perms.editFees ? `<div class="flex"><button class="btn btn-gold btn-sm" id="printDebtors"><i class="fas fa-print"></i> Debtors List</button></div>` : ''}
+        <div class="card" style="margin-top:12px;"><h3 style="font-size:1rem;"><i class="fas fa-history"></i> All Payments History</h3>
+        <div class="filter-section"><div class="flex">
+            <div><label>Student</label><select id="historyStudentFilter" class="form-control"><option value="all">All</option>${students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name}</option>`).join('')}</select></div>
+            <div><label>Term</label><select id="historyTermFilter" class="form-control">${TERMS.map(t => `<option value="${t}" ${t === filterTerm ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+            <div><label>Year</label><select id="historyYearFilter" class="form-control">${ACADEMIC_YEARS.map(y => `<option value="${y}" ${y === filterYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+            <div><label>Method</label><select id="historyMethodFilter" class="form-control"><option value="all">All</option>${PAYMENT_METHODS.map(m => `<option value="${m}">${m}</option>`).join('')}</select></div>
+            <button class="btn btn-sm btn-primary" id="applyHistoryFilter">Filter</button>
+            <button class="btn btn-sm btn-gold" id="printHistoryBtn"><i class="fas fa-print"></i> Print</button>
+        </div></div>
+        <div class="data-table"><table class="history-table"><thead><tr><th>Date & Time</th><th>Student</th><th>LIN</th><th>Class</th><th>Amount</th><th>Method</th><th>Receipt</th><th>Term</th><th>Year</th></tr></thead><tbody id="historyBody"></tbody></table></div></div>
+    `;
+    
+    document.getElementById('updateClassSummary')?.addEventListener('click', () => renderClassSummary());
+    document.getElementById('printClassSummary')?.addEventListener('click', printClassSummary);
+    document.getElementById('applyFeeFilter')?.addEventListener('click', () => {
+        filterTerm = document.getElementById('feeTermFilter').value;
+        filterYear = document.getElementById('feeYearFilter').value;
+        renderFeesTable();
+    });
+    document.getElementById('applyHistoryFilter')?.addEventListener('click', () => {
+        filterTerm = document.getElementById('historyTermFilter').value;
+        filterYear = document.getElementById('historyYearFilter').value;
+        renderFinancialHistory();
+    });
+    document.getElementById('printHistoryBtn')?.addEventListener('click', printFinancialHistory);
+    
+    document.getElementById('recordPay')?.addEventListener('click', async () => {
+        let sid = document.getElementById('payStudent').value;
+        let amt = parseFloat(document.getElementById('payAmount').value);
+        let method = document.getElementById('payMethod').value;
+        let term = document.getElementById('payTerm').value;
+        let year = document.getElementById('payYear').value;
+        if (sid && amt > 0) {
+            let paymentData = {
+                id: crypto.randomUUID(),
+                school_id: SCHOOL_ID,
+                student_id: sid,
+                amount: amt,
+                payment_date: new Date().toISOString().slice(0, 10),
+                receipt_number: `RCP-${Date.now()}`,
+                term: term || 'Term I',
+                academic_year: year || CURRENT_ACADEMIC_YEAR,
+                payment_method: method || 'Cash'
+            };
+            let result = await insertDB('payments', paymentData);
+            if (result) {
+                updateCachePayment(paymentData);
+                renderFees();
+                showToast('Payment recorded');
+            }
+        } else showToast('Enter valid amount', true);
+    });
+    
+    document.getElementById('sendReminder')?.addEventListener('click', () => {
+        let term = document.getElementById('feeTermFilter')?.value || filterTerm;
+        let year = document.getElementById('feeYearFilter')?.value || filterYear;
+        let msg = `Dear parents, please clear fees for ${term} ${year}. Accounts Department.`;
+        let sent = 0;
+        let students = getStudents();
+        for (let s of students) {
+            if (s.parent_whatsapp) { sendWhatsApp(s.parent_whatsapp, msg); sent++; }
+        }
+        showToast(`Sent to ${sent} parents`);
+    });
+    
+    let feesSearchInput = document.getElementById('feesSearch');
+    if (feesSearchInput) {
+        feesSearchInput.addEventListener('input', (e) => {
+            feesSearch = e.target.value;
+            debounce('feesSearch', () => renderFeesTable(), 150);
+        });
+    }
+    document.getElementById('historyStudentFilter')?.addEventListener('change', renderFinancialHistory);
+    document.getElementById('historyMethodFilter')?.addEventListener('change', renderFinancialHistory);
+    document.getElementById('printDebtors')?.addEventListener('click', printDebtorsList);
+    
+    renderClassSummary();
+    renderFeesTable();
+    renderFinancialHistory();
+}
+
+function renderClassSummary() {
+    let container = document.getElementById('classSummaryContainer');
+    if (!container) return;
+    let students = getStudents(), payments = getPayments();
+    let term = document.getElementById('classSummaryTerm')?.value || filterTerm;
+    let year = document.getElementById('classSummaryYear')?.value || filterYear;
+    let classData = {};
+    for (let s of students) {
+        if (!classData[s.class]) classData[s.class] = { expected: 0, paid: 0, count: 0 };
+        let paid = payments.filter(p => p.student_id === s.id && p.term === term && p.academic_year === year).reduce((a, b) => a + (b.amount || 0), 0);
+        classData[s.class].expected += s.total_fees || 0;
+        classData[s.class].paid += paid;
+        classData[s.class].count++;
+    }
+    let html = '', grandE = 0, grandP = 0;
+    for (let cls of CLASS_ORDER) {
+        if (!classData[cls]) continue;
+        let d = classData[cls];
+        let bal = d.expected - d.paid;
+        grandE += d.expected; grandP += d.paid;
+        html += `<div class="class-summary-card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;"><strong>${cls}</strong><span style="font-size:0.7rem;background:#e2e8f0;padding:0 10px;border-radius:20px;">${d.count} students</span></div>
+        <div class="stat-row"><span><strong>Expected:</strong> ${formatMoney(d.expected)}</span><span><strong>Paid:</strong> <span class="paid">${formatMoney(d.paid)}</span></span><span><strong>Balance:</strong> <span class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</span></span><span><strong>Rate:</strong> ${d.expected > 0 ? Math.round((d.paid/d.expected)*100) : 0}%</span></div></div>`;
+    }
+    let totalBal = grandE - grandP;
+    html += `<div class="class-summary-card" style="background:#fef3c7;border-left-color:#D4A017;"><strong>📊 SCHOOL TOTALS</strong><div class="stat-row">
+        <span><strong>Expected:</strong> ${formatMoney(grandE)}</span><span><strong>Paid:</strong> <span class="paid">${formatMoney(grandP)}</span></span><span><strong>Balance:</strong> <span class="${totalBal > 0 ? 'debt' : ''}">${formatMoney(totalBal)}</span></span><span><strong>Rate:</strong> ${grandE > 0 ? Math.round((grandP/grandE)*100) : 0}%</span>
+    </div></div>`;
+    container.innerHTML = html;
+}
+
+function printClassSummary() {
+    let container = document.getElementById('classSummaryContainer');
+    if (!container || !container.innerHTML) return;
+    let term = document.getElementById('classSummaryTerm')?.value || filterTerm;
+    let year = document.getElementById('classSummaryYear')?.value || filterYear;
+    let win = window.open('', '_blank');
+    win.document.write(`<html><head><title>Class Summary - ${term} ${year}</title>
+        <style>body{font-family:Arial;padding:20px;}h1{color:#003366;}.summary-card{background:#f8fafc;padding:12px;border-radius:12px;margin-bottom:10px;border-left:4px solid #003366;}.stat-row{display:flex;gap:20px;flex-wrap:wrap;margin-top:6px;}.debt{color:#dc2626;font-weight:bold;}.paid{color:#10b981;font-weight:bold;}</style></head><body>
+        <h1>PROGRESSIVE MOTHERS SCHOOL</h1><h2>Class Financial Summary - ${term} ${year}</h2><p>Generated on ${formatUgandaDateTime(getUgandaTime())}</p>${container.innerHTML}</body></html>`);
+    win.document.close();
+    win.print();
+}
+
+function renderFeesTable() {
+    let tbody = document.getElementById('feesBody');
+    if (!tbody) return;
+    let students = getStudents(), payments = getPayments();
+    let filtered = students.filter(s => !feesSearch || `${s.first_name} ${s.last_name}`.toLowerCase().includes(feesSearch.toLowerCase()) || s.lin.toLowerCase().includes(feesSearch.toLowerCase()));
+    let perms = ROLE_PERMS[currentUser?.role];
+    tbody.innerHTML = '';
+    let term = document.getElementById('feeTermFilter')?.value || filterTerm;
+    let year = document.getElementById('feeYearFilter')?.value || filterYear;
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:#666;">No students found</td></tr>';
+        return;
+    }
+    for (let s of filtered) {
+        let paid = payments.filter(p => p.student_id === s.id && p.term === term && p.academic_year === year).reduce((a, b) => a + (b.amount || 0), 0);
+        let bal = (s.total_fees || 0) - paid;
+        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" style="width:35px;height:35px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-circle fa-2x"></i>`;
+        let row = tbody.insertRow();
+        if (perms.editFees) {
+            row.innerHTML = `<td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td><button class="btn btn-sm btn-whatsapp" onclick="sendSingleFeeReminder('${s.id}','${term}','${year}')">Remind</button> <button class="btn btn-sm btn-primary" onclick="quickFeePayment('${s.id}','${term}','${year}')">Pay</button> <button class="btn btn-sm btn-gold" onclick="editStudentFees('${s.id}')">Edit</button> <button class="btn btn-sm btn-gold" onclick="showStudentFinancialHistory('${s.id}')"><i class="fas fa-history"></i></button></td>`;
+        } else {
+            row.innerHTML = `<td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td><span>View only</span></td>`;
+        }
+    }
+}
+
+function renderFinancialHistory() {
+    let container = document.getElementById('historyBody');
+    if (!container) return;
+    let students = getStudents(), payments = getPayments();
+    let term = document.getElementById('historyTermFilter')?.value || filterTerm;
+    let year = document.getElementById('historyYearFilter')?.value || filterYear;
+    let studentFilter = document.getElementById('historyStudentFilter')?.value || 'all';
+    let methodFilter = document.getElementById('historyMethodFilter')?.value || 'all';
+    let filtered = [...payments].filter(p => p.term === term && p.academic_year === year);
+    if (studentFilter !== 'all') filtered = filtered.filter(p => p.student_id === studentFilter);
+    if (methodFilter !== 'all') filtered = filtered.filter(p => p.payment_method === methodFilter);
+    filtered.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+    if (filtered.length === 0) {
+        container.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:16px;color:#666;">No records found</td></tr>';
+        return;
+    }
+    let html = '';
+    for (let p of filtered) {
+        let s = students.find(st => st.id === p.student_id);
+        if (!s) continue;
+        html += `<tr><td>${formatUgandaDateTime(p.payment_date)}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td>${s.class}</td><td class="paid">${formatMoney(p.amount)}</td><td>${getPaymentMethodBadge(p.payment_method)}</td><td>${p.receipt_number || 'N/A'}</td><td>${p.term || 'Term I'}</td><td>${p.academic_year || CURRENT_ACADEMIC_YEAR}</td></tr>`;
+    }
+    container.innerHTML = html;
+}
+
+function printFinancialHistory() {
+    let students = getStudents(), payments = getPayments();
+    let term = document.getElementById('historyTermFilter')?.value || filterTerm;
+    let year = document.getElementById('historyYearFilter')?.value || filterYear;
+    let studentFilter = document.getElementById('historyStudentFilter')?.value || 'all';
+    let methodFilter = document.getElementById('historyMethodFilter')?.value || 'all';
+    let filtered = payments.filter(p => p.term === term && p.academic_year === year);
+    if (studentFilter !== 'all') filtered = filtered.filter(p => p.student_id === studentFilter);
+    if (methodFilter !== 'all') filtered = filtered.filter(p => p.payment_method === methodFilter);
+    filtered.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+    if (filtered.length === 0) { alert('No records'); return; }
+    let total = filtered.reduce((a, b) => a + (b.amount || 0), 0);
+    let win = window.open('', '_blank');
+    win.document.write(`<html><head><title>Payment History</title>
+        <style>body{font-family:Arial;padding:20px;}h1{color:#003366;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:6px;text-align:left;}th{background:#003366;color:white;}.paid{color:#10b981;font-weight:bold;}</style></head><body>
+        <h1>PROGRESSIVE MOTHERS SCHOOL</h1><h2>Payment History - ${term} ${year}</h2><p>Generated ${formatUgandaDateTime(getUgandaTime())}</p>
+        <table><thead><tr><th>Date & Time</th><th>Student</th><th>LIN</th><th>Class</th><th>Amount</th><th>Method</th><th>Receipt</th></tr></thead><tbody>
+        ${filtered.map(p => {
+            let s = students.find(st => st.id === p.student_id);
+            if (!s) return '';
+            return `<tr><td>${formatUgandaDateTime(p.payment_date)}</td><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td>${s.class}</td><td class="paid">${formatMoney(p.amount)}</td><td>${p.payment_method || 'Cash'}</td><td>${p.receipt_number || 'N/A'}</td></tr>`;
+        }).join('')}
+        </tbody></table>
+        <div style="margin-top:12px;"><strong>Total Records:</strong> ${filtered.length} | <strong>Total Amount:</strong> ${formatMoney(total)}</div>
+    </body></html>`);
+    win.document.close();
+    win.print();
+}
+
+function printDebtorsList() {
+    let students = getStudents(), payments = getPayments();
+    let term = document.getElementById('feeTermFilter')?.value || filterTerm;
+    let year = document.getElementById('feeYearFilter')?.value || filterYear;
+    let debtors = students.filter(s => {
+        let paid = payments.filter(p => p.student_id === s.id && p.term === term && p.academic_year === year).reduce((a, b) => a + (b.amount || 0), 0);
+        return (s.total_fees || 0) - paid > 0;
+    });
+    if (debtors.length === 0) { alert('No debtors'); return; }
+    let win = window.open('', '_blank');
+    win.document.write(`<html><head><title>Debtors List</title><style>body{font-family:Arial;padding:20px;}h1{color:#003366;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:6px;text-align:left;}th{background:#003366;color:white;}.debt{color:#dc2626;font-weight:bold;}</style></head><body>
+        <h1>PROGRESSIVE MOTHERS SCHOOL</h1><h2>Debtors List - ${term} ${year}</h2>
+        <table><thead><tr><th>Name</th><th>LIN</th><th>Class</th><th>Total</th><th>Paid</th><th>Balance</th><th>WhatsApp</th></tr></thead><tbody>
+        ${debtors.map(s => {
+            let paid = payments.filter(p => p.student_id === s.id && p.term === term && p.academic_year === year).reduce((a, b) => a + (b.amount || 0), 0);
+            let bal = (s.total_fees || 0) - paid;
+            return `<tr><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td>${s.class}</td><td>${formatMoney(s.total_fees)}</td><td>${formatMoney(paid)}</td><td class="debt">${formatMoney(bal)}</td><td>${s.parent_whatsapp || ''}</td></tr>`;
+        }).join('')}
+        </tbody></table>
+        <p><strong>Total Debtors:</strong> ${debtors.length}</p>
+    </body></html>`);
+    win.document.close();
+    win.print();
+}
+
+window.editStudentFees = async (id) => {
+    let students = getStudents();
+    let s = students.find(st => st.id === id);
+    if (!s) return;
+    let newFees = prompt(`Edit total fees for ${s.first_name} ${s.last_name}\nCurrent: ${formatMoney(s.total_fees || 0)}\nEnter new total fees (UGX):`, s.total_fees || 0);
+    if (newFees !== null && !isNaN(parseFloat(newFees)) && parseFloat(newFees) >= 0) {
+        let result = await updateDB('students', id, { total_fees: parseFloat(newFees) });
+        if (result) {
+            updateCacheStudent({ id, total_fees: parseFloat(newFees) });
+            renderFees();
+            showToast(`Updated to ${formatMoney(parseFloat(newFees))}`);
+        }
+    }
+};
+
+window.sendSingleFeeReminder = (id, term, year) => {
+    let students = getStudents(), payments = getPayments();
+    let s = students.find(st => st.id === id);
+    if (!s) return;
+    let paid = payments.filter(p => p.student_id === id && p.term === term && p.academic_year === year).reduce((a, b) => a + (b.amount || 0), 0);
+    let bal = (s.total_fees || 0) - paid;
+    if (s?.parent_whatsapp) sendWhatsApp(s.parent_whatsapp, `Dear ${s.parent_name}, ${s.first_name} ${s.last_name} balance ${formatMoney(bal)} for ${term} ${year}.`);
+};
+
+window.quickFeePayment = async (id, term, year) => {
+    let amt = prompt('Enter amount (UGX):');
+    if (amt && parseFloat(amt) > 0) {
+        let method = prompt('Method (Cash, Mobile Money, Bank Transfer, School Pay):') || 'Cash';
+        let paymentData = {
+            id: crypto.randomUUID(),
+            school_id: SCHOOL_ID,
+            student_id: id,
+            amount: parseFloat(amt),
+            payment_date: new Date().toISOString().slice(0, 10),
+            receipt_number: `RCP-${Date.now()}`,
+            term: term || filterTerm,
+            academic_year: year || filterYear,
+            payment_method: method
+        };
+        let result = await insertDB('payments', paymentData);
+        if (result) {
+            updateCachePayment(paymentData);
+            renderFees();
+            showToast('Payment recorded');
+        }
+    }
+};
+
+// ============= DELETE STUDENT =============
+window.deleteStudent = async (id) => {
+    if (confirm('Delete this student?')) {
+        let marks = getMarks(), attendance = getAttendance(), payments = getPayments();
+        let studentMarks = marks.filter(m => m.student_id === id);
+        for (let m of studentMarks) await deleteDB('marks', m.id);
+        let studentAttendance = attendance.filter(a => a.student_id === id);
+        for (let a of studentAttendance) await deleteDB('attendance', a.id);
+        let studentPayments = payments.filter(p => p.student_id === id);
+        for (let p of studentPayments) await deleteDB('payments', p.id);
+        await deleteDB('students', id);
+        cache.students = cache.students.filter(s => s.id !== id);
+        cache.marks = cache.marks.filter(m => m.student_id !== id);
+        cache.attendance = cache.attendance.filter(a => a.student_id !== id);
+        cache.payments = cache.payments.filter(p => p.student_id !== id);
+        renderStudents();
+        showToast('Deleted');
+    }
+};
+
+// ============= EDIT STUDENT =============
+window.editStudent = async (id) => {
+    let students = getStudents();
+    let s = students.find(st => st.id === id);
+    if (!s) return;
+    let modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
+    let photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="photo-upload-preview" id="editPhotoPreview">` : `<div class="photo-upload-preview" id="editPhotoPreview" style="background:#e2e8f0;"><i class="fas fa-user fa-2x" style="color:#666;"></i></div>`;
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3 style="font-size:1.1rem;">Edit Student</h3>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+                    <div>${photoHtml}</div>
+                    <div><label style="font-size:0.8rem;">Upload Photo</label><input type="file" id="editPhotoUpload" accept="image/*" class="form-control" style="padding:4px;"></div>
+                </div>
+                <div><label style="font-size:0.8rem;">First Name</label><input type="text" id="editFirstName" value="${escapeHtml(s.first_name)}" class="form-control"></div>
+                <div><label style="font-size:0.8rem;">Last Name</label><input type="text" id="editLastName" value="${escapeHtml(s.last_name)}" class="form-control"></div>
+                <div><label style="font-size:0.8rem;">LIN</label><input type="text" id="editLin" value="${s.lin}" class="form-control"></div>
+                <div><label style="font-size:0.8rem;">Payment Code</label><input type="text" id="editPaymentCode" value="${s.payment_code || ''}" class="form-control"></div>
+                <div><label style="font-size:0.8rem;">Class</label><select id="editClass" class="form-control">${CLASS_ORDER.map(c => `<option ${s.class === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+                <div><label style="font-size:0.8rem;">Parent Name</label><input type="text" id="editParentName" value="${escapeHtml(s.parent_name || '')}" class="form-control"></div>
+                <div><label style="font-size:0.8rem;">Parent WhatsApp</label><input type="text" id="editParentWhatsapp" value="${escapeHtml(s.parent_whatsapp || '')}" class="form-control"></div>
+                <div><label style="font-size:0.8rem;">Total Fees (UGX)</label><input type="number" id="editTotalFees" value="${s.total_fees || 0}" class="form-control"></div>
+            </div>
+            <div class="flex" style="justify-content:flex-end; margin-top:12px;">
+                <button class="btn btn-primary btn-sm" onclick="saveEditStudent('${s.id}')">Update</button>
+                <button class="btn btn-gold btn-sm" onclick="this.closest('.modal').remove()">Cancel</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    document.getElementById('editPhotoUpload')?.addEventListener('change', function(e) {
+        let file = e.target.files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.onload = function(ev) {
+                let preview = document.getElementById('editPhotoPreview');
+                if (preview) preview.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+};
+
+window.saveEditStudent = async (id) => {
+    let photoFile = document.getElementById('editPhotoUpload')?.files[0];
+    let photoUrl = '';
+    if (photoFile) {
+        let btn = document.querySelector('.modal .btn-primary');
+        if (btn) { btn.textContent = 'Uploading...'; btn.disabled = true; }
+        photoUrl = await fileToBase64(photoFile);
+        if (btn) { btn.textContent = 'Update'; btn.disabled = false; }
+    }
+    let updates = {
+        first_name: document.getElementById('editFirstName').value,
+        last_name: document.getElementById('editLastName').value,
+        lin: document.getElementById('editLin').value.trim().toUpperCase(),
+        payment_code: document.getElementById('editPaymentCode').value.trim().toUpperCase(),
+        class: document.getElementById('editClass').value,
+        parent_name: document.getElementById('editParentName').value,
+        parent_whatsapp: document.getElementById('editParentWhatsapp').value,
+        total_fees: parseFloat(document.getElementById('editTotalFees').value) || 0
+    };
+    if (photoUrl) updates.photo_url = photoUrl;
+    let result = await updateDB('students', id, updates);
+    if (result) {
+        updateCacheStudent({ id, ...updates });
+        document.querySelector('.modal')?.remove();
+        renderStudents();
+        showToast('Updated');
+    }
+};
+
+function showAddStudentModal() {
+    let modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
+    modal.innerHTML = `<div class="modal-content"><h3 style="font-size:1.1rem;">Add Student</h3>
+        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:6px;">
+            <div class="photo-upload-preview" id="newPhotoPreview" style="background:#e2e8f0;"><i class="fas fa-user fa-2x" style="color:#666;"></i></div>
+            <div><label style="font-size:0.8rem;">Photo</label><input type="file" id="newPhotoUpload" accept="image/*" class="form-control" style="padding:4px;"></div>
+        </div>
+        <input type="text" id="newFirstName" placeholder="First Name" class="form-control">
+        <input type="text" id="newLastName" placeholder="Last Name" class="form-control">
+        <select id="newClass" class="form-control">${CLASS_ORDER.map(c => `<option>${c}</option>`).join('')}</select>
+        <input type="text" id="newLin" placeholder="LIN (auto)" class="form-control">
+        <input type="text" id="newPaymentCode" placeholder="Payment Code (optional)" class="form-control">
+        <input type="text" id="newParentName" placeholder="Parent Name" class="form-control">
+        <input type="text" id="newParentWhatsapp" placeholder="Parent WhatsApp" class="form-control">
+        <input type="number" id="newTotalFees" placeholder="Total Fees" class="form-control">
+        <div class="flex" style="justify-content:flex-end; margin-top:10px;">
+            <button class="btn btn-primary btn-sm" onclick="saveNewStudent()">Save</button>
+            <button class="btn btn-gold btn-sm" onclick="this.closest('.modal').remove()">Cancel</button>
+        </div></div>`;
+    document.body.appendChild(modal);
+    document.getElementById('newPhotoUpload')?.addEventListener('change', function(e) {
+        let file = e.target.files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.onload = function(ev) {
+                let preview = document.getElementById('newPhotoPreview');
+                if (preview) preview.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+window.saveNewStudent = async () => {
+    let first = document.getElementById('newFirstName').value.trim();
+    let last = document.getElementById('newLastName').value.trim();
+    if (!first || !last) { showToast('First and Last name required', true); return; }
+    let lin = document.getElementById('newLin').value.trim().toUpperCase() || `PM${first.charAt(0).toUpperCase()}${Math.floor(1000 + Math.random() * 9000)}`;
+    let paymentCode = document.getElementById('newPaymentCode').value.trim().toUpperCase() || '';
+    let photoFile = document.getElementById('newPhotoUpload')?.files[0];
+    let photoUrl = '';
+    if (photoFile) {
+        let btn = document.querySelector('.modal .btn-primary');
+        if (btn) { btn.textContent = 'Uploading...'; btn.disabled = true; }
+        photoUrl = await fileToBase64(photoFile);
+        if (btn) { btn.textContent = 'Save'; btn.disabled = false; }
+    }
+    let newStudent = {
+        id: crypto.randomUUID(),
+        school_id: SCHOOL_ID,
+        first_name: first,
+        last_name: last,
+        lin: lin,
+        payment_code: paymentCode,
+        class: document.getElementById('newClass').value,
+        parent_name: document.getElementById('newParentName').value,
+        parent_whatsapp: document.getElementById('newParentWhatsapp').value,
+        total_fees: parseFloat(document.getElementById('newTotalFees').value) || 0,
+        fees_paid: 0,
+        photo_url: photoUrl,
+        academic_year: CURRENT_ACADEMIC_YEAR
+    };
+    let result = await insertDB('students', newStudent);
+    if (result) {
+        updateCacheStudent(newStudent);
+        document.querySelector('.modal')?.remove();
+        renderStudents();
+        showToast('Student added');
+    }
+};
+
+// ============= PROMOTE =============
+window.showPromoteModal = () => {
+    let modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
+    modal.innerHTML = `<div class="modal-content"><h3>Promote Students</h3>
+        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="promoteSearch" placeholder="Search..."></div>
+        <div id="promoteStudentsList" style="max-height:250px;overflow-y:auto;margin:10px 0;"></div>
+        <div class="flex"><label>Promote To:</label><select id="promoteToClass" class="form-control">${CLASS_ORDER.map(c => `<option>${c}</option>`).join('')}</select></div>
+        <div class="flex" style="justify-content:flex-end;"><button class="btn btn-primary btn-sm" onclick="executePromotion()">Promote</button><button class="btn btn-gold btn-sm" onclick="this.closest('.modal').remove()">Cancel</button></div>
+    </div>`;
+    document.body.appendChild(modal);
+    loadPromoteList();
+};
+
+async function loadPromoteList() {
+    let students = getStudents();
+    let search = document.getElementById('promoteSearch')?.value || '';
+    let filtered = students.filter(s => !search || `${s.first_name} ${s.last_name}`.toLowerCase().includes(search.toLowerCase()) || s.lin.toLowerCase().includes(search.toLowerCase()));
+    let container = document.getElementById('promoteStudentsList');
+    if (!container) return;
+    container.innerHTML = `<table><thead><tr><th><input type="checkbox" id="promoteAll"></th><th>Name</th><th>LIN</th><th>Class</th></tr></thead><tbody>${filtered.map(s => `<tr><td><input type="checkbox" class="promote-check" data-id="${s.id}"></td><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td>${s.class}</td></tr>`).join('')}</tbody></table>`;
+    document.getElementById('promoteAll')?.addEventListener('change', function() { document.querySelectorAll('.promote-check').forEach(c => c.checked = this.checked); });
+    document.getElementById('promoteSearch')?.addEventListener('input', () => debounce('promoteSearch', loadPromoteList, 150));
+}
+
+window.executePromotion = async () => {
+    let selected = document.querySelectorAll('.promote-check:checked');
+    if (selected.length === 0) { showToast('Select students', true); return; }
+    let newClass = document.getElementById('promoteToClass').value;
+    let count = 0;
+    for (let cb of selected) {
+        let id = cb.dataset.id;
+        let result = await updateDB('students', id, { class: newClass });
+        if (result) {
+            updateCacheStudent({ id, class: newClass });
+            count++;
+        }
+    }
+    renderStudents();
+    document.querySelector('.modal')?.remove();
+    showToast(`${count} promoted to ${newClass}`);
+};
+
+// ============= ATTENDANCE =============
+async function renderAttendance() {
+    if (!ROLE_PERMS[currentUser?.role]?.attendance) {
+        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3></div>';
+        return;
+    }
+    let students = getStudents();
+    let opts = [...new Set(students.map(s => s.class))];
+    document.getElementById('tabContent').innerHTML = `<div class="card"><h3 style="font-size:1rem;">Attendance Tracker</h3>
+        <div class="flex"><select id="attClass" class="form-control">${opts.map(c => `<option>${c}</option>`).join('')}</select><input type="date" id="attDate" value="${new Date().toISOString().slice(0, 10)}" class="form-control"><button class="btn btn-primary btn-sm" id="loadAtt">Load</button><button class="btn btn-gold btn-sm" id="saveAtt">Save</button></div>
+        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="attSearch" placeholder="Search..."></div>
+        <div id="attList"></div></div>`;
+    document.getElementById('loadAtt').onclick = loadAttendance;
+    document.getElementById('saveAtt').onclick = saveAttendance;
+    document.getElementById('attSearch').addEventListener('input', (e) => { attSearch = e.target.value; debounce('attSearch', loadAttendance, 150); });
+    await loadAttendance();
+}
+
+async function loadAttendance() {
+    let students = getStudents();
+    let cls = document.getElementById('attClass').value;
+    let date = document.getElementById('attDate').value;
+    let classStd = students.filter(s => s.class === cls);
+    if (attSearch) {
+        const term = attSearch.toLowerCase();
+        classStd = classStd.filter(s => `${s.first_name} ${s.last_name}`.toLowerCase().includes(term) || s.lin.toLowerCase().includes(term));
+    }
+    let existing = await fetchDB('attendance', `&date=eq.${date}&status=eq.absent&school_id=eq.${SCHOOL_ID}`);
+    let absentSet = new Set(existing.map(a => a.student_id));
+    let tbl = `<table><thead><tr><th>Photo</th><th>Student</th><th>LIN</th><th>Mark Absent</th></tr></thead><tbody>`;
+    for (let s of classStd) {
+        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" style="width:35px;height:35px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-circle fa-2x"></i>`;
+        tbl += `<tr><td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td><input type="checkbox" class="absent-cb" data-id="${s.id}" ${absentSet.has(s.id) ? 'checked' : ''}></td></tr>`;
+    }
+    tbl += `</tbody></table>`;
+    document.getElementById('attList').innerHTML = tbl;
+}
+
+async function saveAttendance() {
+    let date = document.getElementById('attDate').value;
+    let cbs = document.querySelectorAll('.absent-cb');
+    for (let cb of cbs) {
+        let sid = cb.dataset.id;
+        let exist = await fetchDB('attendance', `&student_id=eq.${sid}&date=eq.${date}`);
+        if (cb.checked) {
+            if (!exist.length) {
+                let att = { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: sid, date, status: 'absent', academic_year: CURRENT_ACADEMIC_YEAR };
+                await insertDB('attendance', att);
+                cache.attendance.push(att);
+            }
+        } else {
+            if (exist.length) {
+                await deleteDB('attendance', exist[0].id);
+                cache.attendance = cache.attendance.filter(a => a.id !== exist[0].id);
+            }
+        }
+    }
+    showToast('Attendance saved');
+}
+
+// ============= MARKS =============
+async function renderMarks() {
+    if (!ROLE_PERMS[currentUser?.role]?.marks) {
+        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3></div>';
+        return;
+    }
+    let students = getStudents();
+    let opts = [...new Set(students.map(s => s.class))];
+    document.getElementById('tabContent').innerHTML = `<div class="card"><h3 style="font-size:1rem;">Marks Entry</h3>
+        <div class="flex"><select id="markClass" class="form-control">${opts.map(c => `<option>${c}</option>`).join('')}</select><select id="markTerm" class="form-control">${TERMS.map(t => `<option>${t}</option>`).join('')}</select><select id="markExam" class="form-control">${EXAM_TYPES.map(e => `<option>${e}</option>`).join('')}</select><select id="markYear" class="form-control">${ACADEMIC_YEARS.map(y => `<option ${y === CURRENT_ACADEMIC_YEAR ? 'selected' : ''}>${y}</option>`).join('')}</select><button class="btn btn-primary btn-sm" id="loadMarks">Load</button><button class="btn btn-gold btn-sm" id="saveMarks">Save</button></div>
+        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="marksSearch" placeholder="Search..."></div>
+        <div id="marksGrid"></div></div>`;
+    document.getElementById('loadMarks').onclick = async () => {
+        let students = getStudents(), marks = getMarks();
+        let cls = document.getElementById('markClass').value;
+        let term = document.getElementById('markTerm').value;
+        let exam = document.getElementById('markExam').value;
+        let year = document.getElementById('markYear').value;
+        let classStd = students.filter(s => s.class === cls);
+        if (document.getElementById('marksSearch').value) {
+            const termSearch = document.getElementById('marksSearch').value.toLowerCase();
+            classStd = classStd.filter(s => `${s.first_name} ${s.last_name}`.toLowerCase().includes(termSearch) || s.lin.toLowerCase().includes(termSearch));
+        }
+        let subs = SUBJECTS_BY_CLASS[cls] || [];
+        let relMarks = marks.filter(m => m.term === term && m.exam_type === exam && m.academic_year === year);
+        let grid = `<div class="data-table"><table><thead><tr><th>Student</th><th>Photo</th>${subs.map(s => `<th>${s}</th>`).join('')}</thead><tbody>`;
+        for (let s of classStd) {
+            let photoHtml = s.photo_url ? `<img src="${s.photo_url}" style="width:35px;height:35px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-circle fa-2x"></i>`;
+            grid += `<tr><td><strong>${s.first_name} ${s.last_name}</strong><br><small>${s.lin}</small></td><td>${photoHtml}</td>`;
+            for (let sub of subs) {
+                let mk = relMarks.find(m => m.student_id === s.id && m.subject === sub);
+                let disabled = (currentUser?.role === 'teacher' && mk && mk.created_at && (new Date() - new Date(mk.created_at)) / 60000 > 1) ? 'disabled' : '';
+                grid += `<td><input type="number" class="mark-input" data-student="${s.id}" data-subject="${sub}" data-mark-id="${mk?.id || ''}" value="${mk ? mk.score : ''}" style="width:60px;" min="0" max="100" ${disabled}> ${disabled ? '🔒' : ''}</td>`;
+            }
+            grid += `</tr>`;
+        }
+        grid += `</tbody></table></div>`;
+        document.getElementById('marksGrid').innerHTML = grid;
+    };
+    document.getElementById('saveMarks').onclick = async () => {
+        let term = document.getElementById('markTerm').value;
+        let exam = document.getElementById('markExam').value;
+        let year = document.getElementById('markYear').value;
+        let inputs = document.querySelectorAll('.mark-input');
+        for (let inp of inputs) {
+            let score = parseInt(inp.value);
+            if (!isNaN(score) && score >= 0 && score <= 100) {
+                let sid = inp.dataset.student;
+                let subj = inp.dataset.subject;
+                let markId = inp.dataset.markId;
+                if (currentUser?.role === 'teacher' && markId) {
+                    let existingMark = getMarks().find(m => m.id === markId);
+                    if (existingMark && existingMark.created_at && (new Date() - new Date(existingMark.created_at)) / 60000 > 1) {
+                        showToast(`Cannot edit ${subj} - only 1 minute`, true);
+                        continue;
+                    }
+                }
+                let existing = getMarks().find(m => m.student_id === sid && m.subject === subj && m.term === term && m.exam_type === exam && m.academic_year === year);
+                let grade = getStandardGrade(score);
+                if (existing) {
+                    let result = await updateDB('marks', existing.id, { score, grade });
+                    if (result) {
+                        let idx = cache.marks.findIndex(m => m.id === existing.id);
+                        if (idx >= 0) cache.marks[idx] = { ...cache.marks[idx], score, grade };
+                    }
+                } else {
+                    let newMark = { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: sid, subject: subj, score, grade, term, exam_type: exam, academic_year: year, created_at: new Date().toISOString() };
+                    let result = await insertDB('marks', newMark);
+                    if (result) cache.marks.push(newMark);
+                }
+            }
+        }
+        showToast('Marks saved');
+    };
+    document.getElementById('marksSearch').addEventListener('input', (e) => { if (document.getElementById('loadMarks')) debounce('marksSearch', () => document.getElementById('loadMarks').click(), 200); });
+    document.getElementById('loadMarks').click();
+}
+
+// ============= REPORTS =============
+async function renderReports() {
+    if (!ROLE_PERMS[currentUser?.role]?.reports) {
+        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3></div>';
+        return;
+    }
+    let students = getStudents();
+    let opts = [...new Set(students.map(s => s.class))];
+    document.getElementById('tabContent').innerHTML = `
+        <div class="card"><h3 style="font-size:1rem;">Report Center</h3>
+        <div class="flex">
+            <div><select id="reportClass" class="form-control">${opts.map(c => `<option value="${c}">${c}</option>`).join('')}</select></div>
+            <div><select id="reportTerm" class="form-control">${TERMS.map(t => `<option value="${t}">${t}</option>`).join('')}</select></div>
+            <div><select id="reportExam" class="form-control"><option value="beginning">Beginning</option><option value="mid">Mid</option><option value="end" selected>End</option></select></div>
+            <div><select id="reportYear" class="form-control">${ACADEMIC_YEARS.map(y => `<option ${y === CURRENT_ACADEMIC_YEAR ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+            <button class="btn btn-primary btn-sm" id="loadReportList">Load</button>
+        </div>
+        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="reportSearch" placeholder="Search..."></div>
+        <div id="studentList"></div>
+        <div id="selectionBar" class="selection-bar" style="display:none;">
+            <span><i class="fas fa-check-circle"></i> <span id="selectedCount">0</span> selected</span>
+            <div class="flex" style="margin-bottom:0;">
+                <button class="btn btn-primary btn-sm" id="printSelected">Print Selected</button>
+                <button class="btn btn-outline btn-sm" id="selectAll">Select All</button>
+                <button class="btn btn-outline btn-sm" id="deselectAll">Deselect</button>
+            </div>
+        </div>
+        <button class="btn btn-gold" id="printWholeClass" style="width:100%; margin-top:10px;">Print Whole Class</button>
+        </div>`;
+    
+    const loadList = () => {
+        let students = getStudents();
+        let cls = document.getElementById('reportClass').value;
+        if (!cls) return;
+        let classStd = students.filter(s => s.class === cls);
+        if (document.getElementById('reportSearch').value) {
+            const term = document.getElementById('reportSearch').value.toLowerCase();
+            classStd = classStd.filter(s => `${s.first_name} ${s.last_name}`.toLowerCase().includes(term) || s.lin.toLowerCase().includes(term));
+        }
+        selectedStudentIds.clear();
+        document.getElementById('studentList').innerHTML = `<div class="data-table"><table><thead><tr><th><input type="checkbox" id="headerChk"></th><th>Photo</th><th>Name</th><th>LIN</th><th>Payment Code</th><th>Parent</th><th></th></tr></thead><tbody>${classStd.map(s => `<tr>
+            <td><input type="checkbox" class="studentChk" data-id="${s.id}"></td>
+            <td><div class="student-photo-img">${s.photo_url ? `<img src="${s.photo_url}" class="student-photo-img">` : `<i class="fas fa-user-circle fa-2x"></i>`}</div></td>
+            <td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${s.parent_name || ''}</td>
+            <td><button class="btn btn-sm btn-gold" onclick="printSingleStudentReport('${s.id}')">Print</button></td>
+        `).join('')}</tbody></table></div>`;
+        document.getElementById('selectionBar').style.display = 'flex';
+        document.querySelectorAll('.studentChk').forEach(cb => cb.addEventListener('change', function() {
+            if (this.checked) selectedStudentIds.add(this.dataset.id);
+            else selectedStudentIds.delete(this.dataset.id);
+            document.getElementById('selectedCount').innerText = selectedStudentIds.size;
+        }));
+        let header = document.getElementById('headerChk');
+        if (header) header.onchange = function() {
+            document.querySelectorAll('.studentChk').forEach(c => {
+                c.checked = this.checked;
+                if (this.checked) selectedStudentIds.add(c.dataset.id);
+                else selectedStudentIds.delete(c.dataset.id);
+            });
+            document.getElementById('selectedCount').innerText = selectedStudentIds.size;
+        };
+    };
+    document.getElementById('loadReportList').onclick = loadList;
+    document.getElementById('reportSearch').addEventListener('input', (e) => debounce('reportSearch', loadList, 150));
+    document.getElementById('printSelected').onclick = () => printReports(Array.from(selectedStudentIds));
+    document.getElementById('selectAll').onclick = () => {
+        document.querySelectorAll('.studentChk').forEach(c => { c.checked = true; selectedStudentIds.add(c.dataset.id); });
+        document.getElementById('selectedCount').innerText = selectedStudentIds.size;
+        let h = document.getElementById('headerChk'); if (h) h.checked = true;
+    };
+    document.getElementById('deselectAll').onclick = () => {
+        document.querySelectorAll('.studentChk').forEach(c => { c.checked = false; selectedStudentIds.delete(c.dataset.id); });
+        document.getElementById('selectedCount').innerText = 0;
+        let h = document.getElementById('headerChk'); if (h) h.checked = false;
+    };
+    document.getElementById('printWholeClass').onclick = () => {
+        let cls = document.getElementById('reportClass').value;
+        let ids = getStudents().filter(s => s.class === cls).map(s => s.id);
+        printReports(ids);
+    };
+    loadList();
+}
+
+window.printSingleStudentReport = (id) => printReports([id]);
+
+function calculatePosition(classStudents, term, examType, year) {
+    let marks = getMarks();
+    let scores = classStudents.map(s => {
+        let total = 0;
+        let subs = SUBJECTS_BY_CLASS[s.class] || [];
+        for (let sub of subs) {
+            let mark = marks.find(m => m.student_id === s.id && m.term === term && m.exam_type === examType && m.subject === sub && m.academic_year === year);
+            if (mark) total += mark.score;
+        }
+        return { id: s.id, total: total };
+    });
+    scores.sort((a, b) => b.total - a.total);
+    let map = new Map();
+    scores.forEach((item, idx) => map.set(item.id, idx + 1));
+    return map;
+}
+
+async function printReports(ids) {
+    if (!ids.length) { showToast('No students selected', true); return; }
+    let students = getStudents(), marks = getMarks();
+    let cls = document.getElementById('reportClass').value;
+    let term = document.getElementById('reportTerm').value;
+    let examSelection = document.getElementById('reportExam').value;
+    let year = document.getElementById('reportYear').value;
+    let selected = students.filter(s => ids.includes(s.id));
+    let classStudents = students.filter(s => s.class === cls);
+    let examType = examSelection === 'end' ? 'End of Term' : examSelection === 'mid' ? 'Mid Term' : 'Beginning';
+    let positionMap = calculatePosition(classStudents, term, examType, year);
+    let exams = examSelection === 'end' ? ['Beginning of Term', 'Mid Term', 'End of Term'] : examSelection === 'mid' ? ['Beginning of Term', 'Mid Term'] : ['Beginning of Term'];
+    
+    let html = `<!DOCTYPE html><html><head><title>Reports - ${term} ${year}</title><style>
+        body{font-family:Arial;padding:20px;background:white;}
+        .report-card{max-width:1000px;margin:0 auto 20px;background:white;border-radius:16px;padding:24px;page-break-after:all;box-shadow:0 2px 12px rgba(0,0,0,0.06);}
+        .report-header{text-align:center;border-bottom:2px solid #D4A017;padding-bottom:12px;margin-bottom:16px;}
+        .report-header h2{color:#003366;margin:0;font-size:1.2rem;}
+        .student-info{background:#f8fafc;padding:12px;border-radius:12px;display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+        .student-photo{width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #D4A017;background:#e2e8f0;display:flex;align-items:center;justify-content:center;}
+        .grade-table{width:100%;border-collapse:collapse;margin:12px 0;}
+        .grade-table th,.grade-table td{border:1px solid #e2e8f0;padding:6px;text-align:center;font-size:0.8rem;}
+        .grade-table th{background:#003366;color:white;}
+        .comment-section{display:flex;gap:20px;margin-top:16px;flex-wrap:wrap;}
+        .comment-box{flex:1;border-top:2px dashed #cbd5e1;padding-top:12px;}
+        .position-badge{background:#D4A017;color:#003366;padding:2px 12px;border-radius:20px;font-size:0.8rem;font-weight:bold;}
+        @media print{body{padding:0;}.report-card{box-shadow:none;margin:0;page-break-after:always;}}
+    </style></head><body>`;
+    
+    for (let s of selected) {
+        let studentMarks = marks.filter(m => m.student_id === s.id && m.term === term && m.academic_year === year);
+        let subjects = SUBJECTS_BY_CLASS[s.class] || ['English', 'Mathematics', 'Science', 'Social Studies'];
+        let rows = '', totals = {};
+        exams.forEach(e => totals[e] = 0);
+        for (let sub of subjects) {
+            rows += `<tr><td style="font-weight:600;">${sub}</td>`;
+            for (let ex of exams) {
+                let mk = studentMarks.find(m => m.subject === sub && m.exam_type === ex);
+                let score = mk ? mk.score : '-';
+                let grade = '-';
+                if (score !== '-') {
+                    if (s.class === 'P.1' || s.class === 'P.2' || s.class === 'P.3') {
+                        if (sub === 'R.E') grade = getLetterGrade(score);
+                        else grade = getStandardGrade(score);
+                    } else if (['Baby','Middle','Top'].includes(s.class)) {
+                        grade = '-';
+                    } else {
+                        grade = getStandardGrade(score);
+                    }
+                }
+                rows += `<td>${score}<br><small>${grade}</small></td>`;
+                if (mk) totals[ex] += mk.score;
+            }
+            rows += `</tr>`;
+        }
+        let totalRow = `<tr style="background:#eef2ff;"><td style="font-weight:700;">TOTAL / ${subjects.length * 100}</td>`;
+        for (let ex of exams) totalRow += `<td><strong>${totals[ex] || 0}</strong></td>`;
+        totalRow += `</tr>`;
+        rows += totalRow;
+        
+        let position = positionMap.get(s.id) || classStudents.length;
+        let totalScore = totals['End of Term'] || totals['Mid Term'] || totals['Beginning of Term'] || 0;
+        let specialInfo = '';
+        if (['Baby','Middle','Top'].includes(s.class)) {
+            specialInfo = `<div style="margin-top:10px;text-align:center;"><span class="position-badge">Position: ${position}/${classStudents.length}</span> <span style="margin-left:12px;"><strong>Total:</strong> ${totalScore}/${subjects.length * 100}</span></div>`;
+        } else if (['P.1','P.2','P.3'].includes(s.class)) {
+            let gradingSubjects = subjects.filter(s => s !== 'R.E');
+            let gradingTotal = 0;
+            for (let sub of gradingSubjects) {
+                let mk = studentMarks.find(m => m.subject === sub && m.exam_type === examType);
+                if (mk) gradingTotal += mk.score;
+            }
+            let overallGrade = getLetterGrade(gradingTotal / gradingSubjects.length);
+            specialInfo = `<div style="margin-top:10px;text-align:center;"><span class="position-badge">Position: ${position}/${classStudents.length}</span> <span style="margin-left:12px;"><strong>Grade:</strong> ${overallGrade}</span> <span style="margin-left:12px;"><strong>Total:</strong> ${totalScore}/${subjects.length * 100}</span></div>`;
+        } else {
+            let gradePointsList = [];
+            for (let sub of subjects) {
+                let mk = studentMarks.find(m => m.subject === sub && m.exam_type === examType);
+                if (mk) gradePointsList.push(getGradePoints(getStandardGrade(mk.score)));
+            }
+            gradePointsList.sort((a, b) => a - b);
+            let agg = gradePointsList.slice(0, 4).reduce((s, p) => s + p, 0);
+            let division = getDivision(agg);
+            specialInfo = `<div style="margin-top:10px;text-align:center;"><strong>Aggregate: ${agg}</strong> | <strong>Division: ${division}</strong> | <strong>Total:</strong> ${totalScore}/${subjects.length * 100}</div>`;
+        }
+        
+        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="student-photo">` : `<div class="student-photo"><i class="fas fa-user-graduate fa-2x" style="color:#003366;"></i></div>`;
+        html += `<div class="report-card">
+            <div class="report-header"><h2>PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</h2><p>"With God Everything is Possible"</p><p>Tel: 0756 585035</p></div>
+            <h3 style="text-align:center;margin:6px 0;">ACADEMIC REPORT - ${term} ${year}</h3>
+            <p style="text-align:center;color:#666;font-size:0.8rem;">${examSelection === 'beginning' ? 'Beginning of Term' : examSelection === 'mid' ? 'Mid Term' : 'End of Term'} Examination</p>
+            <div class="student-info">${photoHtml}<div><p><strong>Name:</strong> ${s.first_name} ${s.last_name}</p><p><strong>LIN:</strong> ${s.lin}</p><p><strong>Payment Code:</strong> ${s.payment_code || ''}</p><p><strong>Class:</strong> ${s.class}</p><p><strong>Parent:</strong> ${s.parent_name || 'N/A'}</p></div></div>
+            <table class="grade-table"><thead><tr><th>SUBJECT</th>${exams.map(e => `<th>${e}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
+            ${specialInfo}
+            <div class="comment-section">
+                <div class="comment-box"><strong>👩‍🏫 CLASS TEACHER</strong><div style="height:40px;border-bottom:1px solid #000;margin:8px 0;"></div>Signature: ____________________</div>
+                <div class="comment-box"><strong>👨‍🎓 HEAD TEACHER</strong><div style="height:40px;border-bottom:1px solid #000;margin:8px 0;"></div>Signature: ____________________</div>
+            </div>
+            <div style="text-align:center;margin-top:12px;font-size:8px;color:#666;border-top:1px solid #eee;padding-top:10px;">Generated ${formatUgandaDateTime(getUgandaTime())}</div>
+        </div>`;
+    }
+    html += `</body></html>`;
+    let win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+    win.print();
+    showToast(`Printed ${selected.length} report(s)`);
+}
+
+// ============= ABSENTEES =============
+async function renderAbsentees() {
+    if (!ROLE_PERMS[currentUser?.role]?.absentees) {
+        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3></div>';
+        return;
+    }
+    document.getElementById('tabContent').innerHTML = `
+        <div class="card"><h3 style="font-size:1rem;">Absent Students</h3>
+        <div class="flex"><input type="date" id="absentDate" value="${new Date().toISOString().slice(0, 10)}" class="form-control"><button class="btn btn-primary btn-sm" id="loadAbsent">Load</button><button class="btn btn-whatsapp btn-sm" id="notifyAllAbsent">Notify All</button><button class="btn btn-gold btn-sm" id="printAbsentList"><i class="fas fa-print"></i> Print</button></div>
+        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="absentSearch" placeholder="Search..."></div>
+        <div id="absentGrid"></div></div>`;
+    document.getElementById('loadAbsent').onclick = loadAbsentList;
+    document.getElementById('notifyAllAbsent').onclick = notifyAllAbsentParents;
+    document.getElementById('printAbsentList').onclick = printAbsentList;
+    document.getElementById('absentSearch').addEventListener('input', (e) => { absentSearch = e.target.value; debounce('absentSearch', loadAbsentList, 150); });
+    await loadAbsentList();
+}
+
+async function loadAbsentList() {
+    let students = getStudents();
+    let date = document.getElementById('absentDate').value;
+    let records = await fetchDB('attendance', `&date=eq.${date}&status=eq.absent&school_id=eq.${SCHOOL_ID}`);
+    let absentStudents = students.filter(s => records.map(r => r.student_id).includes(s.id));
+    if (absentSearch) {
+        const term = absentSearch.toLowerCase();
+        absentStudents = absentStudents.filter(s => `${s.first_name} ${s.last_name}`.toLowerCase().includes(term) || s.lin.toLowerCase().includes(term) || s.class.toLowerCase().includes(term));
+    }
+    let grid = document.getElementById('absentGrid');
+    if (absentStudents.length === 0) {
+        grid.innerHTML = `<div style="text-align:center;padding:20px;background:#f0fdf4;border-radius:16px;"><i class="fas fa-check-circle" style="color:#10b981;"></i><p>No absent students on ${date}</p></div>`;
+        return;
+    }
+    grid.innerHTML = `<div style="margin-bottom:10px;"><span style="background:#dc2626;color:white;padding:2px 12px;border-radius:30px;">${absentStudents.length} absent</span></div>`;
+    for (let s of absentStudents) {
+        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="absent-photo" style="width:45px;height:45px;border-radius:50%;object-fit:cover;">` : `<div class="absent-photo"><i class="fas fa-user-graduate fa-2x"></i></div>`;
+        grid.innerHTML += `<div class="absent-card">${photoHtml}<div style="flex:1;"><p><strong>${s.first_name} ${s.last_name}</strong></p><p style="font-size:0.75rem;">LIN: ${s.lin} | ${s.class}</p><p style="font-size:0.75rem;">Parent: ${s.parent_name || 'N/A'}</p></div><button class="btn btn-sm btn-whatsapp" onclick="sendAbsentParentNotify('${s.id}','${date}')"><i class="fab fa-whatsapp"></i> Notify</button></div>`;
+    }
+}
+
+window.sendAbsentParentNotify = (id, date) => {
+    let students = getStudents();
+    let s = students.find(st => st.id === id);
+    if (s?.parent_whatsapp) sendWhatsApp(s.parent_whatsapp, `Dear ${s.parent_name}, ${s.first_name} ${s.last_name} was absent on ${date}.`);
+};
+
+async function notifyAllAbsentParents() {
+    let students = getStudents();
+    let date = document.getElementById('absentDate').value;
+    let records = await fetchDB('attendance', `&date=eq.${date}&status=eq.absent&school_id=eq.${SCHOOL_ID}`);
+    let absent = students.filter(s => records.map(r => r.student_id).includes(s.id));
+    let sent = 0;
+    for (let s of absent) {
+        if (s.parent_whatsapp) { sendWhatsApp(s.parent_whatsapp, `Dear ${s.parent_name}, ${s.first_name} ${s.last_name} was absent on ${date}.`); sent++; await new Promise(r => setTimeout(r, 100)); }
+    }
+    showToast(`Sent to ${sent} parents`);
+}
+
+function printAbsentList() {
+    let date = document.getElementById('absentDate').value;
+    let container = document.getElementById('absentGrid');
+    if (!container || !container.innerHTML) return;
+    let win = window.open('', '_blank');
+    win.document.write(`<html><head><title>Absent Students - ${date}</title><style>
+        body{font-family:Arial;padding:20px;}.absent-card{background:#fef2f2;border-radius:12px;padding:12px;display:flex;gap:12px;align-items:center;border-left:4px solid #dc2626;margin-bottom:8px;}.absent-photo{width:45px;height:45px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;}h2{color:#003366;}
+    </style></head><body><h2>PROGRESSIVE MOTHERS SCHOOL - ABSENT STUDENTS</h2><p>Date: ${date}</p>${container.innerHTML}<p style="margin-top:20px;font-size:10px;">Generated ${formatUgandaDateTime(getUgandaTime())}</p></body></html>`);
+    win.document.close();
+    win.print();
+}
 
 // ============= MAIN APP =============
 async function renderMainApp() {
@@ -575,6 +1513,7 @@ async function renderMainApp() {
     if (!tabs.includes(activeTab)) activeTab = 'dashboard';
     
     let now = getUgandaTime();
+    let statusClass = supabaseConnected ? '' : 'error';
     document.getElementById('app').innerHTML = `
         <div class="role-badge">${currentUser.role.toUpperCase()} <button class="logout-btn" onclick="logout()">Exit</button></div>
         <div class="app-container">
@@ -585,6 +1524,9 @@ async function renderMainApp() {
                     <div><i class="far fa-calendar-alt"></i> ${now.toLocaleDateString('en-UG', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</div>
                     <div><i class="far fa-clock"></i> <span id="liveTime">${now.toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit', hour12: true })} (EAT)</span></div>
                     <div class="global-search"><i class="fas fa-search"></i><input type="text" id="globalSearchInput" placeholder="Search..."></div>
+                </div>
+                <div style="margin-top:8px;display:flex;justify-content:flex-end;">
+                    <span class="supabase-status ${statusClass}">${supabaseConnected ? '✅ Supabase Connected' : '⚠️ Supabase Error - Using Local Data'}</span>
                 </div>
             </div>
             <div class="action-buttons">${tabs.map(t => `<button class="action-btn ${activeTab === t ? 'active' : ''}" data-tab="${t}"><i class="fas ${t === 'dashboard' ? 'fa-tachometer-alt' : t === 'students' ? 'fa-user-graduate' : t === 'attendance' ? 'fa-calendar-check' : t === 'marks' ? 'fa-chart-line' : t === 'fees' ? 'fa-coins' : t === 'reports' ? 'fa-print' : 'fa-user-clock'}"></i> ${t.charAt(0).toUpperCase() + t.slice(1)}</button>`).join('')}</div>
