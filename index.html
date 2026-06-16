@@ -94,17 +94,17 @@
         .btn-gold:hover { opacity: 0.9; }
         .btn-red:hover { opacity: 0.9; }
         .btn-whatsapp:hover { opacity: 0.9; }
-        /* Fast typing fix */
-        input, select, textarea { touch-action: manipulation; }
-        .search-bar input { min-width: 100px; }
+        .loading-spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: #003366; animation: spin 0.8s ease infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .term-badge { background: #D4A017; color: #003366; padding: 2px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
     </style>
 </head>
 <body>
-<div id="app">Loading...</div>
+<div id="app"><div style="display:flex;justify-content:center;align-items:center;height:100vh;"><div class="loading-spinner"></div><span style="margin-left:12px;">Loading...</span></div></div>
 
 <script>
 // ============================================================
-// PROGRESSIVE MOTHERS SCHOOL - OPTIMIZED & RESPONSIVE
+// PROGRESSIVE MOTHERS SCHOOL - ULTRA FAST & RESPONSIVE
 // ============================================================
 
 const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
@@ -117,6 +117,16 @@ const CLASS_ORDER = ['Baby', 'Middle', 'Top', 'P.1', 'P.2', 'P.3', 'P.4', 'P.5',
 const ACADEMIC_YEARS = ['2026', '2027', '2028', '2029', '2030'];
 const CURRENT_ACADEMIC_YEAR = '2026';
 const PAYMENT_METHODS = ['Cash', 'Mobile Money', 'Bank Transfer', 'School Pay'];
+
+// Fast cache
+let cache = { students: [], marks: [], attendance: [], payments: [] };
+let dataLoaded = false;
+let currentUser = null, activeTab = 'dashboard';
+let globalSearch = '', feesSearch = '', attSearch = '', marksSearch = '', reportSearch = '', absentSearch = '';
+let selectedStudentIds = new Set();
+let filterTerm = 'Term I';
+let filterYear = CURRENT_ACADEMIC_YEAR;
+let debounceTimers = {};
 
 // Uganda Time
 function getUgandaTime() {
@@ -192,22 +202,13 @@ const ROLE_PERMS = {
     finance: { students: true, attendance: false, marks: false, fees: true, reports: false, absentees: false, editStudents: true, editFees: true, promote: false }
 };
 
-let students = [], marks = [], attendance = [], payments = [];
-let currentUser = null, activeTab = 'dashboard';
-let globalSearch = '', feesSearch = '', attSearch = '', marksSearch = '', reportSearch = '', absentSearch = '';
-let selectedStudentIds = new Set();
-let filterTerm = 'Term I';
-let filterYear = CURRENT_ACADEMIC_YEAR;
-let dataLoaded = false;
-let debounceTimers = {};
-
 // Debounce helper
-function debounce(key, fn, delay = 300) {
+function debounce(key, fn, delay = 200) {
     clearTimeout(debounceTimers[key]);
     debounceTimers[key] = setTimeout(fn, delay);
 }
 
-// Supabase API
+// Supabase API with caching
 async function fetchDB(table, filter = '') {
     try {
         let res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=*${filter}`, {
@@ -258,23 +259,35 @@ async function deleteDB(table, id) {
 
 async function loadAllData(force = false) {
     if (dataLoaded && !force) return;
-    let [s, m, a, p] = await Promise.all([
-        fetchDB('students', `&school_id=eq.${SCHOOL_ID}`),
-        fetchDB('marks', `&school_id=eq.${SCHOOL_ID}`),
-        fetchDB('attendance', `&school_id=eq.${SCHOOL_ID}`),
-        fetchDB('payments', `&school_id=eq.${SCHOOL_ID}`)
-    ]);
-    students = s; marks = m; attendance = a; payments = p;
-    if (students.length === 0) await createDemoData();
-    students = await fetchDB('students', `&school_id=eq.${SCHOOL_ID}`);
-    marks = await fetchDB('marks', `&school_id=eq.${SCHOOL_ID}`);
-    students.sort((a, b) => {
-        let nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
-        let nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
-        return nameA < nameB ? -1 : nameA > nameB ? 1 : 0;
-    });
-    dataLoaded = true;
+    try {
+        let [s, m, a, p] = await Promise.all([
+            fetchDB('students', `&school_id=eq.${SCHOOL_ID}`),
+            fetchDB('marks', `&school_id=eq.${SCHOOL_ID}`),
+            fetchDB('attendance', `&school_id=eq.${SCHOOL_ID}`),
+            fetchDB('payments', `&school_id=eq.${SCHOOL_ID}`)
+        ]);
+        cache.students = s; cache.marks = m; cache.attendance = a; cache.payments = p;
+        if (cache.students.length === 0) {
+            await createDemoData();
+            cache.students = await fetchDB('students', `&school_id=eq.${SCHOOL_ID}`);
+            cache.marks = await fetchDB('marks', `&school_id=eq.${SCHOOL_ID}`);
+        }
+        cache.students.sort((a, b) => {
+            let nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
+            let nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
+            return nameA < nameB ? -1 : nameA > nameB ? 1 : 0;
+        });
+        dataLoaded = true;
+    } catch (e) {
+        showToast('Error loading data: ' + e.message, true);
+    }
 }
+
+// Get cached data
+function getStudents() { return cache.students; }
+function getMarks() { return cache.marks; }
+function getAttendance() { return cache.attendance; }
+function getPayments() { return cache.payments; }
 
 async function createDemoData() {
     let demo = [
@@ -303,6 +316,7 @@ function fileToBase64(file) {
 
 // ============= DASHBOARD =============
 async function renderDashboard() {
+    let students = getStudents(), payments = getPayments(), attendance = getAttendance();
     let today = new Date().toISOString().slice(0, 10);
     let absentToday = attendance.filter(a => a.date === today && a.status === 'absent').length;
     let totalInc = payments.reduce((a, b) => a + (b.amount || 0), 0);
@@ -334,6 +348,7 @@ function getNavButtons() {
 
 // ============= STUDENTS =============
 async function renderStudents() {
+    let students = getStudents(), payments = getPayments();
     let perms = ROLE_PERMS[currentUser?.role];
     let filtered = students.filter(s => {
         if (!globalSearch) return true;
@@ -364,7 +379,7 @@ async function renderStudents() {
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
             globalSearch = e.target.value;
-            debounce('studentSearch', () => renderStudents(), 200);
+            debounce('studentSearch', () => renderStudents(), 150);
         });
     }
     let tbody = document.getElementById('studentsBody');
@@ -390,6 +405,7 @@ async function renderStudents() {
 
 // ============= STUDENT FINANCIAL HISTORY =============
 window.showStudentFinancialHistory = (studentId) => {
+    let students = getStudents(), payments = getPayments();
     let student = students.find(s => s.id === studentId);
     if (!student) return;
     let studentPayments = payments.filter(p => p.student_id === studentId).sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
@@ -438,6 +454,7 @@ window.showStudentFinancialHistory = (studentId) => {
 };
 
 window.printStudentFinancialHistory = (studentId) => {
+    let students = getStudents(), payments = getPayments();
     let student = students.find(s => s.id === studentId);
     if (!student) return;
     let studentPayments = payments.filter(p => p.student_id === studentId).sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
@@ -471,6 +488,7 @@ async function renderFees() {
         document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3></div>';
         return;
     }
+    let students = getStudents(), payments = getPayments();
     let perms = ROLE_PERMS[currentUser?.role];
     document.getElementById('tabContent').innerHTML = `
         <div class="card"><h3 style="font-size:1rem;">Financial Summary</h3><div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
@@ -484,6 +502,8 @@ async function renderFees() {
             <div style="flex:2;min-width:120px;"><select id="payStudent" class="form-control">${students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name}</option>`).join('')}</select></div>
             <div style="flex:1;min-width:100px;"><input type="number" id="payAmount" placeholder="Amount (UGX)" class="form-control"></div>
             <div style="flex:1;min-width:100px;"><select id="payMethod" class="form-control">${PAYMENT_METHODS.map(m => `<option value="${m}">${m}</option>`).join('')}</select></div>
+            <div style="flex:1;min-width:100px;"><select id="payTerm" class="form-control">${TERMS.map(t => `<option value="${t}" ${t === filterTerm ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+            <div style="flex:1;min-width:100px;"><select id="payYear" class="form-control">${ACADEMIC_YEARS.map(y => `<option value="${y}" ${y === filterYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
             <button class="btn btn-primary btn-sm" id="recordPay">Record</button>
             <button class="btn btn-whatsapp btn-sm" id="sendReminder">Remind</button>
         </div></div>` : ''}
@@ -534,6 +554,8 @@ async function renderFees() {
         let sid = document.getElementById('payStudent').value;
         let amt = parseFloat(document.getElementById('payAmount').value);
         let method = document.getElementById('payMethod').value;
+        let term = document.getElementById('payTerm').value;
+        let year = document.getElementById('payYear').value;
         if (sid && amt > 0) {
             let paymentData = {
                 id: crypto.randomUUID(),
@@ -542,8 +564,8 @@ async function renderFees() {
                 amount: amt,
                 payment_date: new Date().toISOString().slice(0, 10),
                 receipt_number: `RCP-${Date.now()}`,
-                term: document.getElementById('feeTermFilter')?.value || 'Term I',
-                academic_year: document.getElementById('feeYearFilter')?.value || CURRENT_ACADEMIC_YEAR,
+                term: term || 'Term I',
+                academic_year: year || CURRENT_ACADEMIC_YEAR,
                 payment_method: method || 'Cash'
             };
             let result = await insertDB('payments', paymentData);
@@ -560,6 +582,7 @@ async function renderFees() {
         let year = document.getElementById('feeYearFilter')?.value || filterYear;
         let msg = `Dear parents, please clear fees for ${term} ${year}. Accounts Department.`;
         let sent = 0;
+        let students = getStudents();
         for (let s of students) {
             if (s.parent_whatsapp) { sendWhatsApp(s.parent_whatsapp, msg); sent++; }
         }
@@ -570,7 +593,7 @@ async function renderFees() {
     if (feesSearchInput) {
         feesSearchInput.addEventListener('input', (e) => {
             feesSearch = e.target.value;
-            debounce('feesSearch', () => renderFeesTable(), 200);
+            debounce('feesSearch', () => renderFeesTable(), 150);
         });
     }
     document.getElementById('historyStudentFilter')?.addEventListener('change', renderFinancialHistory);
@@ -585,6 +608,7 @@ async function renderFees() {
 function renderClassSummary() {
     let container = document.getElementById('classSummaryContainer');
     if (!container) return;
+    let students = getStudents(), payments = getPayments();
     let term = document.getElementById('classSummaryTerm')?.value || filterTerm;
     let year = document.getElementById('classSummaryYear')?.value || filterYear;
     let classData = {};
@@ -627,6 +651,7 @@ function printClassSummary() {
 function renderFeesTable() {
     let tbody = document.getElementById('feesBody');
     if (!tbody) return;
+    let students = getStudents(), payments = getPayments();
     let filtered = students.filter(s => !feesSearch || `${s.first_name} ${s.last_name}`.toLowerCase().includes(feesSearch.toLowerCase()) || s.lin.toLowerCase().includes(feesSearch.toLowerCase()));
     let perms = ROLE_PERMS[currentUser?.role];
     tbody.innerHTML = '';
@@ -648,6 +673,7 @@ function renderFeesTable() {
 function renderFinancialHistory() {
     let container = document.getElementById('historyBody');
     if (!container) return;
+    let students = getStudents(), payments = getPayments();
     let term = document.getElementById('historyTermFilter')?.value || filterTerm;
     let year = document.getElementById('historyYearFilter')?.value || filterYear;
     let studentFilter = document.getElementById('historyStudentFilter')?.value || 'all';
@@ -670,6 +696,7 @@ function renderFinancialHistory() {
 }
 
 function printFinancialHistory() {
+    let students = getStudents(), payments = getPayments();
     let term = document.getElementById('historyTermFilter')?.value || filterTerm;
     let year = document.getElementById('historyYearFilter')?.value || filterYear;
     let studentFilter = document.getElementById('historyStudentFilter')?.value || 'all';
@@ -698,6 +725,7 @@ function printFinancialHistory() {
 }
 
 function printDebtorsList() {
+    let students = getStudents(), payments = getPayments();
     let term = document.getElementById('feeTermFilter')?.value || filterTerm;
     let year = document.getElementById('feeYearFilter')?.value || filterYear;
     let debtors = students.filter(s => {
@@ -722,6 +750,7 @@ function printDebtorsList() {
 }
 
 window.editStudentFees = async (id) => {
+    let students = getStudents();
     let s = students.find(st => st.id === id);
     if (!s) return;
     let newFees = prompt(`Edit total fees for ${s.first_name} ${s.last_name}\nCurrent: ${formatMoney(s.total_fees || 0)}\nEnter new total fees (UGX):`, s.total_fees || 0);
@@ -734,6 +763,7 @@ window.editStudentFees = async (id) => {
 };
 
 window.sendSingleFeeReminder = (id, term, year) => {
+    let students = getStudents(), payments = getPayments();
     let s = students.find(st => st.id === id);
     if (!s) return;
     let paid = payments.filter(p => p.student_id === id && p.term === term && p.academic_year === year).reduce((a, b) => a + (b.amount || 0), 0);
@@ -752,8 +782,8 @@ window.quickFeePayment = async (id, term, year) => {
             amount: parseFloat(amt),
             payment_date: new Date().toISOString().slice(0, 10),
             receipt_number: `RCP-${Date.now()}`,
-            term: term || 'Term I',
-            academic_year: year || CURRENT_ACADEMIC_YEAR,
+            term: term || filterTerm,
+            academic_year: year || filterYear,
             payment_method: method
         };
         let result = await insertDB('payments', paymentData);
@@ -768,6 +798,7 @@ window.quickFeePayment = async (id, term, year) => {
 // ============= DELETE STUDENT =============
 window.deleteStudent = async (id) => {
     if (confirm('Delete this student?')) {
+        let marks = getMarks(), attendance = getAttendance(), payments = getPayments();
         let studentMarks = marks.filter(m => m.student_id === id);
         for (let m of studentMarks) await deleteDB('marks', m.id);
         let studentAttendance = attendance.filter(a => a.student_id === id);
@@ -783,6 +814,7 @@ window.deleteStudent = async (id) => {
 
 // ============= EDIT STUDENT =============
 window.editStudent = async (id) => {
+    let students = getStudents();
     let s = students.find(st => st.id === id);
     if (!s) return;
     let modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
@@ -921,13 +953,14 @@ window.showPromoteModal = () => {
 };
 
 async function loadPromoteList() {
+    let students = getStudents();
     let search = document.getElementById('promoteSearch')?.value || '';
     let filtered = students.filter(s => !search || `${s.first_name} ${s.last_name}`.toLowerCase().includes(search.toLowerCase()) || s.lin.toLowerCase().includes(search.toLowerCase()));
     let container = document.getElementById('promoteStudentsList');
     if (!container) return;
     container.innerHTML = `<table><thead><tr><th><input type="checkbox" id="promoteAll"></th><th>Name</th><th>LIN</th><th>Class</th></tr></thead><tbody>${filtered.map(s => `<tr><td><input type="checkbox" class="promote-check" data-id="${s.id}"></td><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td>${s.class}</td></tr>`).join('')}</tbody></table>`;
     document.getElementById('promoteAll')?.addEventListener('change', function() { document.querySelectorAll('.promote-check').forEach(c => c.checked = this.checked); });
-    document.getElementById('promoteSearch')?.addEventListener('input', () => debounce('promoteSearch', loadPromoteList, 200));
+    document.getElementById('promoteSearch')?.addEventListener('input', () => debounce('promoteSearch', loadPromoteList, 150));
 }
 
 window.executePromotion = async () => {
@@ -951,6 +984,7 @@ async function renderAttendance() {
         document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3></div>';
         return;
     }
+    let students = getStudents();
     let opts = [...new Set(students.map(s => s.class))];
     document.getElementById('tabContent').innerHTML = `<div class="card"><h3 style="font-size:1rem;">Attendance Tracker</h3>
         <div class="flex"><select id="attClass" class="form-control">${opts.map(c => `<option>${c}</option>`).join('')}</select><input type="date" id="attDate" value="${new Date().toISOString().slice(0, 10)}" class="form-control"><button class="btn btn-primary btn-sm" id="loadAtt">Load</button><button class="btn btn-gold btn-sm" id="saveAtt">Save</button></div>
@@ -958,11 +992,12 @@ async function renderAttendance() {
         <div id="attList"></div></div>`;
     document.getElementById('loadAtt').onclick = loadAttendance;
     document.getElementById('saveAtt').onclick = saveAttendance;
-    document.getElementById('attSearch').addEventListener('input', (e) => { attSearch = e.target.value; debounce('attSearch', loadAttendance, 200); });
+    document.getElementById('attSearch').addEventListener('input', (e) => { attSearch = e.target.value; debounce('attSearch', loadAttendance, 150); });
     await loadAttendance();
 }
 
 async function loadAttendance() {
+    let students = getStudents();
     let cls = document.getElementById('attClass').value;
     let date = document.getElementById('attDate').value;
     let classStd = students.filter(s => s.class === cls);
@@ -1003,12 +1038,14 @@ async function renderMarks() {
         document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3></div>';
         return;
     }
+    let students = getStudents();
     let opts = [...new Set(students.map(s => s.class))];
     document.getElementById('tabContent').innerHTML = `<div class="card"><h3 style="font-size:1rem;">Marks Entry</h3>
         <div class="flex"><select id="markClass" class="form-control">${opts.map(c => `<option>${c}</option>`).join('')}</select><select id="markTerm" class="form-control">${TERMS.map(t => `<option>${t}</option>`).join('')}</select><select id="markExam" class="form-control">${EXAM_TYPES.map(e => `<option>${e}</option>`).join('')}</select><select id="markYear" class="form-control">${ACADEMIC_YEARS.map(y => `<option ${y === CURRENT_ACADEMIC_YEAR ? 'selected' : ''}>${y}</option>`).join('')}</select><button class="btn btn-primary btn-sm" id="loadMarks">Load</button><button class="btn btn-gold btn-sm" id="saveMarks">Save</button></div>
         <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="marksSearch" placeholder="Search..."></div>
         <div id="marksGrid"></div></div>`;
     document.getElementById('loadMarks').onclick = async () => {
+        let students = getStudents(), marks = getMarks();
         let cls = document.getElementById('markClass').value;
         let term = document.getElementById('markTerm').value;
         let exam = document.getElementById('markExam').value;
@@ -1046,13 +1083,13 @@ async function renderMarks() {
                 let subj = inp.dataset.subject;
                 let markId = inp.dataset.markId;
                 if (currentUser?.role === 'teacher' && markId) {
-                    let existingMark = marks.find(m => m.id === markId);
+                    let existingMark = getMarks().find(m => m.id === markId);
                     if (existingMark && existingMark.created_at && (new Date() - new Date(existingMark.created_at)) / 60000 > 1) {
                         showToast(`Cannot edit ${subj} - only 1 minute`, true);
                         continue;
                     }
                 }
-                let existing = marks.find(m => m.student_id === sid && m.subject === subj && m.term === term && m.exam_type === exam && m.academic_year === year);
+                let existing = getMarks().find(m => m.student_id === sid && m.subject === subj && m.term === term && m.exam_type === exam && m.academic_year === year);
                 let grade = getStandardGrade(score);
                 if (existing) await updateDB('marks', existing.id, { score, grade });
                 else await insertDB('marks', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: sid, subject: subj, score, grade, term, exam_type: exam, academic_year: year, created_at: new Date().toISOString() });
@@ -1061,7 +1098,7 @@ async function renderMarks() {
         showToast('Marks saved');
         await loadAllData(true);
     };
-    document.getElementById('marksSearch').addEventListener('input', (e) => { if (document.getElementById('loadMarks')) debounce('marksSearch', () => document.getElementById('loadMarks').click(), 300); });
+    document.getElementById('marksSearch').addEventListener('input', (e) => { if (document.getElementById('loadMarks')) debounce('marksSearch', () => document.getElementById('loadMarks').click(), 200); });
     document.getElementById('loadMarks').click();
 }
 
@@ -1071,6 +1108,7 @@ async function renderReports() {
         document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3></div>';
         return;
     }
+    let students = getStudents();
     let opts = [...new Set(students.map(s => s.class))];
     document.getElementById('tabContent').innerHTML = `
         <div class="card"><h3 style="font-size:1rem;">Report Center</h3>
@@ -1095,6 +1133,7 @@ async function renderReports() {
         </div>`;
     
     const loadList = () => {
+        let students = getStudents();
         let cls = document.getElementById('reportClass').value;
         if (!cls) return;
         let classStd = students.filter(s => s.class === cls);
@@ -1126,7 +1165,7 @@ async function renderReports() {
         };
     };
     document.getElementById('loadReportList').onclick = loadList;
-    document.getElementById('reportSearch').addEventListener('input', (e) => debounce('reportSearch', loadList, 200));
+    document.getElementById('reportSearch').addEventListener('input', (e) => debounce('reportSearch', loadList, 150));
     document.getElementById('printSelected').onclick = () => printReports(Array.from(selectedStudentIds));
     document.getElementById('selectAll').onclick = () => {
         document.querySelectorAll('.studentChk').forEach(c => { c.checked = true; selectedStudentIds.add(c.dataset.id); });
@@ -1140,7 +1179,7 @@ async function renderReports() {
     };
     document.getElementById('printWholeClass').onclick = () => {
         let cls = document.getElementById('reportClass').value;
-        let ids = students.filter(s => s.class === cls).map(s => s.id);
+        let ids = getStudents().filter(s => s.class === cls).map(s => s.id);
         printReports(ids);
     };
     loadList();
@@ -1149,6 +1188,7 @@ async function renderReports() {
 window.printSingleStudentReport = (id) => printReports([id]);
 
 function calculatePosition(classStudents, term, examType, year) {
+    let marks = getMarks();
     let scores = classStudents.map(s => {
         let total = 0;
         let subs = SUBJECTS_BY_CLASS[s.class] || [];
@@ -1166,6 +1206,7 @@ function calculatePosition(classStudents, term, examType, year) {
 
 async function printReports(ids) {
     if (!ids.length) { showToast('No students selected', true); return; }
+    let students = getStudents(), marks = getMarks();
     let cls = document.getElementById('reportClass').value;
     let term = document.getElementById('reportTerm').value;
     let examSelection = document.getElementById('reportExam').value;
@@ -1286,11 +1327,12 @@ async function renderAbsentees() {
     document.getElementById('loadAbsent').onclick = loadAbsentList;
     document.getElementById('notifyAllAbsent').onclick = notifyAllAbsentParents;
     document.getElementById('printAbsentList').onclick = printAbsentList;
-    document.getElementById('absentSearch').addEventListener('input', (e) => { absentSearch = e.target.value; debounce('absentSearch', loadAbsentList, 200); });
+    document.getElementById('absentSearch').addEventListener('input', (e) => { absentSearch = e.target.value; debounce('absentSearch', loadAbsentList, 150); });
     await loadAbsentList();
 }
 
 async function loadAbsentList() {
+    let students = getStudents();
     let date = document.getElementById('absentDate').value;
     let records = await fetchDB('attendance', `&date=eq.${date}&status=eq.absent&school_id=eq.${SCHOOL_ID}`);
     let absentStudents = students.filter(s => records.map(r => r.student_id).includes(s.id));
@@ -1311,17 +1353,19 @@ async function loadAbsentList() {
 }
 
 window.sendAbsentParentNotify = (id, date) => {
+    let students = getStudents();
     let s = students.find(st => st.id === id);
     if (s?.parent_whatsapp) sendWhatsApp(s.parent_whatsapp, `Dear ${s.parent_name}, ${s.first_name} ${s.last_name} was absent on ${date}.`);
 };
 
 async function notifyAllAbsentParents() {
+    let students = getStudents();
     let date = document.getElementById('absentDate').value;
     let records = await fetchDB('attendance', `&date=eq.${date}&status=eq.absent&school_id=eq.${SCHOOL_ID}`);
     let absent = students.filter(s => records.map(r => r.student_id).includes(s.id));
     let sent = 0;
     for (let s of absent) {
-        if (s.parent_whatsapp) { sendWhatsApp(s.parent_whatsapp, `Dear ${s.parent_name}, ${s.first_name} ${s.last_name} was absent on ${date}.`); sent++; await new Promise(r => setTimeout(r, 200)); }
+        if (s.parent_whatsapp) { sendWhatsApp(s.parent_whatsapp, `Dear ${s.parent_name}, ${s.first_name} ${s.last_name} was absent on ${date}.`); sent++; await new Promise(r => setTimeout(r, 100)); }
     }
     showToast(`Sent to ${sent} parents`);
 }
@@ -1340,6 +1384,7 @@ function printAbsentList() {
 
 // ============= MAIN APP =============
 async function renderMainApp() {
+    document.getElementById('app').innerHTML = `<div style="display:flex;justify-content:center;align-items:center;height:100vh;"><div class="loading-spinner"></div><span style="margin-left:12px;">Loading...</span></div>`;
     await loadAllData();
     let perms = ROLE_PERMS[currentUser?.role];
     let tabs = ['dashboard'];
@@ -1372,7 +1417,7 @@ async function renderMainApp() {
     if (search) {
         search.addEventListener('input', (e) => {
             globalSearch = e.target.value;
-            if (activeTab === 'students') debounce('globalSearch', () => renderStudents(), 200);
+            if (activeTab === 'students') debounce('globalSearch', () => renderStudents(), 150);
         });
     }
     document.querySelectorAll('.action-btn').forEach(btn => { btn.onclick = () => { activeTab = btn.dataset.tab; renderMainApp(); }; });
@@ -1398,7 +1443,13 @@ function doLogin() {
     else if (u === 'finance' && p === 'finance123') { currentUser = { username: 'finance', role: 'finance' }; sessionStorage.setItem('progressive_user', JSON.stringify(currentUser)); renderMainApp(); }
     else alert('Invalid credentials');
 }
-function init() { let saved = sessionStorage.getItem('progressive_user'); if (saved) { currentUser = JSON.parse(saved); renderMainApp(); } else renderLogin(); }
+function init() { 
+    let saved = sessionStorage.getItem('progressive_user'); 
+    if (saved) { 
+        try { currentUser = JSON.parse(saved); renderMainApp(); } 
+        catch(e) { renderLogin(); }
+    } else renderLogin(); 
+}
 init();
 </script>
 </body>
