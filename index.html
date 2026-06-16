@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-    <title>PROGRESSIVE MOTHERS SCHOOL | Complete Management</title>
+    <title>PROGRESSIVE MOTHERS SCHOOL | Fast Management</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -69,7 +69,6 @@
         .login-container { max-width: 380px; margin: 60px auto; background: white; border-radius: 28px; padding: 30px 24px; text-align: center; box-shadow: 0 12px 30px rgba(0,0,0,0.08); }
         .login-container input { width: 100%; margin: 8px 0; padding: 12px; border-radius: 40px; border: 1px solid #ccc; font-size: 0.9rem; }
         .login-container button { width: 100%; background: #003366; color: white; padding: 12px; border-radius: 40px; border: none; cursor: pointer; font-weight: bold; font-size: 1rem; }
-        /* Responsive */
         @media (max-width: 640px) {
             .school-name { font-size: 1rem; }
             .datetime-row { flex-direction: column; align-items: stretch; gap: 4px; }
@@ -88,7 +87,6 @@
             .stats-grid { grid-template-columns: repeat(4, 1fr); }
             .school-name { font-size: 1.8rem; }
         }
-        /* scrollable tables on small screens */
         .data-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .data-table table { min-width: 500px; }
         .btn-primary { background: #003366; color: white; }
@@ -96,6 +94,9 @@
         .btn-gold:hover { opacity: 0.9; }
         .btn-red:hover { opacity: 0.9; }
         .btn-whatsapp:hover { opacity: 0.9; }
+        /* Fast typing fix */
+        input, select, textarea { touch-action: manipulation; }
+        .search-bar input { min-width: 100px; }
     </style>
 </head>
 <body>
@@ -198,8 +199,15 @@ let selectedStudentIds = new Set();
 let filterTerm = 'Term I';
 let filterYear = CURRENT_ACADEMIC_YEAR;
 let dataLoaded = false;
+let debounceTimers = {};
 
-// Supabase API with caching
+// Debounce helper
+function debounce(key, fn, delay = 300) {
+    clearTimeout(debounceTimers[key]);
+    debounceTimers[key] = setTimeout(fn, delay);
+}
+
+// Supabase API
 async function fetchDB(table, filter = '') {
     try {
         let res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=*${filter}`, {
@@ -250,10 +258,13 @@ async function deleteDB(table, id) {
 
 async function loadAllData(force = false) {
     if (dataLoaded && !force) return;
-    students = await fetchDB('students', `&school_id=eq.${SCHOOL_ID}`);
-    marks = await fetchDB('marks', `&school_id=eq.${SCHOOL_ID}`);
-    attendance = await fetchDB('attendance', `&school_id=eq.${SCHOOL_ID}`);
-    payments = await fetchDB('payments', `&school_id=eq.${SCHOOL_ID}`);
+    let [s, m, a, p] = await Promise.all([
+        fetchDB('students', `&school_id=eq.${SCHOOL_ID}`),
+        fetchDB('marks', `&school_id=eq.${SCHOOL_ID}`),
+        fetchDB('attendance', `&school_id=eq.${SCHOOL_ID}`),
+        fetchDB('payments', `&school_id=eq.${SCHOOL_ID}`)
+    ]);
+    students = s; marks = m; attendance = a; payments = p;
     if (students.length === 0) await createDemoData();
     students = await fetchDB('students', `&school_id=eq.${SCHOOL_ID}`);
     marks = await fetchDB('marks', `&school_id=eq.${SCHOOL_ID}`);
@@ -349,7 +360,13 @@ async function renderStudents() {
             <div class="data-table"><table><thead><tr><th>Photo</th><th>Name</th><th>Class</th><th>LIN</th><th>Payment Code</th>${viewFinance ? '<th>Total</th><th>Paid</th><th>Balance</th>' : ''}<th>Parent</th><th>Actions</th></tr></thead><tbody id="studentsBody"></tbody></table></div>
         </div>`;
     
-    document.getElementById('studentSearch').addEventListener('input', (e) => { globalSearch = e.target.value; renderStudents(); });
+    let searchInput = document.getElementById('studentSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            globalSearch = e.target.value;
+            debounce('studentSearch', () => renderStudents(), 200);
+        });
+    }
     let tbody = document.getElementById('studentsBody');
     if (!tbody) return;
     tbody.innerHTML = '';
@@ -499,7 +516,7 @@ async function renderFees() {
         <div class="data-table"><table class="history-table"><thead><tr><th>Date & Time</th><th>Student</th><th>LIN</th><th>Class</th><th>Amount</th><th>Method</th><th>Receipt</th><th>Term</th><th>Year</th></tr></thead><tbody id="historyBody"></tbody></table></div></div>
     `;
     
-    document.getElementById('updateClassSummary')?.addEventListener('click', renderClassSummary);
+    document.getElementById('updateClassSummary')?.addEventListener('click', () => renderClassSummary());
     document.getElementById('printClassSummary')?.addEventListener('click', printClassSummary);
     document.getElementById('applyFeeFilter')?.addEventListener('click', () => {
         filterTerm = document.getElementById('feeTermFilter').value;
@@ -549,7 +566,13 @@ async function renderFees() {
         showToast(`Sent to ${sent} parents`);
     });
     
-    document.getElementById('feesSearch')?.addEventListener('input', (e) => { feesSearch = e.target.value; renderFeesTable(); });
+    let feesSearchInput = document.getElementById('feesSearch');
+    if (feesSearchInput) {
+        feesSearchInput.addEventListener('input', (e) => {
+            feesSearch = e.target.value;
+            debounce('feesSearch', () => renderFeesTable(), 200);
+        });
+    }
     document.getElementById('historyStudentFilter')?.addEventListener('change', renderFinancialHistory);
     document.getElementById('historyMethodFilter')?.addEventListener('change', renderFinancialHistory);
     document.getElementById('printDebtors')?.addEventListener('click', printDebtorsList);
@@ -904,7 +927,7 @@ async function loadPromoteList() {
     if (!container) return;
     container.innerHTML = `<table><thead><tr><th><input type="checkbox" id="promoteAll"></th><th>Name</th><th>LIN</th><th>Class</th></tr></thead><tbody>${filtered.map(s => `<tr><td><input type="checkbox" class="promote-check" data-id="${s.id}"></td><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td>${s.class}</td></tr>`).join('')}</tbody></table>`;
     document.getElementById('promoteAll')?.addEventListener('change', function() { document.querySelectorAll('.promote-check').forEach(c => c.checked = this.checked); });
-    document.getElementById('promoteSearch')?.addEventListener('input', loadPromoteList);
+    document.getElementById('promoteSearch')?.addEventListener('input', () => debounce('promoteSearch', loadPromoteList, 200));
 }
 
 window.executePromotion = async () => {
@@ -935,7 +958,7 @@ async function renderAttendance() {
         <div id="attList"></div></div>`;
     document.getElementById('loadAtt').onclick = loadAttendance;
     document.getElementById('saveAtt').onclick = saveAttendance;
-    document.getElementById('attSearch').addEventListener('input', (e) => { attSearch = e.target.value; loadAttendance(); });
+    document.getElementById('attSearch').addEventListener('input', (e) => { attSearch = e.target.value; debounce('attSearch', loadAttendance, 200); });
     await loadAttendance();
 }
 
@@ -1038,7 +1061,7 @@ async function renderMarks() {
         showToast('Marks saved');
         await loadAllData(true);
     };
-    document.getElementById('marksSearch').addEventListener('input', (e) => { if (document.getElementById('loadMarks')) document.getElementById('loadMarks').click(); });
+    document.getElementById('marksSearch').addEventListener('input', (e) => { if (document.getElementById('loadMarks')) debounce('marksSearch', () => document.getElementById('loadMarks').click(), 300); });
     document.getElementById('loadMarks').click();
 }
 
@@ -1103,7 +1126,7 @@ async function renderReports() {
         };
     };
     document.getElementById('loadReportList').onclick = loadList;
-    document.getElementById('reportSearch').addEventListener('input', loadList);
+    document.getElementById('reportSearch').addEventListener('input', (e) => debounce('reportSearch', loadList, 200));
     document.getElementById('printSelected').onclick = () => printReports(Array.from(selectedStudentIds));
     document.getElementById('selectAll').onclick = () => {
         document.querySelectorAll('.studentChk').forEach(c => { c.checked = true; selectedStudentIds.add(c.dataset.id); });
@@ -1263,7 +1286,7 @@ async function renderAbsentees() {
     document.getElementById('loadAbsent').onclick = loadAbsentList;
     document.getElementById('notifyAllAbsent').onclick = notifyAllAbsentParents;
     document.getElementById('printAbsentList').onclick = printAbsentList;
-    document.getElementById('absentSearch').addEventListener('input', (e) => { absentSearch = e.target.value; loadAbsentList(); });
+    document.getElementById('absentSearch').addEventListener('input', (e) => { absentSearch = e.target.value; debounce('absentSearch', loadAbsentList, 200); });
     await loadAbsentList();
 }
 
@@ -1346,7 +1369,12 @@ async function renderMainApp() {
         </div>`;
     setInterval(() => { let t = document.getElementById('liveTime'); if (t) t.innerText = getUgandaTime().toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit', hour12: true }) + ' (EAT)'; }, 1000);
     let search = document.getElementById('globalSearchInput');
-    if (search) search.addEventListener('input', (e) => { globalSearch = e.target.value; if (activeTab === 'students') renderStudents(); });
+    if (search) {
+        search.addEventListener('input', (e) => {
+            globalSearch = e.target.value;
+            if (activeTab === 'students') debounce('globalSearch', () => renderStudents(), 200);
+        });
+    }
     document.querySelectorAll('.action-btn').forEach(btn => { btn.onclick = () => { activeTab = btn.dataset.tab; renderMainApp(); }; });
     
     if (activeTab === 'dashboard') await renderDashboard();
