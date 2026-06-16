@@ -2,89 +2,100 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PROGRESSIVE MOTHERS SCHOOL | Complete Management System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>PROGRESSIVE MOTHERS SCHOOL | Complete Management</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: #f0f4f8; }
-        .app-container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-        .school-header { background: linear-gradient(135deg, #003366, #002244); color: white; border-radius: 24px; padding: 20px; margin-bottom: 24px; }
-        .school-name { font-size: 1.6rem; font-weight: 800; }
-        .school-address { font-size: 0.8rem; opacity: 0.9; margin-top: 4px; }
-        .datetime-row { display: flex; justify-content: space-between; margin-top: 12px; background: rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 40px; font-size: 0.75rem; flex-wrap: wrap; gap: 10px; }
-        .global-search { background: white; border-radius: 40px; padding: 6px 16px; display: flex; align-items: center; gap: 8px; }
-        .global-search input { border: none; outline: none; background: transparent; width: 250px; color: #003366; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: white; border-radius: 20px; padding: 18px; text-align: center; border-top: 4px solid #D4A017; cursor: pointer; transition: transform 0.2s; }
-        .stat-card:hover { transform: translateY(-3px); }
-        .stat-number { font-size: 32px; font-weight: 800; color: #003366; }
-        .stat-label { font-size: 12px; color: #5a6874; }
-        .action-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; }
-        .action-btn { background: white; border: none; padding: 10px 20px; border-radius: 40px; font-weight: 600; color: #003366; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+        body { background: #f0f4f8; padding: 8px; }
+        .app-container { max-width: 1400px; margin: 0 auto; padding: 8px; }
+        .school-header { background: linear-gradient(135deg, #003366, #002244); color: white; border-radius: 20px; padding: 16px; margin-bottom: 16px; }
+        .school-name { font-size: 1.2rem; font-weight: 800; letter-spacing: -0.5px; }
+        .school-address { font-size: 0.7rem; opacity: 0.9; margin-top: 2px; }
+        .datetime-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-top: 8px; background: rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 40px; font-size: 0.7rem; gap: 6px; }
+        .global-search { background: white; border-radius: 40px; padding: 4px 12px; display: flex; align-items: center; gap: 6px; flex: 1; min-width: 140px; }
+        .global-search input { border: none; outline: none; background: transparent; width: 100%; color: #003366; font-size: 0.8rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .stat-card { background: white; border-radius: 16px; padding: 14px 8px; text-align: center; border-top: 4px solid #D4A017; cursor: default; transition: transform 0.15s; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+        .stat-card:hover { transform: translateY(-2px); }
+        .stat-number { font-size: 24px; font-weight: 800; color: #003366; line-height: 1.2; }
+        .stat-label { font-size: 11px; color: #5a6874; }
+        .action-buttons { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+        .action-btn { background: white; border: none; padding: 8px 14px; border-radius: 40px; font-weight: 600; font-size: 0.8rem; color: #003366; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
         .action-btn.active { background: #003366; color: white; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .btn { background: #003366; color: white; padding: 8px 18px; border: none; border-radius: 40px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+        .btn { background: #003366; color: white; padding: 6px 14px; border: none; border-radius: 40px; cursor: pointer; font-weight: 500; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 5px; transition: 0.15s; }
         .btn-gold { background: #D4A017; color: #003366; }
         .btn-red { background: #dc2626; color: white; }
-        .btn-sm { padding: 4px 12px; font-size: 12px; border-radius: 20px; cursor: pointer; }
-        .btn-green { background: #10b981; color: white; }
+        .btn-sm { padding: 3px 10px; font-size: 0.7rem; border-radius: 20px; }
         .btn-whatsapp { background: #25D366; color: white; }
-        .card { background: white; border-radius: 20px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .flex { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 20px; }
-        select, input { padding: 10px 16px; border-radius: 30px; border: 1px solid #cbd5e1; }
-        .form-control { padding: 10px 16px; border-radius: 30px; border: 1px solid #cbd5e1; width: 100%; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-        th { background: #f8fafc; font-weight: 700; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
-        .modal-content { background: white; border-radius: 28px; padding: 24px; max-width: 800px; width: 90%; max-height: 85vh; overflow-y: auto; }
-        .student-photo-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: #e2e8f0; display: flex; align-items: center; justify-content: center; }
-        .report-card { background: white; border-radius: 24px; padding: 32px; margin-bottom: 32px; page-break-after: always; }
-        .report-header { text-align: center; border-bottom: 3px solid #003366; padding-bottom: 20px; margin-bottom: 24px; }
-        .report-header h2 { color: #003366; }
-        .report-student-info { background: #f8fafc; padding: 20px; border-radius: 20px; display: flex; gap: 24px; flex-wrap: wrap; align-items: center; margin-bottom: 24px; }
-        .report-student-photo { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #D4A017; background: #e2e8f0; display: flex; align-items: center; justify-content: center; }
-        .report-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        .report-table th, .report-table td { border: 1px solid #e2e8f0; padding: 12px; text-align: center; }
-        .report-table th { background: #003366; color: white; }
-        .comments-section { display: flex; gap: 30px; margin-top: 30px; flex-wrap: wrap; }
-        .comment-box { flex: 1; border-top: 2px dashed #cbd5e1; padding-top: 18px; }
-        .login-container { max-width: 420px; margin: 100px auto; background: white; border-radius: 32px; padding: 40px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-        .login-container input { width: 100%; margin: 12px 0; padding: 14px; border-radius: 40px; border: 1px solid #ccc; }
-        .login-container button { width: 100%; background: #003366; color: white; padding: 14px; border-radius: 40px; border: none; cursor: pointer; font-weight: bold; }
-        .role-badge { position: fixed; top: 20px; right: 20px; background: #003366; color: white; padding: 8px 16px; border-radius: 40px; font-size: 12px; z-index: 100; }
-        .logout-btn { background: #dc2626; margin-left: 10px; border: none; color: white; padding: 5px 12px; border-radius: 20px; cursor: pointer; }
-        .toast { position: fixed; bottom: 24px; right: 24px; background: #10b981; color: white; padding: 12px 24px; border-radius: 40px; z-index: 2000; animation: fadeOut 3s forwards; }
+        .btn-outline { background: transparent; border: 1px solid #003366; color: #003366; }
+        .card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .flex { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 14px; }
+        select, input { padding: 8px 14px; border-radius: 30px; border: 1px solid #cbd5e1; font-size: 0.85rem; background: white; min-width: 100px; }
+        .form-control { padding: 8px 14px; border-radius: 30px; border: 1px solid #cbd5e1; width: 100%; font-size: 0.85rem; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+        th { background: #f8fafc; font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.3px; color: #1e293b; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); align-items: center; justify-content: center; z-index: 1000; padding: 12px; }
+        .modal-content { background: white; border-radius: 24px; padding: 20px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; }
+        .student-photo-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+        .role-badge { position: fixed; top: 10px; right: 10px; background: #003366; color: white; padding: 4px 12px; border-radius: 40px; font-size: 0.65rem; z-index: 100; display: flex; align-items: center; gap: 6px; }
+        .logout-btn { background: #dc2626; border: none; color: white; padding: 2px 10px; border-radius: 20px; cursor: pointer; font-size: 0.7rem; }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 10px 20px; border-radius: 40px; z-index: 2000; animation: fadeOut 3s forwards; font-size: 0.85rem; max-width: 90%; }
         .toast.error { background: #ef4444; }
         @keyframes fadeOut { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
         .debt { color: #dc2626; font-weight: 700; }
         .paid { color: #10b981; }
-        .selection-bar { background: #eef2ff; border-radius: 16px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-top: 20px; }
-        .search-bar { background: #f8fafc; border-radius: 50px; padding: 8px 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
-        .search-bar input { flex: 1; border: none; background: transparent; outline: none; }
-        .absent-card { background: #fef2f2; border-radius: 16px; padding: 16px; display: flex; gap: 16px; align-items: center; border-left: 4px solid #dc2626; margin-bottom: 12px; }
-        .absent-photo { width: 55px; height: 55px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; }
-        @media print { .no-print { display: none; } .report-card { page-break-after: always; } }
-        .history-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .history-table th, .history-table td { border: 1px solid #e2e8f0; padding: 10px; text-align: left; }
+        .search-bar { background: #f8fafc; border-radius: 50px; padding: 4px 16px; display: flex; align-items: center; gap: 10px; margin-bottom: 14px; border: 1px solid #e2e8f0; }
+        .search-bar input { flex: 1; border: none; background: transparent; outline: none; font-size: 0.85rem; padding: 6px 0; }
+        .absent-card { background: #fef2f2; border-radius: 14px; padding: 12px; display: flex; gap: 12px; align-items: center; border-left: 4px solid #dc2626; margin-bottom: 10px; flex-wrap: wrap; }
+        .absent-photo { width: 45px; height: 45px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; }
+        @media print { .no-print { display: none; } }
+        .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.75rem; }
+        .history-table th, .history-table td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; }
         .history-table th { background: #003366; color: white; }
-        .filter-section { background: #f8fafc; padding: 15px; border-radius: 16px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
-        .filter-section label { font-weight: 600; font-size: 13px; color: #1e293b; }
-        .payment-method-badge { padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block; }
+        .filter-section { background: #f8fafc; padding: 12px; border-radius: 14px; margin-bottom: 14px; border: 1px solid #e2e8f0; }
+        .filter-section label { font-weight: 600; font-size: 0.7rem; color: #1e293b; display: block; margin-bottom: 2px; }
+        .payment-method-badge { padding: 2px 8px; border-radius: 20px; font-size: 0.6rem; font-weight: 600; display: inline-block; white-space: nowrap; }
         .method-cash { background: #dbeafe; color: #1e40af; }
         .method-mobile { background: #d1fae5; color: #065f46; }
         .method-bank { background: #fef3c7; color: #92400e; }
         .method-schoolpay { background: #e0e7ff; color: #3730a3; }
-        .student-history-btn { background: #003366; color: white; border: none; border-radius: 20px; padding: 4px 12px; cursor: pointer; font-size: 11px; }
-        .student-history-btn:hover { background: #D4A017; color: #003366; }
-        .photo-upload-preview { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid #D4A017; margin-top: 8px; }
-        .btn-outline { background: transparent; border: 1px solid #003366; color: #003366; }
-        .btn-outline:hover { background: #003366; color: white; }
-        .class-summary-card { background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 12px; border-left: 4px solid #003366; }
-        .stat-row { display: flex; gap: 30px; flex-wrap: wrap; margin-top: 10px; }
+        .photo-upload-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #D4A017; background: #e2e8f0; display: flex; align-items: center; justify-content: center; }
+        .class-summary-card { background: #f8fafc; padding: 12px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid #003366; }
+        .stat-row { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 6px; font-size: 0.8rem; }
+        .selection-bar { background: #eef2ff; border-radius: 14px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .login-container { max-width: 380px; margin: 60px auto; background: white; border-radius: 28px; padding: 30px 24px; text-align: center; box-shadow: 0 12px 30px rgba(0,0,0,0.08); }
+        .login-container input { width: 100%; margin: 8px 0; padding: 12px; border-radius: 40px; border: 1px solid #ccc; font-size: 0.9rem; }
+        .login-container button { width: 100%; background: #003366; color: white; padding: 12px; border-radius: 40px; border: none; cursor: pointer; font-weight: bold; font-size: 1rem; }
+        /* Responsive */
+        @media (max-width: 640px) {
+            .school-name { font-size: 1rem; }
+            .datetime-row { flex-direction: column; align-items: stretch; gap: 4px; }
+            .global-search { width: 100%; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .action-btn { font-size: 0.7rem; padding: 6px 12px; }
+            .flex { gap: 6px; }
+            select, input { min-width: 80px; font-size: 0.8rem; padding: 6px 10px; }
+            .card { padding: 12px; }
+            table { font-size: 0.7rem; }
+            th, td { padding: 4px 4px; }
+            .modal-content { padding: 14px; }
+            .role-badge { top: 6px; right: 6px; font-size: 0.6rem; padding: 2px 8px; }
+        }
+        @media (min-width: 1024px) {
+            .stats-grid { grid-template-columns: repeat(4, 1fr); }
+            .school-name { font-size: 1.8rem; }
+        }
+        /* scrollable tables on small screens */
+        .data-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .data-table table { min-width: 500px; }
+        .btn-primary { background: #003366; color: white; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-gold:hover { opacity: 0.9; }
+        .btn-red:hover { opacity: 0.9; }
+        .btn-whatsapp:hover { opacity: 0.9; }
     </style>
 </head>
 <body>
@@ -92,8 +103,7 @@
 
 <script>
 // ============================================================
-// PROGRESSIVE MOTHERS SCHOOL - COMPLETE SYSTEM
-// WITH STUDENT FINANCIAL HISTORY & PHOTO UPLOAD
+// PROGRESSIVE MOTHERS SCHOOL - OPTIMIZED & RESPONSIVE
 // ============================================================
 
 const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
@@ -107,20 +117,49 @@ const ACADEMIC_YEARS = ['2026', '2027', '2028', '2029', '2030'];
 const CURRENT_ACADEMIC_YEAR = '2026';
 const PAYMENT_METHODS = ['Cash', 'Mobile Money', 'Bank Transfer', 'School Pay'];
 
-// Uganda Time (EAT - UTC+3)
+// Uganda Time
 function getUgandaTime() {
     const now = new Date();
     return new Date(now.getTime() + (3 * 60 * 60 * 1000));
 }
-
-function formatUgandaDate(date) {
-    const d = new Date(date);
-    return d.toLocaleDateString('en-UG', { year: 'numeric', month: 'short', day: 'numeric' });
-}
-
 function formatUgandaDateTime(date) {
     const d = new Date(date);
     return d.toLocaleString('en-UG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
+}
+function formatMoney(amt) { return 'UGX ' + (amt || 0).toLocaleString(); }
+function escapeHtml(str) { return str ? String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]) : ''; }
+function showToast(msg, isErr) { let t = document.createElement('div'); t.className = `toast ${isErr ? 'error' : ''}`; t.innerText = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); }
+function sendWhatsApp(phone, msg) { if (!phone) { showToast('No WhatsApp number', true); return; } let clean = phone.replace(/\D/g, ''); if (clean.startsWith('0')) clean = '256' + clean.slice(1); window.open(`https://wa.me/${clean}?text=${encodeURIComponent(msg)}`, '_blank'); }
+
+function getStandardGrade(score) {
+    if (score >= 90) return 'D1';
+    if (score >= 80) return 'D2';
+    if (score >= 75) return 'C3';
+    if (score >= 70) return 'C4';
+    if (score >= 65) return 'C5';
+    if (score >= 60) return 'C6';
+    if (score >= 55) return 'P7';
+    if (score >= 50) return 'P8';
+    return 'F9';
+}
+function getGradePoints(grade) {
+    const points = { D1: 1, D2: 2, C3: 3, C4: 4, C5: 5, C6: 6, P7: 7, P8: 8, F9: 9 };
+    return points[grade] || 9;
+}
+function getDivision(agg) {
+    if (agg <= 12) return 'Division 1';
+    if (agg <= 23) return 'Division 2';
+    if (agg <= 29) return 'Division 3';
+    if (agg <= 34) return 'Division 4';
+    return 'Division U';
+}
+function getLetterGrade(score) {
+    if (score >= 90) return 'A';
+    if (score >= 80) return 'B';
+    if (score >= 70) return 'C';
+    if (score >= 60) return 'D';
+    if (score >= 50) return 'E';
+    return 'F';
 }
 
 function getPaymentMethodBadge(method) {
@@ -146,19 +185,11 @@ const SUBJECTS_BY_CLASS = {
     'P.7': ['English', 'Mathematics', 'Science', 'Social Studies']
 };
 
-const GRADING_EXCLUSIONS = {
-    'P.1': ['R.E'],
-    'P.2': ['R.E'],
-    'P.3': ['R.E']
-};
-
 const ROLE_PERMS = {
     admin: { students: true, attendance: true, marks: true, fees: true, reports: true, absentees: true, editStudents: true, editFees: true, promote: true },
     teacher: { students: false, attendance: true, marks: true, fees: false, reports: false, absentees: false, editStudents: false, editFees: false, promote: false },
     finance: { students: true, attendance: false, marks: false, fees: true, reports: false, absentees: false, editStudents: true, editFees: true, promote: false }
 };
-
-const USERS = { admin: { password: 'admin123', role: 'admin' }, teacher: { password: 'teacher123', role: 'teacher' }, finance: { password: 'finance123', role: 'finance' } };
 
 let students = [], marks = [], attendance = [], payments = [];
 let currentUser = null, activeTab = 'dashboard';
@@ -166,48 +197,9 @@ let globalSearch = '', feesSearch = '', attSearch = '', marksSearch = '', report
 let selectedStudentIds = new Set();
 let filterTerm = 'Term I';
 let filterYear = CURRENT_ACADEMIC_YEAR;
-let filterStudent = 'all';
+let dataLoaded = false;
 
-function formatMoney(amt) { return 'UGX ' + (amt || 0).toLocaleString(); }
-function escapeHtml(str) { return str ? String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]) : ''; }
-function showToast(msg, isErr) { let t = document.createElement('div'); t.className = `toast ${isErr ? 'error' : ''}`; t.innerText = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); }
-function sendWhatsApp(phone, msg) { if (!phone) { showToast('No WhatsApp number', true); return; } let clean = phone.replace(/\D/g, ''); if (clean.startsWith('0')) clean = '256' + clean.slice(1); window.open(`https://wa.me/${clean}?text=${encodeURIComponent(msg)}`, '_blank'); }
-
-function getStandardGrade(score) {
-    if (score >= 90) return 'D1';
-    if (score >= 80) return 'D2';
-    if (score >= 75) return 'C3';
-    if (score >= 70) return 'C4';
-    if (score >= 65) return 'C5';
-    if (score >= 60) return 'C6';
-    if (score >= 55) return 'P7';
-    if (score >= 50) return 'P8';
-    return 'F9';
-}
-
-function getGradePoints(grade) {
-    const points = { D1: 1, D2: 2, C3: 3, C4: 4, C5: 5, C6: 6, P7: 7, P8: 8, F9: 9 };
-    return points[grade] || 9;
-}
-
-function getDivision(agg) {
-    if (agg <= 12) return 'Division 1';
-    if (agg <= 23) return 'Division 2';
-    if (agg <= 29) return 'Division 3';
-    if (agg <= 34) return 'Division 4';
-    return 'Division U';
-}
-
-function getLetterGrade(score) {
-    if (score >= 90) return 'A';
-    if (score >= 80) return 'B';
-    if (score >= 70) return 'C';
-    if (score >= 60) return 'D';
-    if (score >= 50) return 'E';
-    return 'F';
-}
-
-// Supabase API
+// Supabase API with caching
 async function fetchDB(table, filter = '') {
     try {
         let res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=*${filter}`, {
@@ -228,8 +220,7 @@ async function insertDB(table, data) {
         });
         if (!res.ok) {
             let errorText = await res.text();
-            console.error('Insert error:', errorText);
-            showToast(`Error: ${errorText.substring(0, 100)}`, true);
+            showToast(`Error: ${errorText.substring(0, 80)}`, true);
             return null;
         }
         let text = await res.text();
@@ -257,7 +248,8 @@ async function deleteDB(table, id) {
     });
 }
 
-async function loadAllData() {
+async function loadAllData(force = false) {
+    if (dataLoaded && !force) return;
     students = await fetchDB('students', `&school_id=eq.${SCHOOL_ID}`);
     marks = await fetchDB('marks', `&school_id=eq.${SCHOOL_ID}`);
     attendance = await fetchDB('attendance', `&school_id=eq.${SCHOOL_ID}`);
@@ -270,6 +262,7 @@ async function loadAllData() {
         let nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
         return nameA < nameB ? -1 : nameA > nameB ? 1 : 0;
     });
+    dataLoaded = true;
 }
 
 async function createDemoData() {
@@ -279,7 +272,6 @@ async function createDemoData() {
         { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: 'Barungi', last_name: 'Hadija Husina', lin: 'PMB7980', payment_code: '', class: 'P.7', parent_name: 'Mr. Barungi', parent_whatsapp: '0756000012', total_fees: 350000, fees_paid: 100000, photo_url: '', academic_year: CURRENT_ACADEMIC_YEAR }
     ];
     for (let s of demo) await insertDB('students', s);
-    
     let samplePayments = [
         { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: demo[0].id, amount: 100000, payment_date: new Date().toISOString().slice(0,10), receipt_number: 'RCP001', term: 'Term I', academic_year: '2026', payment_method: 'Cash' },
         { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: demo[0].id, amount: 100000, payment_date: new Date().toISOString().slice(0,10), receipt_number: 'RCP002', term: 'Term I', academic_year: '2026', payment_method: 'Mobile Money' },
@@ -289,14 +281,22 @@ async function createDemoData() {
     for (let p of samplePayments) await insertDB('payments', p);
 }
 
-// Dashboard
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+}
+
+// ============= DASHBOARD =============
 async function renderDashboard() {
     let today = new Date().toISOString().slice(0, 10);
     let absentToday = attendance.filter(a => a.date === today && a.status === 'absent').length;
     let totalInc = payments.reduce((a, b) => a + (b.amount || 0), 0);
     let totalExp = students.reduce((a, b) => a + (b.total_fees || 0), 0);
     let viewFinance = currentUser?.role === 'admin' || currentUser?.role === 'finance';
-    
     document.getElementById('tabContent').innerHTML = `
         <div class="stats-grid">
             <div class="stat-card"><div class="stat-number">${students.length}</div><div class="stat-label">Total Students</div></div>
@@ -321,7 +321,7 @@ function getNavButtons() {
     return btns.join('');
 }
 
-// ==================== STUDENTS ====================
+// ============= STUDENTS =============
 async function renderStudents() {
     let perms = ROLE_PERMS[currentUser?.role];
     let filtered = students.filter(s => {
@@ -338,30 +338,31 @@ async function renderStudents() {
     
     document.getElementById('tabContent').innerHTML = `
         <div class="card">
-            <div class="flex" style="justify-content: space-between;">
-                <h3>Student Register (${students.length})</h3>
+            <div class="flex" style="justify-content: space-between; align-items: center;">
+                <h3 style="font-size:1.1rem;">Student Register (${students.length})</h3>
                 <div class="flex" style="margin-bottom:0;">
-                    ${perms.promote ? `<button class="btn btn-gold" onclick="showPromoteModal()"><i class="fas fa-arrow-up"></i> Promote Students</button>` : ''}
-                    ${perms.editStudents ? `<button class="btn btn-primary" onclick="showAddStudentModal()"><i class="fas fa-plus"></i> Add Student</button>` : ''}
+                    ${perms.promote ? `<button class="btn btn-gold btn-sm" onclick="showPromoteModal()"><i class="fas fa-arrow-up"></i> Promote</button>` : ''}
+                    ${perms.editStudents ? `<button class="btn btn-primary btn-sm" onclick="showAddStudentModal()"><i class="fas fa-plus"></i> Add</button>` : ''}
                 </div>
             </div>
-            <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="studentSearch" placeholder="Search by name, LIN, class, parent..." value="${escapeHtml(globalSearch)}"></div>
+            <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="studentSearch" placeholder="Search name, LIN, class, parent..." value="${escapeHtml(globalSearch)}"></div>
             <div class="data-table"><table><thead><tr><th>Photo</th><th>Name</th><th>Class</th><th>LIN</th><th>Payment Code</th>${viewFinance ? '<th>Total</th><th>Paid</th><th>Balance</th>' : ''}<th>Parent</th><th>Actions</th></tr></thead><tbody id="studentsBody"></tbody></table></div>
         </div>`;
     
     document.getElementById('studentSearch').addEventListener('input', (e) => { globalSearch = e.target.value; renderStudents(); });
     let tbody = document.getElementById('studentsBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
     for (let s of filtered) {
         let paid = payments.filter(p => p.student_id === s.id).reduce((a, b) => a + (b.amount || 0), 0);
         let bal = (s.total_fees || 0) - paid;
         let row = tbody.insertRow();
-        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="student-photo-img" style="width:45px;height:45px;border-radius:50%;object-fit:cover;">` : `<div class="student-photo-img"><i class="fas fa-user-circle fa-2x"></i></div>`;
+        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="student-photo-img" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : `<div class="student-photo-img"><i class="fas fa-user-circle fa-2x"></i></div>`;
         let actions = '';
         if (perms.editStudents) {
-            actions += `<button class="btn btn-sm btn-primary" onclick="editStudent('${s.id}')">Edit</button> <button class="btn btn-sm btn-red" onclick="deleteStudent('${s.id}')">Delete</button>`;
+            actions += `<button class="btn btn-sm btn-primary" onclick="editStudent('${s.id}')">Edit</button> <button class="btn btn-sm btn-red" onclick="deleteStudent('${s.id}')">Del</button>`;
         }
-        actions += `<button class="btn btn-sm btn-gold" onclick="showStudentFinancialHistory('${s.id}')"><i class="fas fa-history"></i> Fees History</button>`;
-        
+        actions += `<button class="btn btn-sm btn-gold" onclick="showStudentFinancialHistory('${s.id}')"><i class="fas fa-history"></i> History</button>`;
         if (viewFinance) {
             row.innerHTML = `<td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td>${escapeHtml(s.parent_name || '')}</td><td>${actions}</td>`;
         } else {
@@ -370,99 +371,52 @@ async function renderStudents() {
     }
 }
 
-// ==================== STUDENT FINANCIAL HISTORY ====================
+// ============= STUDENT FINANCIAL HISTORY =============
 window.showStudentFinancialHistory = (studentId) => {
     let student = students.find(s => s.id === studentId);
     if (!student) return;
-    
     let studentPayments = payments.filter(p => p.student_id === studentId).sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
     let totalPaid = studentPayments.reduce((a, b) => a + (b.amount || 0), 0);
     let balance = (student.total_fees || 0) - totalPaid;
-    
     let groupedPayments = {};
     for (let p of studentPayments) {
         let key = `${p.term} ${p.academic_year}`;
         if (!groupedPayments[key]) groupedPayments[key] = [];
         groupedPayments[key].push(p);
     }
-    
     let modal = document.createElement('div');
     modal.className = 'modal';
     modal.style.display = 'flex';
     modal.innerHTML = `
         <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h2 style="color:#003366;">💰 Financial History</h2>
-                <button onclick="this.closest('.modal').remove()" style="background:none; border:none; font-size:24px; cursor:pointer;">&times;</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                <h3 style="color:#003366;">💰 Financial History</h3>
+                <button onclick="this.closest('.modal').remove()" style="background:none; border:none; font-size:22px; cursor:pointer;">&times;</button>
             </div>
-            
-            <div style="display:flex; gap:20px; flex-wrap:wrap; background:#f8fafc; padding:20px; border-radius:16px; margin-bottom:20px;">
+            <div style="display:flex; gap:12px; flex-wrap:wrap; background:#f8fafc; padding:14px; border-radius:14px; margin-bottom:14px; font-size:0.85rem;">
                 <div><strong>Student:</strong> ${student.first_name} ${student.last_name}</div>
                 <div><strong>LIN:</strong> ${student.lin}</div>
                 <div><strong>Class:</strong> ${student.class}</div>
                 <div><strong>Payment Code:</strong> ${student.payment_code || 'N/A'}</div>
             </div>
-            
-            <div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:20px;">
-                <div style="background:#eef2ff; padding:15px 20px; border-radius:12px; flex:1; text-align:center;">
-                    <div style="font-size:20px; font-weight:bold; color:#003366;">${formatMoney(student.total_fees || 0)}</div>
-                    <div style="font-size:12px; color:#666;">Total Fees</div>
-                </div>
-                <div style="background:#d1fae5; padding:15px 20px; border-radius:12px; flex:1; text-align:center;">
-                    <div style="font-size:20px; font-weight:bold; color:#065f46;">${formatMoney(totalPaid)}</div>
-                    <div style="font-size:12px; color:#666;">Total Paid</div>
-                </div>
-                <div style="background:${balance > 0 ? '#fef2f2' : '#d1fae5'}; padding:15px 20px; border-radius:12px; flex:1; text-align:center;">
-                    <div style="font-size:20px; font-weight:bold; ${balance > 0 ? 'color:#dc2626;' : 'color:#065f46;'}">${formatMoney(balance)}</div>
-                    <div style="font-size:12px; color:#666;">Balance</div>
-                </div>
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
+                <div style="background:#eef2ff; padding:12px 16px; border-radius:12px; flex:1; text-align:center;"><div style="font-weight:bold;">${formatMoney(student.total_fees || 0)}</div><div style="font-size:0.7rem;">Total Fees</div></div>
+                <div style="background:#d1fae5; padding:12px 16px; border-radius:12px; flex:1; text-align:center;"><div style="font-weight:bold;color:#065f46;">${formatMoney(totalPaid)}</div><div style="font-size:0.7rem;">Paid</div></div>
+                <div style="background:${balance > 0 ? '#fef2f2' : '#d1fae5'}; padding:12px 16px; border-radius:12px; flex:1; text-align:center;"><div style="font-weight:bold;${balance > 0 ? 'color:#dc2626;' : 'color:#065f46;'}">${formatMoney(balance)}</div><div style="font-size:0.7rem;">Balance</div></div>
             </div>
-            
-            ${Object.keys(groupedPayments).length === 0 ? `
-                <div style="text-align:center; padding:30px; color:#666;">
-                    <i class="fas fa-info-circle"></i> No payment records found for this student
-                </div>
-            ` : `
-                <div style="max-height:400px; overflow-y:auto;">
-                    ${Object.keys(groupedPayments).sort().reverse().map(key => {
-                        let paymentsList = groupedPayments[key];
-                        let totalForPeriod = paymentsList.reduce((a, b) => a + (b.amount || 0), 0);
-                        return `
-                            <div style="margin-bottom:20px;">
-                                <div style="background:#003366; color:white; padding:8px 15px; border-radius:12px; display:flex; justify-content:space-between; align-items:center;">
-                                    <strong>${key}</strong>
-                                    <span>Total: ${formatMoney(totalForPeriod)}</span>
-                                </div>
-                                <table class="history-table">
-                                    <thead><tr>
-                                        <th>Date & Time</th>
-                                        <th>Amount</th>
-                                        <th>Method</th>
-                                        <th>Receipt No</th>
-                                    </tr></thead>
-                                    <tbody>
-                                        ${paymentsList.map(p => `
-                                            <tr>
-                                                <td>${formatUgandaDateTime(p.payment_date)}</td>
-                                                <td class="paid">${formatMoney(p.amount)}</td>
-                                                <td>${getPaymentMethodBadge(p.payment_method)}</td>
-                                                <td>${p.receipt_number || 'N/A'}</td>
-                                            </tr>
-                                        `).join('')}
-                                    </tbody>
-                                </table>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-                <div style="margin-top:15px; text-align:right;">
-                    <button class="btn btn-gold" onclick="printStudentFinancialHistory('${student.id}')">
-                        <i class="fas fa-print"></i> Print History
-                    </button>
-                </div>
-            `}
-        </div>
-    `;
+            ${Object.keys(groupedPayments).length === 0 ? '<div style="text-align:center;padding:20px;color:#666;">No payment records</div>' : `
+            <div style="max-height:350px;overflow-y:auto;">
+                ${Object.keys(groupedPayments).sort().reverse().map(key => {
+                    let list = groupedPayments[key];
+                    let total = list.reduce((a,b) => a + (b.amount || 0), 0);
+                    return `<div style="margin-bottom:12px;"><div style="background:#003366;color:white;padding:4px 12px;border-radius:10px;display:flex;justify-content:space-between;font-size:0.8rem;"><strong>${key}</strong><span>${formatMoney(total)}</span></div>
+                    <table class="history-table"><thead><tr><th>Date & Time</th><th>Amount</th><th>Method</th><th>Receipt</th></tr></thead><tbody>
+                    ${list.map(p => `<tr><td>${formatUgandaDateTime(p.payment_date)}</td><td class="paid">${formatMoney(p.amount)}</td><td>${getPaymentMethodBadge(p.payment_method)}</td><td>${p.receipt_number || 'N/A'}</td></tr>`).join('')}
+                    </tbody></table></div>`;
+                }).join('')}
+            </div>
+            <div style="margin-top:10px;text-align:right;"><button class="btn btn-gold btn-sm" onclick="printStudentFinancialHistory('${student.id}')"><i class="fas fa-print"></i> Print</button></div>`}
+        </div>`;
     document.body.appendChild(modal);
 };
 
@@ -472,152 +426,91 @@ window.printStudentFinancialHistory = (studentId) => {
     let studentPayments = payments.filter(p => p.student_id === studentId).sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
     let totalPaid = studentPayments.reduce((a, b) => a + (b.amount || 0), 0);
     let balance = (student.total_fees || 0) - totalPaid;
-    
     let win = window.open('', '_blank');
     win.document.write(`<html><head><title>Financial History - ${student.first_name} ${student.last_name}</title>
-        <style>
-            body{font-family:Arial;padding:30px;background:white;}
-            h1{color:#003366;border-bottom:3px solid #D4A017;padding-bottom:15px;}
-            table{width:100%;border-collapse:collapse;margin-top:20px;}
-            th,td{border:1px solid #ccc;padding:8px;text-align:left;}
-            th{background:#003366;color:white;}
-            .paid{color:#10b981;font-weight:bold;}
-            .summary-box{background:#f8fafc;padding:15px;border-radius:12px;margin-top:20px;}
-            .header-info{display:flex;gap:20px;flex-wrap:wrap;background:#f8fafc;padding:15px;border-radius:12px;margin-bottom:20px;}
-            .method-cash{background:#dbeafe;padding:2px 8px;border-radius:12px;}
-            .method-mobile{background:#d1fae5;padding:2px 8px;border-radius:12px;}
-            .method-bank{background:#fef3c7;padding:2px 8px;border-radius:12px;}
-            .method-schoolpay{background:#e0e7ff;padding:2px 8px;border-radius:12px;}
-    </style></head><body>
-    <h1>PROGRESSIVE MOTHERS SCHOOL</h1>
-    <h2>Financial History - ${student.first_name} ${student.last_name}</h2>
-    <div class="header-info">
-        <div><strong>LIN:</strong> ${student.lin}</div>
-        <div><strong>Class:</strong> ${student.class}</div>
-        <div><strong>Payment Code:</strong> ${student.payment_code || 'N/A'}</div>
-        <div><strong>Parent:</strong> ${student.parent_name || 'N/A'}</div>
-    </div>
-    <div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:20px;">
-        <div style="background:#eef2ff; padding:15px 20px; border-radius:12px; flex:1; text-align:center;">
-            <strong>Total Fees:</strong> ${formatMoney(student.total_fees || 0)}
+        <style>body{font-family:Arial;padding:20px;}h1{color:#003366;}table{width:100%;border-collapse:collapse;margin-top:10px;}th,td{border:1px solid #ccc;padding:6px;text-align:left;}th{background:#003366;color:white;}.paid{color:#10b981;font-weight:bold;}.method-cash{background:#dbeafe;padding:2px 8px;border-radius:12px;}.method-mobile{background:#d1fae5;padding:2px 8px;border-radius:12px;}.method-bank{background:#fef3c7;padding:2px 8px;border-radius:12px;}.method-schoolpay{background:#e0e7ff;padding:2px 8px;border-radius:12px;}</style></head><body>
+        <h1>PROGRESSIVE MOTHERS SCHOOL</h1><h2>Financial History - ${student.first_name} ${student.last_name}</h2>
+        <div style="display:flex;gap:15px;flex-wrap:wrap;background:#f8fafc;padding:12px;border-radius:12px;margin-bottom:12px;">
+            <div><strong>LIN:</strong> ${student.lin}</div><div><strong>Class:</strong> ${student.class}</div><div><strong>Payment Code:</strong> ${student.payment_code || 'N/A'}</div>
         </div>
-        <div style="background:#d1fae5; padding:15px 20px; border-radius:12px; flex:1; text-align:center;">
-            <strong>Total Paid:</strong> ${formatMoney(totalPaid)}
+        <div style="display:flex;gap:15px;flex-wrap:wrap;margin-bottom:12px;">
+            <div><strong>Total Fees:</strong> ${formatMoney(student.total_fees || 0)}</div>
+            <div><strong>Total Paid:</strong> ${formatMoney(totalPaid)}</div>
+            <div><strong>Balance:</strong> ${formatMoney(balance)}</div>
         </div>
-        <div style="background:${balance > 0 ? '#fef2f2' : '#d1fae5'}; padding:15px 20px; border-radius:12px; flex:1; text-align:center;">
-            <strong>Balance:</strong> ${formatMoney(balance)}
-        </div>
-    </div>
-    ${studentPayments.length === 0 ? '<p style="text-align:center;color:#666;">No payment records found</p>' : `
-    <table><thead><tr><th>Date & Time</th><th>Amount</th><th>Method</th><th>Receipt No</th><th>Term</th><th>Year</th></tr></thead><tbody>
-    ${studentPayments.map(p => `
-        <tr>
-            <td>${formatUgandaDateTime(p.payment_date)}</td>
-            <td class="paid">${formatMoney(p.amount)}</td>
-            <td><span class="${p.payment_method === 'Cash' ? 'method-cash' : p.payment_method === 'Mobile Money' ? 'method-mobile' : p.payment_method === 'Bank Transfer' ? 'method-bank' : 'method-schoolpay'}">${p.payment_method || 'Cash'}</span></td>
-            <td>${p.receipt_number || 'N/A'}</td>
-            <td>${p.term || 'Term I'}</td>
-            <td>${p.academic_year || CURRENT_ACADEMIC_YEAR}</td>
-        </tr>
-    `).join('')}
-    </tbody></table>
-    <div class="summary-box"><strong>Total Records:</strong> ${studentPayments.length}</div>`}
-    <p style="margin-top:30px;text-align:center;font-size:11px;">Generated on ${formatUgandaDateTime(getUgandaTime())}</p>
+        ${studentPayments.length === 0 ? '<p>No payment records</p>' : `
+        <table><thead><tr><th>Date & Time</th><th>Amount</th><th>Method</th><th>Receipt No</th><th>Term</th><th>Year</th></tr></thead><tbody>
+        ${studentPayments.map(p => `<tr><td>${formatUgandaDateTime(p.payment_date)}</td><td class="paid">${formatMoney(p.amount)}</td><td><span class="${p.payment_method === 'Cash' ? 'method-cash' : p.payment_method === 'Mobile Money' ? 'method-mobile' : p.payment_method === 'Bank Transfer' ? 'method-bank' : 'method-schoolpay'}">${p.payment_method || 'Cash'}</span></td><td>${p.receipt_number || 'N/A'}</td><td>${p.term || 'Term I'}</td><td>${p.academic_year || CURRENT_ACADEMIC_YEAR}</td></tr>`).join('')}
+        </tbody></table>`}
+        <p style="margin-top:20px;font-size:10px;">Generated on ${formatUgandaDateTime(getUgandaTime())}</p>
     </body></html>`);
     win.document.close();
     win.print();
 };
 
-// ==================== FEES ====================
+// ============= FEES =============
 async function renderFees() {
     if (!ROLE_PERMS[currentUser?.role]?.fees) {
-        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3><p>You do not have permission to access this module.</p></div>';
+        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3></div>';
         return;
     }
     let perms = ROLE_PERMS[currentUser?.role];
-    
     document.getElementById('tabContent').innerHTML = `
-        <div class="card"><h3>Financial Summary</h3><div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
-            <div class="stat-card"><div class="stat-number">${formatMoney(payments.reduce((a, b) => a + (b.amount || 0), 0))}</div><div class="stat-label">Total Income</div></div>
+        <div class="card"><h3 style="font-size:1rem;">Financial Summary</h3><div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+            <div class="stat-card"><div class="stat-number">${formatMoney(payments.reduce((a, b) => a + (b.amount || 0), 0))}</div><div class="stat-label">Income</div></div>
             <div class="stat-card"><div class="stat-number">${formatMoney(students.reduce((a, b) => a + (b.total_fees || 0), 0))}</div><div class="stat-label">Expected</div></div>
             <div class="stat-card"><div class="stat-number">${formatMoney(students.reduce((a, b) => a + (b.total_fees || 0), 0) - payments.reduce((a, b) => a + (b.amount || 0), 0))}</div><div class="stat-label">Outstanding</div></div>
         </div></div>
-        
         ${perms.editFees ? `
-        <div class="card"><h3>Record Payment</h3>
+        <div class="card"><h3 style="font-size:1rem;">Record Payment</h3>
         <div class="flex">
-            <div style="flex:2;"><select id="payStudent" class="form-control">${students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.lin})</option>`).join('')}</select></div>
-            <div style="flex:1;"><input type="number" id="payAmount" placeholder="Enter amount (UGX)" class="form-control"></div>
-            <div style="flex:1;"><select id="payMethod" class="form-control">${PAYMENT_METHODS.map(m => `<option value="${m}">${m}</option>`).join('')}</select></div>
-            <button class="btn btn-primary" id="recordPay">Record Payment</button>
-            <button class="btn btn-whatsapp" id="sendReminder">Send Reminder</button>
+            <div style="flex:2;min-width:120px;"><select id="payStudent" class="form-control">${students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name}</option>`).join('')}</select></div>
+            <div style="flex:1;min-width:100px;"><input type="number" id="payAmount" placeholder="Amount (UGX)" class="form-control"></div>
+            <div style="flex:1;min-width:100px;"><select id="payMethod" class="form-control">${PAYMENT_METHODS.map(m => `<option value="${m}">${m}</option>`).join('')}</select></div>
+            <button class="btn btn-primary btn-sm" id="recordPay">Record</button>
+            <button class="btn btn-whatsapp btn-sm" id="sendReminder">Remind</button>
         </div></div>` : ''}
-        
-        <!-- Class Summary -->
-        <div class="card"><h3>Class-wise Financial Summary</h3>
-        <div class="filter-section">
-            <div class="flex">
-                <div style="flex:1;"><label>Term</label><select id="classSummaryTerm" class="form-control">${TERMS.map(t => `<option value="${t}" ${t === filterTerm ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
-                <div style="flex:1;"><label>Academic Year</label><select id="classSummaryYear" class="form-control">${ACADEMIC_YEARS.map(y => `<option value="${y}" ${y === filterYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
-                <button class="btn btn-sm btn-primary" id="updateClassSummary">Update Summary</button>
-                <button class="btn btn-sm btn-gold" id="printClassSummary"><i class="fas fa-print"></i> Print Summary</button>
-            </div>
-        </div>
+        <div class="card"><h3 style="font-size:1rem;">Class Summary</h3>
+        <div class="filter-section"><div class="flex">
+            <div><label>Term</label><select id="classSummaryTerm" class="form-control">${TERMS.map(t => `<option value="${t}" ${t === filterTerm ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+            <div><label>Year</label><select id="classSummaryYear" class="form-control">${ACADEMIC_YEARS.map(y => `<option value="${y}" ${y === filterYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+            <button class="btn btn-sm btn-primary" id="updateClassSummary">Update</button>
+            <button class="btn btn-sm btn-gold" id="printClassSummary"><i class="fas fa-print"></i> Print</button>
+        </div></div>
         <div id="classSummaryContainer"></div></div>
-        
-        <!-- Student Balances -->
-        <div class="card"><h3>Student Balances</h3>
-        <div class="filter-section">
-            <div class="flex">
-                <div style="flex:1;"><label>Term</label><select id="feeTermFilter" class="form-control">${TERMS.map(t => `<option value="${t}" ${t === filterTerm ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
-                <div style="flex:1;"><label>Academic Year</label><select id="feeYearFilter" class="form-control">${ACADEMIC_YEARS.map(y => `<option value="${y}" ${y === filterYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
-                <button class="btn btn-sm btn-primary" id="applyFeeFilter">Apply Filter</button>
-            </div>
-        </div>
+        <div class="card"><h3 style="font-size:1rem;">Student Balances</h3>
+        <div class="filter-section"><div class="flex">
+            <div><label>Term</label><select id="feeTermFilter" class="form-control">${TERMS.map(t => `<option value="${t}" ${t === filterTerm ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+            <div><label>Year</label><select id="feeYearFilter" class="form-control">${ACADEMIC_YEARS.map(y => `<option value="${y}" ${y === filterYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+            <button class="btn btn-sm btn-primary" id="applyFeeFilter">Apply</button>
+        </div></div>
         <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="feesSearch" placeholder="Search student..."></div>
         <div class="data-table"><table><thead><tr><th>Photo</th><th>Student</th><th>LIN</th>${perms.editFees ? '<th>Total</th><th>Paid</th><th>Balance</th>' : ''}<th>Action</th></tr></thead><tbody id="feesBody"></tbody></table></div>
-        ${perms.editFees ? `<div class="flex"><button class="btn btn-gold" id="printDebtors"><i class="fas fa-print"></i> Print Debtors List</button></div>` : ''}
-        
-        <!-- Financial History -->
-        <div class="card"><h3><i class="fas fa-history"></i> Financial History (All Students)</h3>
-        <div class="filter-section">
-            <div class="flex">
-                <div style="flex:1;"><label>Student</label>
-                    <select id="historyStudentFilter" class="form-control">
-                        <option value="all">All Students</option>
-                        ${students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.lin})</option>`).join('')}
-                    </select>
-                </div>
-                <div style="flex:1;"><label>Term</label><select id="historyTermFilter" class="form-control">${TERMS.map(t => `<option value="${t}" ${t === filterTerm ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
-                <div style="flex:1;"><label>Academic Year</label><select id="historyYearFilter" class="form-control">${ACADEMIC_YEARS.map(y => `<option value="${y}" ${y === filterYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
-                <div style="flex:1;"><label>Payment Method</label><select id="historyMethodFilter" class="form-control">
-                    <option value="all">All Methods</option>
-                    ${PAYMENT_METHODS.map(m => `<option value="${m}">${m}</option>`).join('')}</select></div>
-                <button class="btn btn-sm btn-primary" id="applyHistoryFilter">Apply Filter</button>
-                <button class="btn btn-sm btn-gold" id="printHistoryBtn"><i class="fas fa-print"></i> Print History</button>
-            </div>
-        </div>
-        <div class="data-table"><table class="history-table"><thead><tr><th>Date & Time (EAT)</th><th>Student</th><th>LIN</th><th>Class</th><th>Amount</th><th>Method</th><th>Receipt No</th><th>Term</th><th>Year</th></tr></thead><tbody id="historyBody"></tbody></table></div></div>
+        ${perms.editFees ? `<div class="flex"><button class="btn btn-gold btn-sm" id="printDebtors"><i class="fas fa-print"></i> Debtors List</button></div>` : ''}
+        <div class="card" style="margin-top:12px;"><h3 style="font-size:1rem;"><i class="fas fa-history"></i> All Payments History</h3>
+        <div class="filter-section"><div class="flex">
+            <div><label>Student</label><select id="historyStudentFilter" class="form-control"><option value="all">All</option>${students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name}</option>`).join('')}</select></div>
+            <div><label>Term</label><select id="historyTermFilter" class="form-control">${TERMS.map(t => `<option value="${t}" ${t === filterTerm ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+            <div><label>Year</label><select id="historyYearFilter" class="form-control">${ACADEMIC_YEARS.map(y => `<option value="${y}" ${y === filterYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+            <div><label>Method</label><select id="historyMethodFilter" class="form-control"><option value="all">All</option>${PAYMENT_METHODS.map(m => `<option value="${m}">${m}</option>`).join('')}</select></div>
+            <button class="btn btn-sm btn-primary" id="applyHistoryFilter">Filter</button>
+            <button class="btn btn-sm btn-gold" id="printHistoryBtn"><i class="fas fa-print"></i> Print</button>
+        </div></div>
+        <div class="data-table"><table class="history-table"><thead><tr><th>Date & Time</th><th>Student</th><th>LIN</th><th>Class</th><th>Amount</th><th>Method</th><th>Receipt</th><th>Term</th><th>Year</th></tr></thead><tbody id="historyBody"></tbody></table></div></div>
     `;
     
-    // Class Summary
     document.getElementById('updateClassSummary')?.addEventListener('click', renderClassSummary);
     document.getElementById('printClassSummary')?.addEventListener('click', printClassSummary);
-    
-    // Fee filter
     document.getElementById('applyFeeFilter')?.addEventListener('click', () => {
         filterTerm = document.getElementById('feeTermFilter').value;
         filterYear = document.getElementById('feeYearFilter').value;
         renderFeesTable();
     });
-    
-    // History filter
     document.getElementById('applyHistoryFilter')?.addEventListener('click', () => {
         filterTerm = document.getElementById('historyTermFilter').value;
         filterYear = document.getElementById('historyYearFilter').value;
         renderFinancialHistory();
     });
-    
     document.getElementById('printHistoryBtn')?.addEventListener('click', printFinancialHistory);
     
     document.getElementById('recordPay')?.addEventListener('click', async () => {
@@ -638,33 +531,27 @@ async function renderFees() {
             };
             let result = await insertDB('payments', paymentData);
             if (result) {
-                await loadAllData();
+                await loadAllData(true);
                 renderFees();
-                showToast('Payment recorded successfully');
+                showToast('Payment recorded');
             }
-        } else {
-            showToast('Please select a student and enter a valid amount', true);
-        }
+        } else showToast('Enter valid amount', true);
     });
     
     document.getElementById('sendReminder')?.addEventListener('click', () => {
         let term = document.getElementById('feeTermFilter')?.value || filterTerm;
         let year = document.getElementById('feeYearFilter')?.value || filterYear;
-        let msg = `Good evening parents. Please clear fees for ${term} ${year}. Accounts Department.`;
+        let msg = `Dear parents, please clear fees for ${term} ${year}. Accounts Department.`;
         let sent = 0;
         for (let s of students) {
-            if (s.parent_whatsapp) {
-                sendWhatsApp(s.parent_whatsapp, msg);
-                sent++;
-            }
+            if (s.parent_whatsapp) { sendWhatsApp(s.parent_whatsapp, msg); sent++; }
         }
-        showToast(`Reminders sent to ${sent} parents`);
+        showToast(`Sent to ${sent} parents`);
     });
     
     document.getElementById('feesSearch')?.addEventListener('input', (e) => { feesSearch = e.target.value; renderFeesTable(); });
     document.getElementById('historyStudentFilter')?.addEventListener('change', renderFinancialHistory);
     document.getElementById('historyMethodFilter')?.addEventListener('change', renderFinancialHistory);
-    
     document.getElementById('printDebtors')?.addEventListener('click', printDebtorsList);
     
     renderClassSummary();
@@ -672,61 +559,32 @@ async function renderFees() {
     renderFinancialHistory();
 }
 
-// ==================== CLASS SUMMARY ====================
 function renderClassSummary() {
     let container = document.getElementById('classSummaryContainer');
     if (!container) return;
     let term = document.getElementById('classSummaryTerm')?.value || filterTerm;
     let year = document.getElementById('classSummaryYear')?.value || filterYear;
-    
     let classData = {};
     for (let s of students) {
-        if (!classData[s.class]) {
-            classData[s.class] = { expected: 0, paid: 0, count: 0, students: [] };
-        }
+        if (!classData[s.class]) classData[s.class] = { expected: 0, paid: 0, count: 0 };
         let paid = payments.filter(p => p.student_id === s.id && p.term === term && p.academic_year === year).reduce((a, b) => a + (b.amount || 0), 0);
         classData[s.class].expected += s.total_fees || 0;
         classData[s.class].paid += paid;
         classData[s.class].count++;
-        classData[s.class].students.push(s);
     }
-    
-    let html = '';
-    let grandExpected = 0, grandPaid = 0;
+    let html = '', grandE = 0, grandP = 0;
     for (let cls of CLASS_ORDER) {
         if (!classData[cls]) continue;
-        let data = classData[cls];
-        let bal = data.expected - data.paid;
-        grandExpected += data.expected;
-        grandPaid += data.paid;
-        html += `
-            <div class="class-summary-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                    <strong style="font-size:16px; color:#003366;">${cls}</strong>
-                    <span style="font-size:12px; background:#e2e8f0; padding:2px 12px; border-radius:20px;">${data.count} students</span>
-                </div>
-                <div class="stat-row">
-                    <span><strong>Expected:</strong> ${formatMoney(data.expected)}</span>
-                    <span><strong>Paid:</strong> <span class="paid">${formatMoney(data.paid)}</span></span>
-                    <span><strong>Balance:</strong> <span class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</span></span>
-                    <span><strong>Collection Rate:</strong> ${data.expected > 0 ? Math.round((data.paid/data.expected)*100) : 0}%</span>
-                </div>
-            </div>
-        `;
+        let d = classData[cls];
+        let bal = d.expected - d.paid;
+        grandE += d.expected; grandP += d.paid;
+        html += `<div class="class-summary-card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;"><strong>${cls}</strong><span style="font-size:0.7rem;background:#e2e8f0;padding:0 10px;border-radius:20px;">${d.count} students</span></div>
+        <div class="stat-row"><span><strong>Expected:</strong> ${formatMoney(d.expected)}</span><span><strong>Paid:</strong> <span class="paid">${formatMoney(d.paid)}</span></span><span><strong>Balance:</strong> <span class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</span></span><span><strong>Rate:</strong> ${d.expected > 0 ? Math.round((d.paid/d.expected)*100) : 0}%</span></div></div>`;
     }
-    
-    let totalBal = grandExpected - grandPaid;
-    html += `
-        <div class="class-summary-card" style="background:#fef3c7; border-left-color:#D4A017;">
-            <strong style="font-size:16px; color:#003366;">📊 SCHOOL TOTALS</strong>
-            <div class="stat-row">
-                <span><strong>Total Expected:</strong> ${formatMoney(grandExpected)}</span>
-                <span><strong>Total Paid:</strong> <span class="paid">${formatMoney(grandPaid)}</span></span>
-                <span><strong>Total Balance:</strong> <span class="${totalBal > 0 ? 'debt' : ''}">${formatMoney(totalBal)}</span></span>
-                <span><strong>Overall Rate:</strong> ${grandExpected > 0 ? Math.round((grandPaid/grandExpected)*100) : 0}%</span>
-            </div>
-        </div>
-    `;
+    let totalBal = grandE - grandP;
+    html += `<div class="class-summary-card" style="background:#fef3c7;border-left-color:#D4A017;"><strong>📊 SCHOOL TOTALS</strong><div class="stat-row">
+        <span><strong>Expected:</strong> ${formatMoney(grandE)}</span><span><strong>Paid:</strong> <span class="paid">${formatMoney(grandP)}</span></span><span><strong>Balance:</strong> <span class="${totalBal > 0 ? 'debt' : ''}">${formatMoney(totalBal)}</span></span><span><strong>Rate:</strong> ${grandE > 0 ? Math.round((grandP/grandE)*100) : 0}%</span>
+    </div></div>`;
     container.innerHTML = html;
 }
 
@@ -736,26 +594,13 @@ function printClassSummary() {
     let term = document.getElementById('classSummaryTerm')?.value || filterTerm;
     let year = document.getElementById('classSummaryYear')?.value || filterYear;
     let win = window.open('', '_blank');
-    win.document.write(`<html><head><title>Class Financial Summary - ${term} ${year}</title>
-        <style>
-            body{font-family:Arial;padding:30px;background:white;}
-            h1{color:#003366;border-bottom:3px solid #D4A017;padding-bottom:15px;}
-            .summary-card{background:#f8fafc;padding:15px;border-radius:12px;margin-bottom:12px;border-left:4px solid #003366;}
-            .stat-row{display:flex;gap:30px;flex-wrap:wrap;margin-top:10px;}
-            .total-card{background:#fef3c7;padding:15px;border-radius:12px;margin-top:15px;border-left:4px solid #D4A017;}
-            .debt{color:#dc2626;font-weight:bold;}
-            .paid{color:#10b981;font-weight:bold;}
-    </style></head><body>
-    <h1>PROGRESSIVE MOTHERS SCHOOL</h1>
-    <h2>Class Financial Summary - ${term} ${year}</h2>
-    <p>Generated on ${formatUgandaDateTime(getUgandaTime())}</p>
-    ${container.innerHTML}
-    </body></html>`);
+    win.document.write(`<html><head><title>Class Summary - ${term} ${year}</title>
+        <style>body{font-family:Arial;padding:20px;}h1{color:#003366;}.summary-card{background:#f8fafc;padding:12px;border-radius:12px;margin-bottom:10px;border-left:4px solid #003366;}.stat-row{display:flex;gap:20px;flex-wrap:wrap;margin-top:6px;}.debt{color:#dc2626;font-weight:bold;}.paid{color:#10b981;font-weight:bold;}</style></head><body>
+        <h1>PROGRESSIVE MOTHERS SCHOOL</h1><h2>Class Financial Summary - ${term} ${year}</h2><p>Generated on ${formatUgandaDateTime(getUgandaTime())}</p>${container.innerHTML}</body></html>`);
     win.document.close();
     win.print();
 }
 
-// ==================== FEES TABLE ====================
 function renderFeesTable() {
     let tbody = document.getElementById('feesBody');
     if (!tbody) return;
@@ -767,65 +612,36 @@ function renderFeesTable() {
     for (let s of filtered) {
         let paid = payments.filter(p => p.student_id === s.id && p.term === term && p.academic_year === year).reduce((a, b) => a + (b.amount || 0), 0);
         let bal = (s.total_fees || 0) - paid;
-        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-circle fa-2x"></i>`;
+        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" style="width:35px;height:35px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-circle fa-2x"></i>`;
         let row = tbody.insertRow();
         if (perms.editFees) {
-            row.innerHTML = `<td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td><button class="btn btn-sm btn-whatsapp" onclick="sendSingleFeeReminder('${s.id}','${term}','${year}')">Remind</button> <button class="btn btn-sm btn-primary" onclick="quickFeePayment('${s.id}','${term}','${year}')">Pay</button> <button class="btn btn-sm btn-gold" onclick="editStudentFees('${s.id}')">Edit Fees</button> <button class="btn btn-sm btn-gold" onclick="showStudentFinancialHistory('${s.id}')"><i class="fas fa-history"></i> History</button></td>`;
+            row.innerHTML = `<td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td><button class="btn btn-sm btn-whatsapp" onclick="sendSingleFeeReminder('${s.id}','${term}','${year}')">Remind</button> <button class="btn btn-sm btn-primary" onclick="quickFeePayment('${s.id}','${term}','${year}')">Pay</button> <button class="btn btn-sm btn-gold" onclick="editStudentFees('${s.id}')">Edit</button> <button class="btn btn-sm btn-gold" onclick="showStudentFinancialHistory('${s.id}')"><i class="fas fa-history"></i></button></td>`;
         } else {
             row.innerHTML = `<td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td><span>View only</span></td>`;
         }
     }
 }
 
-// ==================== FINANCIAL HISTORY ====================
 function renderFinancialHistory() {
     let container = document.getElementById('historyBody');
     if (!container) return;
-    let searchTerm = document.getElementById('historySearch')?.value || '';
     let term = document.getElementById('historyTermFilter')?.value || filterTerm;
     let year = document.getElementById('historyYearFilter')?.value || filterYear;
     let studentFilter = document.getElementById('historyStudentFilter')?.value || 'all';
     let methodFilter = document.getElementById('historyMethodFilter')?.value || 'all';
-    
     let filtered = [...payments].filter(p => p.term === term && p.academic_year === year);
-    if (studentFilter !== 'all') {
-        filtered = filtered.filter(p => p.student_id === studentFilter);
-    }
-    if (methodFilter !== 'all') {
-        filtered = filtered.filter(p => p.payment_method === methodFilter);
-    }
+    if (studentFilter !== 'all') filtered = filtered.filter(p => p.student_id === studentFilter);
+    if (methodFilter !== 'all') filtered = filtered.filter(p => p.payment_method === methodFilter);
     filtered.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
-    
-    if (searchTerm) {
-        const termSearch = searchTerm.toLowerCase();
-        filtered = filtered.filter(p => {
-            let s = students.find(st => st.id === p.student_id);
-            return s && (`${s.first_name} ${s.last_name}`.toLowerCase().includes(termSearch) || s.lin.toLowerCase().includes(termSearch));
-        });
-    }
-    
     if (filtered.length === 0) {
-        container.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#666;padding:20px;">No payment records found for ' + term + ' ' + year + '</td></tr>';
+        container.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:16px;color:#666;">No records found</td></tr>';
         return;
     }
-    
     let html = '';
     for (let p of filtered) {
         let s = students.find(st => st.id === p.student_id);
         if (!s) continue;
-        let dateTime = formatUgandaDateTime(p.payment_date);
-        let methodBadge = getPaymentMethodBadge(p.payment_method);
-        html += `<tr>
-            <td>${dateTime}</td>
-            <td><strong>${s.first_name} ${s.last_name}</strong></td>
-            <td>${s.lin}</td>
-            <td>${s.class}</td>
-            <td class="paid">${formatMoney(p.amount)}</td>
-            <td>${methodBadge}</td>
-            <td>${p.receipt_number || 'N/A'}</td>
-            <td>${p.term || 'Term I'}</td>
-            <td>${p.academic_year || CURRENT_ACADEMIC_YEAR}</td>
-        </tr>`;
+        html += `<tr><td>${formatUgandaDateTime(p.payment_date)}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td>${s.class}</td><td class="paid">${formatMoney(p.amount)}</td><td>${getPaymentMethodBadge(p.payment_method)}</td><td>${p.receipt_number || 'N/A'}</td><td>${p.term || 'Term I'}</td><td>${p.academic_year || CURRENT_ACADEMIC_YEAR}</td></tr>`;
     }
     container.innerHTML = html;
 }
@@ -835,56 +651,24 @@ function printFinancialHistory() {
     let year = document.getElementById('historyYearFilter')?.value || filterYear;
     let studentFilter = document.getElementById('historyStudentFilter')?.value || 'all';
     let methodFilter = document.getElementById('historyMethodFilter')?.value || 'all';
-    
     let filtered = payments.filter(p => p.term === term && p.academic_year === year);
-    if (studentFilter !== 'all') {
-        filtered = filtered.filter(p => p.student_id === studentFilter);
-        let s = students.find(st => st.id === studentFilter);
-        if (s) {
-            var studentName = `${s.first_name} ${s.last_name}`;
-        }
-    }
-    if (methodFilter !== 'all') {
-        filtered = filtered.filter(p => p.payment_method === methodFilter);
-    }
+    if (studentFilter !== 'all') filtered = filtered.filter(p => p.student_id === studentFilter);
+    if (methodFilter !== 'all') filtered = filtered.filter(p => p.payment_method === methodFilter);
     filtered.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
-    
-    if (filtered.length === 0) { alert('No payment records found'); return; }
-    
-    let totalAmount = filtered.reduce((a, b) => a + (b.amount || 0), 0);
-    let title = studentFilter !== 'all' ? `Payment History for ${studentName}` : 'All Students Financial History';
-    
+    if (filtered.length === 0) { alert('No records'); return; }
+    let total = filtered.reduce((a, b) => a + (b.amount || 0), 0);
     let win = window.open('', '_blank');
-    win.document.write(`<html><head><title>Financial History - ${term} ${year}</title>
-        <style>
-            body{font-family:Arial;padding:30px;background:white;}
-            h1{color:#003366;border-bottom:3px solid #D4A017;padding-bottom:15px;}
-            table{width:100%;border-collapse:collapse;margin-top:20px;}
-            th,td{border:1px solid #ccc;padding:8px;text-align:left;}
-            th{background:#003366;color:white;}
-            .paid{color:#10b981;font-weight:bold;}
-            .summary-box{background:#f8fafc;padding:15px;border-radius:12px;margin-top:20px;}
-            .method-cash{background:#dbeafe;padding:2px 8px;border-radius:12px;}
-            .method-mobile{background:#d1fae5;padding:2px 8px;border-radius:12px;}
-            .method-bank{background:#fef3c7;padding:2px 8px;border-radius:12px;}
-            .method-schoolpay{background:#e0e7ff;padding:2px 8px;border-radius:12px;}
-    </style></head><body>
-    <h1>PROGRESSIVE MOTHERS SCHOOL</h1>
-    <h2>${title}</h2>
-    <p><strong>Term:</strong> ${term} | <strong>Year:</strong> ${year}</p>
-    <p><strong>Generated:</strong> ${formatUgandaDateTime(getUgandaTime())}</p>
-    ${methodFilter !== 'all' ? `<p><strong>Payment Method:</strong> ${methodFilter}</p>` : ''}
-    <table><thead><tr><th>Date & Time</th><th>Student</th><th>LIN</th><th>Class</th><th>Amount</th><th>Method</th><th>Receipt No</th></tr></thead><tbody>
-    ${filtered.map(p => {
-        let s = students.find(st => st.id === p.student_id);
-        if (!s) return '';
-        let methodClass = p.payment_method === 'Cash' ? 'method-cash' : p.payment_method === 'Mobile Money' ? 'method-mobile' : p.payment_method === 'Bank Transfer' ? 'method-bank' : 'method-schoolpay';
-        return `<tr><td>${formatUgandaDateTime(p.payment_date)}</td><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td>${s.class}</td><td class="paid">${formatMoney(p.amount)}</td><td><span class="${methodClass}">${p.payment_method || 'Cash'}</span></td><td>${p.receipt_number || 'N/A'}</td></tr>`;
-    }).join('')}
-    </tbody></table>
-    <div class="summary-box">
-        <strong>Total Records:</strong> ${filtered.length} | <strong>Total Amount:</strong> ${formatMoney(totalAmount)}
-    </div>
+    win.document.write(`<html><head><title>Payment History</title>
+        <style>body{font-family:Arial;padding:20px;}h1{color:#003366;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:6px;text-align:left;}th{background:#003366;color:white;}.paid{color:#10b981;font-weight:bold;}</style></head><body>
+        <h1>PROGRESSIVE MOTHERS SCHOOL</h1><h2>Payment History - ${term} ${year}</h2><p>Generated ${formatUgandaDateTime(getUgandaTime())}</p>
+        <table><thead><tr><th>Date & Time</th><th>Student</th><th>LIN</th><th>Class</th><th>Amount</th><th>Method</th><th>Receipt</th></tr></thead><tbody>
+        ${filtered.map(p => {
+            let s = students.find(st => st.id === p.student_id);
+            if (!s) return '';
+            return `<tr><td>${formatUgandaDateTime(p.payment_date)}</td><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td>${s.class}</td><td class="paid">${formatMoney(p.amount)}</td><td>${p.payment_method || 'Cash'}</td><td>${p.receipt_number || 'N/A'}</td></tr>`;
+        }).join('')}
+        </tbody></table>
+        <div style="margin-top:12px;"><strong>Total Records:</strong> ${filtered.length} | <strong>Total Amount:</strong> ${formatMoney(total)}</div>
     </body></html>`);
     win.document.close();
     win.print();
@@ -897,36 +681,32 @@ function printDebtorsList() {
         let paid = payments.filter(p => p.student_id === s.id && p.term === term && p.academic_year === year).reduce((a, b) => a + (b.amount || 0), 0);
         return (s.total_fees || 0) - paid > 0;
     });
-    if (debtors.length === 0) { alert('No debtors for ' + term + ' ' + year); return; }
+    if (debtors.length === 0) { alert('No debtors'); return; }
     let win = window.open('', '_blank');
-    win.document.write(`<html><head><title>Debtors List - ${term} ${year}</title>
-        <style>body{font-family:Arial;padding:30px;background:white;}h1{color:#003366;}table{width:100%;border-collapse:collapse;margin-top:20px;}th,td{border:1px solid #ccc;padding:8px;text-align:left;}th{background:#003366;color:white;}.debt{color:#dc2626;font-weight:bold;}</style></head><body>
-        <h1>PROGRESSIVE MOTHERS SCHOOL</h1>
-        <h2>Debtors List - ${term} ${year}</h2>
-        <p>Generated on ${formatUgandaDateTime(getUgandaTime())}</p>
-        <table><thead><tr><th>Name</th><th>LIN</th><th>Class</th><th>Total Fees</th><th>Paid</th><th>Balance</th><th>WhatsApp</th></tr></thead><tbody>
+    win.document.write(`<html><head><title>Debtors List</title><style>body{font-family:Arial;padding:20px;}h1{color:#003366;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:6px;text-align:left;}th{background:#003366;color:white;}.debt{color:#dc2626;font-weight:bold;}</style></head><body>
+        <h1>PROGRESSIVE MOTHERS SCHOOL</h1><h2>Debtors List - ${term} ${year}</h2>
+        <table><thead><tr><th>Name</th><th>LIN</th><th>Class</th><th>Total</th><th>Paid</th><th>Balance</th><th>WhatsApp</th></tr></thead><tbody>
         ${debtors.map(s => {
             let paid = payments.filter(p => p.student_id === s.id && p.term === term && p.academic_year === year).reduce((a, b) => a + (b.amount || 0), 0);
             let bal = (s.total_fees || 0) - paid;
             return `<tr><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td>${s.class}</td><td>${formatMoney(s.total_fees)}</td><td>${formatMoney(paid)}</td><td class="debt">${formatMoney(bal)}</td><td>${s.parent_whatsapp || ''}</td></tr>`;
         }).join('')}
         </tbody></table>
-        <p style="margin-top:20px;"><strong>Total Debtors:</strong> ${debtors.length}</p>
+        <p><strong>Total Debtors:</strong> ${debtors.length}</p>
     </body></html>`);
     win.document.close();
     win.print();
 }
 
-// ==================== OTHER FUNCTIONS ====================
 window.editStudentFees = async (id) => {
     let s = students.find(st => st.id === id);
     if (!s) return;
     let newFees = prompt(`Edit total fees for ${s.first_name} ${s.last_name}\nCurrent: ${formatMoney(s.total_fees || 0)}\nEnter new total fees (UGX):`, s.total_fees || 0);
     if (newFees !== null && !isNaN(parseFloat(newFees)) && parseFloat(newFees) >= 0) {
         await updateDB('students', id, { total_fees: parseFloat(newFees) });
-        await loadAllData();
+        await loadAllData(true);
         renderFees();
-        showToast(`Total fees updated to ${formatMoney(parseFloat(newFees))}`);
+        showToast(`Updated to ${formatMoney(parseFloat(newFees))}`);
     }
 };
 
@@ -935,13 +715,13 @@ window.sendSingleFeeReminder = (id, term, year) => {
     if (!s) return;
     let paid = payments.filter(p => p.student_id === id && p.term === term && p.academic_year === year).reduce((a, b) => a + (b.amount || 0), 0);
     let bal = (s.total_fees || 0) - paid;
-    if (s?.parent_whatsapp) sendWhatsApp(s.parent_whatsapp, `Dear ${s.parent_name}, your child ${s.first_name} ${s.last_name} has balance ${formatMoney(bal)} for ${term} ${year}. Please clear.`);
+    if (s?.parent_whatsapp) sendWhatsApp(s.parent_whatsapp, `Dear ${s.parent_name}, ${s.first_name} ${s.last_name} balance ${formatMoney(bal)} for ${term} ${year}.`);
 };
 
 window.quickFeePayment = async (id, term, year) => {
-    let amt = prompt('Enter payment amount (UGX):');
+    let amt = prompt('Enter amount (UGX):');
     if (amt && parseFloat(amt) > 0) {
-        let method = prompt('Payment Method (Cash, Mobile Money, Bank Transfer, School Pay):') || 'Cash';
+        let method = prompt('Method (Cash, Mobile Money, Bank Transfer, School Pay):') || 'Cash';
         let paymentData = {
             id: crypto.randomUUID(),
             school_id: SCHOOL_ID,
@@ -955,16 +735,16 @@ window.quickFeePayment = async (id, term, year) => {
         };
         let result = await insertDB('payments', paymentData);
         if (result) {
-            await loadAllData();
+            await loadAllData(true);
             renderFees();
             showToast('Payment recorded');
         }
     }
 };
 
-// ==================== OTHER MODULES ====================
+// ============= DELETE STUDENT =============
 window.deleteStudent = async (id) => {
-    if (confirm('Are you sure you want to delete this student?')) {
+    if (confirm('Delete this student?')) {
         let studentMarks = marks.filter(m => m.student_id === id);
         for (let m of studentMarks) await deleteDB('marks', m.id);
         let studentAttendance = attendance.filter(a => a.student_id === id);
@@ -972,52 +752,41 @@ window.deleteStudent = async (id) => {
         let studentPayments = payments.filter(p => p.student_id === id);
         for (let p of studentPayments) await deleteDB('payments', p.id);
         await deleteDB('students', id);
-        await loadAllData();
+        await loadAllData(true);
         renderStudents();
-        showToast('Student deleted');
+        showToast('Deleted');
     }
 };
 
-// Helper: Convert file to base64
-function fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-    });
-}
-
+// ============= EDIT STUDENT =============
 window.editStudent = async (id) => {
     let s = students.find(st => st.id === id);
     if (!s) return;
     let modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
-    let photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="photo-upload-preview" id="editPhotoPreview">` : `<div class="photo-upload-preview" id="editPhotoPreview" style="display:flex; align-items:center; justify-content:center; background:#e2e8f0;"><i class="fas fa-user fa-2x" style="color:#666;"></i></div>`;
+    let photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="photo-upload-preview" id="editPhotoPreview">` : `<div class="photo-upload-preview" id="editPhotoPreview" style="background:#e2e8f0;"><i class="fas fa-user fa-2x" style="color:#666;"></i></div>`;
     modal.innerHTML = `
         <div class="modal-content">
-            <h3>Edit Student - ${s.first_name} ${s.last_name}</h3>
-            <div style="display:flex; flex-direction:column; gap:10px;">
-                <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center;">
+            <h3 style="font-size:1.1rem;">Edit Student</h3>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
                     <div>${photoHtml}</div>
-                    <div><label>Upload Photo</label><input type="file" id="editPhotoUpload" accept="image/*" class="form-control" style="padding:6px;"></div>
+                    <div><label style="font-size:0.8rem;">Upload Photo</label><input type="file" id="editPhotoUpload" accept="image/*" class="form-control" style="padding:4px;"></div>
                 </div>
-                <div><label>First Name</label><input type="text" id="editFirstName" value="${escapeHtml(s.first_name)}" class="form-control"></div>
-                <div><label>Last Name</label><input type="text" id="editLastName" value="${escapeHtml(s.last_name)}" class="form-control"></div>
-                <div><label>LIN</label><input type="text" id="editLin" value="${s.lin}" class="form-control" readonly style="background:#f0f0f0;"></div>
-                <div><label>Payment Code</label><input type="text" id="editPaymentCode" value="${s.payment_code || ''}" class="form-control"></div>
-                <div><label>Class</label><select id="editClass" class="form-control">${CLASS_ORDER.map(c => `<option ${s.class === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
-                <div><label>Parent Name</label><input type="text" id="editParentName" value="${escapeHtml(s.parent_name || '')}" class="form-control"></div>
-                <div><label>Parent WhatsApp</label><input type="text" id="editParentWhatsapp" value="${escapeHtml(s.parent_whatsapp || '')}" class="form-control"></div>
-                <div><label>Total Fees (UGX)</label><input type="number" id="editTotalFees" value="${s.total_fees || 0}" class="form-control"></div>
+                <div><label style="font-size:0.8rem;">First Name</label><input type="text" id="editFirstName" value="${escapeHtml(s.first_name)}" class="form-control"></div>
+                <div><label style="font-size:0.8rem;">Last Name</label><input type="text" id="editLastName" value="${escapeHtml(s.last_name)}" class="form-control"></div>
+                <div><label style="font-size:0.8rem;">LIN (readonly)</label><input type="text" id="editLin" value="${s.lin}" class="form-control" readonly style="background:#f0f0f0;"></div>
+                <div><label style="font-size:0.8rem;">Payment Code</label><input type="text" id="editPaymentCode" value="${s.payment_code || ''}" class="form-control"></div>
+                <div><label style="font-size:0.8rem;">Class</label><select id="editClass" class="form-control">${CLASS_ORDER.map(c => `<option ${s.class === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+                <div><label style="font-size:0.8rem;">Parent Name</label><input type="text" id="editParentName" value="${escapeHtml(s.parent_name || '')}" class="form-control"></div>
+                <div><label style="font-size:0.8rem;">Parent WhatsApp</label><input type="text" id="editParentWhatsapp" value="${escapeHtml(s.parent_whatsapp || '')}" class="form-control"></div>
+                <div><label style="font-size:0.8rem;">Total Fees (UGX)</label><input type="number" id="editTotalFees" value="${s.total_fees || 0}" class="form-control"></div>
             </div>
-            <div class="flex" style="justify-content: flex-end; margin-top:20px;">
-                <button class="btn btn-primary" onclick="saveEditStudent('${s.id}')">Update</button>
-                <button class="btn btn-gold" onclick="this.closest('.modal').remove()">Cancel</button>
+            <div class="flex" style="justify-content:flex-end; margin-top:12px;">
+                <button class="btn btn-primary btn-sm" onclick="saveEditStudent('${s.id}')">Update</button>
+                <button class="btn btn-gold btn-sm" onclick="this.closest('.modal').remove()">Cancel</button>
             </div>
         </div>`;
     document.body.appendChild(modal);
-    
-    // Photo preview on file select
     document.getElementById('editPhotoUpload')?.addEventListener('change', function(e) {
         let file = e.target.files[0];
         if (file) {
@@ -1034,10 +803,7 @@ window.editStudent = async (id) => {
 window.saveEditStudent = async (id) => {
     let photoFile = document.getElementById('editPhotoUpload')?.files[0];
     let photoUrl = '';
-    if (photoFile) {
-        photoUrl = await fileToBase64(photoFile);
-    }
-    
+    if (photoFile) photoUrl = await fileToBase64(photoFile);
     let updates = {
         first_name: document.getElementById('editFirstName').value,
         last_name: document.getElementById('editLastName').value,
@@ -1048,20 +814,19 @@ window.saveEditStudent = async (id) => {
         total_fees: parseFloat(document.getElementById('editTotalFees').value) || 0
     };
     if (photoUrl) updates.photo_url = photoUrl;
-    
     await updateDB('students', id, updates);
-    await loadAllData();
+    await loadAllData(true);
     renderStudents();
     document.querySelector('.modal')?.remove();
-    showToast('Student updated');
+    showToast('Updated');
 };
 
 function showAddStudentModal() {
     let modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
-    modal.innerHTML = `<div class="modal-content"><h3>Add New Student</h3>
-        <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
-            <div class="photo-upload-preview" id="newPhotoPreview" style="display:flex; align-items:center; justify-content:center; background:#e2e8f0;"><i class="fas fa-user fa-2x" style="color:#666;"></i></div>
-            <div><label>Upload Photo</label><input type="file" id="newPhotoUpload" accept="image/*" class="form-control" style="padding:6px;"></div>
+    modal.innerHTML = `<div class="modal-content"><h3 style="font-size:1.1rem;">Add Student</h3>
+        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:6px;">
+            <div class="photo-upload-preview" id="newPhotoPreview" style="background:#e2e8f0;"><i class="fas fa-user fa-2x" style="color:#666;"></i></div>
+            <div><label style="font-size:0.8rem;">Photo</label><input type="file" id="newPhotoUpload" accept="image/*" class="form-control" style="padding:4px;"></div>
         </div>
         <input type="text" id="newFirstName" placeholder="First Name" class="form-control">
         <input type="text" id="newLastName" placeholder="Last Name" class="form-control">
@@ -1071,21 +836,18 @@ function showAddStudentModal() {
         <input type="text" id="newParentName" placeholder="Parent Name" class="form-control">
         <input type="text" id="newParentWhatsapp" placeholder="Parent WhatsApp" class="form-control">
         <input type="number" id="newTotalFees" placeholder="Total Fees" class="form-control">
-        <div class="flex" style="justify-content: flex-end; margin-top:10px;">
-            <button class="btn btn-primary" onclick="saveNewStudent()">Save</button>
-            <button class="btn btn-gold" onclick="this.closest('.modal').remove()">Cancel</button>
+        <div class="flex" style="justify-content:flex-end; margin-top:10px;">
+            <button class="btn btn-primary btn-sm" onclick="saveNewStudent()">Save</button>
+            <button class="btn btn-gold btn-sm" onclick="this.closest('.modal').remove()">Cancel</button>
         </div></div>`;
     document.body.appendChild(modal);
-    
     document.getElementById('newPhotoUpload')?.addEventListener('change', function(e) {
         let file = e.target.files[0];
         if (file) {
             let reader = new FileReader();
             reader.onload = function(ev) {
                 let preview = document.getElementById('newPhotoPreview');
-                if (preview) {
-                    preview.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
-                }
+                if (preview) preview.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
             };
             reader.readAsDataURL(file);
         }
@@ -1099,91 +861,77 @@ window.saveNewStudent = async () => {
     let lin = document.getElementById('newLin').value.trim().toUpperCase() || `PM${first.charAt(0).toUpperCase()}${Math.floor(1000 + Math.random() * 9000)}`;
     let paymentCode = document.getElementById('newPaymentCode').value.trim().toUpperCase() || '';
     let photoFile = document.getElementById('newPhotoUpload')?.files[0];
-    let photoUrl = '';
-    if (photoFile) {
-        photoUrl = await fileToBase64(photoFile);
-    }
-    
-    let newStudent = { 
-        id: crypto.randomUUID(), 
-        school_id: SCHOOL_ID, 
-        first_name: first, 
-        last_name: last, 
-        lin: lin, 
-        payment_code: paymentCode, 
-        class: document.getElementById('newClass').value, 
-        parent_name: document.getElementById('newParentName').value, 
-        parent_whatsapp: document.getElementById('newParentWhatsapp').value, 
-        total_fees: parseFloat(document.getElementById('newTotalFees').value) || 0, 
-        fees_paid: 0, 
-        photo_url: photoUrl, 
-        academic_year: CURRENT_ACADEMIC_YEAR 
+    let photoUrl = photoFile ? await fileToBase64(photoFile) : '';
+    let newStudent = {
+        id: crypto.randomUUID(),
+        school_id: SCHOOL_ID,
+        first_name: first,
+        last_name: last,
+        lin: lin,
+        payment_code: paymentCode,
+        class: document.getElementById('newClass').value,
+        parent_name: document.getElementById('newParentName').value,
+        parent_whatsapp: document.getElementById('newParentWhatsapp').value,
+        total_fees: parseFloat(document.getElementById('newTotalFees').value) || 0,
+        fees_paid: 0,
+        photo_url: photoUrl,
+        academic_year: CURRENT_ACADEMIC_YEAR
     };
     await insertDB('students', newStudent);
-    await loadAllData();
+    await loadAllData(true);
     renderStudents();
     document.querySelector('.modal')?.remove();
     showToast('Student added');
 };
 
+// ============= PROMOTE =============
 window.showPromoteModal = () => {
     let modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
-    let classOptions = CLASS_ORDER.map(c => `<option value="${c}">${c}</option>`).join('');
-    modal.innerHTML = `
-        <div class="modal-content">
-            <h3>Promote Students to Next Class</h3>
-            <p style="color:#666;margin-bottom:15px;">Select students to promote to the next class.</p>
-            <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="promoteSearch" placeholder="Search students..."></div>
-            <div id="promoteStudentsList" style="max-height:300px;overflow-y:auto;margin:15px 0;"></div>
-            <div class="flex"><label>Promote To:</label><select id="promoteToClass" class="form-control">${classOptions}</select></div>
-            <div class="flex" style="justify-content: flex-end; margin-top:20px;">
-                <button class="btn btn-primary" onclick="executePromotion()">Promote Selected</button>
-                <button class="btn btn-gold" onclick="this.closest('.modal').remove()">Cancel</button>
-            </div>
-        </div>`;
+    modal.innerHTML = `<div class="modal-content"><h3>Promote Students</h3>
+        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="promoteSearch" placeholder="Search..."></div>
+        <div id="promoteStudentsList" style="max-height:250px;overflow-y:auto;margin:10px 0;"></div>
+        <div class="flex"><label>Promote To:</label><select id="promoteToClass" class="form-control">${CLASS_ORDER.map(c => `<option>${c}</option>`).join('')}</select></div>
+        <div class="flex" style="justify-content:flex-end;"><button class="btn btn-primary btn-sm" onclick="executePromotion()">Promote</button><button class="btn btn-gold btn-sm" onclick="this.closest('.modal').remove()">Cancel</button></div>
+    </div>`;
     document.body.appendChild(modal);
     loadPromoteList();
 };
 
 async function loadPromoteList() {
-    let searchTerm = document.getElementById('promoteSearch')?.value || '';
-    let filtered = students.filter(s => !searchTerm || `${s.first_name} ${s.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) || s.lin.toLowerCase().includes(searchTerm.toLowerCase()));
+    let search = document.getElementById('promoteSearch')?.value || '';
+    let filtered = students.filter(s => !search || `${s.first_name} ${s.last_name}`.toLowerCase().includes(search.toLowerCase()) || s.lin.toLowerCase().includes(search.toLowerCase()));
     let container = document.getElementById('promoteStudentsList');
     if (!container) return;
-    container.innerHTML = `<table class="data-table"><thead><tr><th><input type="checkbox" id="promoteAll"></th><th>Name</th><th>LIN</th><th>Current Class</th></tr></thead><tbody>${filtered.map(s => `<tr><td><input type="checkbox" class="promote-check" data-id="${s.id}"></td><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td>${s.class}</td></tr>`).join('')}</tbody></table>`;
-    document.getElementById('promoteAll')?.addEventListener('change', function() {
-        document.querySelectorAll('.promote-check').forEach(c => c.checked = this.checked);
-    });
+    container.innerHTML = `<table><thead><tr><th><input type="checkbox" id="promoteAll"></th><th>Name</th><th>LIN</th><th>Class</th></tr></thead><tbody>${filtered.map(s => `<tr><td><input type="checkbox" class="promote-check" data-id="${s.id}"></td><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td>${s.class}</td></tr>`).join('')}</tbody></table>`;
+    document.getElementById('promoteAll')?.addEventListener('change', function() { document.querySelectorAll('.promote-check').forEach(c => c.checked = this.checked); });
     document.getElementById('promoteSearch')?.addEventListener('input', loadPromoteList);
 }
 
 window.executePromotion = async () => {
     let selected = document.querySelectorAll('.promote-check:checked');
-    if (selected.length === 0) { showToast('No students selected', true); return; }
+    if (selected.length === 0) { showToast('Select students', true); return; }
     let newClass = document.getElementById('promoteToClass').value;
-    if (!newClass) { showToast('Please select a class', true); return; }
     let count = 0;
     for (let cb of selected) {
-        let id = cb.dataset.id;
-        await updateDB('students', id, { class: newClass });
+        await updateDB('students', cb.dataset.id, { class: newClass });
         count++;
     }
-    await loadAllData();
+    await loadAllData(true);
     renderStudents();
     document.querySelector('.modal')?.remove();
-    showToast(`${count} students promoted to ${newClass}`);
+    showToast(`${count} promoted to ${newClass}`);
 };
 
-// ==================== ATTENDANCE ====================
+// ============= ATTENDANCE =============
 async function renderAttendance() {
     if (!ROLE_PERMS[currentUser?.role]?.attendance) {
         document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3></div>';
         return;
     }
     let opts = [...new Set(students.map(s => s.class))];
-    document.getElementById('tabContent').innerHTML = `<div class="card"><h3>Attendance Tracker</h3>
-        <div class="flex"><select id="attClass">${opts.map(c => `<option>${c}</option>`).join('')}</select><input type="date" id="attDate" value="${new Date().toISOString().slice(0, 10)}"><button class="btn btn-primary" id="loadAtt">Load</button><button class="btn btn-gold" id="saveAtt">Save</button></div>
-        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="attSearch" placeholder="Search student..."></div>
+    document.getElementById('tabContent').innerHTML = `<div class="card"><h3 style="font-size:1rem;">Attendance Tracker</h3>
+        <div class="flex"><select id="attClass" class="form-control">${opts.map(c => `<option>${c}</option>`).join('')}</select><input type="date" id="attDate" value="${new Date().toISOString().slice(0, 10)}" class="form-control"><button class="btn btn-primary btn-sm" id="loadAtt">Load</button><button class="btn btn-gold btn-sm" id="saveAtt">Save</button></div>
+        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="attSearch" placeholder="Search..."></div>
         <div id="attList"></div></div>`;
     document.getElementById('loadAtt').onclick = loadAttendance;
     document.getElementById('saveAtt').onclick = saveAttendance;
@@ -1203,8 +951,8 @@ async function loadAttendance() {
     let absentSet = new Set(existing.map(a => a.student_id));
     let tbl = `<table><thead><tr><th>Photo</th><th>Student</th><th>LIN</th><th>Mark Absent</th></tr></thead><tbody>`;
     for (let s of classStd) {
-        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-circle fa-2x"></i>`;
-        tbl += `<tr><td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td><input type="checkbox" class="absent-cb" data-id="${s.id}" ${absentSet.has(s.id) ? 'checked' : ''}> Mark Absent</td></tr>`;
+        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" style="width:35px;height:35px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-circle fa-2x"></i>`;
+        tbl += `<tr><td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td><input type="checkbox" class="absent-cb" data-id="${s.id}" ${absentSet.has(s.id) ? 'checked' : ''}></td></tr>`;
     }
     tbl += `</tbody></table>`;
     document.getElementById('attList').innerHTML = tbl;
@@ -1223,19 +971,19 @@ async function saveAttendance() {
         }
     }
     showToast('Attendance saved');
-    await loadAllData();
+    await loadAllData(true);
 }
 
-// ==================== MARKS ====================
+// ============= MARKS =============
 async function renderMarks() {
     if (!ROLE_PERMS[currentUser?.role]?.marks) {
         document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3></div>';
         return;
     }
     let opts = [...new Set(students.map(s => s.class))];
-    document.getElementById('tabContent').innerHTML = `<div class="card"><h3>Marks Entry ${currentUser?.role === 'teacher' ? '<span style="font-size:12px;color:#dc2626;">(Editable only within 1 minute)</span>' : ''}</h3>
-        <div class="flex"><select id="markClass">${opts.map(c => `<option>${c}</option>`).join('')}</select><select id="markTerm">${TERMS.map(t => `<option>${t}</option>`).join('')}</select><select id="markExam">${EXAM_TYPES.map(e => `<option>${e}</option>`).join('')}</select><select id="markYear">${ACADEMIC_YEARS.map(y => `<option ${y === CURRENT_ACADEMIC_YEAR ? 'selected' : ''}>${y}</option>`).join('')}</select><button class="btn btn-primary" id="loadMarks">Load</button><button class="btn btn-gold" id="saveMarks">Save</button></div>
-        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="marksSearch" placeholder="Search student..."></div>
+    document.getElementById('tabContent').innerHTML = `<div class="card"><h3 style="font-size:1rem;">Marks Entry</h3>
+        <div class="flex"><select id="markClass" class="form-control">${opts.map(c => `<option>${c}</option>`).join('')}</select><select id="markTerm" class="form-control">${TERMS.map(t => `<option>${t}</option>`).join('')}</select><select id="markExam" class="form-control">${EXAM_TYPES.map(e => `<option>${e}</option>`).join('')}</select><select id="markYear" class="form-control">${ACADEMIC_YEARS.map(y => `<option ${y === CURRENT_ACADEMIC_YEAR ? 'selected' : ''}>${y}</option>`).join('')}</select><button class="btn btn-primary btn-sm" id="loadMarks">Load</button><button class="btn btn-gold btn-sm" id="saveMarks">Save</button></div>
+        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="marksSearch" placeholder="Search..."></div>
         <div id="marksGrid"></div></div>`;
     document.getElementById('loadMarks').onclick = async () => {
         let cls = document.getElementById('markClass').value;
@@ -1249,23 +997,18 @@ async function renderMarks() {
         }
         let subs = SUBJECTS_BY_CLASS[cls] || [];
         let relMarks = marks.filter(m => m.term === term && m.exam_type === exam && m.academic_year === year);
-        let grid = `<table><thead><tr><th>Student</th><th>Photo</th>${subs.map(s => `<th>${s}</th>`).join('')}</thead><tbody>`;
+        let grid = `<div class="data-table"><table><thead><tr><th>Student</th><th>Photo</th>${subs.map(s => `<th>${s}</th>`).join('')}</thead><tbody>`;
         for (let s of classStd) {
-            let photoHtml = s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-circle fa-2x"></i>`;
+            let photoHtml = s.photo_url ? `<img src="${s.photo_url}" style="width:35px;height:35px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-circle fa-2x"></i>`;
             grid += `<tr><td><strong>${s.first_name} ${s.last_name}</strong><br><small>${s.lin}</small></td><td>${photoHtml}</td>`;
             for (let sub of subs) {
                 let mk = relMarks.find(m => m.student_id === s.id && m.subject === sub);
-                let isLocked = false;
-                if (currentUser?.role === 'teacher' && mk && mk.created_at) {
-                    let timeDiff = (new Date() - new Date(mk.created_at)) / 1000 / 60;
-                    isLocked = timeDiff > 1;
-                }
-                let disabledAttr = isLocked ? 'disabled' : '';
-                grid += `<td><input type="number" class="mark-input" data-student="${s.id}" data-subject="${sub}" data-mark-id="${mk?.id || ''}" value="${mk ? mk.score : ''}" style="width:70px;" min="0" max="100" ${disabledAttr}> ${isLocked ? '🔒' : ''}</td>`;
+                let disabled = (currentUser?.role === 'teacher' && mk && mk.created_at && (new Date() - new Date(mk.created_at)) / 60000 > 1) ? 'disabled' : '';
+                grid += `<td><input type="number" class="mark-input" data-student="${s.id}" data-subject="${sub}" data-mark-id="${mk?.id || ''}" value="${mk ? mk.score : ''}" style="width:60px;" min="0" max="100" ${disabled}> ${disabled ? '🔒' : ''}</td>`;
             }
             grid += `</tr>`;
         }
-        grid += `</tbody></table>`;
+        grid += `</tbody></table></div>`;
         document.getElementById('marksGrid').innerHTML = grid;
     };
     document.getElementById('saveMarks').onclick = async () => {
@@ -1281,12 +1024,9 @@ async function renderMarks() {
                 let markId = inp.dataset.markId;
                 if (currentUser?.role === 'teacher' && markId) {
                     let existingMark = marks.find(m => m.id === markId);
-                    if (existingMark && existingMark.created_at) {
-                        let timeDiff = (new Date() - new Date(existingMark.created_at)) / 1000 / 60;
-                        if (timeDiff > 1) {
-                            showToast(`Cannot edit ${subj} - only editable within 1 minute`, true);
-                            continue;
-                        }
+                    if (existingMark && existingMark.created_at && (new Date() - new Date(existingMark.created_at)) / 60000 > 1) {
+                        showToast(`Cannot edit ${subj} - only 1 minute`, true);
+                        continue;
                     }
                 }
                 let existing = marks.find(m => m.student_id === sid && m.subject === subj && m.term === term && m.exam_type === exam && m.academic_year === year);
@@ -1296,13 +1036,13 @@ async function renderMarks() {
             }
         }
         showToast('Marks saved');
-        await loadAllData();
+        await loadAllData(true);
     };
     document.getElementById('marksSearch').addEventListener('input', (e) => { if (document.getElementById('loadMarks')) document.getElementById('loadMarks').click(); });
     document.getElementById('loadMarks').click();
 }
 
-// ==================== REPORTS ====================
+// ============= REPORTS =============
 async function renderReports() {
     if (!ROLE_PERMS[currentUser?.role]?.reports) {
         document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3></div>';
@@ -1310,25 +1050,25 @@ async function renderReports() {
     }
     let opts = [...new Set(students.map(s => s.class))];
     document.getElementById('tabContent').innerHTML = `
-        <div class="card"><h3>Report Center</h3>
+        <div class="card"><h3 style="font-size:1rem;">Report Center</h3>
         <div class="flex">
-            <div style="flex:1;"><select id="reportClass" class="form-control">${opts.map(c => `<option value="${c}">${c}</option>`).join('')}</select></div>
-            <div style="flex:1;"><select id="reportTerm" class="form-control">${TERMS.map(t => `<option value="${t}">${t}</option>`).join('')}</select></div>
-            <div style="flex:1;"><select id="reportExam" class="form-control"><option value="beginning">Beginning Only</option><option value="mid">Beginning + Mid</option><option value="end" selected>Full Term</option></select></div>
-            <div style="flex:1;"><select id="reportYear" class="form-control">${ACADEMIC_YEARS.map(y => `<option ${y === CURRENT_ACADEMIC_YEAR ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
-            <button class="btn btn-primary" id="loadReportList">Load Students</button>
+            <div><select id="reportClass" class="form-control">${opts.map(c => `<option value="${c}">${c}</option>`).join('')}</select></div>
+            <div><select id="reportTerm" class="form-control">${TERMS.map(t => `<option value="${t}">${t}</option>`).join('')}</select></div>
+            <div><select id="reportExam" class="form-control"><option value="beginning">Beginning</option><option value="mid">Mid</option><option value="end" selected>End</option></select></div>
+            <div><select id="reportYear" class="form-control">${ACADEMIC_YEARS.map(y => `<option ${y === CURRENT_ACADEMIC_YEAR ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+            <button class="btn btn-primary btn-sm" id="loadReportList">Load</button>
         </div>
-        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="reportSearch" placeholder="Search student..."></div>
+        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="reportSearch" placeholder="Search..."></div>
         <div id="studentList"></div>
         <div id="selectionBar" class="selection-bar" style="display:none;">
             <span><i class="fas fa-check-circle"></i> <span id="selectedCount">0</span> selected</span>
             <div class="flex" style="margin-bottom:0;">
-                <button class="btn btn-primary" id="printSelected">Print Selected</button>
-                <button class="btn btn-outline" id="selectAll">Select All</button>
-                <button class="btn btn-outline" id="deselectAll">Deselect All</button>
+                <button class="btn btn-primary btn-sm" id="printSelected">Print Selected</button>
+                <button class="btn btn-outline btn-sm" id="selectAll">Select All</button>
+                <button class="btn btn-outline btn-sm" id="deselectAll">Deselect</button>
             </div>
         </div>
-        <button class="btn btn-gold" id="printWholeClass" style="width:100%; margin-top:20px;">Print Whole Class</button>
+        <button class="btn btn-gold" id="printWholeClass" style="width:100%; margin-top:10px;">Print Whole Class</button>
         </div>`;
     
     const loadList = () => {
@@ -1336,24 +1076,24 @@ async function renderReports() {
         if (!cls) return;
         let classStd = students.filter(s => s.class === cls);
         if (document.getElementById('reportSearch').value) {
-            const termSearch = document.getElementById('reportSearch').value.toLowerCase();
-            classStd = classStd.filter(s => `${s.first_name} ${s.last_name}`.toLowerCase().includes(termSearch) || s.lin.toLowerCase().includes(termSearch));
+            const term = document.getElementById('reportSearch').value.toLowerCase();
+            classStd = classStd.filter(s => `${s.first_name} ${s.last_name}`.toLowerCase().includes(term) || s.lin.toLowerCase().includes(term));
         }
         selectedStudentIds.clear();
-        document.getElementById('studentList').innerHTML = `<table><thead><tr><th><input type="checkbox" id="headerChk"></th><th>Photo</th><th>Name</th><th>LIN</th><th>Payment Code</th><th>Parent</th><th></th></tr></thead><tbody>${classStd.map(s => `<tr>
+        document.getElementById('studentList').innerHTML = `<div class="data-table"><table><thead><tr><th><input type="checkbox" id="headerChk"></th><th>Photo</th><th>Name</th><th>LIN</th><th>Payment Code</th><th>Parent</th><th></th></tr></thead><tbody>${classStd.map(s => `<tr>
             <td><input type="checkbox" class="studentChk" data-id="${s.id}"></td>
             <td><div class="student-photo-img">${s.photo_url ? `<img src="${s.photo_url}" class="student-photo-img">` : `<i class="fas fa-user-circle fa-2x"></i>`}</div></td>
             <td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${s.parent_name || ''}</td>
             <td><button class="btn btn-sm btn-gold" onclick="printSingleStudentReport('${s.id}')">Print</button></td>
-        `).join('')}</tbody></table>`;
+        `).join('')}</tbody></table></div>`;
         document.getElementById('selectionBar').style.display = 'flex';
-        document.querySelectorAll('.studentChk').forEach(cb => cb.addEventListener('change', function () {
+        document.querySelectorAll('.studentChk').forEach(cb => cb.addEventListener('change', function() {
             if (this.checked) selectedStudentIds.add(this.dataset.id);
             else selectedStudentIds.delete(this.dataset.id);
             document.getElementById('selectedCount').innerText = selectedStudentIds.size;
         }));
         let header = document.getElementById('headerChk');
-        if (header) header.onchange = function () {
+        if (header) header.onchange = function() {
             document.querySelectorAll('.studentChk').forEach(c => {
                 c.checked = this.checked;
                 if (this.checked) selectedStudentIds.add(c.dataset.id);
@@ -1409,25 +1149,24 @@ async function printReports(ids) {
     let year = document.getElementById('reportYear').value;
     let selected = students.filter(s => ids.includes(s.id));
     let classStudents = students.filter(s => s.class === cls);
-    
     let examType = examSelection === 'end' ? 'End of Term' : examSelection === 'mid' ? 'Mid Term' : 'Beginning';
     let positionMap = calculatePosition(classStudents, term, examType, year);
     let exams = examSelection === 'end' ? ['Beginning of Term', 'Mid Term', 'End of Term'] : examSelection === 'mid' ? ['Beginning of Term', 'Mid Term'] : ['Beginning of Term'];
     
-    let html = `<!DOCTYPE html><html><head><title>Student Reports - ${term} ${year}</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>
-        body{font-family:'Inter',sans-serif;padding:30px;background:white;margin:0;}
-        .report-card{max-width:1000px;margin:0 auto 30px;background:white;border-radius:24px;padding:32px;page-break-after:all;box-shadow:0 4px 20px rgba(0,0,0,0.1)}
-        .report-header{text-align:center;border-bottom:3px solid #D4A017;padding-bottom:20px;margin-bottom:24px}
-        .report-header h2{color:#003366;margin:0;}
-        .student-info{background:#f8fafc;padding:20px;border-radius:20px;display:flex;gap:24px;flex-wrap:wrap;margin-bottom:24px;align-items:center}
-        .student-photo{width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #D4A017;background:#e2e8f0;display:flex;align-items:center;justify-content:center;}
-        .grade-table{width:100%;border-collapse:collapse;margin:20px 0}
-        .grade-table th,.grade-table td{border:1px solid #e2e8f0;padding:10px;text-align:center}
-        .grade-table th{background:#003366;color:white}
-        .comment-section{display:flex;gap:30px;margin-top:30px;flex-wrap:wrap}
-        .comment-box{flex:1;border-top:2px dashed #cbd5e1;padding-top:18px}
-        .position-badge{background:#D4A017;color:#003366;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:bold;display:inline-block;}
-        @media print{body{padding:0}.report-card{page-break-after:always;margin:0;box-shadow:none}}
+    let html = `<!DOCTYPE html><html><head><title>Reports - ${term} ${year}</title><style>
+        body{font-family:Arial;padding:20px;background:white;}
+        .report-card{max-width:1000px;margin:0 auto 20px;background:white;border-radius:16px;padding:24px;page-break-after:all;box-shadow:0 2px 12px rgba(0,0,0,0.06);}
+        .report-header{text-align:center;border-bottom:2px solid #D4A017;padding-bottom:12px;margin-bottom:16px;}
+        .report-header h2{color:#003366;margin:0;font-size:1.2rem;}
+        .student-info{background:#f8fafc;padding:12px;border-radius:12px;display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+        .student-photo{width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #D4A017;background:#e2e8f0;display:flex;align-items:center;justify-content:center;}
+        .grade-table{width:100%;border-collapse:collapse;margin:12px 0;}
+        .grade-table th,.grade-table td{border:1px solid #e2e8f0;padding:6px;text-align:center;font-size:0.8rem;}
+        .grade-table th{background:#003366;color:white;}
+        .comment-section{display:flex;gap:20px;margin-top:16px;flex-wrap:wrap;}
+        .comment-box{flex:1;border-top:2px dashed #cbd5e1;padding-top:12px;}
+        .position-badge{background:#D4A017;color:#003366;padding:2px 12px;border-radius:20px;font-size:0.8rem;font-weight:bold;}
+        @media print{body{padding:0;}.report-card{box-shadow:none;margin:0;page-break-after:always;}}
     </style></head><body>`;
     
     for (let s of selected) {
@@ -1435,9 +1174,8 @@ async function printReports(ids) {
         let subjects = SUBJECTS_BY_CLASS[s.class] || ['English', 'Mathematics', 'Science', 'Social Studies'];
         let rows = '', totals = {};
         exams.forEach(e => totals[e] = 0);
-        
         for (let sub of subjects) {
-            rows += `<tr><td style="font-weight:600;padding:10px;">${sub}</td>`;
+            rows += `<tr><td style="font-weight:600;">${sub}</td>`;
             for (let ex of exams) {
                 let mk = studentMarks.find(m => m.subject === sub && m.exam_type === ex);
                 let score = mk ? mk.score : '-';
@@ -1446,7 +1184,7 @@ async function printReports(ids) {
                     if (s.class === 'P.1' || s.class === 'P.2' || s.class === 'P.3') {
                         if (sub === 'R.E') grade = getLetterGrade(score);
                         else grade = getStandardGrade(score);
-                    } else if (s.class === 'Baby' || s.class === 'Middle' || s.class === 'Top') {
+                    } else if (['Baby','Middle','Top'].includes(s.class)) {
                         grade = '-';
                     } else {
                         grade = getStandardGrade(score);
@@ -1457,21 +1195,17 @@ async function printReports(ids) {
             }
             rows += `</tr>`;
         }
-        
-        let totalRow = `<tr style="background:#eef2ff;"><td style="font-weight:700;padding:10px;">TOTAL / ${subjects.length * 100}</td>`;
+        let totalRow = `<tr style="background:#eef2ff;"><td style="font-weight:700;">TOTAL / ${subjects.length * 100}</td>`;
         for (let ex of exams) totalRow += `<td><strong>${totals[ex] || 0}</strong></td>`;
         totalRow += `</tr>`;
         rows += totalRow;
         
         let position = positionMap.get(s.id) || classStudents.length;
         let totalScore = totals['End of Term'] || totals['Mid Term'] || totals['Beginning of Term'] || 0;
-        let isNursery = ['Baby', 'Middle', 'Top'].includes(s.class);
-        let isLower = ['P.1', 'P.2', 'P.3'].includes(s.class);
-        
         let specialInfo = '';
-        if (isNursery) {
-            specialInfo = `<div style="margin-top:15px; text-align:center;"><span class="position-badge"><i class="fas fa-trophy"></i> Position: ${position} / ${classStudents.length}</span> <span style="margin-left:15px;"><strong>Total Marks:</strong> ${totalScore}/${subjects.length * 100}</span></div>`;
-        } else if (isLower) {
+        if (['Baby','Middle','Top'].includes(s.class)) {
+            specialInfo = `<div style="margin-top:10px;text-align:center;"><span class="position-badge">Position: ${position}/${classStudents.length}</span> <span style="margin-left:12px;"><strong>Total:</strong> ${totalScore}/${subjects.length * 100}</span></div>`;
+        } else if (['P.1','P.2','P.3'].includes(s.class)) {
             let gradingSubjects = subjects.filter(s => s !== 'R.E');
             let gradingTotal = 0;
             for (let sub of gradingSubjects) {
@@ -1479,36 +1213,32 @@ async function printReports(ids) {
                 if (mk) gradingTotal += mk.score;
             }
             let overallGrade = getLetterGrade(gradingTotal / gradingSubjects.length);
-            specialInfo = `<div style="margin-top:15px; text-align:center;"><span class="position-badge"><i class="fas fa-trophy"></i> Position: ${position} / ${classStudents.length}</span> <span style="margin-left:15px;"><strong>Grade:</strong> ${overallGrade}</span> <span style="margin-left:15px;"><strong>Total:</strong> ${totalScore}/${subjects.length * 100}</span></div>`;
+            specialInfo = `<div style="margin-top:10px;text-align:center;"><span class="position-badge">Position: ${position}/${classStudents.length}</span> <span style="margin-left:12px;"><strong>Grade:</strong> ${overallGrade}</span> <span style="margin-left:12px;"><strong>Total:</strong> ${totalScore}/${subjects.length * 100}</span></div>`;
         } else {
             let gradePointsList = [];
             for (let sub of subjects) {
                 let mk = studentMarks.find(m => m.subject === sub && m.exam_type === examType);
-                if (mk) {
-                    let grade = getStandardGrade(mk.score);
-                    gradePointsList.push(getGradePoints(grade));
-                }
+                if (mk) gradePointsList.push(getGradePoints(getStandardGrade(mk.score)));
             }
             gradePointsList.sort((a, b) => a - b);
             let agg = gradePointsList.slice(0, 4).reduce((s, p) => s + p, 0);
             let division = getDivision(agg);
-            specialInfo = `<div style="margin-top:15px; text-align:center;"><strong>Aggregate: ${agg}</strong> | <strong>Division: ${division}</strong> | <strong>Total:</strong> ${totalScore}/${subjects.length * 100}</div>`;
+            specialInfo = `<div style="margin-top:10px;text-align:center;"><strong>Aggregate: ${agg}</strong> | <strong>Division: ${division}</strong> | <strong>Total:</strong> ${totalScore}/${subjects.length * 100}</div>`;
         }
         
-        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="student-photo">` : `<div class="student-photo"><i class="fas fa-user-graduate fa-3x" style="color:#003366;"></i></div>`;
-        
+        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="student-photo">` : `<div class="student-photo"><i class="fas fa-user-graduate fa-2x" style="color:#003366;"></i></div>`;
         html += `<div class="report-card">
-            <div class="report-header"><h2>PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</h2><p>"With God Everything is Possible"</p><p>P.O BOX ......, KAMPALA | Tel: 0756 585035</p></div>
-            <h3 style="text-align:center;margin:10px 0;">ACADEMIC REPORT - ${term} ${year}</h3>
-            <p style="text-align:center;color:#666;font-size:13px;">${examSelection === 'beginning' ? 'Beginning of Term Examination' : examSelection === 'mid' ? 'Mid Term Examination' : 'End of Term Examination'}</p>
+            <div class="report-header"><h2>PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</h2><p>"With God Everything is Possible"</p><p>Tel: 0756 585035</p></div>
+            <h3 style="text-align:center;margin:6px 0;">ACADEMIC REPORT - ${term} ${year}</h3>
+            <p style="text-align:center;color:#666;font-size:0.8rem;">${examSelection === 'beginning' ? 'Beginning of Term' : examSelection === 'mid' ? 'Mid Term' : 'End of Term'} Examination</p>
             <div class="student-info">${photoHtml}<div><p><strong>Name:</strong> ${s.first_name} ${s.last_name}</p><p><strong>LIN:</strong> ${s.lin}</p><p><strong>Payment Code:</strong> ${s.payment_code || ''}</p><p><strong>Class:</strong> ${s.class}</p><p><strong>Parent:</strong> ${s.parent_name || 'N/A'}</p></div></div>
             <table class="grade-table"><thead><tr><th>SUBJECT</th>${exams.map(e => `<th>${e}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
             ${specialInfo}
             <div class="comment-section">
-                <div class="comment-box"><strong>👩‍🏫 CLASS TEACHER'S COMMENT</strong><div style="height:50px;border-bottom:1px solid #000;margin:12px 0"></div>Signature: ____________________<br>Date: ___________</div>
-                <div class="comment-box"><strong>👨‍🎓 HEAD TEACHER'S COMMENT</strong><div style="height:50px;border-bottom:1px solid #000;margin:12px 0"></div>Signature: ____________________<br>Date: ___________</div>
+                <div class="comment-box"><strong>👩‍🏫 CLASS TEACHER</strong><div style="height:40px;border-bottom:1px solid #000;margin:8px 0;"></div>Signature: ____________________</div>
+                <div class="comment-box"><strong>👨‍🎓 HEAD TEACHER</strong><div style="height:40px;border-bottom:1px solid #000;margin:8px 0;"></div>Signature: ____________________</div>
             </div>
-            <div style="text-align:center;margin-top:20px;font-size:10px;color:#666;border-top:1px solid #eee;padding-top:15px;">Generated on ${formatUgandaDateTime(getUgandaTime())}</div>
+            <div style="text-align:center;margin-top:12px;font-size:8px;color:#666;border-top:1px solid #eee;padding-top:10px;">Generated ${formatUgandaDateTime(getUgandaTime())}</div>
         </div>`;
     }
     html += `</body></html>`;
@@ -1519,16 +1249,16 @@ async function printReports(ids) {
     showToast(`Printed ${selected.length} report(s)`);
 }
 
-// ==================== ABSENTEES ====================
+// ============= ABSENTEES =============
 async function renderAbsentees() {
     if (!ROLE_PERMS[currentUser?.role]?.absentees) {
         document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3></div>';
         return;
     }
     document.getElementById('tabContent').innerHTML = `
-        <div class="card"><h3>Absent Students Report</h3>
-        <div class="flex"><input type="date" id="absentDate" value="${new Date().toISOString().slice(0, 10)}"><button class="btn btn-primary" id="loadAbsent">Load</button><button class="btn btn-whatsapp" id="notifyAllAbsent">Notify All Parents</button><button class="btn btn-gold" id="printAbsentList"><i class="fas fa-print"></i> Print List</button></div>
-        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="absentSearch" placeholder="Search student..."></div>
+        <div class="card"><h3 style="font-size:1rem;">Absent Students</h3>
+        <div class="flex"><input type="date" id="absentDate" value="${new Date().toISOString().slice(0, 10)}" class="form-control"><button class="btn btn-primary btn-sm" id="loadAbsent">Load</button><button class="btn btn-whatsapp btn-sm" id="notifyAllAbsent">Notify All</button><button class="btn btn-gold btn-sm" id="printAbsentList"><i class="fas fa-print"></i> Print</button></div>
+        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="absentSearch" placeholder="Search..."></div>
         <div id="absentGrid"></div></div>`;
     document.getElementById('loadAbsent').onclick = loadAbsentList;
     document.getElementById('notifyAllAbsent').onclick = notifyAllAbsentParents;
@@ -1547,26 +1277,19 @@ async function loadAbsentList() {
     }
     let grid = document.getElementById('absentGrid');
     if (absentStudents.length === 0) {
-        grid.innerHTML = `<div style="text-align:center; padding:40px; background:#f0fdf4; border-radius:20px;"><i class="fas fa-check-circle fa-2x" style="color:#10b981;"></i><p>No absent students on ${date}</p></div>`;
+        grid.innerHTML = `<div style="text-align:center;padding:20px;background:#f0fdf4;border-radius:16px;"><i class="fas fa-check-circle" style="color:#10b981;"></i><p>No absent students on ${date}</p></div>`;
         return;
     }
-    grid.innerHTML = `<div style="margin-bottom:15px;"><span style="background:#dc2626; color:white; padding:5px 15px; border-radius:30px;">${absentStudents.length} absent student(s)</span></div>`;
+    grid.innerHTML = `<div style="margin-bottom:10px;"><span style="background:#dc2626;color:white;padding:2px 12px;border-radius:30px;">${absentStudents.length} absent</span></div>`;
     for (let s of absentStudents) {
-        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="absent-photo" style="width:55px;height:55px;border-radius:50%;object-fit:cover;">` : `<div class="absent-photo"><i class="fas fa-user-graduate fa-2x"></i></div>`;
-        grid.innerHTML += `
-            <div class="absent-card">
-                ${photoHtml}
-                <div style="flex:1;"><p><strong>${s.first_name} ${s.last_name}</strong></p><p>LIN: ${s.lin} | ${s.class}</p><p>Parent: ${s.parent_name || 'N/A'}</p><p>WhatsApp: ${s.parent_whatsapp || 'N/A'}</p></div>
-                <button class="btn btn-sm btn-whatsapp" onclick="sendAbsentParentNotify('${s.id}','${date}')"><i class="fab fa-whatsapp"></i> Notify</button>
-            </div>
-        `;
+        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="absent-photo" style="width:45px;height:45px;border-radius:50%;object-fit:cover;">` : `<div class="absent-photo"><i class="fas fa-user-graduate fa-2x"></i></div>`;
+        grid.innerHTML += `<div class="absent-card">${photoHtml}<div style="flex:1;"><p><strong>${s.first_name} ${s.last_name}</strong></p><p style="font-size:0.75rem;">LIN: ${s.lin} | ${s.class}</p><p style="font-size:0.75rem;">Parent: ${s.parent_name || 'N/A'}</p></div><button class="btn btn-sm btn-whatsapp" onclick="sendAbsentParentNotify('${s.id}','${date}')"><i class="fab fa-whatsapp"></i> Notify</button></div>`;
     }
 }
 
 window.sendAbsentParentNotify = (id, date) => {
     let s = students.find(st => st.id === id);
-    if (s?.parent_whatsapp) sendWhatsApp(s.parent_whatsapp, `Dear ${s.parent_name}, your child ${s.first_name} ${s.last_name} (${s.lin}) was absent on ${date}. Please ensure regular attendance.`);
-    else showToast('No WhatsApp number', true);
+    if (s?.parent_whatsapp) sendWhatsApp(s.parent_whatsapp, `Dear ${s.parent_name}, ${s.first_name} ${s.last_name} was absent on ${date}.`);
 };
 
 async function notifyAllAbsentParents() {
@@ -1575,11 +1298,7 @@ async function notifyAllAbsentParents() {
     let absent = students.filter(s => records.map(r => r.student_id).includes(s.id));
     let sent = 0;
     for (let s of absent) {
-        if (s.parent_whatsapp) {
-            sendWhatsApp(s.parent_whatsapp, `Dear ${s.parent_name}, your child ${s.first_name} ${s.last_name} (${s.lin}) was absent on ${date}. Please ensure regular attendance.`);
-            sent++;
-            await new Promise(r => setTimeout(r, 300));
-        }
+        if (s.parent_whatsapp) { sendWhatsApp(s.parent_whatsapp, `Dear ${s.parent_name}, ${s.first_name} ${s.last_name} was absent on ${date}.`); sent++; await new Promise(r => setTimeout(r, 200)); }
     }
     showToast(`Sent to ${sent} parents`);
 }
@@ -1590,16 +1309,13 @@ function printAbsentList() {
     if (!container || !container.innerHTML) return;
     let win = window.open('', '_blank');
     win.document.write(`<html><head><title>Absent Students - ${date}</title><style>
-        body{font-family:Arial;padding:20px}.absent-card{background:#fef2f2;border-radius:16px;padding:16px;display:flex;gap:16px;align-items:center;border-left:4px solid #dc2626;margin-bottom:12px;page-break-inside:avoid}
-        .absent-photo{width:55px;height:55px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;}
-        h2{color:#003366;border-bottom:2px solid #D4A017;padding-bottom:10px;}
-        .count-badge{background:#dc2626;color:white;padding:5px 15px;border-radius:30px;display:inline-block;margin:10px 0;}
-    </style></head><body><h2>PROGRESSIVE MOTHERS SCHOOL - ABSENT STUDENTS</h2><p>Date: ${date}</p>${container.innerHTML}<p style="margin-top:30px;text-align:center;font-size:11px;">Generated on ${formatUgandaDateTime(getUgandaTime())}</p></body></html>`);
+        body{font-family:Arial;padding:20px;}.absent-card{background:#fef2f2;border-radius:12px;padding:12px;display:flex;gap:12px;align-items:center;border-left:4px solid #dc2626;margin-bottom:8px;}.absent-photo{width:45px;height:45px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;}h2{color:#003366;}
+    </style></head><body><h2>PROGRESSIVE MOTHERS SCHOOL - ABSENT STUDENTS</h2><p>Date: ${date}</p>${container.innerHTML}<p style="margin-top:20px;font-size:10px;">Generated ${formatUgandaDateTime(getUgandaTime())}</p></body></html>`);
     win.document.close();
     win.print();
 }
 
-// ==================== MAIN APP ====================
+// ============= MAIN APP =============
 async function renderMainApp() {
     await loadAllData();
     let perms = ROLE_PERMS[currentUser?.role];
@@ -1617,21 +1333,18 @@ async function renderMainApp() {
         <div class="role-badge">${currentUser.role.toUpperCase()} <button class="logout-btn" onclick="logout()">Exit</button></div>
         <div class="app-container">
             <div class="school-header">
-                <div class="school-name">🏫 PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</div>
+                <div class="school-name">🏫 PROGRESSIVE MOTHERS</div>
                 <div class="school-address">Gayaza-Kijabijjo, Kampala | 📞 ${SCHOOL_CONTACTS.join(', ')}</div>
                 <div class="datetime-row">
-                    <div><i class="far fa-calendar-alt"></i> ${now.toLocaleDateString('en-UG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                    <div><i class="far fa-calendar-alt"></i> ${now.toLocaleDateString('en-UG', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</div>
                     <div><i class="far fa-clock"></i> <span id="liveTime">${now.toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit', hour12: true })} (EAT)</span></div>
-                    <div class="global-search"><i class="fas fa-search"></i><input type="text" id="globalSearchInput" placeholder="Search by name, LIN, class, parent..."></div>
+                    <div class="global-search"><i class="fas fa-search"></i><input type="text" id="globalSearchInput" placeholder="Search..."></div>
                 </div>
             </div>
             <div class="action-buttons">${tabs.map(t => `<button class="action-btn ${activeTab === t ? 'active' : ''}" data-tab="${t}"><i class="fas ${t === 'dashboard' ? 'fa-tachometer-alt' : t === 'students' ? 'fa-user-graduate' : t === 'attendance' ? 'fa-calendar-check' : t === 'marks' ? 'fa-chart-line' : t === 'fees' ? 'fa-coins' : t === 'reports' ? 'fa-print' : 'fa-user-clock'}"></i> ${t.charAt(0).toUpperCase() + t.slice(1)}</button>`).join('')}</div>
             <div id="tabContent"></div>
         </div>`;
-    setInterval(() => { 
-        let t = document.getElementById('liveTime'); 
-        if (t) t.innerText = getUgandaTime().toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit', hour12: true }) + ' (EAT)';
-    }, 1000);
+    setInterval(() => { let t = document.getElementById('liveTime'); if (t) t.innerText = getUgandaTime().toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit', hour12: true }) + ' (EAT)'; }, 1000);
     let search = document.getElementById('globalSearchInput');
     if (search) search.addEventListener('input', (e) => { globalSearch = e.target.value; if (activeTab === 'students') renderStudents(); });
     document.querySelectorAll('.action-btn').forEach(btn => { btn.onclick = () => { activeTab = btn.dataset.tab; renderMainApp(); }; });
@@ -1648,7 +1361,7 @@ async function renderMainApp() {
 function switchTab(tab) { activeTab = tab; renderMainApp(); }
 function logout() { currentUser = null; sessionStorage.removeItem('progressive_user'); renderLogin(); }
 function renderLogin() {
-    document.getElementById('app').innerHTML = `<div class="login-container"><i class="fas fa-school fa-3x" style="color:#003366;"></i><h2>Progressive Mothers School</h2><p>"With God Everything is Possible"</p><input type="text" id="username" placeholder="Username"><input type="password" id="password" placeholder="Password"><button onclick="doLogin()">Login</button></div>`;
+    document.getElementById('app').innerHTML = `<div class="login-container"><i class="fas fa-school fa-3x" style="color:#003366;"></i><h2>Progressive Mothers</h2><p>"With God Everything is Possible"</p><input type="text" id="username" placeholder="Username"><input type="password" id="password" placeholder="Password"><button onclick="doLogin()">Login</button></div>`;
 }
 function doLogin() {
     let u = document.getElementById('username').value, p = document.getElementById('password').value;
