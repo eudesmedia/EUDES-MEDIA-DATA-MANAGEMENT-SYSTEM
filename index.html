@@ -30,6 +30,7 @@
         .btn-gold { background: #D4A017; color: #003366; }
         .btn-red { background: #dc2626; color: white; }
         .btn-sm { padding: 4px 12px; font-size: 12px; border-radius: 20px; cursor: pointer; }
+        .btn-green { background: #10b981; color: white; }
         .card { background: white; border-radius: 20px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .flex { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 20px; }
         select, input { padding: 10px 16px; border-radius: 30px; border: 1px solid #cbd5e1; }
@@ -37,7 +38,7 @@
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
         th { background: #f8fafc; font-weight: 700; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
-        .modal-content { background: white; border-radius: 28px; padding: 24px; max-width: 600px; width: 90%; max-height: 85vh; overflow-y: auto; }
+        .modal-content { background: white; border-radius: 28px; padding: 24px; max-width: 800px; width: 90%; max-height: 85vh; overflow-y: auto; }
         .student-photo-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: #e2e8f0; display: flex; align-items: center; justify-content: center; }
         .report-card { background: white; border-radius: 24px; padding: 32px; margin-bottom: 32px; page-break-after: always; }
         .report-header { text-align: center; border-bottom: 3px solid #003366; padding-bottom: 20px; margin-bottom: 24px; }
@@ -68,7 +69,15 @@
         .history-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .history-table th, .history-table td { border: 1px solid #e2e8f0; padding: 10px; text-align: left; }
         .history-table th { background: #003366; color: white; }
-        .history-card { background: #f8fafc; padding: 20px; border-radius: 16px; margin-top: 15px; }
+        .filter-section { background: #f8fafc; padding: 15px; border-radius: 16px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+        .filter-section label { font-weight: 600; font-size: 13px; color: #1e293b; }
+        .payment-method-badge { padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block; }
+        .method-cash { background: #dbeafe; color: #1e40af; }
+        .method-mobile { background: #d1fae5; color: #065f46; }
+        .method-bank { background: #fef3c7; color: #92400e; }
+        .method-schoolpay { background: #e0e7ff; color: #3730a3; }
+        .student-history-btn { background: #003366; color: white; border: none; border-radius: 20px; padding: 4px 12px; cursor: pointer; font-size: 11px; }
+        .student-history-btn:hover { background: #D4A017; color: #003366; }
     </style>
 </head>
 <body>
@@ -76,8 +85,8 @@
 
 <script>
 // ============================================================
-// PROGRESSIVE MOTHERS SCHOOL - ROLE BASED ACCESS
-// Admin: Full Access | Teacher: Attendance + Marks | Finance: Students + Fees
+// PROGRESSIVE MOTHERS SCHOOL - COMPLETE SYSTEM
+// WITH STUDENT FINANCIAL HISTORY
 // ============================================================
 
 const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
@@ -87,7 +96,35 @@ const SCHOOL_CONTACTS = ['0756585035', '0779585035'];
 const TERMS = ['Term I', 'Term II', 'Term III'];
 const EXAM_TYPES = ['Beginning of Term', 'Mid Term', 'End of Term'];
 const CLASS_ORDER = ['Baby', 'Middle', 'Top', 'P.1', 'P.2', 'P.3', 'P.4', 'P.5', 'P.6', 'P.7'];
+const ACADEMIC_YEARS = ['2026', '2027', '2028', '2029', '2030'];
 const CURRENT_ACADEMIC_YEAR = '2026';
+const PAYMENT_METHODS = ['Cash', 'Mobile Money', 'Bank Transfer', 'School Pay'];
+
+// Uganda Time (EAT - UTC+3)
+function getUgandaTime() {
+    const now = new Date();
+    return new Date(now.getTime() + (3 * 60 * 60 * 1000));
+}
+
+function formatUgandaDate(date) {
+    const d = new Date(date);
+    return d.toLocaleDateString('en-UG', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function formatUgandaDateTime(date) {
+    const d = new Date(date);
+    return d.toLocaleString('en-UG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
+}
+
+function getPaymentMethodBadge(method) {
+    const classes = {
+        'Cash': 'method-cash',
+        'Mobile Money': 'method-mobile',
+        'Bank Transfer': 'method-bank',
+        'School Pay': 'method-schoolpay'
+    };
+    return `<span class="payment-method-badge ${classes[method] || 'method-cash'}">${method || 'Cash'}</span>`;
+}
 
 const SUBJECTS_BY_CLASS = {
     'Baby': ['LA 1', 'LA 2', 'LA 3', 'LA 4', 'LA 5'],
@@ -102,18 +139,16 @@ const SUBJECTS_BY_CLASS = {
     'P.7': ['English', 'Mathematics', 'Science', 'Social Studies']
 };
 
-// R.E excluded from grading for P.1-P.3
 const GRADING_EXCLUSIONS = {
     'P.1': ['R.E'],
     'P.2': ['R.E'],
     'P.3': ['R.E']
 };
 
-// ROLE PERMISSIONS
 const ROLE_PERMS = {
-    admin: { students: true, attendance: true, marks: true, fees: true, reports: true, absentees: true, editStudents: true, editFees: true },
-    teacher: { students: false, attendance: true, marks: true, fees: false, reports: false, absentees: false, editStudents: false, editFees: false },
-    finance: { students: true, attendance: false, marks: false, fees: true, reports: false, absentees: false, editStudents: false, editFees: true }
+    admin: { students: true, attendance: true, marks: true, fees: true, reports: true, absentees: true, editStudents: true, editFees: true, promote: true },
+    teacher: { students: false, attendance: true, marks: true, fees: false, reports: false, absentees: false, editStudents: false, editFees: false, promote: false },
+    finance: { students: true, attendance: false, marks: false, fees: true, reports: false, absentees: false, editStudents: false, editFees: true, promote: false }
 };
 
 const USERS = { admin: { password: 'admin123', role: 'admin' }, teacher: { password: 'teacher123', role: 'teacher' }, finance: { password: 'finance123', role: 'finance' } };
@@ -122,6 +157,9 @@ let students = [], marks = [], attendance = [], payments = [];
 let currentUser = null, activeTab = 'dashboard';
 let globalSearch = '', feesSearch = '', attSearch = '', marksSearch = '', reportSearch = '', absentSearch = '';
 let selectedStudentIds = new Set();
+let filterTerm = 'Term I';
+let filterYear = CURRENT_ACADEMIC_YEAR;
+let filterStudent = 'all';
 
 function formatMoney(amt) { return 'UGX ' + (amt || 0).toLocaleString(); }
 function escapeHtml(str) { return str ? String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]) : ''; }
@@ -234,6 +272,14 @@ async function createDemoData() {
         { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: 'Barungi', last_name: 'Hadija Husina', lin: 'PMB7980', payment_code: '', class: 'P.7', parent_name: 'Mr. Barungi', parent_whatsapp: '0756000012', total_fees: 350000, fees_paid: 100000, photo_url: '', academic_year: CURRENT_ACADEMIC_YEAR }
     ];
     for (let s of demo) await insertDB('students', s);
+    
+    let samplePayments = [
+        { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: demo[0].id, amount: 100000, payment_date: new Date().toISOString().slice(0,10), receipt_number: 'RCP001', term: 'Term I', academic_year: '2026', payment_method: 'Cash' },
+        { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: demo[0].id, amount: 100000, payment_date: new Date().toISOString().slice(0,10), receipt_number: 'RCP002', term: 'Term I', academic_year: '2026', payment_method: 'Mobile Money' },
+        { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: demo[1].id, amount: 150000, payment_date: new Date().toISOString().slice(0,10), receipt_number: 'RCP003', term: 'Term I', academic_year: '2026', payment_method: 'Bank Transfer' },
+        { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: demo[2].id, amount: 100000, payment_date: new Date().toISOString().slice(0,10), receipt_number: 'RCP004', term: 'Term I', academic_year: '2026', payment_method: 'School Pay' }
+    ];
+    for (let p of samplePayments) await insertDB('payments', p);
 }
 
 // Dashboard
@@ -287,7 +333,10 @@ async function renderStudents() {
         <div class="card">
             <div class="flex" style="justify-content: space-between;">
                 <h3>Student Register (${students.length})</h3>
-                ${perms.editStudents ? `<button class="btn btn-primary" onclick="showAddStudentModal()"><i class="fas fa-plus"></i> Add Student</button>` : ''}
+                <div class="flex" style="margin-bottom:0;">
+                    ${perms.promote ? `<button class="btn btn-gold" onclick="showPromoteModal()"><i class="fas fa-arrow-up"></i> Promote Students</button>` : ''}
+                    ${perms.editStudents ? `<button class="btn btn-primary" onclick="showAddStudentModal()"><i class="fas fa-plus"></i> Add Student</button>` : ''}
+                </div>
             </div>
             <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="studentSearch" placeholder="Search by name, LIN, class, parent..." value="${escapeHtml(globalSearch)}"></div>
             <div class="data-table"><table><thead><tr><th>Photo</th><th>Name</th><th>Class</th><th>LIN</th><th>Payment Code</th>${viewFinance ? '<th>Total</th><th>Paid</th><th>Balance</th>' : ''}<th>Parent</th><th>Actions</th></tr></thead><tbody id="studentsBody"></tbody></table></div>
@@ -304,6 +353,9 @@ async function renderStudents() {
         if (perms.editStudents) {
             actions += `<button class="btn btn-sm btn-primary" onclick="editStudent('${s.id}')">Edit</button> <button class="btn btn-sm btn-red" onclick="deleteStudent('${s.id}')">Delete</button>`;
         }
+        // Add Financial History button for everyone
+        actions += `<button class="btn btn-sm btn-gold" onclick="showStudentFinancialHistory('${s.id}')"><i class="fas fa-history"></i> Fees History</button>`;
+        
         if (viewFinance) {
             row.innerHTML = `${photoHtml}<td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td>${escapeHtml(s.parent_name || '')}</td><td>${actions}</td>`;
         } else {
@@ -312,8 +364,602 @@ async function renderStudents() {
     }
 }
 
+// ==================== STUDENT FINANCIAL HISTORY ====================
+window.showStudentFinancialHistory = (studentId) => {
+    let student = students.find(s => s.id === studentId);
+    if (!student) return;
+    
+    let studentPayments = payments.filter(p => p.student_id === studentId).sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+    let totalPaid = studentPayments.reduce((a, b) => a + (b.amount || 0), 0);
+    let balance = (student.total_fees || 0) - totalPaid;
+    
+    // Group payments by term and year
+    let groupedPayments = {};
+    for (let p of studentPayments) {
+        let key = `${p.term} ${p.academic_year}`;
+        if (!groupedPayments[key]) groupedPayments[key] = [];
+        groupedPayments[key].push(p);
+    }
+    
+    let modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 style="color:#003366;">💰 Financial History</h2>
+                <button onclick="this.closest('.modal').remove()" style="background:none; border:none; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            
+            <div style="display:flex; gap:20px; flex-wrap:wrap; background:#f8fafc; padding:20px; border-radius:16px; margin-bottom:20px;">
+                <div><strong>Student:</strong> ${student.first_name} ${student.last_name}</div>
+                <div><strong>LIN:</strong> ${student.lin}</div>
+                <div><strong>Class:</strong> ${student.class}</div>
+                <div><strong>Payment Code:</strong> ${student.payment_code || 'N/A'}</div>
+            </div>
+            
+            <div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:20px;">
+                <div style="background:#eef2ff; padding:15px 20px; border-radius:12px; flex:1; text-align:center;">
+                    <div style="font-size:20px; font-weight:bold; color:#003366;">${formatMoney(student.total_fees || 0)}</div>
+                    <div style="font-size:12px; color:#666;">Total Fees</div>
+                </div>
+                <div style="background:#d1fae5; padding:15px 20px; border-radius:12px; flex:1; text-align:center;">
+                    <div style="font-size:20px; font-weight:bold; color:#065f46;">${formatMoney(totalPaid)}</div>
+                    <div style="font-size:12px; color:#666;">Total Paid</div>
+                </div>
+                <div style="background:${balance > 0 ? '#fef2f2' : '#d1fae5'}; padding:15px 20px; border-radius:12px; flex:1; text-align:center;">
+                    <div style="font-size:20px; font-weight:bold; ${balance > 0 ? 'color:#dc2626;' : 'color:#065f46;'}">${formatMoney(balance)}</div>
+                    <div style="font-size:12px; color:#666;">Balance</div>
+                </div>
+            </div>
+            
+            ${Object.keys(groupedPayments).length === 0 ? `
+                <div style="text-align:center; padding:30px; color:#666;">
+                    <i class="fas fa-info-circle"></i> No payment records found for this student
+                </div>
+            ` : `
+                <div style="max-height:400px; overflow-y:auto;">
+                    ${Object.keys(groupedPayments).sort().reverse().map(key => {
+                        let paymentsList = groupedPayments[key];
+                        let totalForPeriod = paymentsList.reduce((a, b) => a + (b.amount || 0), 0);
+                        return `
+                            <div style="margin-bottom:20px;">
+                                <div style="background:#003366; color:white; padding:8px 15px; border-radius:12px; display:flex; justify-content:space-between; align-items:center;">
+                                    <strong>${key}</strong>
+                                    <span>Total: ${formatMoney(totalForPeriod)}</span>
+                                </div>
+                                <table class="history-table">
+                                    <thead><tr>
+                                        <th>Date & Time</th>
+                                        <th>Amount</th>
+                                        <th>Method</th>
+                                        <th>Receipt No</th>
+                                    </tr></thead>
+                                    <tbody>
+                                        ${paymentsList.map(p => `
+                                            <tr>
+                                                <td>${formatUgandaDateTime(p.payment_date)}</td>
+                                                <td class="paid">${formatMoney(p.amount)}</td>
+                                                <td>${getPaymentMethodBadge(p.payment_method)}</td>
+                                                <td>${p.receipt_number || 'N/A'}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                <div style="margin-top:15px; text-align:right;">
+                    <button class="btn btn-gold" onclick="printStudentFinancialHistory('${student.id}')">
+                        <i class="fas fa-print"></i> Print History
+                    </button>
+                </div>
+            `}
+        </div>
+    `;
+    document.body.appendChild(modal);
+};
+
+window.printStudentFinancialHistory = (studentId) => {
+    let student = students.find(s => s.id === studentId);
+    if (!student) return;
+    let studentPayments = payments.filter(p => p.student_id === studentId).sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+    let totalPaid = studentPayments.reduce((a, b) => a + (b.amount || 0), 0);
+    let balance = (student.total_fees || 0) - totalPaid;
+    
+    let win = window.open('', '_blank');
+    win.document.write(`<html><head><title>Financial History - ${student.first_name} ${student.last_name}</title>
+        <style>
+            body{font-family:Arial;padding:30px;background:white;}
+            h1{color:#003366;border-bottom:3px solid #D4A017;padding-bottom:15px;}
+            table{width:100%;border-collapse:collapse;margin-top:20px;}
+            th,td{border:1px solid #ccc;padding:8px;text-align:left;}
+            th{background:#003366;color:white;}
+            .paid{color:#10b981;font-weight:bold;}
+            .summary-box{background:#f8fafc;padding:15px;border-radius:12px;margin-top:20px;}
+            .header-info{display:flex;gap:20px;flex-wrap:wrap;background:#f8fafc;padding:15px;border-radius:12px;margin-bottom:20px;}
+            .method-cash{background:#dbeafe;padding:2px 8px;border-radius:12px;}
+            .method-mobile{background:#d1fae5;padding:2px 8px;border-radius:12px;}
+            .method-bank{background:#fef3c7;padding:2px 8px;border-radius:12px;}
+            .method-schoolpay{background:#e0e7ff;padding:2px 8px;border-radius:12px;}
+    </style></head><body>
+    <h1>PROGRESSIVE MOTHERS SCHOOL</h1>
+    <h2>Financial History - ${student.first_name} ${student.last_name}</h2>
+    <div class="header-info">
+        <div><strong>LIN:</strong> ${student.lin}</div>
+        <div><strong>Class:</strong> ${student.class}</div>
+        <div><strong>Payment Code:</strong> ${student.payment_code || 'N/A'}</div>
+        <div><strong>Parent:</strong> ${student.parent_name || 'N/A'}</div>
+    </div>
+    <div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:20px;">
+        <div style="background:#eef2ff; padding:15px 20px; border-radius:12px; flex:1; text-align:center;">
+            <strong>Total Fees:</strong> ${formatMoney(student.total_fees || 0)}
+        </div>
+        <div style="background:#d1fae5; padding:15px 20px; border-radius:12px; flex:1; text-align:center;">
+            <strong>Total Paid:</strong> ${formatMoney(totalPaid)}
+        </div>
+        <div style="background:${balance > 0 ? '#fef2f2' : '#d1fae5'}; padding:15px 20px; border-radius:12px; flex:1; text-align:center;">
+            <strong>Balance:</strong> ${formatMoney(balance)}
+        </div>
+    </div>
+    ${studentPayments.length === 0 ? '<p style="text-align:center;color:#666;">No payment records found</p>' : `
+    <table><thead><tr><th>Date & Time</th><th>Amount</th><th>Method</th><th>Receipt No</th><th>Term</th><th>Year</th></tr></thead><tbody>
+    ${studentPayments.map(p => `
+        <tr>
+            <td>${formatUgandaDateTime(p.payment_date)}</td>
+            <td class="paid">${formatMoney(p.amount)}</td>
+            <td><span class="${p.payment_method === 'Cash' ? 'method-cash' : p.payment_method === 'Mobile Money' ? 'method-mobile' : p.payment_method === 'Bank Transfer' ? 'method-bank' : 'method-schoolpay'}">${p.payment_method || 'Cash'}</span></td>
+            <td>${p.receipt_number || 'N/A'}</td>
+            <td>${p.term || 'Term I'}</td>
+            <td>${p.academic_year || CURRENT_ACADEMIC_YEAR}</td>
+        </tr>
+    `).join('')}
+    </tbody></table>
+    <div class="summary-box"><strong>Total Records:</strong> ${studentPayments.length}</div>`}
+    <p style="margin-top:30px;text-align:center;font-size:11px;">Generated on ${formatUgandaDateTime(getUgandaTime())}</p>
+    </body></html>`);
+    win.document.close();
+    win.print();
+};
+
+// ==================== FEES ====================
+async function renderFees() {
+    if (!ROLE_PERMS[currentUser?.role]?.fees) {
+        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3><p>You do not have permission to access this module.</p></div>';
+        return;
+    }
+    let perms = ROLE_PERMS[currentUser?.role];
+    
+    document.getElementById('tabContent').innerHTML = `
+        <div class="card"><h3>Financial Summary</h3><div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+            <div class="stat-card"><div class="stat-number">${formatMoney(payments.reduce((a, b) => a + (b.amount || 0), 0))}</div><div class="stat-label">Total Income</div></div>
+            <div class="stat-card"><div class="stat-number">${formatMoney(students.reduce((a, b) => a + (b.total_fees || 0), 0))}</div><div class="stat-label">Expected</div></div>
+            <div class="stat-card"><div class="stat-number">${formatMoney(students.reduce((a, b) => a + (b.total_fees || 0), 0) - payments.reduce((a, b) => a + (b.amount || 0), 0))}</div><div class="stat-label">Outstanding</div></div>
+        </div></div>
+        
+        ${perms.editFees ? `
+        <div class="card"><h3>Record Payment</h3>
+        <div class="flex">
+            <div style="flex:2;"><select id="payStudent" class="form-control">${students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.lin})</option>`).join('')}</select></div>
+            <div style="flex:1;"><input type="number" id="payAmount" placeholder="Enter amount (UGX)" class="form-control"></div>
+            <div style="flex:1;"><select id="payMethod" class="form-control">${PAYMENT_METHODS.map(m => `<option value="${m}">${m}</option>`).join('')}</select></div>
+            <button class="btn btn-primary" id="recordPay">Record Payment</button>
+            <button class="btn btn-whatsapp" id="sendReminder">Send Reminder</button>
+        </div></div>` : ''}
+        
+        <!-- Class Summary -->
+        <div class="card"><h3>Class-wise Financial Summary</h3>
+        <div class="filter-section">
+            <div class="flex">
+                <div style="flex:1;"><label>Term</label><select id="classSummaryTerm" class="form-control">${TERMS.map(t => `<option value="${t}" ${t === filterTerm ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+                <div style="flex:1;"><label>Academic Year</label><select id="classSummaryYear" class="form-control">${ACADEMIC_YEARS.map(y => `<option value="${y}" ${y === filterYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+                <button class="btn btn-sm btn-primary" id="updateClassSummary">Update Summary</button>
+                <button class="btn btn-sm btn-gold" id="printClassSummary"><i class="fas fa-print"></i> Print Summary</button>
+            </div>
+        </div>
+        <div id="classSummaryContainer"></div></div>
+        
+        <!-- Student Balances -->
+        <div class="card"><h3>Student Balances</h3>
+        <div class="filter-section">
+            <div class="flex">
+                <div style="flex:1;"><label>Term</label><select id="feeTermFilter" class="form-control">${TERMS.map(t => `<option value="${t}" ${t === filterTerm ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+                <div style="flex:1;"><label>Academic Year</label><select id="feeYearFilter" class="form-control">${ACADEMIC_YEARS.map(y => `<option value="${y}" ${y === filterYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+                <button class="btn btn-sm btn-primary" id="applyFeeFilter">Apply Filter</button>
+            </div>
+        </div>
+        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="feesSearch" placeholder="Search student..."></div>
+        <div class="data-table"><table><thead><tr><th>Photo</th><th>Student</th><th>LIN</th>${perms.editFees ? '<th>Total</th><th>Paid</th><th>Balance</th>' : ''}<th>Action</th></tr></thead><tbody id="feesBody"></tbody></table></div>
+        ${perms.editFees ? `<div class="flex"><button class="btn btn-gold" id="printDebtors"><i class="fas fa-print"></i> Print Debtors List</button></div>` : ''}
+        
+        <!-- Financial History -->
+        <div class="card"><h3><i class="fas fa-history"></i> Financial History (All Students)</h3>
+        <div class="filter-section">
+            <div class="flex">
+                <div style="flex:1;"><label>Student</label>
+                    <select id="historyStudentFilter" class="form-control">
+                        <option value="all">All Students</option>
+                        ${students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.lin})</option>`).join('')}
+                    </select>
+                </div>
+                <div style="flex:1;"><label>Term</label><select id="historyTermFilter" class="form-control">${TERMS.map(t => `<option value="${t}" ${t === filterTerm ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+                <div style="flex:1;"><label>Academic Year</label><select id="historyYearFilter" class="form-control">${ACADEMIC_YEARS.map(y => `<option value="${y}" ${y === filterYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+                <div style="flex:1;"><label>Payment Method</label><select id="historyMethodFilter" class="form-control">
+                    <option value="all">All Methods</option>
+                    ${PAYMENT_METHODS.map(m => `<option value="${m}">${m}</option>`).join('')}</select></div>
+                <button class="btn btn-sm btn-primary" id="applyHistoryFilter">Apply Filter</button>
+                <button class="btn btn-sm btn-gold" id="printHistoryBtn"><i class="fas fa-print"></i> Print History</button>
+            </div>
+        </div>
+        <div class="data-table"><table class="history-table"><thead><tr><th>Date & Time (EAT)</th><th>Student</th><th>LIN</th><th>Class</th><th>Amount</th><th>Method</th><th>Receipt No</th><th>Term</th><th>Year</th></tr></thead><tbody id="historyBody"></tbody></table></div></div>
+    `;
+    
+    // Class Summary
+    document.getElementById('updateClassSummary')?.addEventListener('click', renderClassSummary);
+    document.getElementById('printClassSummary')?.addEventListener('click', printClassSummary);
+    
+    // Fee filter
+    document.getElementById('applyFeeFilter')?.addEventListener('click', () => {
+        filterTerm = document.getElementById('feeTermFilter').value;
+        filterYear = document.getElementById('feeYearFilter').value;
+        renderFeesTable();
+    });
+    
+    // History filter
+    document.getElementById('applyHistoryFilter')?.addEventListener('click', () => {
+        filterTerm = document.getElementById('historyTermFilter').value;
+        filterYear = document.getElementById('historyYearFilter').value;
+        renderFinancialHistory();
+    });
+    
+    document.getElementById('printHistoryBtn')?.addEventListener('click', printFinancialHistory);
+    
+    document.getElementById('recordPay')?.addEventListener('click', async () => {
+        let sid = document.getElementById('payStudent').value;
+        let amt = parseFloat(document.getElementById('payAmount').value);
+        let method = document.getElementById('payMethod').value;
+        if (sid && amt > 0) {
+            let paymentData = {
+                id: crypto.randomUUID(),
+                school_id: SCHOOL_ID,
+                student_id: sid,
+                amount: amt,
+                payment_date: new Date().toISOString().slice(0, 10),
+                receipt_number: `RCP-${Date.now()}`,
+                term: document.getElementById('feeTermFilter')?.value || 'Term I',
+                academic_year: document.getElementById('feeYearFilter')?.value || CURRENT_ACADEMIC_YEAR,
+                payment_method: method || 'Cash'
+            };
+            let result = await insertDB('payments', paymentData);
+            if (result) {
+                await loadAllData();
+                renderFees();
+                showToast('Payment recorded successfully');
+            }
+        } else {
+            showToast('Please select a student and enter a valid amount', true);
+        }
+    });
+    
+    document.getElementById('sendReminder')?.addEventListener('click', () => {
+        let term = document.getElementById('feeTermFilter')?.value || filterTerm;
+        let year = document.getElementById('feeYearFilter')?.value || filterYear;
+        let msg = `Good evening parents. Please clear fees for ${term} ${year}. Accounts Department.`;
+        let sent = 0;
+        for (let s of students) {
+            if (s.parent_whatsapp) {
+                sendWhatsApp(s.parent_whatsapp, msg);
+                sent++;
+            }
+        }
+        showToast(`Reminders sent to ${sent} parents`);
+    });
+    
+    document.getElementById('feesSearch')?.addEventListener('input', (e) => { feesSearch = e.target.value; renderFeesTable(); });
+    document.getElementById('historyStudentFilter')?.addEventListener('change', renderFinancialHistory);
+    document.getElementById('historyMethodFilter')?.addEventListener('change', renderFinancialHistory);
+    
+    document.getElementById('printDebtors')?.addEventListener('click', printDebtorsList);
+    
+    renderClassSummary();
+    renderFeesTable();
+    renderFinancialHistory();
+}
+
+// ==================== CLASS SUMMARY ====================
+function renderClassSummary() {
+    let container = document.getElementById('classSummaryContainer');
+    if (!container) return;
+    let term = document.getElementById('classSummaryTerm')?.value || filterTerm;
+    let year = document.getElementById('classSummaryYear')?.value || filterYear;
+    
+    let classData = {};
+    for (let s of students) {
+        if (!classData[s.class]) {
+            classData[s.class] = { expected: 0, paid: 0, count: 0, students: [] };
+        }
+        let paid = payments.filter(p => p.student_id === s.id && p.term === term && p.academic_year === year).reduce((a, b) => a + (b.amount || 0), 0);
+        classData[s.class].expected += s.total_fees || 0;
+        classData[s.class].paid += paid;
+        classData[s.class].count++;
+        classData[s.class].students.push(s);
+    }
+    
+    let html = '';
+    let grandExpected = 0, grandPaid = 0;
+    for (let cls of CLASS_ORDER) {
+        if (!classData[cls]) continue;
+        let data = classData[cls];
+        let bal = data.expected - data.paid;
+        grandExpected += data.expected;
+        grandPaid += data.paid;
+        html += `
+            <div class="class-summary-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                    <strong style="font-size:16px; color:#003366;">${cls}</strong>
+                    <span style="font-size:12px; background:#e2e8f0; padding:2px 12px; border-radius:20px;">${data.count} students</span>
+                </div>
+                <div class="stat-row">
+                    <span><strong>Expected:</strong> ${formatMoney(data.expected)}</span>
+                    <span><strong>Paid:</strong> <span class="paid">${formatMoney(data.paid)}</span></span>
+                    <span><strong>Balance:</strong> <span class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</span></span>
+                    <span><strong>Collection Rate:</strong> ${data.expected > 0 ? Math.round((data.paid/data.expected)*100) : 0}%</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    let totalBal = grandExpected - grandPaid;
+    html += `
+        <div class="class-summary-card" style="background:#fef3c7; border-left-color:#D4A017;">
+            <strong style="font-size:16px; color:#003366;">📊 SCHOOL TOTALS</strong>
+            <div class="stat-row">
+                <span><strong>Total Expected:</strong> ${formatMoney(grandExpected)}</span>
+                <span><strong>Total Paid:</strong> <span class="paid">${formatMoney(grandPaid)}</span></span>
+                <span><strong>Total Balance:</strong> <span class="${totalBal > 0 ? 'debt' : ''}">${formatMoney(totalBal)}</span></span>
+                <span><strong>Overall Rate:</strong> ${grandExpected > 0 ? Math.round((grandPaid/grandExpected)*100) : 0}%</span>
+            </div>
+        </div>
+    `;
+    container.innerHTML = html;
+}
+
+function printClassSummary() {
+    let container = document.getElementById('classSummaryContainer');
+    if (!container || !container.innerHTML) return;
+    let term = document.getElementById('classSummaryTerm')?.value || filterTerm;
+    let year = document.getElementById('classSummaryYear')?.value || filterYear;
+    let win = window.open('', '_blank');
+    win.document.write(`<html><head><title>Class Financial Summary - ${term} ${year}</title>
+        <style>
+            body{font-family:Arial;padding:30px;background:white;}
+            h1{color:#003366;border-bottom:3px solid #D4A017;padding-bottom:15px;}
+            .summary-card{background:#f8fafc;padding:15px;border-radius:12px;margin-bottom:12px;border-left:4px solid #003366;}
+            .stat-row{display:flex;gap:30px;flex-wrap:wrap;margin-top:10px;}
+            .total-card{background:#fef3c7;padding:15px;border-radius:12px;margin-top:15px;border-left:4px solid #D4A017;}
+            .debt{color:#dc2626;font-weight:bold;}
+            .paid{color:#10b981;font-weight:bold;}
+    </style></head><body>
+    <h1>PROGRESSIVE MOTHERS SCHOOL</h1>
+    <h2>Class Financial Summary - ${term} ${year}</h2>
+    <p>Generated on ${formatUgandaDateTime(getUgandaTime())}</p>
+    ${container.innerHTML}
+    </body></html>`);
+    win.document.close();
+    win.print();
+}
+
+// ==================== FEES TABLE ====================
+function renderFeesTable() {
+    let tbody = document.getElementById('feesBody');
+    if (!tbody) return;
+    let filtered = students.filter(s => !feesSearch || `${s.first_name} ${s.last_name}`.toLowerCase().includes(feesSearch.toLowerCase()) || s.lin.toLowerCase().includes(feesSearch.toLowerCase()));
+    let perms = ROLE_PERMS[currentUser?.role];
+    tbody.innerHTML = '';
+    let term = document.getElementById('feeTermFilter')?.value || filterTerm;
+    let year = document.getElementById('feeYearFilter')?.value || filterYear;
+    for (let s of filtered) {
+        let paid = payments.filter(p => p.student_id === s.id && p.term === term && p.academic_year === year).reduce((a, b) => a + (b.amount || 0), 0);
+        let bal = (s.total_fees || 0) - paid;
+        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-circle fa-2x"></i>`;
+        let row = tbody.insertRow();
+        if (perms.editFees) {
+            row.innerHTML = `${photoHtml}<td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td><button class="btn btn-sm btn-whatsapp" onclick="sendSingleFeeReminder('${s.id}','${term}','${year}')">Remind</button> <button class="btn btn-sm btn-primary" onclick="quickFeePayment('${s.id}','${term}','${year}')">Pay</button> <button class="btn btn-sm btn-gold" onclick="editStudentFees('${s.id}')">Edit Fees</button> <button class="btn btn-sm btn-gold" onclick="showStudentFinancialHistory('${s.id}')"><i class="fas fa-history"></i> History</button></td>`;
+        } else {
+            row.innerHTML = `${photoHtml}<td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td><span>View only</span></td>`;
+        }
+    }
+}
+
+// ==================== FINANCIAL HISTORY ====================
+function renderFinancialHistory() {
+    let container = document.getElementById('historyBody');
+    if (!container) return;
+    let searchTerm = document.getElementById('historySearch')?.value || '';
+    let term = document.getElementById('historyTermFilter')?.value || filterTerm;
+    let year = document.getElementById('historyYearFilter')?.value || filterYear;
+    let studentFilter = document.getElementById('historyStudentFilter')?.value || 'all';
+    let methodFilter = document.getElementById('historyMethodFilter')?.value || 'all';
+    
+    let filtered = [...payments].filter(p => p.term === term && p.academic_year === year);
+    if (studentFilter !== 'all') {
+        filtered = filtered.filter(p => p.student_id === studentFilter);
+    }
+    if (methodFilter !== 'all') {
+        filtered = filtered.filter(p => p.payment_method === methodFilter);
+    }
+    filtered.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+    
+    if (searchTerm) {
+        const termSearch = searchTerm.toLowerCase();
+        filtered = filtered.filter(p => {
+            let s = students.find(st => st.id === p.student_id);
+            return s && (`${s.first_name} ${s.last_name}`.toLowerCase().includes(termSearch) || s.lin.toLowerCase().includes(termSearch));
+        });
+    }
+    
+    if (filtered.length === 0) {
+        container.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#666;padding:20px;">No payment records found for ' + term + ' ' + year + '</td></tr>';
+        return;
+    }
+    
+    let html = '';
+    for (let p of filtered) {
+        let s = students.find(st => st.id === p.student_id);
+        if (!s) continue;
+        let dateTime = formatUgandaDateTime(p.payment_date);
+        let methodBadge = getPaymentMethodBadge(p.payment_method);
+        html += `<tr>
+            <td>${dateTime}</td>
+            <td><strong>${s.first_name} ${s.last_name}</strong></td>
+            <td>${s.lin}</td>
+            <td>${s.class}</td>
+            <td class="paid">${formatMoney(p.amount)}</td>
+            <td>${methodBadge}</td>
+            <td>${p.receipt_number || 'N/A'}</td>
+            <td>${p.term || 'Term I'}</td>
+            <td>${p.academic_year || CURRENT_ACADEMIC_YEAR}</td>
+        </tr>`;
+    }
+    container.innerHTML = html;
+}
+
+function printFinancialHistory() {
+    let term = document.getElementById('historyTermFilter')?.value || filterTerm;
+    let year = document.getElementById('historyYearFilter')?.value || filterYear;
+    let studentFilter = document.getElementById('historyStudentFilter')?.value || 'all';
+    let methodFilter = document.getElementById('historyMethodFilter')?.value || 'all';
+    
+    let filtered = payments.filter(p => p.term === term && p.academic_year === year);
+    if (studentFilter !== 'all') {
+        filtered = filtered.filter(p => p.student_id === studentFilter);
+        let s = students.find(st => st.id === studentFilter);
+        if (s) {
+            var studentName = `${s.first_name} ${s.last_name}`;
+        }
+    }
+    if (methodFilter !== 'all') {
+        filtered = filtered.filter(p => p.payment_method === methodFilter);
+    }
+    filtered.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+    
+    if (filtered.length === 0) { alert('No payment records found'); return; }
+    
+    let totalAmount = filtered.reduce((a, b) => a + (b.amount || 0), 0);
+    let title = studentFilter !== 'all' ? `Payment History for ${studentName}` : 'All Students Financial History';
+    
+    let win = window.open('', '_blank');
+    win.document.write(`<html><head><title>Financial History - ${term} ${year}</title>
+        <style>
+            body{font-family:Arial;padding:30px;background:white;}
+            h1{color:#003366;border-bottom:3px solid #D4A017;padding-bottom:15px;}
+            table{width:100%;border-collapse:collapse;margin-top:20px;}
+            th,td{border:1px solid #ccc;padding:8px;text-align:left;}
+            th{background:#003366;color:white;}
+            .paid{color:#10b981;font-weight:bold;}
+            .summary-box{background:#f8fafc;padding:15px;border-radius:12px;margin-top:20px;}
+            .method-cash{background:#dbeafe;padding:2px 8px;border-radius:12px;}
+            .method-mobile{background:#d1fae5;padding:2px 8px;border-radius:12px;}
+            .method-bank{background:#fef3c7;padding:2px 8px;border-radius:12px;}
+            .method-schoolpay{background:#e0e7ff;padding:2px 8px;border-radius:12px;}
+    </style></head><body>
+    <h1>PROGRESSIVE MOTHERS SCHOOL</h1>
+    <h2>${title}</h2>
+    <p><strong>Term:</strong> ${term} | <strong>Year:</strong> ${year}</p>
+    <p><strong>Generated:</strong> ${formatUgandaDateTime(getUgandaTime())}</p>
+    ${methodFilter !== 'all' ? `<p><strong>Payment Method:</strong> ${methodFilter}</p>` : ''}
+    <table><thead><tr><th>Date & Time</th><th>Student</th><th>LIN</th><th>Class</th><th>Amount</th><th>Method</th><th>Receipt No</th></tr></thead><tbody>
+    ${filtered.map(p => {
+        let s = students.find(st => st.id === p.student_id);
+        if (!s) return '';
+        let methodClass = p.payment_method === 'Cash' ? 'method-cash' : p.payment_method === 'Mobile Money' ? 'method-mobile' : p.payment_method === 'Bank Transfer' ? 'method-bank' : 'method-schoolpay';
+        return `<tr><td>${formatUgandaDateTime(p.payment_date)}</td><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td>${s.class}</td><td class="paid">${formatMoney(p.amount)}</td><td><span class="${methodClass}">${p.payment_method || 'Cash'}</span></td><td>${p.receipt_number || 'N/A'}</td></tr>`;
+    }).join('')}
+    </tbody></table>
+    <div class="summary-box">
+        <strong>Total Records:</strong> ${filtered.length} | <strong>Total Amount:</strong> ${formatMoney(totalAmount)}
+    </div>
+    </body></html>`);
+    win.document.close();
+    win.print();
+}
+
+function printDebtorsList() {
+    let term = document.getElementById('feeTermFilter')?.value || filterTerm;
+    let year = document.getElementById('feeYearFilter')?.value || filterYear;
+    let debtors = students.filter(s => {
+        let paid = payments.filter(p => p.student_id === s.id && p.term === term && p.academic_year === year).reduce((a, b) => a + (b.amount || 0), 0);
+        return (s.total_fees || 0) - paid > 0;
+    });
+    if (debtors.length === 0) { alert('No debtors for ' + term + ' ' + year); return; }
+    let win = window.open('', '_blank');
+    win.document.write(`<html><head><title>Debtors List - ${term} ${year}</title>
+        <style>body{font-family:Arial;padding:30px;background:white;}h1{color:#003366;}table{width:100%;border-collapse:collapse;margin-top:20px;}th,td{border:1px solid #ccc;padding:8px;text-align:left;}th{background:#003366;color:white;}.debt{color:#dc2626;font-weight:bold;}</style></head><body>
+        <h1>PROGRESSIVE MOTHERS SCHOOL</h1>
+        <h2>Debtors List - ${term} ${year}</h2>
+        <p>Generated on ${formatUgandaDateTime(getUgandaTime())}</p>
+        <table><thead><tr><th>Name</th><th>LIN</th><th>Class</th><th>Total Fees</th><th>Paid</th><th>Balance</th><th>WhatsApp</th></tr></thead><tbody>
+        ${debtors.map(s => {
+            let paid = payments.filter(p => p.student_id === s.id && p.term === term && p.academic_year === year).reduce((a, b) => a + (b.amount || 0), 0);
+            let bal = (s.total_fees || 0) - paid;
+            return `<tr><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td>${s.class}</td><td>${formatMoney(s.total_fees)}</td><td>${formatMoney(paid)}</td><td class="debt">${formatMoney(bal)}</td><td>${s.parent_whatsapp || ''}</td></tr>`;
+        }).join('')}
+        </tbody></table>
+        <p style="margin-top:20px;"><strong>Total Debtors:</strong> ${debtors.length}</p>
+    </body></html>`);
+    win.document.close();
+    win.print();
+}
+
+// ==================== OTHER FUNCTIONS ====================
+window.editStudentFees = async (id) => {
+    let s = students.find(st => st.id === id);
+    if (!s) return;
+    let newFees = prompt(`Edit total fees for ${s.first_name} ${s.last_name}\nCurrent: ${formatMoney(s.total_fees || 0)}\nEnter new total fees (UGX):`, s.total_fees || 0);
+    if (newFees !== null && !isNaN(parseFloat(newFees)) && parseFloat(newFees) >= 0) {
+        await updateDB('students', id, { total_fees: parseFloat(newFees) });
+        await loadAllData();
+        renderFees();
+        showToast(`Total fees updated to ${formatMoney(parseFloat(newFees))}`);
+    }
+};
+
+window.sendSingleFeeReminder = (id, term, year) => {
+    let s = students.find(st => st.id === id);
+    if (!s) return;
+    let paid = payments.filter(p => p.student_id === id && p.term === term && p.academic_year === year).reduce((a, b) => a + (b.amount || 0), 0);
+    let bal = (s.total_fees || 0) - paid;
+    if (s?.parent_whatsapp) sendWhatsApp(s.parent_whatsapp, `Dear ${s.parent_name}, your child ${s.first_name} ${s.last_name} has balance ${formatMoney(bal)} for ${term} ${year}. Please clear.`);
+};
+
+window.quickFeePayment = async (id, term, year) => {
+    let amt = prompt('Enter payment amount (UGX):');
+    if (amt && parseFloat(amt) > 0) {
+        let method = prompt('Payment Method (Cash, Mobile Money, Bank Transfer, School Pay):') || 'Cash';
+        let paymentData = {
+            id: crypto.randomUUID(),
+            school_id: SCHOOL_ID,
+            student_id: id,
+            amount: parseFloat(amt),
+            payment_date: new Date().toISOString().slice(0, 10),
+            receipt_number: `RCP-${Date.now()}`,
+            term: term || 'Term I',
+            academic_year: year || CURRENT_ACADEMIC_YEAR,
+            payment_method: method
+        };
+        let result = await insertDB('payments', paymentData);
+        if (result) {
+            await loadAllData();
+            renderFees();
+            showToast('Payment recorded');
+        }
+    }
+};
+
+// ==================== OTHER MODULES ====================
 window.deleteStudent = async (id) => {
-    if (confirm('Are you sure you want to delete this student? This action cannot be undone.')) {
+    if (confirm('Are you sure you want to delete this student?')) {
         let studentMarks = marks.filter(m => m.student_id === id);
         for (let m of studentMarks) await deleteDB('marks', m.id);
         let studentAttendance = attendance.filter(a => a.student_id === id);
@@ -323,7 +969,7 @@ window.deleteStudent = async (id) => {
         await deleteDB('students', id);
         await loadAllData();
         renderStudents();
-        showToast('Student deleted successfully');
+        showToast('Student deleted');
     }
 };
 
@@ -334,7 +980,7 @@ window.editStudent = async (id) => {
     modal.innerHTML = `
         <div class="modal-content">
             <h3>Edit Student - ${s.first_name} ${s.last_name}</h3>
-            <div class="flex" style="flex-direction:column; gap:10px;">
+            <div style="display:flex; flex-direction:column; gap:10px;">
                 <div><label>First Name</label><input type="text" id="editFirstName" value="${escapeHtml(s.first_name)}" class="form-control"></div>
                 <div><label>Last Name</label><input type="text" id="editLastName" value="${escapeHtml(s.last_name)}" class="form-control"></div>
                 <div><label>LIN</label><input type="text" id="editLin" value="${s.lin}" class="form-control" readonly style="background:#f0f0f0;"></div>
@@ -395,10 +1041,58 @@ window.saveNewStudent = async () => {
     showToast('Student added');
 };
 
+window.showPromoteModal = () => {
+    let modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
+    let classOptions = CLASS_ORDER.map(c => `<option value="${c}">${c}</option>`).join('');
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3>Promote Students to Next Class</h3>
+            <p style="color:#666;margin-bottom:15px;">Select students to promote to the next class.</p>
+            <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="promoteSearch" placeholder="Search students..."></div>
+            <div id="promoteStudentsList" style="max-height:300px;overflow-y:auto;margin:15px 0;"></div>
+            <div class="flex"><label>Promote To:</label><select id="promoteToClass" class="form-control">${classOptions}</select></div>
+            <div class="flex" style="justify-content: flex-end; margin-top:20px;">
+                <button class="btn btn-primary" onclick="executePromotion()">Promote Selected</button>
+                <button class="btn btn-gold" onclick="this.closest('.modal').remove()">Cancel</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    loadPromoteList();
+};
+
+async function loadPromoteList() {
+    let searchTerm = document.getElementById('promoteSearch')?.value || '';
+    let filtered = students.filter(s => !searchTerm || `${s.first_name} ${s.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) || s.lin.toLowerCase().includes(searchTerm.toLowerCase()));
+    let container = document.getElementById('promoteStudentsList');
+    if (!container) return;
+    container.innerHTML = `<table class="data-table"><thead><tr><th><input type="checkbox" id="promoteAll"></th><th>Name</th><th>LIN</th><th>Current Class</th></tr></thead><tbody>${filtered.map(s => `<tr><td><input type="checkbox" class="promote-check" data-id="${s.id}"></td><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td>${s.class}</td></tr>`).join('')}</tbody></table>`;
+    document.getElementById('promoteAll')?.addEventListener('change', function() {
+        document.querySelectorAll('.promote-check').forEach(c => c.checked = this.checked);
+    });
+    document.getElementById('promoteSearch')?.addEventListener('input', loadPromoteList);
+}
+
+window.executePromotion = async () => {
+    let selected = document.querySelectorAll('.promote-check:checked');
+    if (selected.length === 0) { showToast('No students selected', true); return; }
+    let newClass = document.getElementById('promoteToClass').value;
+    if (!newClass) { showToast('Please select a class', true); return; }
+    let count = 0;
+    for (let cb of selected) {
+        let id = cb.dataset.id;
+        await updateDB('students', id, { class: newClass });
+        count++;
+    }
+    await loadAllData();
+    renderStudents();
+    document.querySelector('.modal')?.remove();
+    showToast(`${count} students promoted to ${newClass}`);
+};
+
 // ==================== ATTENDANCE ====================
 async function renderAttendance() {
     if (!ROLE_PERMS[currentUser?.role]?.attendance) {
-        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3><p>You do not have permission to access this module.</p></div>';
+        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3></div>';
         return;
     }
     let opts = [...new Set(students.map(s => s.class))];
@@ -450,25 +1144,26 @@ async function saveAttendance() {
 // ==================== MARKS ====================
 async function renderMarks() {
     if (!ROLE_PERMS[currentUser?.role]?.marks) {
-        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3><p>You do not have permission to access this module.</p></div>';
+        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3></div>';
         return;
     }
     let opts = [...new Set(students.map(s => s.class))];
     document.getElementById('tabContent').innerHTML = `<div class="card"><h3>Marks Entry ${currentUser?.role === 'teacher' ? '<span style="font-size:12px;color:#dc2626;">(Editable only within 1 minute)</span>' : ''}</h3>
-        <div class="flex"><select id="markClass">${opts.map(c => `<option>${c}</option>`).join('')}</select><select id="markTerm">${TERMS.map(t => `<option>${t}</option>`).join('')}</select><select id="markExam">${EXAM_TYPES.map(e => `<option>${e}</option>`).join('')}</select><button class="btn btn-primary" id="loadMarks">Load</button><button class="btn btn-gold" id="saveMarks">Save</button></div>
+        <div class="flex"><select id="markClass">${opts.map(c => `<option>${c}</option>`).join('')}</select><select id="markTerm">${TERMS.map(t => `<option>${t}</option>`).join('')}</select><select id="markExam">${EXAM_TYPES.map(e => `<option>${e}</option>`).join('')}</select><select id="markYear">${ACADEMIC_YEARS.map(y => `<option ${y === CURRENT_ACADEMIC_YEAR ? 'selected' : ''}>${y}</option>`).join('')}</select><button class="btn btn-primary" id="loadMarks">Load</button><button class="btn btn-gold" id="saveMarks">Save</button></div>
         <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="marksSearch" placeholder="Search student..."></div>
         <div id="marksGrid"></div></div>`;
     document.getElementById('loadMarks').onclick = async () => {
         let cls = document.getElementById('markClass').value;
         let term = document.getElementById('markTerm').value;
         let exam = document.getElementById('markExam').value;
+        let year = document.getElementById('markYear').value;
         let classStd = students.filter(s => s.class === cls);
         if (document.getElementById('marksSearch').value) {
             const termSearch = document.getElementById('marksSearch').value.toLowerCase();
             classStd = classStd.filter(s => `${s.first_name} ${s.last_name}`.toLowerCase().includes(termSearch) || s.lin.toLowerCase().includes(termSearch));
         }
         let subs = SUBJECTS_BY_CLASS[cls] || [];
-        let relMarks = marks.filter(m => m.term === term && m.exam_type === exam && m.academic_year === CURRENT_ACADEMIC_YEAR);
+        let relMarks = marks.filter(m => m.term === term && m.exam_type === exam && m.academic_year === year);
         let grid = `<table><thead><tr><th>Student</th><th>Photo</th>${subs.map(s => `<th>${s}</th>`).join('')}</thead><tbody>`;
         for (let s of classStd) {
             let photoHtml = s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-circle fa-2x"></i>`;
@@ -491,6 +1186,7 @@ async function renderMarks() {
     document.getElementById('saveMarks').onclick = async () => {
         let term = document.getElementById('markTerm').value;
         let exam = document.getElementById('markExam').value;
+        let year = document.getElementById('markYear').value;
         let inputs = document.querySelectorAll('.mark-input');
         for (let inp of inputs) {
             let score = parseInt(inp.value);
@@ -508,10 +1204,10 @@ async function renderMarks() {
                         }
                     }
                 }
-                let existing = marks.find(m => m.student_id === sid && m.subject === subj && m.term === term && m.exam_type === exam && m.academic_year === CURRENT_ACADEMIC_YEAR);
+                let existing = marks.find(m => m.student_id === sid && m.subject === subj && m.term === term && m.exam_type === exam && m.academic_year === year);
                 let grade = getStandardGrade(score);
                 if (existing) await updateDB('marks', existing.id, { score, grade });
-                else await insertDB('marks', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: sid, subject: subj, score, grade, term, exam_type: exam, academic_year: CURRENT_ACADEMIC_YEAR, created_at: new Date().toISOString() });
+                else await insertDB('marks', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: sid, subject: subj, score, grade, term, exam_type: exam, academic_year: year, created_at: new Date().toISOString() });
             }
         }
         showToast('Marks saved');
@@ -521,177 +1217,34 @@ async function renderMarks() {
     document.getElementById('loadMarks').click();
 }
 
-// ==================== FEES ====================
-async function renderFees() {
-    if (!ROLE_PERMS[currentUser?.role]?.fees) {
-        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3><p>You do not have permission to access this module.</p></div>';
-        return;
-    }
-    let totalInc = payments.reduce((a, b) => a + (b.amount || 0), 0);
-    let totalExp = students.reduce((a, b) => a + (b.total_fees || 0), 0);
-    let perms = ROLE_PERMS[currentUser?.role];
-    
-    document.getElementById('tabContent').innerHTML = `
-        <div class="card"><h3>Financial Summary</h3><div class="stats-grid" style="grid-template-columns:repeat(3,1fr);"><div class="stat-card"><div class="stat-number">${formatMoney(totalInc)}</div><div class="stat-label">Income</div></div><div class="stat-card"><div class="stat-number">${formatMoney(totalExp)}</div><div class="stat-label">Expected</div></div><div class="stat-card"><div class="stat-number">${formatMoney(totalExp - totalInc)}</div><div class="stat-label">Outstanding</div></div></div></div>
-        ${perms.editFees ? `
-        <div class="card"><h3>Record Payment</h3><div class="flex"><select id="payStudent">${students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.lin})</option>`).join('')}</select><input type="number" id="payAmount" placeholder="Amount"><button class="btn btn-primary" id="recordPay">Record</button><button class="btn btn-whatsapp" id="sendReminder">Send Reminder</button></div></div>` : ''}
-        <div class="card"><h3>Student Balances</h3><div class="search-bar"><i class="fas fa-search"></i><input type="text" id="feesSearch" placeholder="Search student..."></div>
-        <div class="data-table"><table><thead><tr><th>Photo</th><th>Student</th><th>LIN</th>${perms.editFees ? '<th>Total</th><th>Paid</th><th>Balance</th>' : ''}<th>Action</th></tr></thead><tbody id="feesBody"></tbody></table></div>
-        ${perms.editFees ? `<div class="flex"><button class="btn btn-gold" id="printDebtors"><i class="fas fa-print"></i> Print Debtors List</button></div>` : ''}
-        ${perms.editFees ? `
-        <div class="card"><h3><i class="fas fa-history"></i> Financial History</h3><div class="search-bar"><i class="fas fa-search"></i><input type="text" id="historySearch" placeholder="Search by student name or LIN..."></div>
-        <div class="data-table"><table class="history-table"><thead><tr><th>Date</th><th>Student</th><th>LIN</th><th>Amount</th><th>Receipt No</th><th>Term</th><th>Year</th></tr></thead><tbody id="historyBody"></tbody></table></div></div>` : ''}`;
-    
-    document.getElementById('recordPay')?.addEventListener('click', async () => {
-        let sid = document.getElementById('payStudent').value;
-        let amt = parseFloat(document.getElementById('payAmount').value);
-        if (sid && amt > 0) {
-            let paymentData = {
-                id: crypto.randomUUID(),
-                school_id: SCHOOL_ID,
-                student_id: sid,
-                amount: amt,
-                payment_date: new Date().toISOString().slice(0, 10),
-                receipt_number: `RCP-${Date.now()}`,
-                term: 'Term I',
-                academic_year: CURRENT_ACADEMIC_YEAR
-            };
-            let result = await insertDB('payments', paymentData);
-            if (result) {
-                await loadAllData();
-                renderFees();
-                showToast('Payment recorded successfully');
-            }
-        } else {
-            showToast('Please select a student and enter a valid amount', true);
-        }
-    });
-    
-    document.getElementById('sendReminder')?.addEventListener('click', () => {
-        let msg = "Good evening parents. Please clear fees tomorrow. Accounts Department.";
-        let sent = 0;
-        for (let s of students) {
-            if (s.parent_whatsapp) {
-                sendWhatsApp(s.parent_whatsapp, msg);
-                sent++;
-            }
-        }
-        showToast(`Reminders sent to ${sent} parents`);
-    });
-    
-    document.getElementById('feesSearch')?.addEventListener('input', (e) => { feesSearch = e.target.value; renderFees(); });
-    document.getElementById('historySearch')?.addEventListener('input', (e) => { renderFees(); });
-    
-    document.getElementById('printDebtors')?.addEventListener('click', () => {
-        let debtors = students.filter(s => (s.total_fees || 0) - payments.filter(p => p.student_id === s.id).reduce((a, b) => a + (b.amount || 0), 0) > 0);
-        if (debtors.length === 0) { alert('No debtors'); return; }
-        let win = window.open('', '_blank');
-        win.document.write(`<html><head><title>Debtors List</title><style>body{font-family:Arial;padding:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:8px}</style></head><body><h2>Debtors List</h2><p>Date: ${new Date().toLocaleDateString()}</p><table><thead><tr><th>Name</th><th>LIN</th><th>Class</th><th>Total</th><th>Paid</th><th>Balance</th><th>WhatsApp</th></tr></thead><tbody>${debtors.map(s => { let paid = payments.filter(p => p.student_id === s.id).reduce((a, b) => a + (b.amount || 0), 0); let bal = (s.total_fees || 0) - paid; return `<tr><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td>${s.class}</td><td>${formatMoney(s.total_fees)}</td><td>${formatMoney(paid)}</td><td>${formatMoney(bal)}</td><td>${s.parent_whatsapp || ''}</td>`; }).join('')}</tbody></table></body></html>`);
-        win.document.close();
-        win.print();
-    });
-    
-    renderFeesTable();
-    renderFinancialHistory();
-}
-
-function renderFeesTable() {
-    let tbody = document.getElementById('feesBody');
-    if (!tbody) return;
-    let filtered = students.filter(s => !feesSearch || `${s.first_name} ${s.last_name}`.toLowerCase().includes(feesSearch.toLowerCase()) || s.lin.toLowerCase().includes(feesSearch.toLowerCase()));
-    let perms = ROLE_PERMS[currentUser?.role];
-    tbody.innerHTML = '';
-    for (let s of filtered) {
-        let paid = payments.filter(p => p.student_id === s.id).reduce((a, b) => a + (b.amount || 0), 0);
-        let bal = (s.total_fees || 0) - paid;
-        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-circle fa-2x"></i>`;
-        let row = tbody.insertRow();
-        if (perms.editFees) {
-            row.innerHTML = `${photoHtml}<td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td><button class="btn btn-sm btn-whatsapp" onclick="sendSingleFeeReminder('${s.id}')">Remind</button> <button class="btn btn-sm btn-primary" onclick="quickFeePayment('${s.id}')">Pay</button> <button class="btn btn-sm btn-gold" onclick="editStudentFees('${s.id}')">Edit Fees</button></td>`;
-        } else {
-            row.innerHTML = `${photoHtml}<td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td><span>View only</span></td>`;
-        }
-    }
-}
-
-function renderFinancialHistory() {
-    let container = document.getElementById('historyBody');
-    if (!container) return;
-    let searchTerm = document.getElementById('historySearch')?.value || '';
-    let filtered = [...payments].sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
-    if (searchTerm) {
-        const term = searchTerm.toLowerCase();
-        filtered = filtered.filter(p => {
-            let s = students.find(st => st.id === p.student_id);
-            return s && (`${s.first_name} ${s.last_name}`.toLowerCase().includes(term) || s.lin.toLowerCase().includes(term));
-        });
-    }
-    if (filtered.length === 0) {
-        container.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#666;padding:20px;">No payment records found</td></tr>';
-        return;
-    }
-    let html = '';
-    for (let p of filtered) {
-        let s = students.find(st => st.id === p.student_id);
-        if (!s) continue;
-        html += `<tr><td>${p.payment_date || 'N/A'}</td><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td class="paid">${formatMoney(p.amount)}</td><td>${p.receipt_number || 'N/A'}</td><td>${p.term || 'Term I'}</td><td>${p.academic_year || CURRENT_ACADEMIC_YEAR}</td></tr>`;
-    }
-    container.innerHTML = html;
-}
-
-window.editStudentFees = async (id) => {
-    let s = students.find(st => st.id === id);
-    if (!s) return;
-    let newFees = prompt(`Edit total fees for ${s.first_name} ${s.last_name}\nCurrent: ${formatMoney(s.total_fees || 0)}\nEnter new total fees (UGX):`, s.total_fees || 0);
-    if (newFees !== null && !isNaN(parseFloat(newFees)) && parseFloat(newFees) >= 0) {
-        await updateDB('students', id, { total_fees: parseFloat(newFees) });
-        await loadAllData();
-        renderFees();
-        showToast(`Total fees updated to ${formatMoney(parseFloat(newFees))}`);
-    }
-};
-
-window.sendSingleFeeReminder = (id) => {
-    let s = students.find(st => st.id === id);
-    if (s?.parent_whatsapp) sendWhatsApp(s.parent_whatsapp, `Dear ${s.parent_name}, your child ${s.first_name} ${s.last_name} has balance ${formatMoney((s.total_fees || 0) - payments.filter(p => p.student_id === id).reduce((a, b) => a + (b.amount || 0), 0))}. Please clear.`);
-};
-
-window.quickFeePayment = async (id) => {
-    let amt = prompt('Amount (UGX):');
-    if (amt && parseFloat(amt) > 0) {
-        let paymentData = {
-            id: crypto.randomUUID(),
-            school_id: SCHOOL_ID,
-            student_id: id,
-            amount: parseFloat(amt),
-            payment_date: new Date().toISOString().slice(0, 10),
-            receipt_number: `RCP-${Date.now()}`,
-            term: 'Term I',
-            academic_year: CURRENT_ACADEMIC_YEAR
-        };
-        let result = await insertDB('payments', paymentData);
-        if (result) {
-            await loadAllData();
-            renderFees();
-            showToast('Payment recorded');
-        }
-    }
-};
-
 // ==================== REPORTS ====================
 async function renderReports() {
     if (!ROLE_PERMS[currentUser?.role]?.reports) {
-        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3><p>You do not have permission to access this module.</p></div>';
+        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3></div>';
         return;
     }
     let opts = [...new Set(students.map(s => s.class))];
     document.getElementById('tabContent').innerHTML = `
         <div class="card"><h3>Report Center</h3>
-        <div class="flex"><select id="reportClass">${opts.map(c => `<option>${c}</option>`).join('')}</select><select id="reportTerm">${TERMS.map(t => `<option>${t}</option>`).join('')}</select><select id="reportExam"><option value="beginning">Beginning Only</option><option value="mid">Beginning + Mid Term</option><option value="end" selected>Full Term (Beginning + Mid + End)</option></select><button class="btn btn-primary" id="loadReportList">Load Students</button></div>
+        <div class="flex">
+            <div style="flex:1;"><select id="reportClass" class="form-control">${opts.map(c => `<option value="${c}">${c}</option>`).join('')}</select></div>
+            <div style="flex:1;"><select id="reportTerm" class="form-control">${TERMS.map(t => `<option value="${t}">${t}</option>`).join('')}</select></div>
+            <div style="flex:1;"><select id="reportExam" class="form-control"><option value="beginning">Beginning Only</option><option value="mid">Beginning + Mid</option><option value="end" selected>Full Term</option></select></div>
+            <div style="flex:1;"><select id="reportYear" class="form-control">${ACADEMIC_YEARS.map(y => `<option ${y === CURRENT_ACADEMIC_YEAR ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+            <button class="btn btn-primary" id="loadReportList">Load Students</button>
+        </div>
         <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="reportSearch" placeholder="Search student..."></div>
         <div id="studentList"></div>
-        <div id="selectionBar" class="selection-bar" style="display:none;"><span><i class="fas fa-check-circle"></i> <span id="selectedCount">0</span> selected</span><div class="flex" style="margin-bottom:0;"><button class="btn btn-primary" id="printSelected">Print Selected</button><button class="btn btn-outline" id="selectAll">Select All</button><button class="btn btn-outline" id="deselectAll">Deselect All</button></div></div>
-        <button class="btn btn-gold" id="printWholeClass" style="width:100%; margin-top:20px;">Print Whole Class</button></div>`;
+        <div id="selectionBar" class="selection-bar" style="display:none;">
+            <span><i class="fas fa-check-circle"></i> <span id="selectedCount">0</span> selected</span>
+            <div class="flex" style="margin-bottom:0;">
+                <button class="btn btn-primary" id="printSelected">Print Selected</button>
+                <button class="btn btn-outline" id="selectAll">Select All</button>
+                <button class="btn btn-outline" id="deselectAll">Deselect All</button>
+            </div>
+        </div>
+        <button class="btn btn-gold" id="printWholeClass" style="width:100%; margin-top:20px;">Print Whole Class</button>
+        </div>`;
     
     const loadList = () => {
         let cls = document.getElementById('reportClass').value;
@@ -747,12 +1300,12 @@ async function renderReports() {
 
 window.printSingleStudentReport = (id) => printReports([id]);
 
-function calculatePosition(classStudents, term, examType) {
+function calculatePosition(classStudents, term, examType, year) {
     let scores = classStudents.map(s => {
         let total = 0;
         let subs = SUBJECTS_BY_CLASS[s.class] || [];
         for (let sub of subs) {
-            let mark = marks.find(m => m.student_id === s.id && m.term === term && m.exam_type === examType && m.subject === sub);
+            let mark = marks.find(m => m.student_id === s.id && m.term === term && m.exam_type === examType && m.subject === sub && m.academic_year === year);
             if (mark) total += mark.score;
         }
         return { id: s.id, total: total };
@@ -768,14 +1321,15 @@ async function printReports(ids) {
     let cls = document.getElementById('reportClass').value;
     let term = document.getElementById('reportTerm').value;
     let examSelection = document.getElementById('reportExam').value;
+    let year = document.getElementById('reportYear').value;
     let selected = students.filter(s => ids.includes(s.id));
     let classStudents = students.filter(s => s.class === cls);
     
     let examType = examSelection === 'end' ? 'End of Term' : examSelection === 'mid' ? 'Mid Term' : 'Beginning';
-    let positionMap = calculatePosition(classStudents, term, examType);
+    let positionMap = calculatePosition(classStudents, term, examType, year);
     let exams = examSelection === 'end' ? ['Beginning of Term', 'Mid Term', 'End of Term'] : examSelection === 'mid' ? ['Beginning of Term', 'Mid Term'] : ['Beginning of Term'];
     
-    let html = `<!DOCTYPE html><html><head><title>Student Reports</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>
+    let html = `<!DOCTYPE html><html><head><title>Student Reports - ${term} ${year}</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>
         body{font-family:'Inter',sans-serif;padding:30px;background:white;margin:0;}
         .report-card{max-width:1000px;margin:0 auto 30px;background:white;border-radius:24px;padding:32px;page-break-after:all;box-shadow:0 4px 20px rgba(0,0,0,0.1)}
         .report-header{text-align:center;border-bottom:3px solid #D4A017;padding-bottom:20px;margin-bottom:24px}
@@ -792,7 +1346,7 @@ async function printReports(ids) {
     </style></head><body>`;
     
     for (let s of selected) {
-        let studentMarks = marks.filter(m => m.student_id === s.id && m.term === term);
+        let studentMarks = marks.filter(m => m.student_id === s.id && m.term === term && m.academic_year === year);
         let subjects = SUBJECTS_BY_CLASS[s.class] || ['English', 'Mathematics', 'Science', 'Social Studies'];
         let rows = '', totals = {};
         exams.forEach(e => totals[e] = 0);
@@ -860,8 +1414,8 @@ async function printReports(ids) {
         
         html += `<div class="report-card">
             <div class="report-header"><h2>PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</h2><p>"With God Everything is Possible"</p><p>P.O BOX ......, KAMPALA | Tel: 0756 585035</p></div>
-            <h3 style="text-align:center;margin:10px 0;">ACADEMIC REPORT - ${term}</h3>
-            <p style="text-align:center;color:#666;font-size:13px;">${examSelection === 'beginning' ? 'Beginning of Term Examination' : examSelection === 'mid' ? 'Mid Term Examination (Beginning + Mid)' : 'End of Term Examination (Full Year)'}</p>
+            <h3 style="text-align:center;margin:10px 0;">ACADEMIC REPORT - ${term} ${year}</h3>
+            <p style="text-align:center;color:#666;font-size:13px;">${examSelection === 'beginning' ? 'Beginning of Term Examination' : examSelection === 'mid' ? 'Mid Term Examination' : 'End of Term Examination'}</p>
             <div class="student-info">${photoHtml}<div><p><strong>Name:</strong> ${s.first_name} ${s.last_name}</p><p><strong>LIN:</strong> ${s.lin}</p><p><strong>Payment Code:</strong> ${s.payment_code || ''}</p><p><strong>Class:</strong> ${s.class}</p><p><strong>Parent:</strong> ${s.parent_name || 'N/A'}</p></div></div>
             <table class="grade-table"><thead><tr><th>SUBJECT</th>${exams.map(e => `<th>${e}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
             ${specialInfo}
@@ -869,7 +1423,7 @@ async function printReports(ids) {
                 <div class="comment-box"><strong>👩‍🏫 CLASS TEACHER'S COMMENT</strong><div style="height:50px;border-bottom:1px solid #000;margin:12px 0"></div>Signature: ____________________<br>Date: ___________</div>
                 <div class="comment-box"><strong>👨‍🎓 HEAD TEACHER'S COMMENT</strong><div style="height:50px;border-bottom:1px solid #000;margin:12px 0"></div>Signature: ____________________<br>Date: ___________</div>
             </div>
-            <div style="text-align:center;margin-top:20px;font-size:10px;color:#666;border-top:1px solid #eee;padding-top:15px;">Generated on ${new Date().toLocaleString()}</div>
+            <div style="text-align:center;margin-top:20px;font-size:10px;color:#666;border-top:1px solid #eee;padding-top:15px;">Generated on ${formatUgandaDateTime(getUgandaTime())}</div>
         </div>`;
     }
     html += `</body></html>`;
@@ -883,7 +1437,7 @@ async function printReports(ids) {
 // ==================== ABSENTEES ====================
 async function renderAbsentees() {
     if (!ROLE_PERMS[currentUser?.role]?.absentees) {
-        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3><p>You do not have permission to access this module.</p></div>';
+        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3></div>';
         return;
     }
     document.getElementById('tabContent').innerHTML = `
@@ -955,7 +1509,7 @@ function printAbsentList() {
         .absent-photo{width:55px;height:55px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;}
         h2{color:#003366;border-bottom:2px solid #D4A017;padding-bottom:10px;}
         .count-badge{background:#dc2626;color:white;padding:5px 15px;border-radius:30px;display:inline-block;margin:10px 0;}
-    </style></head><body><h2>PROGRESSIVE MOTHERS SCHOOL - ABSENT STUDENTS</h2><p>Date: ${date}</p>${container.innerHTML}<p style="margin-top:30px;text-align:center;font-size:11px;">Generated on ${new Date().toLocaleString()}</p></body></html>`);
+    </style></head><body><h2>PROGRESSIVE MOTHERS SCHOOL - ABSENT STUDENTS</h2><p>Date: ${date}</p>${container.innerHTML}<p style="margin-top:30px;text-align:center;font-size:11px;">Generated on ${formatUgandaDateTime(getUgandaTime())}</p></body></html>`);
     win.document.close();
     win.print();
 }
@@ -973,19 +1527,26 @@ async function renderMainApp() {
     if (perms.absentees) tabs.push('absentees');
     if (!tabs.includes(activeTab)) activeTab = 'dashboard';
     
-    let now = new Date();
+    let now = getUgandaTime();
     document.getElementById('app').innerHTML = `
         <div class="role-badge">${currentUser.role.toUpperCase()} <button class="logout-btn" onclick="logout()">Exit</button></div>
         <div class="app-container">
             <div class="school-header">
                 <div class="school-name">🏫 PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</div>
                 <div class="school-address">Gayaza-Kijabijjo, Kampala | 📞 ${SCHOOL_CONTACTS.join(', ')}</div>
-                <div class="datetime-row"><div><i class="far fa-calendar-alt"></i> ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div><div><i class="far fa-clock"></i> <span id="liveTime">${now.toLocaleTimeString()}</span></div><div class="global-search"><i class="fas fa-search"></i><input type="text" id="globalSearchInput" placeholder="Search by name, LIN, class, parent..."></div></div>
+                <div class="datetime-row">
+                    <div><i class="far fa-calendar-alt"></i> ${now.toLocaleDateString('en-UG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                    <div><i class="far fa-clock"></i> <span id="liveTime">${now.toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit', hour12: true })} (EAT)</span></div>
+                    <div class="global-search"><i class="fas fa-search"></i><input type="text" id="globalSearchInput" placeholder="Search by name, LIN, class, parent..."></div>
+                </div>
             </div>
             <div class="action-buttons">${tabs.map(t => `<button class="action-btn ${activeTab === t ? 'active' : ''}" data-tab="${t}"><i class="fas ${t === 'dashboard' ? 'fa-tachometer-alt' : t === 'students' ? 'fa-user-graduate' : t === 'attendance' ? 'fa-calendar-check' : t === 'marks' ? 'fa-chart-line' : t === 'fees' ? 'fa-coins' : t === 'reports' ? 'fa-print' : 'fa-user-clock'}"></i> ${t.charAt(0).toUpperCase() + t.slice(1)}</button>`).join('')}</div>
             <div id="tabContent"></div>
         </div>`;
-    setInterval(() => { let t = document.getElementById('liveTime'); if (t) t.innerText = new Date().toLocaleTimeString(); }, 1000);
+    setInterval(() => { 
+        let t = document.getElementById('liveTime'); 
+        if (t) t.innerText = getUgandaTime().toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit', hour12: true }) + ' (EAT)';
+    }, 1000);
     let search = document.getElementById('globalSearchInput');
     if (search) search.addEventListener('input', (e) => { globalSearch = e.target.value; if (activeTab === 'students') renderStudents(); });
     document.querySelectorAll('.action-btn').forEach(btn => { btn.onclick = () => { activeTab = btn.dataset.tab; renderMainApp(); }; });
