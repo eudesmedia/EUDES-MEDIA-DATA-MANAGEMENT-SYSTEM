@@ -2,786 +2,826 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PROGRESSIVE MOTHERS SCHOOL | Complete Management System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background: #f0f4f8; }
         .app-container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-        .school-header { background: linear-gradient(135deg, #003366, #002244); color: white; border-radius: 24px; padding: 20px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .school-name { font-size: 1.8rem; font-weight: 800; }
-        .school-address { font-size: 0.85rem; opacity: 0.8; margin-top: 4px; }
+        .school-header { background: linear-gradient(135deg, #003366, #002244); color: white; border-radius: 24px; padding: 20px; margin-bottom: 24px; }
+        .school-name { font-size: 1.6rem; font-weight: 800; }
+        .school-address { font-size: 0.8rem; opacity: 0.9; margin-top: 4px; }
         .datetime-row { display: flex; justify-content: space-between; margin-top: 12px; background: rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 40px; font-size: 0.75rem; flex-wrap: wrap; gap: 10px; }
         .global-search { background: white; border-radius: 40px; padding: 6px 16px; display: flex; align-items: center; gap: 8px; }
         .global-search input { border: none; outline: none; background: transparent; width: 250px; color: #003366; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: white; border-radius: 24px; padding: 16px; text-align: center; border-top: 4px solid #D4A017; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.2s; cursor: pointer; }
-        .stat-card:hover { transform: translateY(-4px); }
+        .stat-card { background: white; border-radius: 20px; padding: 18px; text-align: center; border-top: 4px solid #D4A017; cursor: pointer; transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-3px); }
         .stat-number { font-size: 32px; font-weight: 800; color: #003366; }
-        .stat-label { font-size: 12px; color: #5a6874; text-transform: uppercase; letter-spacing: 0.5px; }
-        .action-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
-        .action-btn { background: white; border: none; padding: 10px 20px; border-radius: 40px; font-weight: 600; color: #003366; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .stat-label { font-size: 12px; color: #5a6874; }
+        .action-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; }
+        .action-btn { background: white; border: none; padding: 10px 20px; border-radius: 40px; font-weight: 600; color: #003366; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
         .action-btn.active { background: #003366; color: white; }
-        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content { display: none; }
         .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .data-table { background: white; border-radius: 24px; overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #edf2f7; vertical-align: middle; }
-        th { background: #f8fafc; font-weight: 700; color: #1e293b; position: sticky; top: 0; }
-        .btn { background: #003366; color: white; padding: 8px 16px; border: none; border-radius: 40px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+        .btn { background: #003366; color: white; padding: 8px 18px; border: none; border-radius: 40px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
         .btn-gold { background: #D4A017; color: #003366; }
         .btn-sm { padding: 4px 12px; font-size: 12px; border-radius: 20px; cursor: pointer; }
-        .btn-sm i { margin-right: 4px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(2px); }
-        .modal-content { background: white; border-radius: 32px; padding: 24px; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; }
-        input, select, textarea { width: 100%; padding: 10px 12px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 16px; background: white; }
-        .student-photo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #f1f5f9; }
-        .debt { color: #dc2626; font-weight: 700; }
-        .paid-text { color: #10b981; font-weight: 500; }
-        .toast { position: fixed; bottom: 80px; right: 20px; background: #10b981; color: white; padding: 12px 20px; border-radius: 40px; z-index: 2000; font-weight: 500; animation: fadeOut 3s forwards; }
-        .toast.error { background: #dc2626; }
-        @keyframes fadeOut { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
-        .login-container { max-width: 420px; margin: 10vh auto; background: white; border-radius: 32px; padding: 40px 32px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-        .login-header { text-align: center; margin-bottom: 32px; }
-        .login-header i { font-size: 48px; color: #003366; background: #eef2ff; padding: 16px; border-radius: 60px; }
-        .input-icon { position: relative; }
-        .input-icon i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
-        .input-icon input { padding-left: 44px; }
-        .login-btn { width: 100%; background: #003366; color: white; padding: 14px; border-radius: 40px; font-weight: 600; margin-top: 8px; cursor: pointer; }
-        .role-badge { position: fixed; top: 20px; right: 20px; background: #003366; color: white; padding: 8px 16px; border-radius: 40px; font-size: 12px; z-index: 100; }
-        .logout-btn { background: #dc2626; margin-left: 10px; }
-        .support-badge { position: fixed; bottom: 20px; left: 20px; background: linear-gradient(135deg, #25D366, #128C7E); color: white; padding: 10px 18px; border-radius: 50px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 12px; z-index: 1000; cursor: pointer; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
-        .photo-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; background: white; margin-top: 8px; border: 1px solid #e2e8f0; }
-        .filter-bar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
-        .filter-bar select { width: auto; min-width: 150px; }
-        .action-buttons-cell { display: flex; gap: 6px; flex-wrap: wrap; }
-        .whatsapp-btn { background: #25D366; color: white; }
-        .id-card { width: 640px; margin: 0 auto; background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); overflow: hidden; display: flex; flex-direction: row; flex-wrap: wrap; }
-        .id-card-header { background: #003366; color: white; padding: 12px; text-align: center; width: 100%; }
-        .id-card-left { width: 40%; padding: 20px; text-align: center; border-right: 1px solid #e2e8f0; }
-        .id-card-right { width: 60%; padding: 20px; }
-        .id-card-photo { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; margin: 0 auto; border: 2px solid #D4A017; background: white; }
-        .finance-summary { background: #f8fafc; padding: 15px; border-radius: 16px; margin-bottom: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        @media (min-width: 768px) { .md\:grid-cols-4 { grid-template-columns: repeat(4, 1fr); } }
-        .absent-checkbox { width: 20px; height: 20px; margin: 0; cursor: pointer; }
-        .attendance-table { width: 100%; border-collapse: collapse; }
-        .attendance-table th, .attendance-table td { padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: left; }
-        .mark-input { width: 80px; padding: 6px; border-radius: 12px; text-align: center; }
+        .card { background: white; border-radius: 20px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .flex { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 20px; }
+        select, input { padding: 10px 16px; border-radius: 30px; border: 1px solid #cbd5e1; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #f8fafc; font-weight: 700; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: white; border-radius: 28px; padding: 24px; max-width: 600px; width: 90%; max-height: 85vh; overflow-y: auto; }
+        .report-card { background: white; border-radius: 24px; padding: 32px; margin-bottom: 32px; page-break-after: always; }
+        .report-header { text-align: center; border-bottom: 3px solid #003366; padding-bottom: 20px; margin-bottom: 24px; }
+        .report-header h2 { color: #003366; }
+        .report-student-info { background: #f8fafc; padding: 20px; border-radius: 20px; display: flex; gap: 24px; flex-wrap: wrap; align-items: center; margin-bottom: 24px; }
+        .report-student-photo { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #D4A017; background: #e2e8f0; display: flex; align-items: center; justify-content: center; }
         .report-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
         .report-table th, .report-table td { border: 1px solid #e2e8f0; padding: 12px; text-align: center; }
         .report-table th { background: #003366; color: white; }
-        .report-header { text-align: center; border-bottom: 3px solid #003366; padding-bottom: 20px; margin-bottom: 20px; }
-        .report-header h2 { color: #003366; font-size: 1.8rem; }
-        .report-student-info { display: flex; gap: 25px; margin-bottom: 25px; padding: 20px; background: #f8fafc; border-radius: 20px; flex-wrap: wrap; align-items: center; }
-        .report-student-photo { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #D4A017; }
-        .report-footer { margin-top: 25px; text-align: center; font-size: 0.7rem; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 15px; }
-        .history-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .history-table th, .history-table td { border: 1px solid #e2e8f0; padding: 10px; text-align: left; }
-        .history-table th { background: #003366; color: white; }
-        .payment-row { border-bottom: 1px solid #e2e8f0; padding: 10px; }
-        @media print {
-            body { background: white; padding: 0; }
-            .action-buttons, .global-search, .role-badge, .logout-btn, .support-badge, .btn, .action-btn { display: none !important; }
-        }
-        .history-card { background: white; border-radius: 20px; padding: 20px; margin-top: 15px; }
-        .absent-card { background: #fef2f2; border-radius: 16px; padding: 15px; margin-bottom: 12px; display: flex; gap: 15px; align-items: center; border-left: 4px solid #dc2626; }
-        .absent-card:hover { background: #fee2e2; }
-        .search-bar { background: #f8fafc; border-radius: 50px; padding: 8px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; border: 1px solid #e2e8f0; }
-        .search-bar i { color: #94a3b8; }
-        .search-bar input { flex: 1; border: none; background: transparent; outline: none; font-size: 14px; }
-        .selection-toolbar { background: #eef2ff; border-radius: 20px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-top: 20px; }
-        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-        .loading-spinner { background: white; padding: 20px 40px; border-radius: 50px; font-size: 16px; color: #003366; }
-        .loading-spinner i { margin-right: 10px; }
+        .comments-section { display: flex; gap: 30px; margin-top: 30px; flex-wrap: wrap; }
+        .comment-box { flex: 1; border-top: 2px dashed #cbd5e1; padding-top: 18px; }
+        .login-container { max-width: 420px; margin: 100px auto; background: white; border-radius: 32px; padding: 40px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .login-container input { width: 100%; margin: 12px 0; padding: 14px; border-radius: 40px; border: 1px solid #ccc; }
+        .login-container button { width: 100%; background: #003366; color: white; padding: 14px; border-radius: 40px; border: none; cursor: pointer; font-weight: bold; }
+        .role-badge { position: fixed; top: 20px; right: 20px; background: #003366; color: white; padding: 8px 16px; border-radius: 40px; font-size: 12px; z-index: 100; }
+        .logout-btn { background: #dc2626; margin-left: 10px; border: none; color: white; padding: 5px 12px; border-radius: 20px; cursor: pointer; }
+        .toast { position: fixed; bottom: 24px; right: 24px; background: #10b981; color: white; padding: 12px 24px; border-radius: 40px; z-index: 2000; animation: fadeOut 3s forwards; }
+        .toast.error { background: #ef4444; }
+        @keyframes fadeOut { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
+        .debt { color: #dc2626; font-weight: 700; }
+        .paid { color: #10b981; }
+        .selection-bar { background: #eef2ff; border-radius: 16px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-top: 20px; }
+        .search-bar { background: #f8fafc; border-radius: 50px; padding: 8px 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+        .search-bar input { flex: 1; border: none; background: transparent; outline: none; }
+        .absent-card { background: #fef2f2; border-radius: 16px; padding: 16px; display: flex; gap: 16px; align-items: center; border-left: 4px solid #dc2626; margin-bottom: 12px; }
+        .absent-photo { width: 55px; height: 55px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; }
+        @media print { .no-print { display: none; } .report-card { page-break-after: always; } }
     </style>
 </head>
 <body>
-<div id="app"></div>
+<div id="app">Loading...</div>
 
 <script>
-    (function(){
-        // ============================================================
-        // PROGRESSIVE MOTHERS SCHOOL - OPTIMIZED VERSION
-        // Data loads once, cached locally
-        // ============================================================
-        
-        // ---------- CONFIGURATION ----------
-        const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
-        const SCHOOL_ID = '11111111-1111-1111-1111-111111111111';
-        const SCHOOL_CONTACTS = ['0756585035', '0779585035'];
-        const SUPPORT_CONTACTS = [{name:'Eudes Media', whatsapp:'0762992440'},{name:'Eudes Media', whatsapp:'0794423143'}];
-        const TERMS = ['Term I', 'Term II', 'Term III'];
-        const EXAM_TYPES = ['Beginning of Term', 'Mid Term', 'End of Term'];
-        const CLASS_ORDER = ['Baby','Middle','Top','P.1','P.2','P.3','P.4','P.5','P.6','P.7'];
-        const ACADEMIC_YEARS = ['2026', '2027', '2028', '2029', '2030'];
-        
-        // Subject mapping based on class
-        const SUBJECTS_BY_CLASS = {
-            'Baby': ['LA 1', 'LA 2', 'LA 3', 'LA 4', 'LA 5'],
-            'Middle': ['LA 1', 'LA 2', 'LA 3', 'LA 4', 'LA 5'],
-            'Top': ['LA 1', 'LA 2', 'LA 3', 'LA 4', 'LA 5'],
-            'P.1': ['English', 'Mathematics', 'Lit 1', 'Lit 2', 'R.E'],
-            'P.2': ['English', 'Mathematics', 'Lit 1', 'Lit 2', 'R.E'],
-            'P.3': ['English', 'Mathematics', 'Lit 1', 'Lit 2', 'R.E'],
-            'P.4': ['English', 'Mathematics', 'Science', 'Social Studies'],
-            'P.5': ['English', 'Mathematics', 'Science', 'Social Studies'],
-            'P.6': ['English', 'Mathematics', 'Science', 'Social Studies'],
-            'P.7': ['English', 'Mathematics', 'Science', 'Social Studies']
-        };
-        
-        let students = [], marks = [], attendance = [], payments = [], expenses = [], transactions = [];
-        let currentUser = null, activeTab = 'dashboard';
-        let globalSearchTerm = '', classFilter = '', feesSearchTerm = '';
-        let clockInterval = null;
-        let dataLoaded = false;
-        let isLoading = false;
-        
-        // ---------- AUTHENTICATION ----------
-        const USERS = { 
-            admin: { password: 'admin123', role: 'admin' }, 
-            teacher: { password: 'teacher123', role: 'teacher' }, 
-            finance: { password: 'finance123', role: 'finance' } 
-        };
-        function login(u,p) { if(USERS[u] && USERS[u].password===p) { currentUser={username:u,role:USERS[u].role}; sessionStorage.setItem('schoolUser',JSON.stringify(currentUser)); return true; } return false; }
-        function logout() { sessionStorage.removeItem('schoolUser'); currentUser=null; if(clockInterval) clearInterval(clockInterval); renderLogin(); }
-        function checkAuth() { let s=sessionStorage.getItem('schoolUser'); if(s){currentUser=JSON.parse(s); return true;} return false; }
-        function canManageStudents() { return currentUser?.role==='admin'; }
-        function canManageMarks() { return currentUser?.role==='admin' || currentUser?.role==='teacher'; }
-        function canManageAttendance() { return currentUser?.role==='admin' || currentUser?.role==='teacher'; }
-        function canManageFees() { return currentUser?.role==='admin' || currentUser?.role==='finance'; }
-        function canViewReports() { return currentUser?.role==='admin'; }
-        
-        function showLoading(show) {
-            let overlay = document.getElementById('loadingOverlay');
-            if(show) {
-                if(!overlay) {
-                    overlay = document.createElement('div');
-                    overlay.id = 'loadingOverlay';
-                    overlay.className = 'loading-overlay';
-                    overlay.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
-                    document.body.appendChild(overlay);
-                }
-                overlay.style.display = 'flex';
-            } else if(overlay) {
-                overlay.style.display = 'none';
+// ============================================================
+// PROGRESSIVE MOTHERS SCHOOL - COMPLETE WORKING SYSTEM
+// ============================================================
+
+const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
+const SCHOOL_ID = '11111111-1111-1111-1111-111111111111';
+const SCHOOL_CONTACTS = ['0756585035', '0779585035'];
+const TERMS = ['Term I', 'Term II', 'Term III'];
+const EXAM_TYPES = ['Beginning of Term', 'Mid Term', 'End of Term'];
+const CLASS_ORDER = ['Baby', 'Middle', 'Top', 'P.1', 'P.2', 'P.3', 'P.4', 'P.5', 'P.6', 'P.7'];
+
+const SUBJECTS_BY_CLASS = {
+    'Baby': ['LA 1', 'LA 2', 'LA 3', 'LA 4', 'LA 5'],
+    'Middle': ['LA 1', 'LA 2', 'LA 3', 'LA 4', 'LA 5'],
+    'Top': ['LA 1', 'LA 2', 'LA 3', 'LA 4', 'LA 5'],
+    'P.1': ['English', 'Mathematics', 'Lit 1', 'Lit 2', 'R.E'],
+    'P.2': ['English', 'Mathematics', 'Lit 1', 'Lit 2', 'R.E'],
+    'P.3': ['English', 'Mathematics', 'Lit 1', 'Lit 2', 'R.E'],
+    'P.4': ['English', 'Mathematics', 'Science', 'Social Studies'],
+    'P.5': ['English', 'Mathematics', 'Science', 'Social Studies'],
+    'P.6': ['English', 'Mathematics', 'Science', 'Social Studies'],
+    'P.7': ['English', 'Mathematics', 'Science', 'Social Studies']
+};
+
+// R.E is excluded from grading for P.1-P.3
+const GRADING_EXCLUSIONS = {
+    'P.1': ['R.E'],
+    'P.2': ['R.E'],
+    'P.3': ['R.E']
+};
+
+const USERS = { admin: { password: 'admin123', role: 'admin' }, teacher: { password: 'teacher123', role: 'teacher' }, finance: { password: 'finance123', role: 'finance' } };
+
+let students = [], marks = [], attendance = [], payments = [];
+let currentUser = null, activeTab = 'dashboard';
+let globalSearch = '', classFilter = '', feesSearch = '', attSearch = '', marksSearch = '', reportSearch = '', absentSearch = '';
+let currentSchool = { name: 'Progressive Mothers School', address: 'Gayaza-Kijabijjo' };
+let selectedStudentIds = new Set();
+
+function formatMoney(amt) { return 'UGX ' + (amt || 0).toLocaleString(); }
+function escapeHtml(str) { return str ? String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]) : ''; }
+function showToast(msg, isErr) { let t = document.createElement('div'); t.className = `toast ${isErr ? 'error' : ''}`; t.innerText = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); }
+function sendWhatsApp(phone, msg) { if (!phone) { showToast('No WhatsApp number', true); return; } let clean = phone.replace(/\D/g, ''); if (clean.startsWith('0')) clean = '256' + clean.slice(1); window.open(`https://wa.me/${clean}?text=${encodeURIComponent(msg)}`, '_blank'); }
+
+function getStandardGrade(score) {
+    if (score >= 90) return 'D1';
+    if (score >= 80) return 'D2';
+    if (score >= 75) return 'C3';
+    if (score >= 70) return 'C4';
+    if (score >= 65) return 'C5';
+    if (score >= 60) return 'C6';
+    if (score >= 55) return 'P7';
+    if (score >= 50) return 'P8';
+    return 'F9';
+}
+
+function getGradePoints(grade) {
+    const points = { D1: 1, D2: 2, C3: 3, C4: 4, C5: 5, C6: 6, P7: 7, P8: 8, F9: 9 };
+    return points[grade] || 9;
+}
+
+function getDivision(agg) {
+    if (agg <= 12) return 'Division 1';
+    if (agg <= 23) return 'Division 2';
+    if (agg <= 29) return 'Division 3';
+    if (agg <= 34) return 'Division 4';
+    return 'Division U';
+}
+
+function getLetterGrade(score) {
+    if (score >= 90) return 'A';
+    if (score >= 80) return 'B';
+    if (score >= 70) return 'C';
+    if (score >= 60) return 'D';
+    if (score >= 50) return 'E';
+    return 'F';
+}
+
+// Supabase API
+async function fetchDB(table, filter = '') {
+    try {
+        let res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=*${filter}`, {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        });
+        if (!res.ok) return [];
+        let text = await res.text();
+        return text ? JSON.parse(text) : [];
+    } catch (e) { return []; }
+}
+
+async function insertDB(table, data) {
+    try {
+        let res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+            method: 'POST',
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(await res.text());
+        let text = await res.text();
+        return text ? JSON.parse(text) : true;
+    } catch (e) { showToast(`Error: ${e.message}`, true); return null; }
+}
+
+async function updateDB(table, id, data) {
+    try {
+        let res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+            method: 'PATCH',
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(await res.text());
+        let text = await res.text();
+        return text ? JSON.parse(text) : true;
+    } catch (e) { showToast(`Error: ${e.message}`, true); return null; }
+}
+
+async function deleteDB(table, id) {
+    await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+}
+
+async function loadAllData() {
+    students = await fetchDB('students', `&school_id=eq.${SCHOOL_ID}`);
+    marks = await fetchDB('marks', `&school_id=eq.${SCHOOL_ID}`);
+    attendance = await fetchDB('attendance', `&school_id=eq.${SCHOOL_ID}`);
+    payments = await fetchDB('payments', `&school_id=eq.${SCHOOL_ID}`);
+    if (students.length === 0) await createDemoData();
+    students = await fetchDB('students', `&school_id=eq.${SCHOOL_ID}`);
+    marks = await fetchDB('marks', `&school_id=eq.${SCHOOL_ID}`);
+}
+
+async function createDemoData() {
+    let demo = [
+        { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: 'Namukose', last_name: 'Rahma', lin: 'PMN9985', payment_code: '', class: 'P.7', parent_name: 'Mr. Namukose', parent_whatsapp: '0756000010', total_fees: 350000, fees_paid: 200000, photo_url: '', academic_year: '2026' },
+        { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: 'Nabagereka', last_name: 'Sharifah', lin: 'PMN9469', payment_code: '', class: 'P.7', parent_name: 'Mrs. Nabagereka', parent_whatsapp: '0756000011', total_fees: 350000, fees_paid: 150000, photo_url: '', academic_year: '2026' },
+        { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: 'Barungi', last_name: 'Hadija Husina', lin: 'PMB7980', payment_code: '', class: 'P.7', parent_name: 'Mr. Barungi', parent_whatsapp: '0756000012', total_fees: 350000, fees_paid: 100000, photo_url: '', academic_year: '2026' }
+    ];
+    for (let s of demo) await insertDB('students', s);
+}
+
+// Dashboard
+async function renderDashboard() {
+    let today = new Date().toISOString().slice(0, 10);
+    let absentToday = attendance.filter(a => a.date === today && a.status === 'absent').length;
+    let totalInc = payments.reduce((a, b) => a + (b.amount || 0), 0);
+    let totalExp = students.reduce((a, b) => a + (b.total_fees || 0), 0);
+    let viewFinance = currentUser?.role === 'admin' || currentUser?.role === 'finance';
+    
+    document.getElementById('tabContent').innerHTML = `
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-number">${students.length}</div><div class="stat-label">Total Students</div></div>
+            ${viewFinance ? `<div class="stat-card"><div class="stat-number">${formatMoney(totalInc)}</div><div class="stat-label">Revenue</div></div>
+            <div class="stat-card"><div class="stat-number">${formatMoney(totalExp - totalInc)}</div><div class="stat-label">Outstanding</div></div>` : ''}
+            <div class="stat-card"><div class="stat-number">${students.length - absentToday}</div><div class="stat-label">Present Today</div></div>
+            <div class="stat-card"><div class="stat-number">${absentToday}</div><div class="stat-label">Absent Today</div></div>
+        </div>
+        <div class="card"><div class="flex">${getNavButtons()}</div></div>
+    `;
+}
+
+function getNavButtons() {
+    let perms = { students: true, attendance: true, marks: true, fees: true, reports: true, absentees: true };
+    if (currentUser?.role === 'teacher') perms = { students: false, attendance: true, marks: true, fees: false, reports: false, absentees: false };
+    if (currentUser?.role === 'finance') perms = { students: true, attendance: false, marks: false, fees: true, reports: false, absentees: false };
+    
+    let btns = [];
+    if (perms.students) btns.push(`<button class="btn btn-primary" onclick="switchTab('students')"><i class="fas fa-users"></i> Students</button>`);
+    if (perms.attendance) btns.push(`<button class="btn btn-primary" onclick="switchTab('attendance')"><i class="fas fa-calendar-check"></i> Attendance</button>`);
+    if (perms.marks) btns.push(`<button class="btn btn-primary" onclick="switchTab('marks')"><i class="fas fa-chart-line"></i> Marks</button>`);
+    if (perms.fees) btns.push(`<button class="btn btn-primary" onclick="switchTab('fees')"><i class="fas fa-coins"></i> Fees</button>`);
+    if (perms.reports) btns.push(`<button class="btn btn-gold" onclick="switchTab('reports')"><i class="fas fa-print"></i> Reports</button>`);
+    if (perms.absentees) btns.push(`<button class="btn btn-primary" onclick="switchTab('absentees')"><i class="fas fa-user-clock"></i> Absentees</button>`);
+    return btns.join('');
+}
+
+// ==================== STUDENTS ====================
+async function renderStudents() {
+    let filtered = students.filter(s => {
+        if (!globalSearch) return true;
+        const term = globalSearch.toLowerCase();
+        return `${s.first_name} ${s.last_name}`.toLowerCase().includes(term) ||
+               s.lin.toLowerCase().includes(term) ||
+               (s.payment_code || '').toLowerCase().includes(term) ||
+               s.class.toLowerCase().includes(term) ||
+               (s.parent_name || '').toLowerCase().includes(term) ||
+               (s.parent_whatsapp || '').includes(term);
+    });
+    let viewFinance = currentUser?.role === 'admin' || currentUser?.role === 'finance';
+    
+    document.getElementById('tabContent').innerHTML = `
+        <div class="card">
+            <div class="flex" style="justify-content: space-between;">
+                <h3>Student Register (${students.length})</h3>
+                <button class="btn btn-primary" onclick="showAddStudentModal()"><i class="fas fa-plus"></i> Add Student</button>
+            </div>
+            <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="studentSearch" placeholder="Search by name, LIN, class, parent..." value="${escapeHtml(globalSearch)}"></div>
+            <div class="data-table"><table><thead><tr><th>Photo</th><th>Name</th><th>Class</th><th>LIN</th><th>Payment Code</th>${viewFinance ? '<th>Total</th><th>Paid</th><th>Balance</th>' : ''}<th>Parent</th><th>Actions</th></tr></thead><tbody id="studentsBody"></tbody></table></div>
+        </div>`;
+    
+    document.getElementById('studentSearch').addEventListener('input', (e) => { globalSearch = e.target.value; renderStudents(); });
+    let tbody = document.getElementById('studentsBody');
+    for (let s of filtered) {
+        let paid = payments.filter(p => p.student_id === s.id).reduce((a, b) => a + (b.amount || 0), 0);
+        let bal = (s.total_fees || 0) - paid;
+        let row = tbody.insertRow();
+        if (viewFinance) {
+            row.innerHTML = `<td><div style="width:40px;height:40px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;">${s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;">` : '<i class="fas fa-user-circle fa-2x"></i>'}</div></td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td>${escapeHtml(s.parent_name || '')}</td><td><button class="btn btn-sm btn-primary" onclick="editStudent('${s.id}')">Edit</button> <button class="btn btn-sm btn-gold" onclick="showPaymentHistory('${s.id}')">History</button></td>`;
+        } else {
+            row.innerHTML = `<td><div style="width:40px;height:40px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;">${s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;">` : '<i class="fas fa-user-circle fa-2x"></i>'}</div></td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${escapeHtml(s.parent_name || '')}</td><td><button class="btn btn-sm btn-primary" onclick="editStudent('${s.id}')">Edit</button> <button class="btn btn-sm btn-gold" onclick="showPaymentHistory('${s.id}')">History</button></td>`;
+        }
+    }
+}
+
+window.editStudent = async (id) => {
+    let s = students.find(st => st.id === id);
+    if (!s) return;
+    let newFees = prompt(`Edit total fees for ${s.first_name} ${s.last_name}:`, s.total_fees || 0);
+    if (newFees !== null && !isNaN(parseFloat(newFees))) {
+        await updateDB('students', id, { total_fees: parseFloat(newFees) });
+        await loadAllData();
+        renderStudents();
+        showToast('Student updated');
+    }
+};
+
+window.showPaymentHistory = (id) => {
+    let s = students.find(st => st.id === id);
+    let studentPayments = payments.filter(p => p.student_id === id).sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+    let paid = studentPayments.reduce((a, b) => a + b.amount, 0);
+    alert(`Payment History for ${s.first_name} ${s.last_name}\nLIN: ${s.lin}\nTotal: ${formatMoney(s.total_fees || 0)}\nPaid: ${formatMoney(paid)}\nBalance: ${formatMoney((s.total_fees || 0) - paid)}\n\nRecent payments: ${studentPayments.slice(0, 3).map(p => `${p.payment_date}: ${formatMoney(p.amount)}`).join(', ')}`);
+};
+
+function showAddStudentModal() {
+    let modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
+    modal.innerHTML = `<div class="modal-content"><h3>Add New Student</h3>
+        <input type="text" id="newFirstName" placeholder="First Name"><input type="text" id="newLastName" placeholder="Last Name">
+        <select id="newClass">${CLASS_ORDER.map(c => `<option>${c}</option>`).join('')}</select>
+        <input type="text" id="newLin" placeholder="LIN (auto)">
+        <input type="text" id="newPaymentCode" placeholder="Payment Code (optional)">
+        <input type="text" id="newParentName" placeholder="Parent Name"><input type="text" id="newParentWhatsapp" placeholder="Parent WhatsApp">
+        <input type="number" id="newTotalFees" placeholder="Total Fees"><div class="flex" style="justify-content: flex-end;"><button class="btn btn-primary" onclick="saveNewStudent()">Save</button><button class="btn btn-gold" onclick="this.closest('.modal').remove()">Cancel</button></div></div>`;
+    document.body.appendChild(modal);
+}
+
+window.saveNewStudent = async () => {
+    let first = document.getElementById('newFirstName').value.trim();
+    let last = document.getElementById('newLastName').value.trim();
+    if (!first || !last) { showToast('First and Last name required', true); return; }
+    let lin = document.getElementById('newLin').value.trim().toUpperCase() || `PM${first.charAt(0).toUpperCase()}${Math.floor(1000 + Math.random() * 9000)}`;
+    let paymentCode = document.getElementById('newPaymentCode').value.trim().toUpperCase() || '';
+    let newStudent = { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: first, last_name: last, lin: lin, payment_code: paymentCode, class: document.getElementById('newClass').value, parent_name: document.getElementById('newParentName').value, parent_whatsapp: document.getElementById('newParentWhatsapp').value, total_fees: parseFloat(document.getElementById('newTotalFees').value) || 0, fees_paid: 0, photo_url: '', academic_year: '2026' };
+    await insertDB('students', newStudent);
+    await loadAllData();
+    renderStudents();
+    document.querySelector('.modal')?.remove();
+    showToast('Student added');
+};
+
+// ==================== ATTENDANCE ====================
+async function renderAttendance() {
+    let opts = [...new Set(students.map(s => s.class))];
+    document.getElementById('tabContent').innerHTML = `<div class="card"><h3>Attendance Tracker</h3>
+        <div class="flex"><select id="attClass">${opts.map(c => `<option>${c}</option>`).join('')}</select><input type="date" id="attDate" value="${new Date().toISOString().slice(0, 10)}"><button class="btn btn-primary" id="loadAtt">Load</button><button class="btn btn-gold" id="saveAtt">Save</button></div>
+        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="attSearch" placeholder="Search student..."></div>
+        <div id="attList"></div></div>`;
+    document.getElementById('loadAtt').onclick = loadAttendance;
+    document.getElementById('saveAtt').onclick = saveAttendance;
+    document.getElementById('attSearch').addEventListener('input', (e) => { attSearch = e.target.value; loadAttendance(); });
+    await loadAttendance();
+}
+
+async function loadAttendance() {
+    let cls = document.getElementById('attClass').value;
+    let date = document.getElementById('attDate').value;
+    let classStd = students.filter(s => s.class === cls);
+    if (attSearch) {
+        const term = attSearch.toLowerCase();
+        classStd = classStd.filter(s => `${s.first_name} ${s.last_name}`.toLowerCase().includes(term) || s.lin.toLowerCase().includes(term));
+    }
+    let existing = await fetchDB('attendance', `&date=eq.${date}&status=eq.absent&school_id=eq.${SCHOOL_ID}`);
+    let absentSet = new Set(existing.map(a => a.student_id));
+    let tbl = `<table><thead><tr><th>Student</th><th>LIN</th><th>Mark Absent</th></tr></thead><tbody>`;
+    for (let s of classStd) {
+        tbl += `<tr><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td><input type="checkbox" class="absent-cb" data-id="${s.id}" ${absentSet.has(s.id) ? 'checked' : ''}> Mark Absent</tr>`;
+    }
+    tbl += `</tbody></table>`;
+    document.getElementById('attList').innerHTML = tbl;
+}
+
+async function saveAttendance() {
+    let date = document.getElementById('attDate').value;
+    let cbs = document.querySelectorAll('.absent-cb');
+    for (let cb of cbs) {
+        let sid = cb.dataset.id;
+        let exist = await fetchDB('attendance', `&student_id=eq.${sid}&date=eq.${date}`);
+        if (cb.checked) {
+            if (!exist.length) await insertDB('attendance', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: sid, date, status: 'absent', academic_year: '2026' });
+        } else {
+            if (exist.length) await deleteDB('attendance', exist[0].id);
+        }
+    }
+    showToast('Attendance saved');
+    await loadAllData();
+}
+
+// ==================== MARKS ====================
+async function renderMarks() {
+    let opts = [...new Set(students.map(s => s.class))];
+    document.getElementById('tabContent').innerHTML = `<div class="card"><h3>Marks Entry</h3>
+        <div class="flex"><select id="markClass">${opts.map(c => `<option>${c}</option>`).join('')}</select><select id="markTerm">${TERMS.map(t => `<option>${t}</option>`).join('')}</select><select id="markExam">${EXAM_TYPES.map(e => `<option>${e}</option>`).join('')}</select><button class="btn btn-primary" id="loadMarks">Load</button><button class="btn btn-gold" id="saveMarks">Save</button></div>
+        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="marksSearch" placeholder="Search student..."></div>
+        <div id="marksGrid"></div></div>`;
+    document.getElementById('loadMarks').onclick = async () => {
+        let cls = document.getElementById('markClass').value;
+        let term = document.getElementById('markTerm').value;
+        let exam = document.getElementById('markExam').value;
+        let classStd = students.filter(s => s.class === cls);
+        if (document.getElementById('marksSearch').value) {
+            const termSearch = document.getElementById('marksSearch').value.toLowerCase();
+            classStd = classStd.filter(s => `${s.first_name} ${s.last_name}`.toLowerCase().includes(termSearch) || s.lin.toLowerCase().includes(termSearch));
+        }
+        let subs = SUBJECTS_BY_CLASS[cls] || [];
+        let relMarks = marks.filter(m => m.term === term && m.exam_type === exam && m.academic_year === '2026');
+        let grid = `<table><thead><tr><th>Student</th>${subs.map(s => `<th>${s}</th>`).join('')}</thead><tbody>`;
+        for (let s of classStd) {
+            grid += `<tr><td><strong>${s.first_name} ${s.last_name}</strong><br><small>${s.lin}</small></td>`;
+            for (let sub of subs) {
+                let mk = relMarks.find(m => m.student_id === s.id && m.subject === sub);
+                grid += `<td><input type="number" class="mark-input" data-student="${s.id}" data-subject="${sub}" value="${mk ? mk.score : ''}" style="width:70px;"></td>`;
+            }
+            grid += `</tr>`;
+        }
+        grid += `</tbody></table>`;
+        document.getElementById('marksGrid').innerHTML = grid;
+    };
+    document.getElementById('saveMarks').onclick = async () => {
+        let term = document.getElementById('markTerm').value;
+        let exam = document.getElementById('markExam').value;
+        let inputs = document.querySelectorAll('.mark-input');
+        for (let inp of inputs) {
+            let score = parseInt(inp.value);
+            if (!isNaN(score) && score >= 0 && score <= 100) {
+                let sid = inp.dataset.student;
+                let subj = inp.dataset.subject;
+                let existing = marks.find(m => m.student_id === sid && m.subject === subj && m.term === term && m.exam_type === exam && m.academic_year === '2026');
+                let grade = getStandardGrade(score);
+                if (existing) await updateDB('marks', existing.id, { score, grade });
+                else await insertDB('marks', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: sid, subject: subj, score, grade, term, exam_type: exam, academic_year: '2026', created_at: new Date().toISOString() });
             }
         }
-        
-        // ---------- HELPER FUNCTIONS ----------
-        function generateLIN(firstName) { let letter=firstName?firstName.charAt(0).toUpperCase():'X'; return `PM${letter}${Math.floor(1000+Math.random()*9000)}`; }
-        function isValidLIN(lin,firstName) { let expected=firstName?firstName.charAt(0).toUpperCase():''; return new RegExp(`^PM${expected}[0-9]{4}$`).test(lin); }
-        
-        function getGrade(score) { 
-            if(score>=90) return 'D1'; if(score>=80) return 'D2'; if(score>=70) return 'C3'; 
-            if(score>=60) return 'C4'; if(score>=50) return 'C5'; if(score>=40) return 'C6'; 
-            if(score>=35) return 'P7'; if(score>=30) return 'P8'; return 'F9'; 
+        showToast('Marks saved');
+        await loadAllData();
+    };
+    document.getElementById('marksSearch').addEventListener('input', (e) => { if (document.getElementById('loadMarks')) document.getElementById('loadMarks').click(); });
+    document.getElementById('loadMarks').click();
+}
+
+// ==================== FEES ====================
+async function renderFees() {
+    let totalInc = payments.reduce((a, b) => a + (b.amount || 0), 0);
+    let totalExp = students.reduce((a, b) => a + (b.total_fees || 0), 0);
+    document.getElementById('tabContent').innerHTML = `
+        <div class="card"><h3>Financial Summary</h3><div class="stats-grid" style="grid-template-columns:repeat(3,1fr);"><div class="stat-card"><div class="stat-number">${formatMoney(totalInc)}</div><div class="stat-label">Income</div></div><div class="stat-card"><div class="stat-number">${formatMoney(totalExp)}</div><div class="stat-label">Expected</div></div><div class="stat-card"><div class="stat-number">${formatMoney(totalExp - totalInc)}</div><div class="stat-label">Outstanding</div></div></div></div>
+        <div class="card"><h3>Record Payment</h3><div class="flex"><select id="payStudent">${students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.lin})</option>`).join('')}</select><input type="number" id="payAmount" placeholder="Amount"><button class="btn btn-primary" id="recordPay">Record</button><button class="btn btn-whatsapp" id="sendReminder">Send Reminder</button></div></div>
+        <div class="card"><h3>Student Balances</h3><div class="search-bar"><i class="fas fa-search"></i><input type="text" id="feesSearch" placeholder="Search student..."></div>
+        <div class="data-table"><table><thead><tr><th>Student</th><th>LIN</th><th>Total</th><th>Paid</th><th>Balance</th><th>Action</th></tr></thead><tbody id="feesBody"></tbody></table></div>
+        <div class="flex"><button class="btn btn-gold" id="printDebtors"><i class="fas fa-print"></i> Print Debtors List</button></div></div>`;
+    document.getElementById('recordPay').onclick = async () => {
+        let sid = document.getElementById('payStudent').value;
+        let amt = parseFloat(document.getElementById('payAmount').value);
+        if (sid && amt > 0) {
+            await insertDB('payments', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: sid, amount: amt, payment_date: new Date().toISOString().slice(0, 10), receipt_number: `RCP-${Date.now()}`, term: 'Term I', academic_year: '2026' });
+            await loadAllData();
+            renderFees();
+            showToast('Payment recorded');
         }
-        
-        function getLetterGrade(score) {
-            if(score>=90) return 'A'; if(score>=80) return 'B'; if(score>=70) return 'C';
-            if(score>=60) return 'D'; if(score>=50) return 'E'; return 'F';
+    };
+    document.getElementById('sendReminder').onclick = () => {
+        let msg = "Good evening parents. Please clear fees tomorrow. Accounts Department.";
+        for (let s of students) if (s.parent_whatsapp) sendWhatsApp(s.parent_whatsapp, msg);
+        showToast('Reminders sent');
+    };
+    document.getElementById('feesSearch').addEventListener('input', (e) => { feesSearch = e.target.value; renderFeesTable(); });
+    document.getElementById('printDebtors').onclick = () => {
+        let debtors = students.filter(s => (s.total_fees || 0) - payments.filter(p => p.student_id === s.id).reduce((a, b) => a + (b.amount || 0), 0) > 0);
+        if (debtors.length === 0) { alert('No debtors'); return; }
+        let win = window.open('', '_blank');
+        win.document.write(`<html><head><title>Debtors List</title><style>body{font-family:Arial;padding:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:8px}</style></head><body><h2>Debtors List</h2><p>Date: ${new Date().toLocaleDateString()}</p><table><thead><tr><th>Name</th><th>LIN</th><th>Class</th><th>Total</th><th>Paid</th><th>Balance</th><th>WhatsApp</th></tr></thead><tbody>${debtors.map(s => { let paid = payments.filter(p => p.student_id === s.id).reduce((a, b) => a + (b.amount || 0), 0); let bal = (s.total_fees || 0) - paid; return `<tr><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td>${s.class}</td><td>${formatMoney(s.total_fees)}</td><td>${formatMoney(paid)}</td><td>${formatMoney(bal)}</td><td>${s.parent_whatsapp || ''}</td>`; }).join('')}</tbody></table></body></html>`);
+        win.document.close();
+        win.print();
+    };
+    renderFeesTable();
+}
+
+function renderFeesTable() {
+    let tbody = document.getElementById('feesBody');
+    if (!tbody) return;
+    let filtered = students.filter(s => !feesSearch || `${s.first_name} ${s.last_name}`.toLowerCase().includes(feesSearch.toLowerCase()) || s.lin.toLowerCase().includes(feesSearch.toLowerCase()));
+    tbody.innerHTML = '';
+    for (let s of filtered) {
+        let paid = payments.filter(p => p.student_id === s.id).reduce((a, b) => a + (b.amount || 0), 0);
+        let bal = (s.total_fees || 0) - paid;
+        let row = tbody.insertRow();
+        row.innerHTML = `<td><strong>${s.first_name} ${s.last_name}</strong></td>}<td class="paid">${formatMoney(paid)}</td>}<td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td>}<button class="btn btn-sm btn-whatsapp" onclick="sendSingleFeeReminder('${s.id}')">Remind</button> <button class="btn btn-sm btn-primary" onclick="quickFeePayment('${s.id}')">Pay</button></td>`;
+    }
+}
+
+window.sendSingleFeeReminder = (id) => {
+    let s = students.find(st => st.id === id);
+    if (s?.parent_whatsapp) sendWhatsApp(s.parent_whatsapp, `Dear ${s.parent_name}, your child ${s.first_name} ${s.last_name} has balance ${formatMoney((s.total_fees || 0) - payments.filter(p => p.student_id === id).reduce((a, b) => a + (b.amount || 0), 0))}. Please clear.`);
+};
+
+window.quickFeePayment = async (id) => {
+    let amt = prompt('Amount (UGX):');
+    if (amt && parseFloat(amt) > 0) {
+        await insertDB('payments', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: id, amount: parseFloat(amt), payment_date: new Date().toISOString().slice(0, 10), receipt_number: `RCP-${Date.now()}`, term: 'Term I', academic_year: '2026' });
+        await loadAllData();
+        renderFees();
+        showToast('Payment recorded');
+    }
+};
+
+// ==================== REPORTS ====================
+async function renderReports() {
+    let opts = [...new Set(students.map(s => s.class))];
+    document.getElementById('tabContent').innerHTML = `
+        <div class="card"><h3>Report Center</h3>
+        <div class="flex"><select id="reportClass">${opts.map(c => `<option>${c}</option>`).join('')}</select><select id="reportTerm">${TERMS.map(t => `<option>${t}</option>`).join('')}</select><select id="reportExam"><option value="beginning">Beginning Only</option><option value="mid">Beginning + Mid Term</option><option value="end" selected>Full Term (Beginning + Mid + End)</option></select><button class="btn btn-primary" id="loadReportList">Load Students</button></div>
+        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="reportSearch" placeholder="Search student..."></div>
+        <div id="studentList"></div>
+        <div id="selectionBar" class="selection-bar" style="display:none;"><span><i class="fas fa-check-circle"></i> <span id="selectedCount">0</span> selected</span><div class="flex" style="margin-bottom:0;"><button class="btn btn-primary" id="printSelected">Print Selected</button><button class="btn btn-outline" id="selectAll">Select All</button><button class="btn btn-outline" id="deselectAll">Deselect All</button></div></div>
+        <button class="btn btn-gold" id="printWholeClass" style="width:100%; margin-top:20px;">Print Whole Class</button></div>`;
+    
+    const loadList = () => {
+        let cls = document.getElementById('reportClass').value;
+        if (!cls) return;
+        let classStd = students.filter(s => s.class === cls);
+        if (document.getElementById('reportSearch').value) {
+            const termSearch = document.getElementById('reportSearch').value.toLowerCase();
+            classStd = classStd.filter(s => `${s.first_name} ${s.last_name}`.toLowerCase().includes(termSearch) || s.lin.toLowerCase().includes(termSearch));
         }
-        
-        function getStandardGrade(score) { return getGrade(score); }
-        
-        function gradePoints(g) { return {D1:1,D2:2,C3:3,C4:4,C5:5,C6:6,P7:7,P8:8,F9:9}[g] || 9; }
-        function getDivision(agg) { if(agg<=12) return 'Division 1'; if(agg<=23) return 'Division 2'; if(agg<=29) return 'Division 3'; if(agg<=34) return 'Division 4'; return 'Division U'; }
-        function formatMoney(amt) { return 'UGX ' + (amt || 0).toLocaleString(); }
-        function escapeHtml(str) { return str ? String(str).replace(/[&<>]/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;' })[m]) : ''; }
-        function showToast(msg, isErr=false) { let t = document.createElement('div'); t.className = `toast ${isErr ? 'error' : ''}`; t.innerText = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); }
-        function sendWhatsApp(phone, message) { if(phone) window.open(`https://wa.me/${phone.replace(/[^0-9]/g,'')}?text=${encodeURIComponent(message)}`, '_blank'); else showToast("No WhatsApp number", true); }
-        
-        // ---------- SUPABASE API ----------
-        async function restFetch(table, query='') {
-            let url=`${SUPABASE_URL}/rest/v1/${table}?select=*${query?`&${query}`:''}`;
-            let res=await fetch(url,{headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}});
-            if(!res.ok) throw new Error(await res.text());
-            return res.json();
-        }
-        async function restInsert(table,data) {
-            let res=await fetch(`${SUPABASE_URL}/rest/v1/${table}`,{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(data)});
-            if(!res.ok) throw new Error(`Insert failed: ${await res.text()}`);
-            let txt=await res.text(); return txt.trim()?JSON.parse(txt):{};
-        }
-        async function restUpdate(table,id,data) {
-            let res=await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(data)});
-            if(!res.ok) throw new Error(await res.text());
-            let txt=await res.text(); return txt.trim()?JSON.parse(txt):{};
-        }
-        async function restDeleteFilter(table,filter,val) {
-            let res=await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}=eq.${val}`,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}});
-            if(!res.ok) throw new Error(await res.text());
-        }
-        
-        async function loadAllData(force=false) {
-            if(dataLoaded && !force) return;
-            showLoading(true);
-            try {
-                let schoolRes = await fetch(`${SUPABASE_URL}/rest/v1/schools?id=eq.${SCHOOL_ID}`,{headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}});
-                let schools = await schoolRes.json();
-                if(schools.length === 0) {
-                    await restInsert('schools', { id: SCHOOL_ID, name: 'Progressive Mothers School', address: 'Gayaza-Kijabijjo', phone: '0779585035' });
-                }
-                
-                [students, marks, attendance, payments, expenses, transactions] = await Promise.all([
-                    restFetch('students', `school_id=eq.${SCHOOL_ID}`).catch(e => []),
-                    restFetch('marks', `school_id=eq.${SCHOOL_ID}`).catch(e => []),
-                    restFetch('attendance', `school_id=eq.${SCHOOL_ID}`).catch(e => []),
-                    restFetch('payments', `school_id=eq.${SCHOOL_ID}`).catch(e => []),
-                    restFetch('expenses', `school_id=eq.${SCHOOL_ID}`).catch(e => []),
-                    restFetch('transactions', `school_id=eq.${SCHOOL_ID}`).catch(e => [])
-                ]);
-                
-                students.sort((a,b) => {
-                    let nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
-                    let nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
-                    return nameA < nameB ? -1 : nameA > nameB ? 1 : 0;
-                });
-                dataLoaded = true;
-            } catch(e) { console.error('Load error:', e); showToast('Error loading data', true); }
-            finally { showLoading(false); }
-        }
-        
-        function filterStudents(list) {
-            let filtered = [...list];
-            if (globalSearchTerm) {
-                const term = globalSearchTerm.toLowerCase();
-                filtered = filtered.filter(s => 
-                    (s.first_name + ' ' + s.last_name).toLowerCase().includes(term) ||
-                    (s.class || '').toLowerCase().includes(term) ||
-                    (s.lin || '').toLowerCase().includes(term) ||
-                    (s.parent_name || '').toLowerCase().includes(term) ||
-                    (s.parent_whatsapp || '').includes(term)
-                );
-            }
-            if (classFilter && classFilter !== 'all') {
-                filtered = filtered.filter(s => s.class === classFilter);
-            }
-            return filtered;
-        }
-        
-        function filterFees(list) {
-            if (!feesSearchTerm.trim()) return list;
-            const term = feesSearchTerm.toLowerCase().trim();
-            return list.filter(s => 
-                `${s.first_name} ${s.last_name}`.toLowerCase().includes(term) ||
-                (s.lin || '').toLowerCase().includes(term)
-            );
-        }
-        
-        // ---------- DASHBOARD ----------
-        async function renderDashboard() {
-            let totalIncome = payments.reduce((s,p) => s + p.amount, 0);
-            let totalExpenses = expenses.reduce((s,e) => s + e.amount, 0);
-            let expected = students.reduce((s,st) => s + (st.total_fees || 0), 0);
-            let outstanding = expected - totalIncome;
-            let today = new Date().toISOString().slice(0,10);
-            let absentToday = attendance.filter(a => a.date === today && a.status === 'absent').length;
-            let presentToday = students.length - absentToday;
-            
-            let statsHtml = '';
-            if (currentUser?.role === 'admin') {
-                statsHtml = `
-                    <div class="stats-grid">
-                        <div class="stat-card"><div class="stat-number">${students.length}</div><div class="stat-label">STUDENTS</div></div>
-                        <div class="stat-card"><div class="stat-number">${formatMoney(totalIncome)}</div><div class="stat-label">INCOME</div></div>
-                        <div class="stat-card"><div class="stat-number">${formatMoney(totalExpenses)}</div><div class="stat-label">EXPENSES</div></div>
-                        <div class="stat-card"><div class="stat-number">${formatMoney(outstanding)}</div><div class="stat-label">OUTSTANDING</div></div>
-                        <div class="stat-card"><div class="stat-number">${presentToday}</div><div class="stat-label">PRESENT TODAY</div></div>
-                        <div class="stat-card"><div class="stat-number">${absentToday}</div><div class="stat-label">ABSENT TODAY</div></div>
-                    </div>
-                `;
-            } else if (currentUser?.role === 'teacher') {
-                statsHtml = `<div class="stats-grid"><div class="stat-card"><div class="stat-number">${absentToday}</div><div class="stat-label">ABSENT TODAY</div></div><div class="stat-card"><div class="stat-number">${students.length}</div><div class="stat-label">TOTAL STUDENTS</div></div></div>`;
-            } else if (currentUser?.role === 'finance') {
-                statsHtml = `<div class="stats-grid"><div class="stat-card"><div class="stat-number">${students.length}</div><div class="stat-label">STUDENTS</div></div><div class="stat-card"><div class="stat-number">${formatMoney(totalExpenses)}</div><div class="stat-label">EXPENSES</div></div></div>`;
-            }
-            document.getElementById('tabContent').innerHTML = `${statsHtml}<div class="bg-white p-6 rounded-xl shadow text-center">Welcome to Progressive Mothers School Management System</div>`;
-        }
-        
-        // ---------- STUDENTS MANAGEMENT ----------
-        async function renderStudents() {
-            if (!canManageStudents() && currentUser?.role !== 'finance') {
-                document.getElementById('tabContent').innerHTML = '<div class="bg-white p-4 rounded-xl text-center text-red-600">Access denied</div>';
-                return;
-            }
-            document.getElementById('tabContent').innerHTML = `
-                <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
-                    <div class="flex gap-2">
-                        ${canManageStudents() ? '<button class="btn" id="addStudentBtn"><i class="fas fa-plus"></i> Add Student</button>' : ''}
-                        <button class="btn btn-gold" id="exportBtn"><i class="fas fa-download"></i> Export Excel</button>
-                    </div>
-                </div>
-                <div class="filter-bar">
-                    <select id="classFilterSelect" class="border rounded-lg p-2">
-                        <option value="all">All Classes</option>
-                        ${CLASS_ORDER.map(c => `<option value="${c}">${c}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="data-table" id="studentTableContainer"></div>
-            `;
-            if (canManageStudents()) document.getElementById('addStudentBtn').onclick = showAddStudentModal;
-            document.getElementById('exportBtn').onclick = () => {
-                const filtered = filterStudents(students);
-                const ws = XLSX.utils.json_to_sheet(filtered.map(s => ({
-                    'Full Name': `${s.first_name} ${s.last_name}`,
-                    'LIN': s.lin,
-                    'Class': s.class,
-                    'Total Fees (UGX)': s.total_fees || 0,
-                    'Paid (UGX)': payments.filter(p => p.student_id === s.id).reduce((a,b) => a + b.amount, 0),
-                    'Balance (UGX)': (s.total_fees || 0) - payments.filter(p => p.student_id === s.id).reduce((a,b) => a + b.amount, 0),
-                    'Parent Name': s.parent_name || '',
-                    'Parent WhatsApp': s.parent_whatsapp || ''
-                })));
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, 'Students');
-                XLSX.writeFile(wb, `students_${SCHOOL_ID}.xlsx`);
-            };
-            document.getElementById('classFilterSelect').addEventListener('change', (e) => {
-                classFilter = e.target.value;
-                renderStudentList();
+        selectedStudentIds.clear();
+        document.getElementById('studentList').innerHTML = `<table><thead><tr><th><input type="checkbox" id="headerChk"></th><th>Photo</th><th>Name</th><th>LIN</th><th>Payment Code</th><th>Parent</th><th></th></tr></thead><tbody>${classStd.map(s => `<tr>
+            <td><input type="checkbox" class="studentChk" data-id="${s.id}"></td>
+            <td><div style="width:40px;height:40px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;">${s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;">` : '<i class="fas fa-user-circle"></i>'}</div></td>
+            <td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${s.parent_name || ''}</td>
+            <td><button class="btn btn-sm btn-gold" onclick="printSingleStudentReport('${s.id}')">Print</button></td>
+        `).join('')}</tbody></table>`;
+        document.getElementById('selectionBar').style.display = 'flex';
+        document.querySelectorAll('.studentChk').forEach(cb => cb.addEventListener('change', function () {
+            if (this.checked) selectedStudentIds.add(this.dataset.id);
+            else selectedStudentIds.delete(this.dataset.id);
+            document.getElementById('selectedCount').innerText = selectedStudentIds.size;
+        }));
+        let header = document.getElementById('headerChk');
+        if (header) header.onchange = function () {
+            document.querySelectorAll('.studentChk').forEach(c => {
+                c.checked = this.checked;
+                if (this.checked) selectedStudentIds.add(c.dataset.id);
+                else selectedStudentIds.delete(c.dataset.id);
             });
-            await renderStudentList();
-        }
-        
-        async function renderStudentList() {
-            let filtered = filterStudents(students);
-            let html = `<table class="w-full"><thead><tr><th>Photo</th><th>Name</th><th>LIN</th><th>Class</th><th>Total Fees</th><th>Paid</th><th>Balance</th><th>Parent Name</th><th>Parent WhatsApp</th><th>Actions</th></tr></thead><tbody>`;
-            for (let s of filtered) {
-                let paid = payments.filter(p => p.student_id === s.id).reduce((a,b) => a + b.amount, 0);
-                let bal = (s.total_fees || 0) - paid;
-                let photo = s.photo_url ? `<img src="${s.photo_url}" class="student-photo">` : '<i class="fas fa-user-circle fa-2x" style="color:#003366;"></i>';
-                html += `<tr><td class="p-2">${photo}</td><td class="p-2"><strong>${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</strong></td><td class="p-2">${escapeHtml(s.lin)}</td><td class="p-2">${escapeHtml(s.class)}</td><td class="p-2">${formatMoney(s.total_fees || 0)}</td><td class="p-2 paid-text">${formatMoney(paid)}</td><td class="p-2 ${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td class="p-2">${escapeHtml(s.parent_name || '')}</td><td class="p-2">${escapeHtml(s.parent_whatsapp || '')}</td>
-                <td class="p-2"><div class="action-buttons-cell">
-                    ${canManageStudents() ? `<button class="btn-sm" onclick="editStudent('${s.id}')"><i class="fas fa-edit"></i> Edit</button>` : ''}
-                    <button class="btn-sm btn-gold" onclick="printIdCard('${s.id}')"><i class="fas fa-id-card"></i> ID</button>
-                    <button class="btn-sm" onclick="quickPayment('${s.id}')"><i class="fas fa-money-bill-wave"></i> Pay</button>
-                    <button class="btn-sm" onclick="showFeeHistory('${s.id}')"><i class="fas fa-history"></i> History</button>
-                    <button class="btn-sm" onclick="showStudentReport('${s.id}')"><i class="fas fa-file-alt"></i> Report</button>
-                </div></td>
-            `;
-            }
-            html += '</tbody></tr>';
-            if (filtered.length === 0) html = '<div class="p-6 text-center text-gray-500">No students found. Click "Add Student" to get started.</div>';
-            document.getElementById('studentTableContainer').innerHTML = html;
-        }
-        
-        window.showFeeHistory = async (studentId) => {
-            const student = students.find(s => s.id === studentId);
-            if (!student) return;
-            const studentPayments = payments.filter(p => p.student_id === studentId).sort((a,b) => new Date(b.payment_date) - new Date(a.payment_date));
-            const totalPaid = studentPayments.reduce((a,b) => a + b.amount, 0);
-            const balance = (student.total_fees || 0) - totalPaid;
-            let historyHtml = `<div class="history-card"><h3 style="color:#003366; margin-bottom:15px;">Fee Payment History - ${escapeHtml(student.first_name)} ${escapeHtml(student.last_name)}</h3>
-                <p><strong>LIN:</strong> ${escapeHtml(student.lin)} | <strong>Class:</strong> ${escapeHtml(student.class)}</p>
-                <p><strong>Total Fees:</strong> ${formatMoney(student.total_fees || 0)} | <strong>Total Paid:</strong> ${formatMoney(totalPaid)} | <strong>Balance:</strong> <span class="${balance > 0 ? 'debt' : ''}">${formatMoney(balance)}</span></p>
-                ${studentPayments.length === 0 ? '<p class="text-center text-gray-500 mt-4">No payment records found</p>' : `<table class="history-table"><thead><tr><th>Date</th><th>Amount</th><th>Receipt No.</th><th>Payment Code</th><th>Year</th><th>Term</th></tr></thead><tbody>${studentPayments.map(p => { const date = new Date(p.payment_date); return `<tr><td class="p-2">${date.toLocaleDateString()}</td><td class="p-2 paid-text">${formatMoney(p.amount)}</td><td class="p-2">${escapeHtml(p.receipt_number || 'N/A')}</td><td class="p-2">${escapeHtml(p.payment_code || 'MANUAL')}<td><td class="p-2">${escapeHtml(p.academic_year || date.getFullYear())}</td><td class="p-2">${escapeHtml(p.term || 'N/A')}</td></tr>`; }).join('')}</tbody></table>`}
-                <div class="flex justify-end gap-2 mt-4"><button class="btn btn-gold" id="printHistoryBtn">Print History</button><button class="btn" onclick="this.closest('.modal').remove()">Close</button></div></div>`;
-            const modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
-            modal.innerHTML = `<div class="modal-content" style="max-width: 900px;">${historyHtml}</div>`;
-            document.body.appendChild(modal);
-            document.getElementById('printHistoryBtn').onclick = () => {
-                const win = window.open('', '_blank');
-                win.document.write(`<!DOCTYPE html><html><head><title>Fee History</title><style>body{font-family:Inter;padding:20px}.history-table{width:100%;border-collapse:collapse}.history-table th,.history-table td{border:1px solid #ccc;padding:8px;text-align:left}.debt{color:#dc2626}</style></head><body>${historyHtml}<script>window.print();<\/script></body></html>`);
-                win.document.close();
-            };
+            document.getElementById('selectedCount').innerText = selectedStudentIds.size;
         };
-        
-        window.editStudent = async (id) => {
-            let s = students.find(st => st.id === id);
-            if (!s) return;
-            let newFees = prompt(`Edit total fees for ${s.first_name} ${s.last_name}:`, s.total_fees||0);
-            if(newFees !== null && !isNaN(parseFloat(newFees))) {
-                await restUpdate('students', id, { total_fees: parseFloat(newFees) });
-                await loadAllData(true);
-                await renderStudentList();
-                showToast('Student updated');
-            }
-        };
-        
-        window.quickPayment = async (id) => {
-            let s = students.find(st => st.id === id);
-            let amt = prompt(`Payment for ${s.first_name} ${s.last_name}\nBalance: ${formatMoney((s.total_fees || 0) - payments.filter(p => p.student_id === id).reduce((a,b) => a + b.amount, 0))}\nEnter amount (UGX):`);
-            if (amt && !isNaN(parseFloat(amt))) {
-                let receipt = `RCP-${Date.now()}`;
-                let paymentData = { school_id: SCHOOL_ID, student_id: id, amount: parseFloat(amt), payment_date: new Date().toISOString().slice(0,10), receipt_number: receipt, payment_code: `MANUAL-${Date.now()}`, academic_year: new Date().getFullYear().toString(), term: 'Term I' };
-                await restUpdate('students', id, { fees_paid: (s.fees_paid || 0) + parseFloat(amt) });
-                await restInsert('payments', paymentData);
-                await restInsert('transactions', { ...paymentData, receipt: receipt });
-                showToast(`Payment of ${formatMoney(parseFloat(amt))} recorded for ${s.first_name}`);
-                await loadAllData(true);
-                await renderStudentList();
-                if (activeTab === 'fees') renderFees();
-            }
-        };
-        
-        window.printIdCard = (id) => {
-            let s = students.find(st => st.id === id);
-            if (!s) return;
-            let win = window.open('', '_blank');
-            let photo = s.photo_url ? `<img src="${s.photo_url}" class="id-card-photo">` : '<div class="id-card-photo" style="background:white;display:flex;align-items:center;justify-content:center;border:2px solid #D4A017;"><i class="fas fa-user-circle fa-4x" style="color:#003366;"></i></div>';
-            win.document.write(`<!DOCTYPE html><html><head><title>ID Card - ${s.first_name} ${s.last_name}</title><style>body{font-family:Inter;background:#e2e8f0;display:flex;justify-content:center;align-items:center;min-height:100vh;}.id-card{width:640px;background:white;border-radius:16px;box-shadow:0 4px 12px rgba(0,0,0,0.15);overflow:hidden;display:flex;flex-wrap:wrap;}.id-card-header{background:#003366;color:white;padding:12px;text-align:center;width:100%;}.id-card-left{width:40%;padding:20px;text-align:center;border-right:1px solid #e2e8f0;}.id-card-right{width:60%;padding:20px;}.id-card-photo{width:140px;height:140px;border-radius:50%;object-fit:cover;margin:0 auto;border:2px solid #D4A017;background:white;}</style></head><body><div class="id-card"><div class="id-card-header"><h3>${escapeHtml(currentSchool.name)}</h3><p>${escapeHtml(currentSchool.address || '')}</p></div><div class="id-card-left">${photo}</div><div class="id-card-right"><h2>${s.first_name} ${s.last_name}</h2><p><strong>LIN:</strong> ${s.lin}</p><p><strong>Class:</strong> ${s.class}</p><p><strong>Admission:</strong> ${s.admission_number || 'N/A'}</p><p><strong>Parent:</strong> ${s.parent_name || 'N/A'}</p><p><strong>WhatsApp:</strong> ${s.parent_whatsapp || 'N/A'}</p></div></div><script>window.print();<\/script></body></html>`);
-            win.document.close();
-        };
-        
-        function showAddStudentModal() {
-            let modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
-            modal.innerHTML = `<div class="modal-content"><h3>Add New Student</h3>
-                <input id="newFirstName" placeholder="First Name *"><input id="newLastName" placeholder="Last Name *">
-                <select id="newClass">${CLASS_ORDER.map(c => `<option>${c}</option>`).join('')}</select>
-                <input id="newLin" placeholder="LIN (auto, e.g., PMJ1234)">
-                <input id="newParentWhatsapp" placeholder="Parent WhatsApp"><input id="newParentName" placeholder="Parent Name">
-                <input id="newTotalFees" type="number" placeholder="Total Fees (UGX)">
-                <div><label>Photo (optional)</label><input type="file" id="photoFile" accept="image/jpeg,image/png"></div>
-                <div id="photoPreview" class="text-center"></div>
-                <div class="flex justify-end gap-2 mt-4"><button class="btn" id="confirmAdd">Save Student</button><button class="btn-gold" onclick="this.closest('.modal').remove()">Cancel</button></div></div>`;
-            document.body.appendChild(modal);
-            document.getElementById('confirmAdd').onclick = async () => {
-                let first = document.getElementById('newFirstName').value.trim();
-                let last = document.getElementById('newLastName').value.trim();
-                if (!first || !last) return showToast("First and Last name required", true);
-                let className = document.getElementById('newClass').value;
-                let lin = document.getElementById('newLin').value.trim().toUpperCase();
-                if (!lin) lin = generateLIN(first);
-                let parentWhatsapp = document.getElementById('newParentWhatsapp').value.trim();
-                let parentName = document.getElementById('newParentName').value.trim();
-                let totalFees = parseFloat(document.getElementById('newTotalFees').value) || 0;
-                let data = { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: first, last_name: last, class: className, lin: lin, parent_whatsapp: parentWhatsapp, parent_name: parentName, total_fees: totalFees, fees_paid: 0 };
-                await restInsert('students', data);
-                showToast(`Student ${first} ${last} added successfully`);
-                modal.remove();
-                await loadAllData(true);
-                await renderStudentList();
-            };
+    };
+    document.getElementById('loadReportList').onclick = loadList;
+    document.getElementById('reportSearch').addEventListener('input', loadList);
+    document.getElementById('printSelected').onclick = () => printReports(Array.from(selectedStudentIds));
+    document.getElementById('selectAll').onclick = () => {
+        document.querySelectorAll('.studentChk').forEach(c => { c.checked = true; selectedStudentIds.add(c.dataset.id); });
+        document.getElementById('selectedCount').innerText = selectedStudentIds.size;
+        let h = document.getElementById('headerChk'); if (h) h.checked = true;
+    };
+    document.getElementById('deselectAll').onclick = () => {
+        document.querySelectorAll('.studentChk').forEach(c => { c.checked = false; selectedStudentIds.delete(c.dataset.id); });
+        document.getElementById('selectedCount').innerText = 0;
+        let h = document.getElementById('headerChk'); if (h) h.checked = false;
+    };
+    document.getElementById('printWholeClass').onclick = () => {
+        let cls = document.getElementById('reportClass').value;
+        let ids = students.filter(s => s.class === cls).map(s => s.id);
+        printReports(ids);
+    };
+    loadList();
+}
+
+window.printSingleStudentReport = (id) => printReports([id]);
+
+function calculatePosition(classStudents, term, examType) {
+    let scores = classStudents.map(s => {
+        let total = 0;
+        let subs = SUBJECTS_BY_CLASS[s.class] || [];
+        for (let sub of subs) {
+            let mark = marks.find(m => m.student_id === s.id && m.term === term && m.exam_type === examType && m.subject === sub);
+            if (mark) total += mark.score;
         }
+        return { id: s.id, total: total };
+    });
+    scores.sort((a, b) => b.total - a.total);
+    let map = new Map();
+    scores.forEach((item, idx) => map.set(item.id, idx + 1));
+    return map;
+}
+
+async function printReports(ids) {
+    if (!ids.length) { showToast('No students selected', true); return; }
+    let cls = document.getElementById('reportClass').value;
+    let term = document.getElementById('reportTerm').value;
+    let examSelection = document.getElementById('reportExam').value;
+    let selected = students.filter(s => ids.includes(s.id));
+    let classStudents = students.filter(s => s.class === cls);
+    
+    let examType = examSelection === 'end' ? 'End of Term' : examSelection === 'mid' ? 'Mid Term' : 'Beginning';
+    let positionMap = calculatePosition(classStudents, term, examType);
+    let exams = examSelection === 'end' ? ['Beginning of Term', 'Mid Term', 'End of Term'] : examSelection === 'mid' ? ['Beginning of Term', 'Mid Term'] : ['Beginning of Term'];
+    
+    let html = `<!DOCTYPE html><html><head><title>Student Reports</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>
+        body{font-family:'Inter',sans-serif;padding:30px;background:white;margin:0;}
+        .report-card{max-width:1000px;margin:0 auto 30px;background:white;border-radius:24px;padding:32px;page-break-after:all;box-shadow:0 4px 20px rgba(0,0,0,0.1)}
+        .report-header{text-align:center;border-bottom:3px solid #D4A017;padding-bottom:20px;margin-bottom:24px}
+        .report-header h2{color:#003366;margin:0;}
+        .student-info{background:#f8fafc;padding:20px;border-radius:20px;display:flex;gap:24px;flex-wrap:wrap;margin-bottom:24px;align-items:center}
+        .student-photo{width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #D4A017;background:#e2e8f0;display:flex;align-items:center;justify-content:center;}
+        .grade-table{width:100%;border-collapse:collapse;margin:20px 0}
+        .grade-table th,.grade-table td{border:1px solid #e2e8f0;padding:10px;text-align:center}
+        .grade-table th{background:#003366;color:white}
+        .comment-section{display:flex;gap:30px;margin-top:30px;flex-wrap:wrap}
+        .comment-box{flex:1;border-top:2px dashed #cbd5e1;padding-top:18px}
+        .position-badge{background:#D4A017;color:#003366;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:bold;display:inline-block;}
+        @media print{body{padding:0}.report-card{page-break-after:always;margin:0;box-shadow:none}}
+    </style></head><body>`;
+    
+    for (let s of selected) {
+        let studentMarks = marks.filter(m => m.student_id === s.id && m.term === term);
+        let subjects = SUBJECTS_BY_CLASS[s.class] || ['English', 'Mathematics', 'Science', 'Social Studies'];
+        let rows = '', totals = {};
+        exams.forEach(e => totals[e] = 0);
         
-        // -------- ATTENDANCE (simplified) --------
-        async function renderAttendance() {
-            if (!canManageAttendance()) { document.getElementById('tabContent').innerHTML = '<div class="bg-white p-4 rounded-xl text-red-600">Access denied</div>'; return; }
-            const classOptions = [...new Set(students.map(s => s.class).filter(Boolean))];
-            if (classOptions.length === 0) { document.getElementById('tabContent').innerHTML = '<div class="bg-white p-4 rounded-xl">No students</div>'; return; }
-            document.getElementById('tabContent').innerHTML = `<div class="bg-white rounded-xl p-4 shadow"><h3 class="font-bold mb-3">Mark Absent Students</h3>
-                <div class="flex flex-wrap gap-3 mb-4"><select id="attClass" class="border rounded-lg p-2">${classOptions.map(c => `<option>${c}</option>`).join('')}</select>
-                <input type="date" id="attDate" value="${new Date().toISOString().slice(0,10)}" class="border rounded-lg p-2">
-                <button class="btn" id="loadAttBtn">Load Class</button><button class="btn btn-gold" id="saveAttBtn">Save Absent Records</button></div>
-                <div id="attList"></div></div>`;
-            document.getElementById('loadAttBtn').onclick = async () => {
-                const selectedClass = document.getElementById('attClass').value;
-                const date = document.getElementById('attDate').value;
-                let classStudents = students.filter(s => s.class === selectedClass);
-                if (classStudents.length === 0) { document.getElementById('attList').innerHTML = '<div class="p-4 text-center">No students in this class</div>'; return; }
-                const existing = await restFetch('attendance', `date=eq.${date}&status=eq.absent&school_id=eq.${SCHOOL_ID}`).catch(e => []);
-                const absentIds = new Set(existing.map(a => a.student_id));
-                let html = '<table class="attendance-table w-full"><thead><tr><th>Student Name</th><th>LIN</th><th>Class</th><th>Mark Absent</th></tr></thead><tbody>';
-                for (let s of classStudents) { html += `<tr><td class="p-2"><strong>${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</strong></td><td class="p-2">${escapeHtml(s.lin)}</td><td class="p-2">${escapeHtml(s.class)}</td><td class="p-2"><input type="checkbox" class="absent-checkbox" data-student="${s.id}" ${absentIds.has(s.id) ? 'checked' : ''}> <span>❌ Absent</span></td></td>`; }
-                html += '</tbody></table>';
-                document.getElementById('attList').innerHTML = html;
-            };
-            document.getElementById('saveAttBtn').onclick = async () => {
-                const date = document.getElementById('attDate').value;
-                const checkboxes = document.querySelectorAll('.absent-checkbox');
-                for (let cb of checkboxes) {
-                    const studentId = cb.dataset.student;
-                    const isAbsent = cb.checked;
-                    const existing = await restFetch('attendance', `student_id=eq.${studentId}&date=eq.${date}`).catch(e => []);
-                    if (isAbsent) { if (existing.length === 0) await restInsert('attendance', { school_id: SCHOOL_ID, student_id: studentId, date, status: 'absent' }); }
-                    else { if (existing.length > 0) await restDeleteFilter('attendance', 'id', existing[0].id); }
-                }
-                showToast('Attendance saved');
-                await loadAllData(true);
-                await document.getElementById('loadAttBtn').click();
-            };
-            await document.getElementById('loadAttBtn').click();
-        }
-        
-        // -------- MARKS ENTRY (simplified) --------
-        async function renderMarks() {
-            if (!canManageMarks()) { document.getElementById('tabContent').innerHTML = '<div class="bg-white p-4 rounded-xl text-red-600">Access denied</div>'; return; }
-            let classOptions = [...new Set(students.map(s => s.class).filter(Boolean))];
-            if (classOptions.length === 0) { document.getElementById('tabContent').innerHTML = '<div class="bg-white p-4 rounded-xl">No students</div>'; return; }
-            document.getElementById('tabContent').innerHTML = `<div class="bg-white rounded-xl p-4 mb-4 shadow"><h3 class="font-bold mb-3">Marks Entry</h3>
-                <div class="flex flex-wrap gap-3 mb-4"><select id="marksClass" class="border rounded-lg p-2">${classOptions.map(c => `<option>${c}</option>`).join('')}</select>
-                <select id="marksTerm" class="border rounded-lg p-2">${TERMS.map(t => `<option>${t}</option>`).join('')}</select>
-                <select id="marksExam" class="border rounded-lg p-2">${EXAM_TYPES.map(e => `<option>${e}</option>`).join('')}</select>
-                <button class="btn" id="loadMarksBtn">Load Students</button><button class="btn btn-gold" id="saveMarksBtn">Save All Marks</button></div>
-                <div id="marksGrid" class="overflow-x-auto"></div></div>`;
-            document.getElementById('loadMarksBtn').onclick = async () => {
-                const className = document.getElementById('marksClass').value;
-                const term = document.getElementById('marksTerm').value;
-                const examType = document.getElementById('marksExam').value;
-                let classStudents = students.filter(s => s.class === className);
-                if (classStudents.length === 0) { document.getElementById('marksGrid').innerHTML = '<div class="p-4 text-center">No students in this class</div>'; return; }
-                const subjects = SUBJECTS_BY_CLASS[className] || ['English', 'Mathematics', 'Science', 'Social Studies'];
-                const currentYear = new Date().getFullYear().toString();
-                const relevantMarks = marks.filter(m => m.term === term && m.exam_type === examType && m.academic_year === currentYear);
-                const markMap = new Map();
-                relevantMarks.forEach(m => markMap.set(`${m.student_id}_${m.subject}`, m));
-                let html = '<table class="w-full border"><thead><tr><th>Student Name (LIN)</th>' + subjects.map(s => `<th>${s}</th>`).join('') + '</thead><tbody>';
-                for (let s of classStudents) {
-                    html += `<tr><td class="p-2"><strong>${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</strong><br><span class="text-xs">${s.lin}</span></td>`;
-                    for (let sub of subjects) {
-                        const existing = markMap.get(`${s.id}_${sub}`);
-                        const val = existing ? existing.score : '';
-                        html += `<td class="p-2"><input type="number" class="mark-input" data-student="${s.id}" data-subject="${sub}" value="${val}" min="0" max="100" style="width:80px; padding:6px; border-radius:8px; border:1px solid #ccc;"> <span class="text-xs">${existing ? existing.grade : ''}</span></td>`;
+        for (let sub of subjects) {
+            rows += `<tr><td style="font-weight:600;padding:10px;">${sub}</td>`;
+            for (let ex of exams) {
+                let mk = studentMarks.find(m => m.subject === sub && m.exam_type === ex);
+                let score = mk ? mk.score : '-';
+                let grade = '-';
+                if (score !== '-') {
+                    // For P.1-P.3, R.E is excluded from grading but included in position
+                    if (s.class === 'P.1' || s.class === 'P.2' || s.class === 'P.3') {
+                        if (sub === 'R.E') grade = getLetterGrade(score);
+                        else grade = getStandardGrade(score);
+                    } else if (s.class === 'Baby' || s.class === 'Middle' || s.class === 'Top') {
+                        grade = '-';
+                    } else {
+                        grade = getStandardGrade(score);
                     }
-                    html += `</tr>`;
                 }
-                html += '</tbody></table>';
-                document.getElementById('marksGrid').innerHTML = html;
-            };
-            document.getElementById('saveMarksBtn').onclick = async () => {
-                const term = document.getElementById('marksTerm').value;
-                const examType = document.getElementById('marksExam').value;
-                const currentYear = new Date().getFullYear().toString();
-                const inputs = document.querySelectorAll('.mark-input');
-                for (let inp of inputs) {
-                    const raw = inp.value.trim();
-                    if (raw === "") continue;
-                    const studentId = inp.dataset.student;
-                    const subject = inp.dataset.subject;
-                    const score = parseInt(raw);
-                    if (isNaN(score) || score < 0 || score > 100) { showToast(`Invalid score for ${subject}`, true); continue; }
-                    const grade = getGrade(score);
-                    let existing = await restFetch('marks', `student_id=eq.${studentId}&subject=eq.${subject}&term=eq.${term}&exam_type=eq.${examType}&school_id=eq.${SCHOOL_ID}`);
-                    if (existing && existing.length > 0) { await restUpdate('marks', existing[0].id, { score: score, grade: grade }); }
-                    else { await restInsert('marks', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: studentId, subject: subject, score: score, grade: grade, term: term, exam_type: examType, academic_year: currentYear }); }
-                }
-                showToast('Marks saved');
-                await loadAllData(true);
-                await document.getElementById('loadMarksBtn').click();
-            };
-            await document.getElementById('loadMarksBtn').click();
-        }
-        
-        // -------- FEES MANAGEMENT --------
-        async function renderFees() {
-            if (!canManageFees()) { document.getElementById('tabContent').innerHTML = '<div class="bg-white p-4 rounded-xl text-red-600">Access denied</div>'; return; }
-            let totalIncome = payments.reduce((s,p) => s + p.amount, 0);
-            let totalExpenses = expenses.reduce((s,e) => s + e.amount, 0);
-            let expected = students.reduce((s,st) => s + (st.total_fees || 0), 0);
-            let outstanding = expected - totalIncome;
-            document.getElementById('tabContent').innerHTML = `
-                <div class="finance-summary"><h4>Financial Summary</h4><div class="grid md:grid-cols-4 gap-3">
-                    <div>Income: ${formatMoney(totalIncome)}</div><div>Expenses: ${formatMoney(totalExpenses)}</div>
-                    <div>Net: ${formatMoney(totalIncome - totalExpenses)}</div><div>Outstanding: ${formatMoney(outstanding)}</div>
-                </div></div>
-                <div class="bg-white p-4 rounded-xl shadow mb-4"><h3 class="font-bold">Record Payment</h3><select id="payStudent" class="border p-2 rounded mb-2"><option value="">Select Student</option>${students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.lin})</option>`).join('')}</select>
-                <input type="number" id="payAmount" placeholder="Amount (UGX)"><input type="date" id="payDate" value="${new Date().toISOString().slice(0,10)}">
-                <select id="payYear"><option value="">Year</option>${ACADEMIC_YEARS.map(y => `<option>${y}</option>`).join('')}</select>
-                <select id="payTerm"><option value="">Term</option>${TERMS.map(t => `<option>${t}</option>`).join('')}</select>
-                <button class="btn mt-2" id="recordPayBtn">Record Payment</button></div>
-                <div class="bg-white p-4 rounded-xl shadow mb-4"><h3 class="font-bold">Student Balances</h3>
-                <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="feesSearch" placeholder="Search by student name or LIN..."></div>
-                <div class="overflow-x-auto"><table class="w-full"><thead><tr><th>Photo</th><th>Student</th><th>LIN</th><th>Total Fees</th><th>Paid</th><th>Balance</th><th>WhatsApp</th><th>Action</th></tr></thead><tbody id="balanceTableBody"></tbody></table></div>
-                <div class="flex gap-2 mt-3"><button class="btn btn-gold" id="printDebtorsBtn">Print Debtors List</button><button class="btn whatsapp-btn" id="notifyAllDebtorsBtn">WhatsApp All Debtors</button></div></div>`;
-            let searchInput = document.getElementById('feesSearch');
-            if(searchInput) searchInput.addEventListener('input', (e) => { feesSearchTerm = e.target.value; renderFeesTable(); });
-            renderFeesTable();
-            document.getElementById('recordPayBtn').onclick = async () => {
-                let sid = document.getElementById('payStudent').value;
-                let amt = parseFloat(document.getElementById('payAmount').value);
-                if (!sid || isNaN(amt) || amt <= 0) return showToast("Select student and valid amount", true);
-                let year = document.getElementById('payYear').value || new Date().getFullYear().toString();
-                let term = document.getElementById('payTerm').value || 'Term I';
-                let receipt = `RCP-${Date.now()}`;
-                let student = students.find(s => s.id === sid);
-                await restUpdate('students', sid, { fees_paid: (student.fees_paid || 0) + amt });
-                await restInsert('payments', { school_id: SCHOOL_ID, student_id: sid, amount: amt, payment_date: new Date().toISOString().slice(0,10), receipt_number: receipt, academic_year: year, term });
-                showToast(`Payment recorded`);
-                await loadAllData(true);
-                await renderFees();
-            };
-            document.getElementById('printDebtorsBtn').onclick = () => {
-                const debtors = students.filter(s => (s.total_fees || 0) - payments.filter(p => p.student_id === s.id).reduce((a,b) => a + b.amount, 0) > 0);
-                if (debtors.length === 0) { alert('No debtors'); return; }
-                let win = window.open('', '_blank');
-                win.document.write(`<html><head><title>Debtors List</title><style>body{font-family:Inter;padding:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:8px}</style></head><body><h2>Debtors List</h2><p>Date: ${new Date().toLocaleDateString()}</p><table><thead><tr><th>Name</th><th>LIN</th><th>Class</th><th>Total</th><th>Paid</th><th>Balance</th><th>WhatsApp</th></tr></thead><tbody>${debtors.map(s => { let paid = payments.filter(p => p.student_id === s.id).reduce((a,b) => a + b.amount, 0); let bal = (s.total_fees || 0) - paid; return `<tr><td class="p-2">${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</td><td>${escapeHtml(s.lin)}</td><td>${escapeHtml(s.class)}</td><td>${formatMoney(s.total_fees)}</td><td>${formatMoney(paid)}</td><td>${formatMoney(bal)}</td><td>${escapeHtml(s.parent_whatsapp || '')}</td>`; }).join('')}</tbody></table></body></html>`);
-                win.document.close();
-                win.print();
-            };
-            document.getElementById('notifyAllDebtorsBtn').onclick = () => {
-                const debtors = students.filter(s => (s.total_fees || 0) - payments.filter(p => p.student_id === s.id).reduce((a,b) => a + b.amount, 0) > 0 && s.parent_whatsapp);
-                debtors.forEach(s => { const paid = payments.filter(p => p.student_id === s.id).reduce((a,b) => a + b.amount, 0); const bal = (s.total_fees || 0) - paid; sendWhatsApp(s.parent_whatsapp, `Dear Parent, fee balance for ${s.first_name} ${s.last_name} (${s.lin}) is ${formatMoney(bal)}. Please clear.`); });
-                showToast(`Reminders sent to ${debtors.length} parents`);
-            };
-        }
-        
-        function renderFeesTable() {
-            let tbody = document.getElementById('balanceTableBody');
-            if (!tbody) return;
-            let filtered = filterFees(students);
-            tbody.innerHTML = '';
-            for (let s of filtered) {
-                let paid = payments.filter(p => p.student_id === s.id).reduce((a,b) => a + b.amount, 0);
-                let bal = (s.total_fees || 0) - paid;
-                let photo = s.photo_url ? `<img src="${s.photo_url}" class="student-photo" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">` : '<i class="fas fa-user-circle fa-2x" style="color:#003366;"></i>';
-                let row = tbody.insertRow();
-                row.innerHTML = `<td>${photo}</td>}<strong>${escapeHtml(s.first_name)} ${escapeHtml(s.last_name)}</strong></td>}${escapeHtml(s.lin)}</td>}${formatMoney(s.total_fees || 0)}</td><td class="paid-text">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td>${escapeHtml(s.parent_whatsapp || '')}</td><td><button class="btn-sm" onclick="quickPayment('${s.id}')"><i class="fas fa-money-bill-wave"></i> Pay</button></td>`;
+                rows += `<td>${score}<br><small>${grade}</small></td>`;
+                if (mk) totals[ex] += mk.score;
             }
+            rows += `</tr>`;
         }
         
-        // -------- REPORTS --------
-        async function renderReports() {
-            if (!canViewReports()) { document.getElementById('tabContent').innerHTML = '<div class="bg-white p-4 rounded-xl text-red-600">Access denied</div>'; return; }
-            const classOptions = [...new Set(students.map(s => s.class).filter(Boolean))];
-            document.getElementById('tabContent').innerHTML = `<div class="bg-white rounded-xl p-6 shadow"><h3 class="font-bold text-xl mb-4">Student Report Card</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div><label class="block font-medium mb-1">Select Class</label><select id="reportClassSelect" class="border rounded-lg p-2 w-full"><option value="">-- Select Class --</option>${classOptions.map(c => `<option value="${c}">${c}</option>`).join('')}</select></div>
-                <div><label class="block font-medium mb-1">Select Student</label><select id="reportStudentSelect" class="border rounded-lg p-2 w-full"><option value="">-- First select a class --</option></select></div>
-                <div><label class="block font-medium mb-1">Select Term</label><select id="reportTermSelect" class="border rounded-lg p-2 w-full">${TERMS.map(t => `<option value="${t}">${t}</option>`).join('')}</select></div></div>
-                <div class="flex gap-3 mb-6"><button class="btn" id="generateReportBtn">Generate Report</button><button class="btn btn-gold" id="printReportBtn">Print / Download PDF</button></div>
-                <div id="studentReportContainer" class="mt-4"></div></div>`;
-            const classSelect = document.getElementById('reportClassSelect');
-            const studentSelect = document.getElementById('reportStudentSelect');
-            classSelect.addEventListener('change', () => {
-                const selectedClass = classSelect.value;
-                if (!selectedClass) { studentSelect.innerHTML = '<option value="">-- First select a class --</option>'; return; }
-                const filtered = students.filter(s => s.class === selectedClass);
-                studentSelect.innerHTML = '<option value="">-- Select Student --</option>' + filtered.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.lin})</option>`).join('');
-            });
-            let currentReportHTML = '';
-            document.getElementById('generateReportBtn').onclick = async () => {
-                const studentId = studentSelect.value;
-                const term = document.getElementById('reportTermSelect').value;
-                if (!studentId) { showToast("Please select a student", true); return; }
-                const student = students.find(s => s.id === studentId);
-                if (!student) return;
-                const subjects = SUBJECTS_BY_CLASS[student.class] || ['English', 'Mathematics', 'Science', 'Social Studies'];
-                const studentMarks = marks.filter(m => m.student_id === studentId && m.term === term);
-                const exams = ['Beginning of Term', 'Mid Term', 'End of Term'];
-                let rows = '', totals = { 'Beginning of Term': 0, 'Mid Term': 0, 'End of Term': 0 }, points = { 'Beginning of Term': [], 'Mid Term': [], 'End of Term': [] };
-                for (let sub of subjects) {
-                    rows += `<td><td style="text-align:left; font-weight:600;">${sub}</td>`;
-                    for (let ex of exams) {
-                        const mark = studentMarks.find(m => m.subject === sub && m.exam_type === ex);
-                        const score = mark ? mark.score : '-';
-                        const grade = mark ? mark.grade : '-';
-                        rows += `<td style="text-align:center;">${score}<br><small>${grade}</small></td>`;
-                        if (mark) { totals[ex] += mark.score; points[ex].push(gradePoints(mark.grade)); }
-                    }
-                    rows += `</tr>`;
+        let totalRow = `<tr style="background:#eef2ff;"><td style="font-weight:700;padding:10px;">TOTAL / ${subjects.length * 100}</td>`;
+        for (let ex of exams) totalRow += `<td><strong>${totals[ex] || 0}</strong></td>`;
+        totalRow += `</tr>`;
+        rows += totalRow;
+        
+        let position = positionMap.get(s.id) || classStudents.length;
+        let totalScore = totals['End of Term'] || totals['Mid Term'] || totals['Beginning of Term'] || 0;
+        let isNursery = ['Baby', 'Middle', 'Top'].includes(s.class);
+        let isLower = ['P.1', 'P.2', 'P.3'].includes(s.class);
+        
+        let specialInfo = '';
+        if (isNursery) {
+            specialInfo = `<div style="margin-top:15px; text-align:center;"><span class="position-badge"><i class="fas fa-trophy"></i> Position: ${position} / ${classStudents.length}</span> <span style="margin-left:15px;"><strong>Total Marks:</strong> ${totalScore}/${subjects.length * 100}</span></div>`;
+        } else if (isLower) {
+            // Calculate overall grade (RE excluded for grading but included for position)
+            let gradingSubjects = subjects.filter(s => s !== 'R.E');
+            let gradingTotal = 0;
+            for (let sub of gradingSubjects) {
+                let mk = studentMarks.find(m => m.subject === sub && m.exam_type === examType);
+                if (mk) gradingTotal += mk.score;
+            }
+            let overallGrade = getLetterGrade(gradingTotal / gradingSubjects.length);
+            specialInfo = `<div style="margin-top:15px; text-align:center;"><span class="position-badge"><i class="fas fa-trophy"></i> Position: ${position} / ${classStudents.length}</span> <span style="margin-left:15px;"><strong>Grade:</strong> ${overallGrade}</span> <span style="margin-left:15px;"><strong>Total:</strong> ${totalScore}/${subjects.length * 100}</span></div>`;
+        } else {
+            let gradePointsList = [];
+            for (let sub of subjects) {
+                let mk = studentMarks.find(m => m.subject === sub && m.exam_type === examType);
+                if (mk) {
+                    let grade = getStandardGrade(mk.score);
+                    gradePointsList.push(getGradePoints(grade));
                 }
-                let summaryRow = `<tr style="background:#f1f5f9;"><td style="font-weight:700;">Total / Aggregate</td>`;
-                let divisionRow = `<tr style="background:#eef2ff;"><td style="font-weight:700;">Division</td>`;
-                for (let ex of exams) {
-                    let total = totals[ex] || 0;
-                    let agg = 0;
-                    if (points[ex].length) { let sorted = [...points[ex]].sort((a,b) => a - b); agg = sorted.slice(0, subjects.length).reduce((s, p) => s + p, 0); }
-                    summaryRow += `<td style="text-align:center;">${total}/${subjects.length*100}<br><small>Agg: ${agg}</small></td>`;
-                    divisionRow += `<td style="text-align:center;"><strong>${getDivision(agg)}</strong></td>`;
-                }
-                summaryRow += `</tr>`; divisionRow += `</tr>`;
-                const photoHtml = student.photo_url ? `<img src="${student.photo_url}" class="report-student-photo">` : `<div class="report-student-photo" style="display:flex;align-items:center;justify-content:center;background:#f1f5f9;"><i class="fas fa-user-graduate fa-3x" style="color:#003366;"></i></div>`;
-                currentReportHTML = `<div id="printableReport" class="student-report-card"><div class="report-header"><h2>${escapeHtml(currentSchool.name)}</h2><p>${escapeHtml(currentSchool.address || '')} | 📞 ${SCHOOL_CONTACTS.join(', ')}</p><p><strong>Academic Report – ${term}</strong></p></div><div class="report-student-info"><div>${photoHtml}</div><div><p><strong>Name:</strong> ${escapeHtml(student.first_name)} ${escapeHtml(student.last_name)}</p><p><strong>LIN:</strong> ${escapeHtml(student.lin)}</p><p><strong>Class:</strong> ${escapeHtml(student.class)}</p><p><strong>Parent:</strong> ${escapeHtml(student.parent_name || 'N/A')} (${escapeHtml(student.parent_whatsapp || 'N/A')})</p></div></div><table class="report-table"><thead><tr><th>Subject</th><th>Beginning of Term</th><th>Mid Term</th><th>End of Term</th></tr></thead><tbody>${rows}${summaryRow}${divisionRow}</tbody></table><div class="report-summary"><div><strong>Grading Scale</strong><br>D1 (90-100), D2 (80-89), C3 (70-79), C4 (60-69), C5 (50-59), C6 (40-49), P7 (35-39), P8 (30-34), F9 (below 30)</div><div><strong>Division</strong><br>Div1 (1-12), Div2 (13-23), Div3 (24-29), Div4 (30-34), DivU (35+)</div></div><div class="report-footer">Generated on ${new Date().toLocaleString()}</div></div>`;
-                document.getElementById('studentReportContainer').innerHTML = currentReportHTML;
-            };
-            document.getElementById('printReportBtn').onclick = () => {
-                if (!currentReportHTML) { showToast("Generate a report first", true); return; }
-                const win = window.open('', '_blank');
-                win.document.write(`<!DOCTYPE html><html><head><title>Student Report Card</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{font-family:Inter;padding:20px}.student-report-card{max-width:1000px;margin:0 auto;background:white;border-radius:24px;padding:30px}.report-header{text-align:center;border-bottom:3px solid #003366;padding-bottom:20px;margin-bottom:20px}.report-header h2{color:#003366;font-size:1.8rem}.report-student-info{display:flex;gap:25px;margin-bottom:25px;padding:15px;background:#f8fafc;border-radius:20px;flex-wrap:wrap;align-items:center}.report-student-photo{width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #D4A017}.report-table{width:100%;border-collapse:collapse;margin:20px 0}.report-table th,.report-table td{border:1px solid #e2e8f0;padding:12px;text-align:center}.report-table th{background:#003366;color:white}.report-summary{background:#eef2ff;padding:15px;border-radius:16px;margin-top:20px;display:flex;justify-content:space-around;flex-wrap:wrap;gap:15px}.report-footer{margin-top:25px;text-align:center;font-size:0.75rem;color:#64748b;border-top:1px solid #e2e8f0;padding-top:15px}</style></head><body>${currentReportHTML}<script>window.print();<\/script></body></html>`);
-                win.document.close();
-            };
+            }
+            gradePointsList.sort((a, b) => a - b);
+            let agg = gradePointsList.slice(0, 4).reduce((s, p) => s + p, 0);
+            let division = getDivision(agg);
+            specialInfo = `<div style="margin-top:15px; text-align:center;"><strong>Aggregate: ${agg}</strong> | <strong>Division: ${division}</strong> | <strong>Total:</strong> ${totalScore}/${subjects.length * 100}</div>`;
         }
         
-        window.showStudentReport = (studentId) => {
-            activeTab = 'reports';
-            renderMainApp().then(() => {
-                setTimeout(() => {
-                    const classSelect = document.getElementById('reportClassSelect');
-                    if (classSelect) {
-                        const student = students.find(s => s.id === studentId);
-                        if (student && student.class) {
-                            classSelect.value = student.class;
-                            classSelect.dispatchEvent(new Event('change'));
-                            setTimeout(() => {
-                                const studentSelect = document.getElementById('reportStudentSelect');
-                                if (studentSelect) {
-                                    studentSelect.value = studentId;
-                                    document.getElementById('generateReportBtn').click();
-                                }
-                            }, 200);
-                        }
-                    }
-                }, 300);
-            });
-        };
+        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="student-photo">` : `<div class="student-photo"><i class="fas fa-user-graduate fa-3x" style="color:#003366;"></i></div>`;
         
-        // -------- OTHER TABS (simplified) --------
-        async function renderTotalExpected() { document.getElementById('tabContent').innerHTML = '<div class="bg-white p-6 rounded-xl shadow text-center">Total Expected Fees Summary</div>'; }
-        async function renderIdCards() { document.getElementById('tabContent').innerHTML = '<div class="bg-white p-6 rounded-xl shadow text-center">ID Card Generator</div>'; }
-        async function renderAbsentStudents() { document.getElementById('tabContent').innerHTML = '<div class="bg-white p-6 rounded-xl shadow text-center">Absent Students Report</div>'; }
-        
-        // ---------- MAIN APPLICATION ----------
-        function getAvailableTabs() {
-            if (currentUser?.role === 'admin') return ['dashboard', 'students', 'attendance', 'marks', 'fees', 'reports'];
-            if (currentUser?.role === 'teacher') return ['dashboard', 'attendance', 'marks'];
-            if (currentUser?.role === 'finance') return ['dashboard', 'students', 'fees'];
-            return ['dashboard'];
+        html += `<div class="report-card">
+            <div class="report-header"><h2>PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</h2><p>"With God Everything is Possible"</p><p>P.O BOX ......, KAMPALA | Tel: 0756 585035</p></div>
+            <h3 style="text-align:center;margin:10px 0;">ACADEMIC REPORT - ${term}</h3>
+            <p style="text-align:center;color:#666;font-size:13px;">${examSelection === 'beginning' ? 'Beginning of Term Examination' : examSelection === 'mid' ? 'Mid Term Examination (Beginning + Mid)' : 'End of Term Examination (Full Year)'}</p>
+            <div class="student-info">${photoHtml}<div><p><strong>Name:</strong> ${s.first_name} ${s.last_name}</p><p><strong>LIN:</strong> ${s.lin}</p><p><strong>Payment Code:</strong> ${s.payment_code || ''}</p><p><strong>Class:</strong> ${s.class}</p><p><strong>Parent:</strong> ${s.parent_name || 'N/A'}</p></div></div>
+            <table class="grade-table"><thead><tr><th>SUBJECT</th>${exams.map(e => `<th>${e}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
+            ${specialInfo}
+            <div class="comment-section">
+                <div class="comment-box"><strong>👩‍🏫 CLASS TEACHER'S COMMENT</strong><div style="height:50px;border-bottom:1px solid #000;margin:12px 0"></div>Signature: ____________________<br>Date: ___________</div>
+                <div class="comment-box"><strong>👨‍🎓 HEAD TEACHER'S COMMENT</strong><div style="height:50px;border-bottom:1px solid #000;margin:12px 0"></div>Signature: ____________________<br>Date: ___________</div>
+            </div>
+            <div style="text-align:center;margin-top:20px;font-size:10px;color:#666;border-top:1px solid #eee;padding-top:15px;">Generated on ${new Date().toLocaleString()}</div>
+        </div>`;
+    }
+    html += `</body></html>`;
+    let win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+    win.print();
+    showToast(`Printed ${selected.length} report(s)`);
+}
+
+// ==================== ABSENTEES (Admin only) ====================
+async function renderAbsentees() {
+    if (currentUser?.role === 'teacher') {
+        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3><p>Teachers do not have access to this module.</p></div>';
+        return;
+    }
+    document.getElementById('tabContent').innerHTML = `
+        <div class="card"><h3>Absent Students Report</h3>
+        <div class="flex"><input type="date" id="absentDate" value="${new Date().toISOString().slice(0, 10)}"><button class="btn btn-primary" id="loadAbsent">Load</button><button class="btn btn-whatsapp" id="notifyAllAbsent">Notify All Parents</button><button class="btn btn-gold" id="printAbsentList"><i class="fas fa-print"></i> Print List</button></div>
+        <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="absentSearch" placeholder="Search student..."></div>
+        <div id="absentGrid"></div></div>`;
+    document.getElementById('loadAbsent').onclick = loadAbsentList;
+    document.getElementById('notifyAllAbsent').onclick = notifyAllAbsentParents;
+    document.getElementById('printAbsentList').onclick = printAbsentList;
+    document.getElementById('absentSearch').addEventListener('input', (e) => { absentSearch = e.target.value; loadAbsentList(); });
+    await loadAbsentList();
+}
+
+async function loadAbsentList() {
+    let date = document.getElementById('absentDate').value;
+    let records = await fetchDB('attendance', `&date=eq.${date}&status=eq.absent&school_id=eq.${SCHOOL_ID}`);
+    let absentStudents = students.filter(s => records.map(r => r.student_id).includes(s.id));
+    if (absentSearch) {
+        const term = absentSearch.toLowerCase();
+        absentStudents = absentStudents.filter(s => `${s.first_name} ${s.last_name}`.toLowerCase().includes(term) || s.lin.toLowerCase().includes(term) || s.class.toLowerCase().includes(term));
+    }
+    let grid = document.getElementById('absentGrid');
+    if (absentStudents.length === 0) {
+        grid.innerHTML = `<div style="text-align:center; padding:40px; background:#f0fdf4; border-radius:20px;"><i class="fas fa-check-circle fa-2x" style="color:#10b981;"></i><p>No absent students on ${date}</p></div>`;
+        return;
+    }
+    grid.innerHTML = `<div style="margin-bottom:15px;"><span style="background:#dc2626; color:white; padding:5px 15px; border-radius:30px;">${absentStudents.length} absent student(s)</span></div>`;
+    for (let s of absentStudents) {
+        grid.innerHTML += `
+            <div class="absent-card">
+                <div class="absent-photo">${s.photo_url ? `<img src="${s.photo_url}" style="width:55px;height:55px;border-radius:50%;">` : '<i class="fas fa-user-graduate fa-2x"></i>'}</div>
+                <div style="flex:1;"><p><strong>${s.first_name} ${s.last_name}</strong></p><p>LIN: ${s.lin} | ${s.class}</p><p>Parent: ${s.parent_name || 'N/A'}</p><p>WhatsApp: ${s.parent_whatsapp || 'N/A'}</p></div>
+                <button class="btn btn-sm btn-whatsapp" onclick="sendAbsentParentNotify('${s.id}','${date}')"><i class="fab fa-whatsapp"></i> Notify</button>
+            </div>
+        `;
+    }
+}
+
+window.sendAbsentParentNotify = (id, date) => {
+    let s = students.find(st => st.id === id);
+    if (s?.parent_whatsapp) sendWhatsApp(s.parent_whatsapp, `Dear ${s.parent_name}, your child ${s.first_name} ${s.last_name} (${s.lin}) was absent on ${date}. Please ensure regular attendance.`);
+    else showToast('No WhatsApp number', true);
+};
+
+async function notifyAllAbsentParents() {
+    let date = document.getElementById('absentDate').value;
+    let records = await fetchDB('attendance', `&date=eq.${date}&status=eq.absent&school_id=eq.${SCHOOL_ID}`);
+    let absent = students.filter(s => records.map(r => r.student_id).includes(s.id));
+    let sent = 0;
+    for (let s of absent) {
+        if (s.parent_whatsapp) {
+            sendWhatsApp(s.parent_whatsapp, `Dear ${s.parent_name}, your child ${s.first_name} ${s.last_name} (${s.lin}) was absent on ${date}. Please ensure regular attendance.`);
+            sent++;
+            await new Promise(r => setTimeout(r, 300));
         }
-        
-        async function renderMainApp() {
-            await loadAllData(false);
-            let availableTabs = getAvailableTabs();
-            if (!availableTabs.includes(activeTab)) activeTab = availableTabs[0];
-            let now = new Date();
-            document.getElementById('app').innerHTML = `
-                <div style="position:fixed; top:10px; right:10px; z-index:1000;"><span class="role-badge">${currentUser.role.toUpperCase()} (${currentUser.username})</span><button class="btn logout-btn" onclick="window.logout()">Logout</button></div>
-                <div class="app-container">
-                    <div class="school-header">
-                        <div class="school-name">🏫 Progressive Mothers School</div>
-                        <div class="school-address">Gayaza-Kijabijjo | 📞 ${SCHOOL_CONTACTS.join(', ')}</div>
-                        <div class="datetime-row"><span><i class="far fa-calendar-alt"></i> <span id="liveDate"></span></span><span><i class="far fa-clock"></i> <span id="liveTime"></span></span>
-                        <div class="global-search"><i class="fas fa-search"></i><input type="text" id="globalSearchInput" placeholder="Search by name, LIN, class or parent..."></div></div>
-                    </div>
-                    <div class="action-buttons">${availableTabs.map(tab => `<button class="action-btn ${activeTab === tab ? 'active' : ''}" data-tab="${tab}"><i class="fas ${tab === 'dashboard' ? 'fa-tachometer-alt' : tab === 'students' ? 'fa-user-graduate' : tab === 'attendance' ? 'fa-calendar-check' : tab === 'marks' ? 'fa-chart-line' : tab === 'fees' ? 'fa-money-bill-wave' : 'fa-file-alt'}"></i> ${tab.charAt(0).toUpperCase() + tab.slice(1)}</button>`).join('')}</div>
-                    <div id="tabContent"></div>
-                </div>
-                <div class="support-badge" onclick="window.showSupportWhatsApp()"><i class="fab fa-whatsapp"></i> Eudes Media Support</div>`;
-            const updateClock = () => { let d = document.getElementById('liveDate'); let t = document.getElementById('liveTime'); if(d) d.innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }); if(t) t.innerText = new Date().toLocaleTimeString(); };
-            updateClock();
-            if(clockInterval) clearInterval(clockInterval);
-            clockInterval = setInterval(updateClock, 1000);
-            const searchInput = document.getElementById('globalSearchInput');
-            if(searchInput) { searchInput.value = globalSearchTerm; searchInput.addEventListener('input', (e) => { globalSearchTerm = e.target.value; if(activeTab === 'students') renderStudentList(); }); }
-            document.querySelectorAll('.action-btn').forEach(btn => { btn.onclick = () => { activeTab = btn.dataset.tab; renderMainApp(); }; });
-            if (activeTab === 'dashboard') await renderDashboard();
-            else if (activeTab === 'students') await renderStudents();
-            else if (activeTab === 'attendance') await renderAttendance();
-            else if (activeTab === 'marks') await renderMarks();
-            else if (activeTab === 'fees') await renderFees();
-            else if (activeTab === 'reports') await renderReports();
-            else if (activeTab === 'totalexpected') await renderTotalExpected();
-            else if (activeTab === 'idcards') await renderIdCards();
-            else if (activeTab === 'absentstudents') await renderAbsentStudents();
-        }
-        
-        window.showSupportWhatsApp = () => { SUPPORT_CONTACTS.forEach(c => sendWhatsApp(c.whatsapp, `Support for Progressive Mothers School`)); };
-        window.logout = logout;
-        
-        function renderLogin() {
-            document.getElementById('app').innerHTML = `<div class="login-container"><div class="login-header"><i class="fas fa-school"></i><h2>Welcome Back</h2><p>Sign in to continue</p></div>
-                <form id="loginForm"><div class="input-group"><div class="input-icon"><i class="fas fa-user"></i><input type="text" id="username" placeholder="Username" required></div></div>
-                <div class="input-group"><div class="input-icon"><i class="fas fa-lock"></i><input type="password" id="password" placeholder="Password" required></div></div>
-                <button type="submit" class="login-btn">Login <i class="fas fa-arrow-right"></i></button></form>
-                <div class="login-footer"><p>Progressive Mothers School</p></div></div>`;
-            document.getElementById('loginForm').onsubmit = (e) => { e.preventDefault(); if (login(document.getElementById('username').value, document.getElementById('password').value)) init(); else alert('Invalid credentials'); };
-        }
-        
-        async function init() {
-            if (!checkAuth()) { renderLogin(); return; }
-            try {
-                await loadAllData(false);
-                await renderMainApp();
-            } catch(err) { console.error(err); document.getElementById('app').innerHTML = `<div class="bg-red-100 p-4 rounded-xl text-center">Error: ${err.message}</div>`; }
-        }
-        init();
-    })();
+    }
+    showToast(`Sent to ${sent} parents`);
+}
+
+function printAbsentList() {
+    let date = document.getElementById('absentDate').value;
+    let container = document.getElementById('absentGrid');
+    if (!container || !container.innerHTML) return;
+    let win = window.open('', '_blank');
+    win.document.write(`<html><head><title>Absent Students - ${date}</title><style>
+        body{font-family:Arial;padding:20px}.absent-card{background:#fef2f2;border-radius:16px;padding:16px;display:flex;gap:16px;align-items:center;border-left:4px solid #dc2626;margin-bottom:12px;page-break-inside:avoid}
+        .absent-photo{width:55px;height:55px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;}
+        h2{color:#003366;border-bottom:2px solid #D4A017;padding-bottom:10px;}
+        .count-badge{background:#dc2626;color:white;padding:5px 15px;border-radius:30px;display:inline-block;margin:10px 0;}
+    </style></head><body><h2>PROGRESSIVE MOTHERS SCHOOL - ABSENT STUDENTS</h2><p>Date: ${date}</p>${container.innerHTML}<p style="margin-top:30px;text-align:center;font-size:11px;">Generated on ${new Date().toLocaleString()}</p></body></html>`);
+    win.document.close();
+    win.print();
+}
+
+// ==================== MAIN APP ====================
+async function renderMainApp() {
+    await loadAllData();
+    let tabs = ['dashboard', 'students', 'attendance', 'marks', 'fees', 'reports'];
+    if (currentUser?.role === 'admin') tabs.push('absentees');
+    if (currentUser?.role === 'teacher') tabs = ['dashboard', 'attendance', 'marks'];
+    if (currentUser?.role === 'finance') tabs = ['dashboard', 'students', 'fees'];
+    if (!tabs.includes(activeTab)) activeTab = 'dashboard';
+    
+    let now = new Date();
+    document.getElementById('app').innerHTML = `
+        <div class="role-badge">${currentUser.role.toUpperCase()} <button class="logout-btn" onclick="logout()">Exit</button></div>
+        <div class="app-container">
+            <div class="school-header">
+                <div class="school-name">🏫 PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</div>
+                <div class="school-address">Gayaza-Kijabijjo, Kampala | 📞 ${SCHOOL_CONTACTS.join(', ')}</div>
+                <div class="datetime-row"><div><i class="far fa-calendar-alt"></i> ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div><div><i class="far fa-clock"></i> <span id="liveTime">${now.toLocaleTimeString()}</span></div><div class="global-search"><i class="fas fa-search"></i><input type="text" id="globalSearchInput" placeholder="Search by name, LIN, class, parent..."></div></div>
+            </div>
+            <div class="action-buttons">${tabs.map(t => `<button class="action-btn ${activeTab === t ? 'active' : ''}" data-tab="${t}"><i class="fas ${t === 'dashboard' ? 'fa-tachometer-alt' : t === 'students' ? 'fa-user-graduate' : t === 'attendance' ? 'fa-calendar-check' : t === 'marks' ? 'fa-chart-line' : t === 'fees' ? 'fa-coins' : t === 'reports' ? 'fa-print' : 'fa-user-clock'}"></i> ${t.charAt(0).toUpperCase() + t.slice(1)}</button>`).join('')}</div>
+            <div id="tabContent"></div>
+        </div>`;
+    setInterval(() => { let t = document.getElementById('liveTime'); if (t) t.innerText = new Date().toLocaleTimeString(); }, 1000);
+    let search = document.getElementById('globalSearchInput');
+    if (search) search.addEventListener('input', (e) => { globalSearch = e.target.value; if (activeTab === 'students') renderStudents(); });
+    document.querySelectorAll('.action-btn').forEach(btn => { btn.onclick = () => { activeTab = btn.dataset.tab; renderMainApp(); }; });
+    
+    if (activeTab === 'dashboard') await renderDashboard();
+    else if (activeTab === 'students') await renderStudents();
+    else if (activeTab === 'attendance') await renderAttendance();
+    else if (activeTab === 'marks') await renderMarks();
+    else if (activeTab === 'fees') await renderFees();
+    else if (activeTab === 'reports') await renderReports();
+    else if (activeTab === 'absentees') await renderAbsentees();
+}
+
+function switchTab(tab) { activeTab = tab; renderMainApp(); }
+function logout() { currentUser = null; sessionStorage.removeItem('progressive_user'); renderLogin(); }
+function renderLogin() {
+    document.getElementById('app').innerHTML = `<div class="login-container"><i class="fas fa-school fa-3x" style="color:#003366;"></i><h2>Progressive Mothers School</h2><p>"With God Everything is Possible"</p><input type="text" id="username" placeholder="Username"><input type="password" id="password" placeholder="Password"><button onclick="doLogin()">Login</button></div>`;
+}
+function doLogin() {
+    let u = document.getElementById('username').value, p = document.getElementById('password').value;
+    if (u === 'admin' && p === 'admin123') { currentUser = { username: 'admin', role: 'admin' }; sessionStorage.setItem('progressive_user', JSON.stringify(currentUser)); renderMainApp(); }
+    else if (u === 'teacher' && p === 'teacher123') { currentUser = { username: 'teacher', role: 'teacher' }; sessionStorage.setItem('progressive_user', JSON.stringify(currentUser)); renderMainApp(); }
+    else if (u === 'finance' && p === 'finance123') { currentUser = { username: 'finance', role: 'finance' }; sessionStorage.setItem('progressive_user', JSON.stringify(currentUser)); renderMainApp(); }
+    else alert('Invalid credentials');
+}
+function init() { let saved = sessionStorage.getItem('progressive_user'); if (saved) { currentUser = JSON.parse(saved); renderMainApp(); } else renderLogin(); }
+init();
 </script>
 </body>
 </html>
