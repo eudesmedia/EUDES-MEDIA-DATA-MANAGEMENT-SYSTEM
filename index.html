@@ -76,7 +76,8 @@
 
 <script>
 // ============================================================
-// PROGRESSIVE MOTHERS SCHOOL - COMPLETE SYSTEM
+// PROGRESSIVE MOTHERS SCHOOL - ROLE BASED ACCESS
+// Admin: Full Access | Teacher: Attendance + Marks | Finance: Students + Fees
 // ============================================================
 
 const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
@@ -108,12 +109,18 @@ const GRADING_EXCLUSIONS = {
     'P.3': ['R.E']
 };
 
+// ROLE PERMISSIONS
+const ROLE_PERMS = {
+    admin: { students: true, attendance: true, marks: true, fees: true, reports: true, absentees: true, editStudents: true, editFees: true },
+    teacher: { students: false, attendance: true, marks: true, fees: false, reports: false, absentees: false, editStudents: false, editFees: false },
+    finance: { students: true, attendance: false, marks: false, fees: true, reports: false, absentees: false, editStudents: false, editFees: true }
+};
+
 const USERS = { admin: { password: 'admin123', role: 'admin' }, teacher: { password: 'teacher123', role: 'teacher' }, finance: { password: 'finance123', role: 'finance' } };
 
 let students = [], marks = [], attendance = [], payments = [];
 let currentUser = null, activeTab = 'dashboard';
-let globalSearch = '', classFilter = '', feesSearch = '', attSearch = '', marksSearch = '', reportSearch = '', absentSearch = '';
-let currentSchool = { name: 'Progressive Mothers School', address: 'Gayaza-Kijabijjo' };
+let globalSearch = '', feesSearch = '', attSearch = '', marksSearch = '', reportSearch = '', absentSearch = '';
 let selectedStudentIds = new Set();
 
 function formatMoney(amt) { return 'UGX ' + (amt || 0).toLocaleString(); }
@@ -213,7 +220,6 @@ async function loadAllData() {
     if (students.length === 0) await createDemoData();
     students = await fetchDB('students', `&school_id=eq.${SCHOOL_ID}`);
     marks = await fetchDB('marks', `&school_id=eq.${SCHOOL_ID}`);
-    // Sort students alphabetically by full name
     students.sort((a, b) => {
         let nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
         let nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
@@ -251,10 +257,7 @@ async function renderDashboard() {
 }
 
 function getNavButtons() {
-    let perms = { students: true, attendance: true, marks: true, fees: true, reports: true, absentees: true };
-    if (currentUser?.role === 'teacher') perms = { students: false, attendance: true, marks: true, fees: false, reports: false, absentees: false };
-    if (currentUser?.role === 'finance') perms = { students: true, attendance: false, marks: false, fees: true, reports: false, absentees: false };
-    
+    let perms = ROLE_PERMS[currentUser?.role];
     let btns = [];
     if (perms.students) btns.push(`<button class="btn btn-primary" onclick="switchTab('students')"><i class="fas fa-users"></i> Students</button>`);
     if (perms.attendance) btns.push(`<button class="btn btn-primary" onclick="switchTab('attendance')"><i class="fas fa-calendar-check"></i> Attendance</button>`);
@@ -267,6 +270,7 @@ function getNavButtons() {
 
 // ==================== STUDENTS ====================
 async function renderStudents() {
+    let perms = ROLE_PERMS[currentUser?.role];
     let filtered = students.filter(s => {
         if (!globalSearch) return true;
         const term = globalSearch.toLowerCase();
@@ -283,7 +287,7 @@ async function renderStudents() {
         <div class="card">
             <div class="flex" style="justify-content: space-between;">
                 <h3>Student Register (${students.length})</h3>
-                <button class="btn btn-primary" onclick="showAddStudentModal()"><i class="fas fa-plus"></i> Add Student</button>
+                ${perms.editStudents ? `<button class="btn btn-primary" onclick="showAddStudentModal()"><i class="fas fa-plus"></i> Add Student</button>` : ''}
             </div>
             <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="studentSearch" placeholder="Search by name, LIN, class, parent..." value="${escapeHtml(globalSearch)}"></div>
             <div class="data-table"><table><thead><tr><th>Photo</th><th>Name</th><th>Class</th><th>LIN</th><th>Payment Code</th>${viewFinance ? '<th>Total</th><th>Paid</th><th>Balance</th>' : ''}<th>Parent</th><th>Actions</th></tr></thead><tbody id="studentsBody"></tbody></table></div>
@@ -296,8 +300,10 @@ async function renderStudents() {
         let bal = (s.total_fees || 0) - paid;
         let row = tbody.insertRow();
         let photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="student-photo-img" style="width:45px;height:45px;border-radius:50%;object-fit:cover;">` : `<div class="student-photo-img"><i class="fas fa-user-circle fa-2x"></i></div>`;
-        let actions = `<button class="btn btn-sm btn-primary" onclick="editStudent('${s.id}')">Edit</button> <button class="btn btn-sm btn-red" onclick="deleteStudent('${s.id}')">Delete</button>`;
-        
+        let actions = '';
+        if (perms.editStudents) {
+            actions += `<button class="btn btn-sm btn-primary" onclick="editStudent('${s.id}')">Edit</button> <button class="btn btn-sm btn-red" onclick="deleteStudent('${s.id}')">Delete</button>`;
+        }
         if (viewFinance) {
             row.innerHTML = `${photoHtml}<td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td>${escapeHtml(s.parent_name || '')}</td><td>${actions}</td>`;
         } else {
@@ -324,13 +330,43 @@ window.deleteStudent = async (id) => {
 window.editStudent = async (id) => {
     let s = students.find(st => st.id === id);
     if (!s) return;
-    let newFees = prompt(`Edit total fees for ${s.first_name} ${s.last_name}:`, s.total_fees || 0);
-    if (newFees !== null && !isNaN(parseFloat(newFees))) {
-        await updateDB('students', id, { total_fees: parseFloat(newFees) });
-        await loadAllData();
-        renderStudents();
-        showToast('Student updated');
-    }
+    let modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3>Edit Student - ${s.first_name} ${s.last_name}</h3>
+            <div class="flex" style="flex-direction:column; gap:10px;">
+                <div><label>First Name</label><input type="text" id="editFirstName" value="${escapeHtml(s.first_name)}" class="form-control"></div>
+                <div><label>Last Name</label><input type="text" id="editLastName" value="${escapeHtml(s.last_name)}" class="form-control"></div>
+                <div><label>LIN</label><input type="text" id="editLin" value="${s.lin}" class="form-control" readonly style="background:#f0f0f0;"></div>
+                <div><label>Payment Code</label><input type="text" id="editPaymentCode" value="${s.payment_code || ''}" class="form-control"></div>
+                <div><label>Class</label><select id="editClass" class="form-control">${CLASS_ORDER.map(c => `<option ${s.class === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+                <div><label>Parent Name</label><input type="text" id="editParentName" value="${escapeHtml(s.parent_name || '')}" class="form-control"></div>
+                <div><label>Parent WhatsApp</label><input type="text" id="editParentWhatsapp" value="${escapeHtml(s.parent_whatsapp || '')}" class="form-control"></div>
+                <div><label>Total Fees (UGX)</label><input type="number" id="editTotalFees" value="${s.total_fees || 0}" class="form-control"></div>
+            </div>
+            <div class="flex" style="justify-content: flex-end; margin-top:20px;">
+                <button class="btn btn-primary" onclick="saveEditStudent('${s.id}')">Update</button>
+                <button class="btn btn-gold" onclick="this.closest('.modal').remove()">Cancel</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+};
+
+window.saveEditStudent = async (id) => {
+    let updates = {
+        first_name: document.getElementById('editFirstName').value,
+        last_name: document.getElementById('editLastName').value,
+        payment_code: document.getElementById('editPaymentCode').value.trim().toUpperCase(),
+        class: document.getElementById('editClass').value,
+        parent_name: document.getElementById('editParentName').value,
+        parent_whatsapp: document.getElementById('editParentWhatsapp').value,
+        total_fees: parseFloat(document.getElementById('editTotalFees').value) || 0
+    };
+    await updateDB('students', id, updates);
+    await loadAllData();
+    renderStudents();
+    document.querySelector('.modal')?.remove();
+    showToast('Student updated');
 };
 
 function showAddStudentModal() {
@@ -361,6 +397,10 @@ window.saveNewStudent = async () => {
 
 // ==================== ATTENDANCE ====================
 async function renderAttendance() {
+    if (!ROLE_PERMS[currentUser?.role]?.attendance) {
+        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3><p>You do not have permission to access this module.</p></div>';
+        return;
+    }
     let opts = [...new Set(students.map(s => s.class))];
     document.getElementById('tabContent').innerHTML = `<div class="card"><h3>Attendance Tracker</h3>
         <div class="flex"><select id="attClass">${opts.map(c => `<option>${c}</option>`).join('')}</select><input type="date" id="attDate" value="${new Date().toISOString().slice(0, 10)}"><button class="btn btn-primary" id="loadAtt">Load</button><button class="btn btn-gold" id="saveAtt">Save</button></div>
@@ -409,8 +449,12 @@ async function saveAttendance() {
 
 // ==================== MARKS ====================
 async function renderMarks() {
+    if (!ROLE_PERMS[currentUser?.role]?.marks) {
+        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3><p>You do not have permission to access this module.</p></div>';
+        return;
+    }
     let opts = [...new Set(students.map(s => s.class))];
-    document.getElementById('tabContent').innerHTML = `<div class="card"><h3>Marks Entry</h3>
+    document.getElementById('tabContent').innerHTML = `<div class="card"><h3>Marks Entry ${currentUser?.role === 'teacher' ? '<span style="font-size:12px;color:#dc2626;">(Editable only within 1 minute)</span>' : ''}</h3>
         <div class="flex"><select id="markClass">${opts.map(c => `<option>${c}</option>`).join('')}</select><select id="markTerm">${TERMS.map(t => `<option>${t}</option>`).join('')}</select><select id="markExam">${EXAM_TYPES.map(e => `<option>${e}</option>`).join('')}</select><button class="btn btn-primary" id="loadMarks">Load</button><button class="btn btn-gold" id="saveMarks">Save</button></div>
         <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="marksSearch" placeholder="Search student..."></div>
         <div id="marksGrid"></div></div>`;
@@ -431,7 +475,13 @@ async function renderMarks() {
             grid += `<tr><td><strong>${s.first_name} ${s.last_name}</strong><br><small>${s.lin}</small></td><td>${photoHtml}</td>`;
             for (let sub of subs) {
                 let mk = relMarks.find(m => m.student_id === s.id && m.subject === sub);
-                grid += `<td><input type="number" class="mark-input" data-student="${s.id}" data-subject="${sub}" value="${mk ? mk.score : ''}" style="width:70px;"></td>`;
+                let isLocked = false;
+                if (currentUser?.role === 'teacher' && mk && mk.created_at) {
+                    let timeDiff = (new Date() - new Date(mk.created_at)) / 1000 / 60;
+                    isLocked = timeDiff > 1;
+                }
+                let disabledAttr = isLocked ? 'disabled' : '';
+                grid += `<td><input type="number" class="mark-input" data-student="${s.id}" data-subject="${sub}" data-mark-id="${mk?.id || ''}" value="${mk ? mk.score : ''}" style="width:70px;" min="0" max="100" ${disabledAttr}> ${isLocked ? '🔒' : ''}</td>`;
             }
             grid += `</tr>`;
         }
@@ -447,6 +497,17 @@ async function renderMarks() {
             if (!isNaN(score) && score >= 0 && score <= 100) {
                 let sid = inp.dataset.student;
                 let subj = inp.dataset.subject;
+                let markId = inp.dataset.markId;
+                if (currentUser?.role === 'teacher' && markId) {
+                    let existingMark = marks.find(m => m.id === markId);
+                    if (existingMark && existingMark.created_at) {
+                        let timeDiff = (new Date() - new Date(existingMark.created_at)) / 1000 / 60;
+                        if (timeDiff > 1) {
+                            showToast(`Cannot edit ${subj} - only editable within 1 minute`, true);
+                            continue;
+                        }
+                    }
+                }
                 let existing = marks.find(m => m.student_id === sid && m.subject === subj && m.term === term && m.exam_type === exam && m.academic_year === CURRENT_ACADEMIC_YEAR);
                 let grade = getStandardGrade(score);
                 if (existing) await updateDB('marks', existing.id, { score, grade });
@@ -460,49 +521,28 @@ async function renderMarks() {
     document.getElementById('loadMarks').click();
 }
 
-// ==================== FEES with Financial History ====================
+// ==================== FEES ====================
 async function renderFees() {
+    if (!ROLE_PERMS[currentUser?.role]?.fees) {
+        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3><p>You do not have permission to access this module.</p></div>';
+        return;
+    }
     let totalInc = payments.reduce((a, b) => a + (b.amount || 0), 0);
     let totalExp = students.reduce((a, b) => a + (b.total_fees || 0), 0);
-    
-    // Get student balances
-    let balancesHtml = '';
-    let filteredStudents = students.filter(s => !feesSearch || `${s.first_name} ${s.last_name}`.toLowerCase().includes(feesSearch.toLowerCase()) || s.lin.toLowerCase().includes(feesSearch.toLowerCase()));
-    for (let s of filteredStudents) {
-        let paid = payments.filter(p => p.student_id === s.id).reduce((a, b) => a + (b.amount || 0), 0);
-        let bal = (s.total_fees || 0) - paid;
-        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-circle fa-2x"></i>`;
-        balancesHtml += `<tr><td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td><button class="btn btn-sm btn-whatsapp" onclick="sendSingleFeeReminder('${s.id}')">Remind</button> <button class="btn btn-sm btn-primary" onclick="quickFeePayment('${s.id}')">Pay</button></td></tr>`;
-    }
-    
-    // Financial History
-    let historyHtml = '';
-    let sortedPayments = [...payments].sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
-    let historySearchTerm = document.getElementById('historySearch')?.value || '';
-    let filteredHistory = sortedPayments;
-    if (historySearchTerm) {
-        const term = historySearchTerm.toLowerCase();
-        filteredHistory = sortedPayments.filter(p => {
-            let s = students.find(st => st.id === p.student_id);
-            return s && (`${s.first_name} ${s.last_name}`.toLowerCase().includes(term) || s.lin.toLowerCase().includes(term));
-        });
-    }
-    for (let p of filteredHistory) {
-        let s = students.find(st => st.id === p.student_id);
-        if (!s) continue;
-        historyHtml += `<tr><td>${p.payment_date || 'N/A'}</td><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td class="paid">${formatMoney(p.amount)}</td><td>${p.receipt_number || 'N/A'}</td><td>${p.term || 'Term I'}</td><td>${p.academic_year || CURRENT_ACADEMIC_YEAR}</td></tr>`;
-    }
+    let perms = ROLE_PERMS[currentUser?.role];
     
     document.getElementById('tabContent').innerHTML = `
         <div class="card"><h3>Financial Summary</h3><div class="stats-grid" style="grid-template-columns:repeat(3,1fr);"><div class="stat-card"><div class="stat-number">${formatMoney(totalInc)}</div><div class="stat-label">Income</div></div><div class="stat-card"><div class="stat-number">${formatMoney(totalExp)}</div><div class="stat-label">Expected</div></div><div class="stat-card"><div class="stat-number">${formatMoney(totalExp - totalInc)}</div><div class="stat-label">Outstanding</div></div></div></div>
-        <div class="card"><h3>Record Payment</h3><div class="flex"><select id="payStudent">${students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.lin})</option>`).join('')}</select><input type="number" id="payAmount" placeholder="Amount"><button class="btn btn-primary" id="recordPay">Record</button><button class="btn btn-whatsapp" id="sendReminder">Send Reminder</button></div></div>
+        ${perms.editFees ? `
+        <div class="card"><h3>Record Payment</h3><div class="flex"><select id="payStudent">${students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.lin})</option>`).join('')}</select><input type="number" id="payAmount" placeholder="Amount"><button class="btn btn-primary" id="recordPay">Record</button><button class="btn btn-whatsapp" id="sendReminder">Send Reminder</button></div></div>` : ''}
         <div class="card"><h3>Student Balances</h3><div class="search-bar"><i class="fas fa-search"></i><input type="text" id="feesSearch" placeholder="Search student..."></div>
-        <div class="data-table"><table><thead><tr><th>Photo</th><th>Student</th><th>LIN</th><th>Total</th><th>Paid</th><th>Balance</th><th>Action</th></tr></thead><tbody id="feesBody">${balancesHtml}</tbody></table></div>
-        <div class="flex"><button class="btn btn-gold" id="printDebtors"><i class="fas fa-print"></i> Print Debtors List</button></div></div>
+        <div class="data-table"><table><thead><tr><th>Photo</th><th>Student</th><th>LIN</th>${perms.editFees ? '<th>Total</th><th>Paid</th><th>Balance</th>' : ''}<th>Action</th></tr></thead><tbody id="feesBody"></tbody></table></div>
+        ${perms.editFees ? `<div class="flex"><button class="btn btn-gold" id="printDebtors"><i class="fas fa-print"></i> Print Debtors List</button></div>` : ''}
+        ${perms.editFees ? `
         <div class="card"><h3><i class="fas fa-history"></i> Financial History</h3><div class="search-bar"><i class="fas fa-search"></i><input type="text" id="historySearch" placeholder="Search by student name or LIN..."></div>
-        <div class="data-table"><table class="history-table"><thead><tr><th>Date</th><th>Student</th><th>LIN</th><th>Amount</th><th>Receipt No</th><th>Term</th><th>Year</th></tr></thead><tbody id="historyBody">${historyHtml || '<tr><td colspan="7" style="text-align:center;color:#666;">No payment records found</td></tr>'}</tbody></table></div></div>`;
+        <div class="data-table"><table class="history-table"><thead><tr><th>Date</th><th>Student</th><th>LIN</th><th>Amount</th><th>Receipt No</th><th>Term</th><th>Year</th></tr></thead><tbody id="historyBody"></tbody></table></div></div>` : ''}`;
     
-    document.getElementById('recordPay').onclick = async () => {
+    document.getElementById('recordPay')?.addEventListener('click', async () => {
         let sid = document.getElementById('payStudent').value;
         let amt = parseFloat(document.getElementById('payAmount').value);
         if (sid && amt > 0) {
@@ -525,9 +565,9 @@ async function renderFees() {
         } else {
             showToast('Please select a student and enter a valid amount', true);
         }
-    };
+    });
     
-    document.getElementById('sendReminder').onclick = () => {
+    document.getElementById('sendReminder')?.addEventListener('click', () => {
         let msg = "Good evening parents. Please clear fees tomorrow. Accounts Department.";
         let sent = 0;
         for (let s of students) {
@@ -537,20 +577,79 @@ async function renderFees() {
             }
         }
         showToast(`Reminders sent to ${sent} parents`);
-    };
+    });
     
-    document.getElementById('feesSearch').addEventListener('input', (e) => { feesSearch = e.target.value; renderFees(); });
-    document.getElementById('historySearch').addEventListener('input', (e) => { renderFees(); });
+    document.getElementById('feesSearch')?.addEventListener('input', (e) => { feesSearch = e.target.value; renderFees(); });
+    document.getElementById('historySearch')?.addEventListener('input', (e) => { renderFees(); });
     
-    document.getElementById('printDebtors').onclick = () => {
+    document.getElementById('printDebtors')?.addEventListener('click', () => {
         let debtors = students.filter(s => (s.total_fees || 0) - payments.filter(p => p.student_id === s.id).reduce((a, b) => a + (b.amount || 0), 0) > 0);
         if (debtors.length === 0) { alert('No debtors'); return; }
         let win = window.open('', '_blank');
         win.document.write(`<html><head><title>Debtors List</title><style>body{font-family:Arial;padding:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:8px}</style></head><body><h2>Debtors List</h2><p>Date: ${new Date().toLocaleDateString()}</p><table><thead><tr><th>Name</th><th>LIN</th><th>Class</th><th>Total</th><th>Paid</th><th>Balance</th><th>WhatsApp</th></tr></thead><tbody>${debtors.map(s => { let paid = payments.filter(p => p.student_id === s.id).reduce((a, b) => a + (b.amount || 0), 0); let bal = (s.total_fees || 0) - paid; return `<tr><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td>${s.class}</td><td>${formatMoney(s.total_fees)}</td><td>${formatMoney(paid)}</td><td>${formatMoney(bal)}</td><td>${s.parent_whatsapp || ''}</td>`; }).join('')}</tbody></table></body></html>`);
         win.document.close();
         win.print();
-    };
+    });
+    
+    renderFeesTable();
+    renderFinancialHistory();
 }
+
+function renderFeesTable() {
+    let tbody = document.getElementById('feesBody');
+    if (!tbody) return;
+    let filtered = students.filter(s => !feesSearch || `${s.first_name} ${s.last_name}`.toLowerCase().includes(feesSearch.toLowerCase()) || s.lin.toLowerCase().includes(feesSearch.toLowerCase()));
+    let perms = ROLE_PERMS[currentUser?.role];
+    tbody.innerHTML = '';
+    for (let s of filtered) {
+        let paid = payments.filter(p => p.student_id === s.id).reduce((a, b) => a + (b.amount || 0), 0);
+        let bal = (s.total_fees || 0) - paid;
+        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-circle fa-2x"></i>`;
+        let row = tbody.insertRow();
+        if (perms.editFees) {
+            row.innerHTML = `${photoHtml}<td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td><button class="btn btn-sm btn-whatsapp" onclick="sendSingleFeeReminder('${s.id}')">Remind</button> <button class="btn btn-sm btn-primary" onclick="quickFeePayment('${s.id}')">Pay</button> <button class="btn btn-sm btn-gold" onclick="editStudentFees('${s.id}')">Edit Fees</button></td>`;
+        } else {
+            row.innerHTML = `${photoHtml}<td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td><span>View only</span></td>`;
+        }
+    }
+}
+
+function renderFinancialHistory() {
+    let container = document.getElementById('historyBody');
+    if (!container) return;
+    let searchTerm = document.getElementById('historySearch')?.value || '';
+    let filtered = [...payments].sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+    if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        filtered = filtered.filter(p => {
+            let s = students.find(st => st.id === p.student_id);
+            return s && (`${s.first_name} ${s.last_name}`.toLowerCase().includes(term) || s.lin.toLowerCase().includes(term));
+        });
+    }
+    if (filtered.length === 0) {
+        container.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#666;padding:20px;">No payment records found</td></tr>';
+        return;
+    }
+    let html = '';
+    for (let p of filtered) {
+        let s = students.find(st => st.id === p.student_id);
+        if (!s) continue;
+        html += `<tr><td>${p.payment_date || 'N/A'}</td><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td class="paid">${formatMoney(p.amount)}</td><td>${p.receipt_number || 'N/A'}</td><td>${p.term || 'Term I'}</td><td>${p.academic_year || CURRENT_ACADEMIC_YEAR}</td></tr>`;
+    }
+    container.innerHTML = html;
+}
+
+window.editStudentFees = async (id) => {
+    let s = students.find(st => st.id === id);
+    if (!s) return;
+    let newFees = prompt(`Edit total fees for ${s.first_name} ${s.last_name}\nCurrent: ${formatMoney(s.total_fees || 0)}\nEnter new total fees (UGX):`, s.total_fees || 0);
+    if (newFees !== null && !isNaN(parseFloat(newFees)) && parseFloat(newFees) >= 0) {
+        await updateDB('students', id, { total_fees: parseFloat(newFees) });
+        await loadAllData();
+        renderFees();
+        showToast(`Total fees updated to ${formatMoney(parseFloat(newFees))}`);
+    }
+};
 
 window.sendSingleFeeReminder = (id) => {
     let s = students.find(st => st.id === id);
@@ -581,6 +680,10 @@ window.quickFeePayment = async (id) => {
 
 // ==================== REPORTS ====================
 async function renderReports() {
+    if (!ROLE_PERMS[currentUser?.role]?.reports) {
+        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3><p>You do not have permission to access this module.</p></div>';
+        return;
+    }
     let opts = [...new Set(students.map(s => s.class))];
     document.getElementById('tabContent').innerHTML = `
         <div class="card"><h3>Report Center</h3>
@@ -779,8 +882,8 @@ async function printReports(ids) {
 
 // ==================== ABSENTEES ====================
 async function renderAbsentees() {
-    if (currentUser?.role === 'teacher') {
-        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3><p>Teachers do not have access to this module.</p></div>';
+    if (!ROLE_PERMS[currentUser?.role]?.absentees) {
+        document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3><p>You do not have permission to access this module.</p></div>';
         return;
     }
     document.getElementById('tabContent').innerHTML = `
@@ -860,10 +963,14 @@ function printAbsentList() {
 // ==================== MAIN APP ====================
 async function renderMainApp() {
     await loadAllData();
-    let tabs = ['dashboard', 'students', 'attendance', 'marks', 'fees', 'reports'];
-    if (currentUser?.role === 'admin') tabs.push('absentees');
-    if (currentUser?.role === 'teacher') tabs = ['dashboard', 'attendance', 'marks'];
-    if (currentUser?.role === 'finance') tabs = ['dashboard', 'students', 'fees'];
+    let perms = ROLE_PERMS[currentUser?.role];
+    let tabs = ['dashboard'];
+    if (perms.students) tabs.push('students');
+    if (perms.attendance) tabs.push('attendance');
+    if (perms.marks) tabs.push('marks');
+    if (perms.fees) tabs.push('fees');
+    if (perms.reports) tabs.push('reports');
+    if (perms.absentees) tabs.push('absentees');
     if (!tabs.includes(activeTab)) activeTab = 'dashboard';
     
     let now = new Date();
