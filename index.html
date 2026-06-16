@@ -28,6 +28,7 @@
         .tab-content.active { display: block; }
         .btn { background: #003366; color: white; padding: 8px 18px; border: none; border-radius: 40px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
         .btn-gold { background: #D4A017; color: #003366; }
+        .btn-red { background: #dc2626; color: white; }
         .btn-sm { padding: 4px 12px; font-size: 12px; border-radius: 20px; cursor: pointer; }
         .card { background: white; border-radius: 20px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .flex { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 20px; }
@@ -37,6 +38,7 @@
         th { background: #f8fafc; font-weight: 700; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
         .modal-content { background: white; border-radius: 28px; padding: 24px; max-width: 600px; width: 90%; max-height: 85vh; overflow-y: auto; }
+        .student-photo-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: #e2e8f0; display: flex; align-items: center; justify-content: center; }
         .report-card { background: white; border-radius: 24px; padding: 32px; margin-bottom: 32px; page-break-after: always; }
         .report-header { text-align: center; border-bottom: 3px solid #003366; padding-bottom: 20px; margin-bottom: 24px; }
         .report-header h2 { color: #003366; }
@@ -63,6 +65,10 @@
         .absent-card { background: #fef2f2; border-radius: 16px; padding: 16px; display: flex; gap: 16px; align-items: center; border-left: 4px solid #dc2626; margin-bottom: 12px; }
         .absent-photo { width: 55px; height: 55px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; }
         @media print { .no-print { display: none; } .report-card { page-break-after: always; } }
+        .history-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .history-table th, .history-table td { border: 1px solid #e2e8f0; padding: 10px; text-align: left; }
+        .history-table th { background: #003366; color: white; }
+        .history-card { background: #f8fafc; padding: 20px; border-radius: 16px; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -70,7 +76,7 @@
 
 <script>
 // ============================================================
-// PROGRESSIVE MOTHERS SCHOOL - COMPLETE WORKING SYSTEM
+// PROGRESSIVE MOTHERS SCHOOL - COMPLETE SYSTEM
 // ============================================================
 
 const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
@@ -80,6 +86,7 @@ const SCHOOL_CONTACTS = ['0756585035', '0779585035'];
 const TERMS = ['Term I', 'Term II', 'Term III'];
 const EXAM_TYPES = ['Beginning of Term', 'Mid Term', 'End of Term'];
 const CLASS_ORDER = ['Baby', 'Middle', 'Top', 'P.1', 'P.2', 'P.3', 'P.4', 'P.5', 'P.6', 'P.7'];
+const CURRENT_ACADEMIC_YEAR = '2026';
 
 const SUBJECTS_BY_CLASS = {
     'Baby': ['LA 1', 'LA 2', 'LA 3', 'LA 4', 'LA 5'],
@@ -94,7 +101,7 @@ const SUBJECTS_BY_CLASS = {
     'P.7': ['English', 'Mathematics', 'Science', 'Social Studies']
 };
 
-// R.E is excluded from grading for P.1-P.3
+// R.E excluded from grading for P.1-P.3
 const GRADING_EXCLUSIONS = {
     'P.1': ['R.E'],
     'P.2': ['R.E'],
@@ -167,7 +174,12 @@ async function insertDB(table, data) {
             headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-        if (!res.ok) throw new Error(await res.text());
+        if (!res.ok) {
+            let errorText = await res.text();
+            console.error('Insert error:', errorText);
+            showToast(`Error: ${errorText.substring(0, 100)}`, true);
+            return null;
+        }
         let text = await res.text();
         return text ? JSON.parse(text) : true;
     } catch (e) { showToast(`Error: ${e.message}`, true); return null; }
@@ -201,13 +213,19 @@ async function loadAllData() {
     if (students.length === 0) await createDemoData();
     students = await fetchDB('students', `&school_id=eq.${SCHOOL_ID}`);
     marks = await fetchDB('marks', `&school_id=eq.${SCHOOL_ID}`);
+    // Sort students alphabetically by full name
+    students.sort((a, b) => {
+        let nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
+        let nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
+        return nameA < nameB ? -1 : nameA > nameB ? 1 : 0;
+    });
 }
 
 async function createDemoData() {
     let demo = [
-        { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: 'Namukose', last_name: 'Rahma', lin: 'PMN9985', payment_code: '', class: 'P.7', parent_name: 'Mr. Namukose', parent_whatsapp: '0756000010', total_fees: 350000, fees_paid: 200000, photo_url: '', academic_year: '2026' },
-        { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: 'Nabagereka', last_name: 'Sharifah', lin: 'PMN9469', payment_code: '', class: 'P.7', parent_name: 'Mrs. Nabagereka', parent_whatsapp: '0756000011', total_fees: 350000, fees_paid: 150000, photo_url: '', academic_year: '2026' },
-        { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: 'Barungi', last_name: 'Hadija Husina', lin: 'PMB7980', payment_code: '', class: 'P.7', parent_name: 'Mr. Barungi', parent_whatsapp: '0756000012', total_fees: 350000, fees_paid: 100000, photo_url: '', academic_year: '2026' }
+        { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: 'Namukose', last_name: 'Rahma', lin: 'PMN9985', payment_code: '', class: 'P.7', parent_name: 'Mr. Namukose', parent_whatsapp: '0756000010', total_fees: 350000, fees_paid: 200000, photo_url: '', academic_year: CURRENT_ACADEMIC_YEAR },
+        { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: 'Nabagereka', last_name: 'Sharifah', lin: 'PMN9469', payment_code: '', class: 'P.7', parent_name: 'Mrs. Nabagereka', parent_whatsapp: '0756000011', total_fees: 350000, fees_paid: 150000, photo_url: '', academic_year: CURRENT_ACADEMIC_YEAR },
+        { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: 'Barungi', last_name: 'Hadija Husina', lin: 'PMB7980', payment_code: '', class: 'P.7', parent_name: 'Mr. Barungi', parent_whatsapp: '0756000012', total_fees: 350000, fees_paid: 100000, photo_url: '', academic_year: CURRENT_ACADEMIC_YEAR }
     ];
     for (let s of demo) await insertDB('students', s);
 }
@@ -277,13 +295,31 @@ async function renderStudents() {
         let paid = payments.filter(p => p.student_id === s.id).reduce((a, b) => a + (b.amount || 0), 0);
         let bal = (s.total_fees || 0) - paid;
         let row = tbody.insertRow();
+        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="student-photo-img" style="width:45px;height:45px;border-radius:50%;object-fit:cover;">` : `<div class="student-photo-img"><i class="fas fa-user-circle fa-2x"></i></div>`;
+        let actions = `<button class="btn btn-sm btn-primary" onclick="editStudent('${s.id}')">Edit</button> <button class="btn btn-sm btn-red" onclick="deleteStudent('${s.id}')">Delete</button>`;
+        
         if (viewFinance) {
-            row.innerHTML = `<td><div style="width:40px;height:40px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;">${s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;">` : '<i class="fas fa-user-circle fa-2x"></i>'}</div></td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td>${escapeHtml(s.parent_name || '')}</td><td><button class="btn btn-sm btn-primary" onclick="editStudent('${s.id}')">Edit</button> <button class="btn btn-sm btn-gold" onclick="showPaymentHistory('${s.id}')">History</button></td>`;
+            row.innerHTML = `${photoHtml}<td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td>${escapeHtml(s.parent_name || '')}</td><td>${actions}</td>`;
         } else {
-            row.innerHTML = `<td><div style="width:40px;height:40px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;">${s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;">` : '<i class="fas fa-user-circle fa-2x"></i>'}</div></td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${escapeHtml(s.parent_name || '')}</td><td><button class="btn btn-sm btn-primary" onclick="editStudent('${s.id}')">Edit</button> <button class="btn btn-sm btn-gold" onclick="showPaymentHistory('${s.id}')">History</button></td>`;
+            row.innerHTML = `${photoHtml}<td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${escapeHtml(s.parent_name || '')}</td><td>${actions}</td>`;
         }
     }
 }
+
+window.deleteStudent = async (id) => {
+    if (confirm('Are you sure you want to delete this student? This action cannot be undone.')) {
+        let studentMarks = marks.filter(m => m.student_id === id);
+        for (let m of studentMarks) await deleteDB('marks', m.id);
+        let studentAttendance = attendance.filter(a => a.student_id === id);
+        for (let a of studentAttendance) await deleteDB('attendance', a.id);
+        let studentPayments = payments.filter(p => p.student_id === id);
+        for (let p of studentPayments) await deleteDB('payments', p.id);
+        await deleteDB('students', id);
+        await loadAllData();
+        renderStudents();
+        showToast('Student deleted successfully');
+    }
+};
 
 window.editStudent = async (id) => {
     let s = students.find(st => st.id === id);
@@ -295,13 +331,6 @@ window.editStudent = async (id) => {
         renderStudents();
         showToast('Student updated');
     }
-};
-
-window.showPaymentHistory = (id) => {
-    let s = students.find(st => st.id === id);
-    let studentPayments = payments.filter(p => p.student_id === id).sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
-    let paid = studentPayments.reduce((a, b) => a + b.amount, 0);
-    alert(`Payment History for ${s.first_name} ${s.last_name}\nLIN: ${s.lin}\nTotal: ${formatMoney(s.total_fees || 0)}\nPaid: ${formatMoney(paid)}\nBalance: ${formatMoney((s.total_fees || 0) - paid)}\n\nRecent payments: ${studentPayments.slice(0, 3).map(p => `${p.payment_date}: ${formatMoney(p.amount)}`).join(', ')}`);
 };
 
 function showAddStudentModal() {
@@ -322,7 +351,7 @@ window.saveNewStudent = async () => {
     if (!first || !last) { showToast('First and Last name required', true); return; }
     let lin = document.getElementById('newLin').value.trim().toUpperCase() || `PM${first.charAt(0).toUpperCase()}${Math.floor(1000 + Math.random() * 9000)}`;
     let paymentCode = document.getElementById('newPaymentCode').value.trim().toUpperCase() || '';
-    let newStudent = { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: first, last_name: last, lin: lin, payment_code: paymentCode, class: document.getElementById('newClass').value, parent_name: document.getElementById('newParentName').value, parent_whatsapp: document.getElementById('newParentWhatsapp').value, total_fees: parseFloat(document.getElementById('newTotalFees').value) || 0, fees_paid: 0, photo_url: '', academic_year: '2026' };
+    let newStudent = { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: first, last_name: last, lin: lin, payment_code: paymentCode, class: document.getElementById('newClass').value, parent_name: document.getElementById('newParentName').value, parent_whatsapp: document.getElementById('newParentWhatsapp').value, total_fees: parseFloat(document.getElementById('newTotalFees').value) || 0, fees_paid: 0, photo_url: '', academic_year: CURRENT_ACADEMIC_YEAR };
     await insertDB('students', newStudent);
     await loadAllData();
     renderStudents();
@@ -353,9 +382,10 @@ async function loadAttendance() {
     }
     let existing = await fetchDB('attendance', `&date=eq.${date}&status=eq.absent&school_id=eq.${SCHOOL_ID}`);
     let absentSet = new Set(existing.map(a => a.student_id));
-    let tbl = `<table><thead><tr><th>Student</th><th>LIN</th><th>Mark Absent</th></tr></thead><tbody>`;
+    let tbl = `<table><thead><tr><th>Photo</th><th>Student</th><th>LIN</th><th>Mark Absent</th></tr></thead><tbody>`;
     for (let s of classStd) {
-        tbl += `<tr><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td><input type="checkbox" class="absent-cb" data-id="${s.id}" ${absentSet.has(s.id) ? 'checked' : ''}> Mark Absent</tr>`;
+        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-circle fa-2x"></i>`;
+        tbl += `<tr><td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td><input type="checkbox" class="absent-cb" data-id="${s.id}" ${absentSet.has(s.id) ? 'checked' : ''}> Mark Absent</td></tr>`;
     }
     tbl += `</tbody></table>`;
     document.getElementById('attList').innerHTML = tbl;
@@ -368,7 +398,7 @@ async function saveAttendance() {
         let sid = cb.dataset.id;
         let exist = await fetchDB('attendance', `&student_id=eq.${sid}&date=eq.${date}`);
         if (cb.checked) {
-            if (!exist.length) await insertDB('attendance', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: sid, date, status: 'absent', academic_year: '2026' });
+            if (!exist.length) await insertDB('attendance', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: sid, date, status: 'absent', academic_year: CURRENT_ACADEMIC_YEAR });
         } else {
             if (exist.length) await deleteDB('attendance', exist[0].id);
         }
@@ -394,10 +424,11 @@ async function renderMarks() {
             classStd = classStd.filter(s => `${s.first_name} ${s.last_name}`.toLowerCase().includes(termSearch) || s.lin.toLowerCase().includes(termSearch));
         }
         let subs = SUBJECTS_BY_CLASS[cls] || [];
-        let relMarks = marks.filter(m => m.term === term && m.exam_type === exam && m.academic_year === '2026');
-        let grid = `<table><thead><tr><th>Student</th>${subs.map(s => `<th>${s}</th>`).join('')}</thead><tbody>`;
+        let relMarks = marks.filter(m => m.term === term && m.exam_type === exam && m.academic_year === CURRENT_ACADEMIC_YEAR);
+        let grid = `<table><thead><tr><th>Student</th><th>Photo</th>${subs.map(s => `<th>${s}</th>`).join('')}</thead><tbody>`;
         for (let s of classStd) {
-            grid += `<tr><td><strong>${s.first_name} ${s.last_name}</strong><br><small>${s.lin}</small></td>`;
+            let photoHtml = s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-circle fa-2x"></i>`;
+            grid += `<tr><td><strong>${s.first_name} ${s.last_name}</strong><br><small>${s.lin}</small></td><td>${photoHtml}</td>`;
             for (let sub of subs) {
                 let mk = relMarks.find(m => m.student_id === s.id && m.subject === sub);
                 grid += `<td><input type="number" class="mark-input" data-student="${s.id}" data-subject="${sub}" value="${mk ? mk.score : ''}" style="width:70px;"></td>`;
@@ -416,10 +447,10 @@ async function renderMarks() {
             if (!isNaN(score) && score >= 0 && score <= 100) {
                 let sid = inp.dataset.student;
                 let subj = inp.dataset.subject;
-                let existing = marks.find(m => m.student_id === sid && m.subject === subj && m.term === term && m.exam_type === exam && m.academic_year === '2026');
+                let existing = marks.find(m => m.student_id === sid && m.subject === subj && m.term === term && m.exam_type === exam && m.academic_year === CURRENT_ACADEMIC_YEAR);
                 let grade = getStandardGrade(score);
                 if (existing) await updateDB('marks', existing.id, { score, grade });
-                else await insertDB('marks', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: sid, subject: subj, score, grade, term, exam_type: exam, academic_year: '2026', created_at: new Date().toISOString() });
+                else await insertDB('marks', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: sid, subject: subj, score, grade, term, exam_type: exam, academic_year: CURRENT_ACADEMIC_YEAR, created_at: new Date().toISOString() });
             }
         }
         showToast('Marks saved');
@@ -429,32 +460,88 @@ async function renderMarks() {
     document.getElementById('loadMarks').click();
 }
 
-// ==================== FEES ====================
+// ==================== FEES with Financial History ====================
 async function renderFees() {
     let totalInc = payments.reduce((a, b) => a + (b.amount || 0), 0);
     let totalExp = students.reduce((a, b) => a + (b.total_fees || 0), 0);
+    
+    // Get student balances
+    let balancesHtml = '';
+    let filteredStudents = students.filter(s => !feesSearch || `${s.first_name} ${s.last_name}`.toLowerCase().includes(feesSearch.toLowerCase()) || s.lin.toLowerCase().includes(feesSearch.toLowerCase()));
+    for (let s of filteredStudents) {
+        let paid = payments.filter(p => p.student_id === s.id).reduce((a, b) => a + (b.amount || 0), 0);
+        let bal = (s.total_fees || 0) - paid;
+        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-circle fa-2x"></i>`;
+        balancesHtml += `<tr><td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td><button class="btn btn-sm btn-whatsapp" onclick="sendSingleFeeReminder('${s.id}')">Remind</button> <button class="btn btn-sm btn-primary" onclick="quickFeePayment('${s.id}')">Pay</button></td></tr>`;
+    }
+    
+    // Financial History
+    let historyHtml = '';
+    let sortedPayments = [...payments].sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+    let historySearchTerm = document.getElementById('historySearch')?.value || '';
+    let filteredHistory = sortedPayments;
+    if (historySearchTerm) {
+        const term = historySearchTerm.toLowerCase();
+        filteredHistory = sortedPayments.filter(p => {
+            let s = students.find(st => st.id === p.student_id);
+            return s && (`${s.first_name} ${s.last_name}`.toLowerCase().includes(term) || s.lin.toLowerCase().includes(term));
+        });
+    }
+    for (let p of filteredHistory) {
+        let s = students.find(st => st.id === p.student_id);
+        if (!s) continue;
+        historyHtml += `<tr><td>${p.payment_date || 'N/A'}</td><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td class="paid">${formatMoney(p.amount)}</td><td>${p.receipt_number || 'N/A'}</td><td>${p.term || 'Term I'}</td><td>${p.academic_year || CURRENT_ACADEMIC_YEAR}</td></tr>`;
+    }
+    
     document.getElementById('tabContent').innerHTML = `
         <div class="card"><h3>Financial Summary</h3><div class="stats-grid" style="grid-template-columns:repeat(3,1fr);"><div class="stat-card"><div class="stat-number">${formatMoney(totalInc)}</div><div class="stat-label">Income</div></div><div class="stat-card"><div class="stat-number">${formatMoney(totalExp)}</div><div class="stat-label">Expected</div></div><div class="stat-card"><div class="stat-number">${formatMoney(totalExp - totalInc)}</div><div class="stat-label">Outstanding</div></div></div></div>
         <div class="card"><h3>Record Payment</h3><div class="flex"><select id="payStudent">${students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.lin})</option>`).join('')}</select><input type="number" id="payAmount" placeholder="Amount"><button class="btn btn-primary" id="recordPay">Record</button><button class="btn btn-whatsapp" id="sendReminder">Send Reminder</button></div></div>
         <div class="card"><h3>Student Balances</h3><div class="search-bar"><i class="fas fa-search"></i><input type="text" id="feesSearch" placeholder="Search student..."></div>
-        <div class="data-table"><table><thead><tr><th>Student</th><th>LIN</th><th>Total</th><th>Paid</th><th>Balance</th><th>Action</th></tr></thead><tbody id="feesBody"></tbody></table></div>
-        <div class="flex"><button class="btn btn-gold" id="printDebtors"><i class="fas fa-print"></i> Print Debtors List</button></div></div>`;
+        <div class="data-table"><table><thead><tr><th>Photo</th><th>Student</th><th>LIN</th><th>Total</th><th>Paid</th><th>Balance</th><th>Action</th></tr></thead><tbody id="feesBody">${balancesHtml}</tbody></table></div>
+        <div class="flex"><button class="btn btn-gold" id="printDebtors"><i class="fas fa-print"></i> Print Debtors List</button></div></div>
+        <div class="card"><h3><i class="fas fa-history"></i> Financial History</h3><div class="search-bar"><i class="fas fa-search"></i><input type="text" id="historySearch" placeholder="Search by student name or LIN..."></div>
+        <div class="data-table"><table class="history-table"><thead><tr><th>Date</th><th>Student</th><th>LIN</th><th>Amount</th><th>Receipt No</th><th>Term</th><th>Year</th></tr></thead><tbody id="historyBody">${historyHtml || '<tr><td colspan="7" style="text-align:center;color:#666;">No payment records found</td></tr>'}</tbody></table></div></div>`;
+    
     document.getElementById('recordPay').onclick = async () => {
         let sid = document.getElementById('payStudent').value;
         let amt = parseFloat(document.getElementById('payAmount').value);
         if (sid && amt > 0) {
-            await insertDB('payments', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: sid, amount: amt, payment_date: new Date().toISOString().slice(0, 10), receipt_number: `RCP-${Date.now()}`, term: 'Term I', academic_year: '2026' });
-            await loadAllData();
-            renderFees();
-            showToast('Payment recorded');
+            let paymentData = {
+                id: crypto.randomUUID(),
+                school_id: SCHOOL_ID,
+                student_id: sid,
+                amount: amt,
+                payment_date: new Date().toISOString().slice(0, 10),
+                receipt_number: `RCP-${Date.now()}`,
+                term: 'Term I',
+                academic_year: CURRENT_ACADEMIC_YEAR
+            };
+            let result = await insertDB('payments', paymentData);
+            if (result) {
+                await loadAllData();
+                renderFees();
+                showToast('Payment recorded successfully');
+            }
+        } else {
+            showToast('Please select a student and enter a valid amount', true);
         }
     };
+    
     document.getElementById('sendReminder').onclick = () => {
         let msg = "Good evening parents. Please clear fees tomorrow. Accounts Department.";
-        for (let s of students) if (s.parent_whatsapp) sendWhatsApp(s.parent_whatsapp, msg);
-        showToast('Reminders sent');
+        let sent = 0;
+        for (let s of students) {
+            if (s.parent_whatsapp) {
+                sendWhatsApp(s.parent_whatsapp, msg);
+                sent++;
+            }
+        }
+        showToast(`Reminders sent to ${sent} parents`);
     };
-    document.getElementById('feesSearch').addEventListener('input', (e) => { feesSearch = e.target.value; renderFeesTable(); });
+    
+    document.getElementById('feesSearch').addEventListener('input', (e) => { feesSearch = e.target.value; renderFees(); });
+    document.getElementById('historySearch').addEventListener('input', (e) => { renderFees(); });
+    
     document.getElementById('printDebtors').onclick = () => {
         let debtors = students.filter(s => (s.total_fees || 0) - payments.filter(p => p.student_id === s.id).reduce((a, b) => a + (b.amount || 0), 0) > 0);
         if (debtors.length === 0) { alert('No debtors'); return; }
@@ -463,20 +550,6 @@ async function renderFees() {
         win.document.close();
         win.print();
     };
-    renderFeesTable();
-}
-
-function renderFeesTable() {
-    let tbody = document.getElementById('feesBody');
-    if (!tbody) return;
-    let filtered = students.filter(s => !feesSearch || `${s.first_name} ${s.last_name}`.toLowerCase().includes(feesSearch.toLowerCase()) || s.lin.toLowerCase().includes(feesSearch.toLowerCase()));
-    tbody.innerHTML = '';
-    for (let s of filtered) {
-        let paid = payments.filter(p => p.student_id === s.id).reduce((a, b) => a + (b.amount || 0), 0);
-        let bal = (s.total_fees || 0) - paid;
-        let row = tbody.insertRow();
-        row.innerHTML = `<td><strong>${s.first_name} ${s.last_name}</strong></td>}<td class="paid">${formatMoney(paid)}</td>}<td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td>}<button class="btn btn-sm btn-whatsapp" onclick="sendSingleFeeReminder('${s.id}')">Remind</button> <button class="btn btn-sm btn-primary" onclick="quickFeePayment('${s.id}')">Pay</button></td>`;
-    }
 }
 
 window.sendSingleFeeReminder = (id) => {
@@ -487,10 +560,22 @@ window.sendSingleFeeReminder = (id) => {
 window.quickFeePayment = async (id) => {
     let amt = prompt('Amount (UGX):');
     if (amt && parseFloat(amt) > 0) {
-        await insertDB('payments', { id: crypto.randomUUID(), school_id: SCHOOL_ID, student_id: id, amount: parseFloat(amt), payment_date: new Date().toISOString().slice(0, 10), receipt_number: `RCP-${Date.now()}`, term: 'Term I', academic_year: '2026' });
-        await loadAllData();
-        renderFees();
-        showToast('Payment recorded');
+        let paymentData = {
+            id: crypto.randomUUID(),
+            school_id: SCHOOL_ID,
+            student_id: id,
+            amount: parseFloat(amt),
+            payment_date: new Date().toISOString().slice(0, 10),
+            receipt_number: `RCP-${Date.now()}`,
+            term: 'Term I',
+            academic_year: CURRENT_ACADEMIC_YEAR
+        };
+        let result = await insertDB('payments', paymentData);
+        if (result) {
+            await loadAllData();
+            renderFees();
+            showToast('Payment recorded');
+        }
     }
 };
 
@@ -516,7 +601,7 @@ async function renderReports() {
         selectedStudentIds.clear();
         document.getElementById('studentList').innerHTML = `<table><thead><tr><th><input type="checkbox" id="headerChk"></th><th>Photo</th><th>Name</th><th>LIN</th><th>Payment Code</th><th>Parent</th><th></th></tr></thead><tbody>${classStd.map(s => `<tr>
             <td><input type="checkbox" class="studentChk" data-id="${s.id}"></td>
-            <td><div style="width:40px;height:40px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;">${s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;">` : '<i class="fas fa-user-circle"></i>'}</div></td>
+            <td><div class="student-photo-img">${s.photo_url ? `<img src="${s.photo_url}" class="student-photo-img">` : `<i class="fas fa-user-circle fa-2x"></i>`}</div></td>
             <td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${s.parent_name || ''}</td>
             <td><button class="btn btn-sm btn-gold" onclick="printSingleStudentReport('${s.id}')">Print</button></td>
         `).join('')}</tbody></table>`;
@@ -616,7 +701,6 @@ async function printReports(ids) {
                 let score = mk ? mk.score : '-';
                 let grade = '-';
                 if (score !== '-') {
-                    // For P.1-P.3, R.E is excluded from grading but included in position
                     if (s.class === 'P.1' || s.class === 'P.2' || s.class === 'P.3') {
                         if (sub === 'R.E') grade = getLetterGrade(score);
                         else grade = getStandardGrade(score);
@@ -646,7 +730,6 @@ async function printReports(ids) {
         if (isNursery) {
             specialInfo = `<div style="margin-top:15px; text-align:center;"><span class="position-badge"><i class="fas fa-trophy"></i> Position: ${position} / ${classStudents.length}</span> <span style="margin-left:15px;"><strong>Total Marks:</strong> ${totalScore}/${subjects.length * 100}</span></div>`;
         } else if (isLower) {
-            // Calculate overall grade (RE excluded for grading but included for position)
             let gradingSubjects = subjects.filter(s => s !== 'R.E');
             let gradingTotal = 0;
             for (let sub of gradingSubjects) {
@@ -694,7 +777,7 @@ async function printReports(ids) {
     showToast(`Printed ${selected.length} report(s)`);
 }
 
-// ==================== ABSENTEES (Admin only) ====================
+// ==================== ABSENTEES ====================
 async function renderAbsentees() {
     if (currentUser?.role === 'teacher') {
         document.getElementById('tabContent').innerHTML = '<div class="card"><h3>Access Denied</h3><p>Teachers do not have access to this module.</p></div>';
@@ -727,9 +810,10 @@ async function loadAbsentList() {
     }
     grid.innerHTML = `<div style="margin-bottom:15px;"><span style="background:#dc2626; color:white; padding:5px 15px; border-radius:30px;">${absentStudents.length} absent student(s)</span></div>`;
     for (let s of absentStudents) {
+        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="absent-photo" style="width:55px;height:55px;border-radius:50%;object-fit:cover;">` : `<div class="absent-photo"><i class="fas fa-user-graduate fa-2x"></i></div>`;
         grid.innerHTML += `
             <div class="absent-card">
-                <div class="absent-photo">${s.photo_url ? `<img src="${s.photo_url}" style="width:55px;height:55px;border-radius:50%;">` : '<i class="fas fa-user-graduate fa-2x"></i>'}</div>
+                ${photoHtml}
                 <div style="flex:1;"><p><strong>${s.first_name} ${s.last_name}</strong></p><p>LIN: ${s.lin} | ${s.class}</p><p>Parent: ${s.parent_name || 'N/A'}</p><p>WhatsApp: ${s.parent_whatsapp || 'N/A'}</p></div>
                 <button class="btn btn-sm btn-whatsapp" onclick="sendAbsentParentNotify('${s.id}','${date}')"><i class="fab fa-whatsapp"></i> Notify</button>
             </div>
