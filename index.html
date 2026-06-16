@@ -31,9 +31,11 @@
         .btn-red { background: #dc2626; color: white; }
         .btn-sm { padding: 4px 12px; font-size: 12px; border-radius: 20px; cursor: pointer; }
         .btn-green { background: #10b981; color: white; }
+        .btn-whatsapp { background: #25D366; color: white; }
         .card { background: white; border-radius: 20px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .flex { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 20px; }
         select, input { padding: 10px 16px; border-radius: 30px; border: 1px solid #cbd5e1; }
+        .form-control { padding: 10px 16px; border-radius: 30px; border: 1px solid #cbd5e1; width: 100%; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
         th { background: #f8fafc; font-weight: 700; }
@@ -78,6 +80,11 @@
         .method-schoolpay { background: #e0e7ff; color: #3730a3; }
         .student-history-btn { background: #003366; color: white; border: none; border-radius: 20px; padding: 4px 12px; cursor: pointer; font-size: 11px; }
         .student-history-btn:hover { background: #D4A017; color: #003366; }
+        .photo-upload-preview { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid #D4A017; margin-top: 8px; }
+        .btn-outline { background: transparent; border: 1px solid #003366; color: #003366; }
+        .btn-outline:hover { background: #003366; color: white; }
+        .class-summary-card { background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 12px; border-left: 4px solid #003366; }
+        .stat-row { display: flex; gap: 30px; flex-wrap: wrap; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -86,7 +93,7 @@
 <script>
 // ============================================================
 // PROGRESSIVE MOTHERS SCHOOL - COMPLETE SYSTEM
-// WITH STUDENT FINANCIAL HISTORY
+// WITH STUDENT FINANCIAL HISTORY & PHOTO UPLOAD
 // ============================================================
 
 const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
@@ -148,7 +155,7 @@ const GRADING_EXCLUSIONS = {
 const ROLE_PERMS = {
     admin: { students: true, attendance: true, marks: true, fees: true, reports: true, absentees: true, editStudents: true, editFees: true, promote: true },
     teacher: { students: false, attendance: true, marks: true, fees: false, reports: false, absentees: false, editStudents: false, editFees: false, promote: false },
-    finance: { students: true, attendance: false, marks: false, fees: true, reports: false, absentees: false, editStudents: false, editFees: true, promote: false }
+    finance: { students: true, attendance: false, marks: false, fees: true, reports: false, absentees: false, editStudents: true, editFees: true, promote: false }
 };
 
 const USERS = { admin: { password: 'admin123', role: 'admin' }, teacher: { password: 'teacher123', role: 'teacher' }, finance: { password: 'finance123', role: 'finance' } };
@@ -353,13 +360,12 @@ async function renderStudents() {
         if (perms.editStudents) {
             actions += `<button class="btn btn-sm btn-primary" onclick="editStudent('${s.id}')">Edit</button> <button class="btn btn-sm btn-red" onclick="deleteStudent('${s.id}')">Delete</button>`;
         }
-        // Add Financial History button for everyone
         actions += `<button class="btn btn-sm btn-gold" onclick="showStudentFinancialHistory('${s.id}')"><i class="fas fa-history"></i> Fees History</button>`;
         
         if (viewFinance) {
-            row.innerHTML = `${photoHtml}<td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td>${escapeHtml(s.parent_name || '')}</td><td>${actions}</td>`;
+            row.innerHTML = `<td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td>${escapeHtml(s.parent_name || '')}</td><td>${actions}</td>`;
         } else {
-            row.innerHTML = `${photoHtml}<td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${escapeHtml(s.parent_name || '')}</td><td>${actions}</td>`;
+            row.innerHTML = `<td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${escapeHtml(s.parent_name || '')}</td><td>${actions}</td>`;
         }
     }
 }
@@ -373,7 +379,6 @@ window.showStudentFinancialHistory = (studentId) => {
     let totalPaid = studentPayments.reduce((a, b) => a + (b.amount || 0), 0);
     let balance = (student.total_fees || 0) - totalPaid;
     
-    // Group payments by term and year
     let groupedPayments = {};
     for (let p of studentPayments) {
         let key = `${p.term} ${p.academic_year}`;
@@ -765,9 +770,9 @@ function renderFeesTable() {
         let photoHtml = s.photo_url ? `<img src="${s.photo_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-circle fa-2x"></i>`;
         let row = tbody.insertRow();
         if (perms.editFees) {
-            row.innerHTML = `${photoHtml}<td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td><button class="btn btn-sm btn-whatsapp" onclick="sendSingleFeeReminder('${s.id}','${term}','${year}')">Remind</button> <button class="btn btn-sm btn-primary" onclick="quickFeePayment('${s.id}','${term}','${year}')">Pay</button> <button class="btn btn-sm btn-gold" onclick="editStudentFees('${s.id}')">Edit Fees</button> <button class="btn btn-sm btn-gold" onclick="showStudentFinancialHistory('${s.id}')"><i class="fas fa-history"></i> History</button></td>`;
+            row.innerHTML = `<td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td><button class="btn btn-sm btn-whatsapp" onclick="sendSingleFeeReminder('${s.id}','${term}','${year}')">Remind</button> <button class="btn btn-sm btn-primary" onclick="quickFeePayment('${s.id}','${term}','${year}')">Pay</button> <button class="btn btn-sm btn-gold" onclick="editStudentFees('${s.id}')">Edit Fees</button> <button class="btn btn-sm btn-gold" onclick="showStudentFinancialHistory('${s.id}')"><i class="fas fa-history"></i> History</button></td>`;
         } else {
-            row.innerHTML = `${photoHtml}<td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td><span>View only</span></td>`;
+            row.innerHTML = `<td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td><span>View only</span></td>`;
         }
     }
 }
@@ -973,14 +978,29 @@ window.deleteStudent = async (id) => {
     }
 };
 
+// Helper: Convert file to base64
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+}
+
 window.editStudent = async (id) => {
     let s = students.find(st => st.id === id);
     if (!s) return;
     let modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
+    let photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="photo-upload-preview" id="editPhotoPreview">` : `<div class="photo-upload-preview" id="editPhotoPreview" style="display:flex; align-items:center; justify-content:center; background:#e2e8f0;"><i class="fas fa-user fa-2x" style="color:#666;"></i></div>`;
     modal.innerHTML = `
         <div class="modal-content">
             <h3>Edit Student - ${s.first_name} ${s.last_name}</h3>
             <div style="display:flex; flex-direction:column; gap:10px;">
+                <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center;">
+                    <div>${photoHtml}</div>
+                    <div><label>Upload Photo</label><input type="file" id="editPhotoUpload" accept="image/*" class="form-control" style="padding:6px;"></div>
+                </div>
                 <div><label>First Name</label><input type="text" id="editFirstName" value="${escapeHtml(s.first_name)}" class="form-control"></div>
                 <div><label>Last Name</label><input type="text" id="editLastName" value="${escapeHtml(s.last_name)}" class="form-control"></div>
                 <div><label>LIN</label><input type="text" id="editLin" value="${s.lin}" class="form-control" readonly style="background:#f0f0f0;"></div>
@@ -996,9 +1016,28 @@ window.editStudent = async (id) => {
             </div>
         </div>`;
     document.body.appendChild(modal);
+    
+    // Photo preview on file select
+    document.getElementById('editPhotoUpload')?.addEventListener('change', function(e) {
+        let file = e.target.files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.onload = function(ev) {
+                let preview = document.getElementById('editPhotoPreview');
+                if (preview) preview.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
 };
 
 window.saveEditStudent = async (id) => {
+    let photoFile = document.getElementById('editPhotoUpload')?.files[0];
+    let photoUrl = '';
+    if (photoFile) {
+        photoUrl = await fileToBase64(photoFile);
+    }
+    
     let updates = {
         first_name: document.getElementById('editFirstName').value,
         last_name: document.getElementById('editLastName').value,
@@ -1008,6 +1047,8 @@ window.saveEditStudent = async (id) => {
         parent_whatsapp: document.getElementById('editParentWhatsapp').value,
         total_fees: parseFloat(document.getElementById('editTotalFees').value) || 0
     };
+    if (photoUrl) updates.photo_url = photoUrl;
+    
     await updateDB('students', id, updates);
     await loadAllData();
     renderStudents();
@@ -1018,13 +1059,37 @@ window.saveEditStudent = async (id) => {
 function showAddStudentModal() {
     let modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
     modal.innerHTML = `<div class="modal-content"><h3>Add New Student</h3>
-        <input type="text" id="newFirstName" placeholder="First Name"><input type="text" id="newLastName" placeholder="Last Name">
-        <select id="newClass">${CLASS_ORDER.map(c => `<option>${c}</option>`).join('')}</select>
-        <input type="text" id="newLin" placeholder="LIN (auto)">
-        <input type="text" id="newPaymentCode" placeholder="Payment Code (optional)">
-        <input type="text" id="newParentName" placeholder="Parent Name"><input type="text" id="newParentWhatsapp" placeholder="Parent WhatsApp">
-        <input type="number" id="newTotalFees" placeholder="Total Fees"><div class="flex" style="justify-content: flex-end;"><button class="btn btn-primary" onclick="saveNewStudent()">Save</button><button class="btn btn-gold" onclick="this.closest('.modal').remove()">Cancel</button></div></div>`;
+        <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
+            <div class="photo-upload-preview" id="newPhotoPreview" style="display:flex; align-items:center; justify-content:center; background:#e2e8f0;"><i class="fas fa-user fa-2x" style="color:#666;"></i></div>
+            <div><label>Upload Photo</label><input type="file" id="newPhotoUpload" accept="image/*" class="form-control" style="padding:6px;"></div>
+        </div>
+        <input type="text" id="newFirstName" placeholder="First Name" class="form-control">
+        <input type="text" id="newLastName" placeholder="Last Name" class="form-control">
+        <select id="newClass" class="form-control">${CLASS_ORDER.map(c => `<option>${c}</option>`).join('')}</select>
+        <input type="text" id="newLin" placeholder="LIN (auto)" class="form-control">
+        <input type="text" id="newPaymentCode" placeholder="Payment Code (optional)" class="form-control">
+        <input type="text" id="newParentName" placeholder="Parent Name" class="form-control">
+        <input type="text" id="newParentWhatsapp" placeholder="Parent WhatsApp" class="form-control">
+        <input type="number" id="newTotalFees" placeholder="Total Fees" class="form-control">
+        <div class="flex" style="justify-content: flex-end; margin-top:10px;">
+            <button class="btn btn-primary" onclick="saveNewStudent()">Save</button>
+            <button class="btn btn-gold" onclick="this.closest('.modal').remove()">Cancel</button>
+        </div></div>`;
     document.body.appendChild(modal);
+    
+    document.getElementById('newPhotoUpload')?.addEventListener('change', function(e) {
+        let file = e.target.files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.onload = function(ev) {
+                let preview = document.getElementById('newPhotoPreview');
+                if (preview) {
+                    preview.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    });
 }
 
 window.saveNewStudent = async () => {
@@ -1033,7 +1098,27 @@ window.saveNewStudent = async () => {
     if (!first || !last) { showToast('First and Last name required', true); return; }
     let lin = document.getElementById('newLin').value.trim().toUpperCase() || `PM${first.charAt(0).toUpperCase()}${Math.floor(1000 + Math.random() * 9000)}`;
     let paymentCode = document.getElementById('newPaymentCode').value.trim().toUpperCase() || '';
-    let newStudent = { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: first, last_name: last, lin: lin, payment_code: paymentCode, class: document.getElementById('newClass').value, parent_name: document.getElementById('newParentName').value, parent_whatsapp: document.getElementById('newParentWhatsapp').value, total_fees: parseFloat(document.getElementById('newTotalFees').value) || 0, fees_paid: 0, photo_url: '', academic_year: CURRENT_ACADEMIC_YEAR };
+    let photoFile = document.getElementById('newPhotoUpload')?.files[0];
+    let photoUrl = '';
+    if (photoFile) {
+        photoUrl = await fileToBase64(photoFile);
+    }
+    
+    let newStudent = { 
+        id: crypto.randomUUID(), 
+        school_id: SCHOOL_ID, 
+        first_name: first, 
+        last_name: last, 
+        lin: lin, 
+        payment_code: paymentCode, 
+        class: document.getElementById('newClass').value, 
+        parent_name: document.getElementById('newParentName').value, 
+        parent_whatsapp: document.getElementById('newParentWhatsapp').value, 
+        total_fees: parseFloat(document.getElementById('newTotalFees').value) || 0, 
+        fees_paid: 0, 
+        photo_url: photoUrl, 
+        academic_year: CURRENT_ACADEMIC_YEAR 
+    };
     await insertDB('students', newStudent);
     await loadAllData();
     renderStudents();
