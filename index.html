@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-    <title>PROGRESSIVE MOTHERS SCHOOL | Complete Management</title>
+    <title>PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -69,6 +69,14 @@
         .login-container { max-width: 380px; margin: 60px auto; background: white; border-radius: 28px; padding: 30px 24px; text-align: center; box-shadow: 0 12px 30px rgba(0,0,0,0.08); }
         .login-container input { width: 100%; margin: 8px 0; padding: 12px; border-radius: 40px; border: 1px solid #ccc; font-size: 0.9rem; }
         .login-container button { width: 100%; background: #003366; color: white; padding: 12px; border-radius: 40px; border: none; cursor: pointer; font-weight: bold; font-size: 1rem; }
+        .help-footer { background: rgba(255,255,255,0.08); padding: 6px 14px; border-radius: 12px; margin-top: 8px; display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 0.65rem; color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.1); }
+        .help-footer i { color: #D4A017; }
+        .help-footer strong { color: #D4A017; }
+        .live-clock { font-weight: 600; color: #D4A017; min-width: 120px; display: inline-block; }
+        .grid-2cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .gender-badge { padding: 2px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 600; }
+        .gender-male { background: #dbeafe; color: #1e40af; }
+        .gender-female { background: #fce7f3; color: #9d174d; }
         @media (max-width: 640px) {
             .school-name { font-size: 1rem; }
             .datetime-row { flex-direction: column; align-items: stretch; gap: 4px; }
@@ -82,6 +90,8 @@
             th, td { padding: 4px 4px; }
             .modal-content { padding: 14px; }
             .role-badge { top: 6px; right: 6px; font-size: 0.6rem; padding: 2px 8px; }
+            .help-footer { font-size: 0.55rem; gap: 6px; padding: 4px 10px; }
+            .grid-2cols { grid-template-columns: 1fr; }
         }
         @media (min-width: 1024px) {
             .stats-grid { grid-template-columns: repeat(4, 1fr); }
@@ -106,19 +116,22 @@
 
 <script>
 // ============================================================
-// PROGRESSIVE MOTHERS SCHOOL - COMPLETE MANAGEMENT SYSTEM
+// PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL
+// Gayaza-Kijabijjo, Kampala
 // ============================================================
 
 const SUPABASE_URL = 'https://qtvkasgnrftajqrrcgsg.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dmthc2ducmZ0YWpxcnJjZ3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTM5ODksImV4cCI6MjA5Mjg4OTk4OX0.gw1-WKC2ccGRXl1O74v1TaHu2DzwSlVTCaQHv6bsYcg';
 const SCHOOL_ID = '11111111-1111-1111-1111-111111111111';
 const SCHOOL_CONTACTS = ['0756585035', '0779585035'];
+const EUDES_MEDIA = ['0762992440', '0200930932'];
 const TERMS = ['Term I', 'Term II', 'Term III'];
 const EXAM_TYPES = ['Beginning of Term', 'Mid Term', 'End of Term'];
 const CLASS_ORDER = ['Baby', 'Middle', 'Top', 'P.1', 'P.2', 'P.3', 'P.4', 'P.5', 'P.6', 'P.7'];
 const ACADEMIC_YEARS = ['2026', '2027', '2028', '2029', '2030'];
 const CURRENT_ACADEMIC_YEAR = '2026';
 const PAYMENT_METHODS = ['Cash', 'Mobile Money', 'Bank Transfer', 'School Pay'];
+const GENDER_OPTIONS = ['Male', 'Female'];
 
 // Cache
 let cache = { students: [], marks: [], attendance: [], payments: [] };
@@ -130,15 +143,43 @@ let filterTerm = 'Term I';
 let filterYear = CURRENT_ACADEMIC_YEAR;
 let debounceTimers = {};
 let supabaseConnected = false;
+let clockInterval = null;
 
+// ============================================================
+// UGANDA TIME - FIXED (UTC+3)
+// ============================================================
 function getUgandaTime() {
     const now = new Date();
+    // Uganda is UTC+3 (East Africa Time)
     return new Date(now.getTime() + (3 * 60 * 60 * 1000));
 }
+
+function formatUgandaTime(date) {
+    return date.toLocaleTimeString('en-UG', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit',
+        hour12: true
+    });
+}
+
+function formatUgandaDate(date) {
+    return date.toLocaleDateString('en-UG', { 
+        weekday: 'short', 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric'
+    });
+}
+
 function formatUgandaDateTime(date) {
     const d = new Date(date);
-    return d.toLocaleString('en-UG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
+    return d.toLocaleString('en-UG', { 
+        year: 'numeric', month: 'short', day: 'numeric', 
+        hour: '2-digit', minute: '2-digit', hour12: true
+    });
 }
+
 function formatMoney(amt) { return 'UGX ' + (amt || 0).toLocaleString(); }
 function escapeHtml(str) { return str ? String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]) : ''; }
 function showToast(msg, isErr) { let t = document.createElement('div'); t.className = `toast ${isErr ? 'error' : ''}`; t.innerText = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); }
@@ -185,6 +226,15 @@ function getPaymentMethodBadge(method) {
     return `<span class="payment-method-badge ${classes[method] || 'method-cash'}">${method || 'Cash'}</span>`;
 }
 
+function getGenderBadge(gender) {
+    if (!gender) return '';
+    const classes = {
+        'Male': 'gender-male',
+        'Female': 'gender-female'
+    };
+    return `<span class="gender-badge ${classes[gender] || ''}">${gender}</span>`;
+}
+
 const SUBJECTS_BY_CLASS = {
     'Baby': ['LA 1', 'LA 2', 'LA 3', 'LA 4', 'LA 5'],
     'Middle': ['LA 1', 'LA 2', 'LA 3', 'LA 4', 'LA 5'],
@@ -200,8 +250,8 @@ const SUBJECTS_BY_CLASS = {
 
 const ROLE_PERMS = {
     admin: { students: true, attendance: true, marks: true, fees: true, reports: true, absentees: true, editStudents: true, editFees: true, promote: true },
-    teacher: { students: false, attendance: true, marks: true, fees: false, reports: false, absentees: false, editStudents: false, editFees: false, promote: false },
-    finance: { students: true, attendance: false, marks: false, fees: true, reports: false, absentees: false, editStudents: true, editFees: true, promote: false }
+    teacher: { students: true, attendance: true, marks: true, fees: false, reports: true, absentees: true, editStudents: false, editFees: false, promote: false },
+    finance: { students: true, attendance: false, marks: false, fees: true, reports: false, absentees: false, editStudents: false, editFees: true, promote: false }
 };
 
 function debounce(key, fn, delay = 150) {
@@ -209,7 +259,33 @@ function debounce(key, fn, delay = 150) {
     debounceTimers[key] = setTimeout(fn, delay);
 }
 
-// Supabase API
+// ============================================================
+// LIVE CLOCK - CORRECT UGANDA TIME
+// ============================================================
+function startClock() {
+    if (clockInterval) {
+        clearInterval(clockInterval);
+        clockInterval = null;
+    }
+    updateClock();
+    clockInterval = setInterval(updateClock, 1000);
+}
+
+function updateClock() {
+    const now = getUgandaTime();
+    const timeStr = formatUgandaTime(now);
+    const dateStr = formatUgandaDate(now);
+    
+    const clockEl = document.getElementById('liveClock');
+    if (clockEl) clockEl.textContent = timeStr + ' (EAT)';
+    
+    const dateEl = document.getElementById('liveDate');
+    if (dateEl) dateEl.textContent = dateStr;
+}
+
+// ============================================================
+// SUPABASE API
+// ============================================================
 async function fetchDB(table, filter = '', retries = 3) {
     for (let i = 0; i < retries; i++) {
         try {
@@ -349,9 +425,9 @@ function getPayments() { return cache.payments || []; }
 
 async function createDemoData() {
     let demo = [
-        { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: 'Namukose', last_name: 'Rahma', lin: 'PMN9985', payment_code: 'PMN9985', class: 'P.7', parent_name: 'Mr. Namukose', parent_whatsapp: '0756000010', total_fees: 350000, fees_paid: 200000, photo_url: '', academic_year: '2026' },
-        { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: 'Nabagereka', last_name: 'Sharifah', lin: 'PMN9469', payment_code: 'PMN9469', class: 'P.7', parent_name: 'Mrs. Nabagereka', parent_whatsapp: '0756000011', total_fees: 350000, fees_paid: 150000, photo_url: '', academic_year: '2026' },
-        { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: 'Barungi', last_name: 'Hadija Husina', lin: 'PMB7980', payment_code: 'PMB7980', class: 'P.7', parent_name: 'Mr. Barungi', parent_whatsapp: '0756000012', total_fees: 350000, fees_paid: 100000, photo_url: '', academic_year: '2026' }
+        { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: 'Namukose', last_name: 'Rahma', lin: 'PMN9985', payment_code: 'PMN9985', class: 'P.7', date_of_birth: '2010-05-15', gender: 'Female', address: 'Gayaza, Kampala', parent_name: 'Mr. Namukose', parent_whatsapp: '0756000010', total_fees: 350000, fees_paid: 200000, photo_url: '', academic_year: '2026' },
+        { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: 'Nabagereka', last_name: 'Sharifah', lin: 'PMN9469', payment_code: 'PMN9469', class: 'P.7', date_of_birth: '2010-08-22', gender: 'Female', address: 'Kijabijjo, Kampala', parent_name: 'Mrs. Nabagereka', parent_whatsapp: '0756000011', total_fees: 350000, fees_paid: 150000, photo_url: '', academic_year: '2026' },
+        { id: crypto.randomUUID(), school_id: SCHOOL_ID, first_name: 'Barungi', last_name: 'Hadija Husina', lin: 'PMB7980', payment_code: 'PMB7980', class: 'P.7', date_of_birth: '2011-01-10', gender: 'Female', address: 'Ggaba, Kampala', parent_name: 'Mr. Barungi', parent_whatsapp: '0756000012', total_fees: 350000, fees_paid: 100000, photo_url: '', academic_year: '2026' }
     ];
     for (let s of demo) await insertDB('students', s);
     let samplePayments = [
@@ -372,6 +448,48 @@ function fileToBase64(file) {
     });
 }
 
+// ============================================================
+// COMPRESS IMAGE FUNCTION
+// ============================================================
+function compressImage(file, maxSizeKB = 30) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function(event) {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                let width = img.width, height = img.height;
+                const MAX = 200;
+                if (width > MAX) { height = (height * MAX) / width; width = MAX; }
+                if (height > MAX) { width = (width * MAX) / height; height = MAX; }
+                canvas.width = width; canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                let quality = 0.6;
+                let dataUrl = canvas.toDataURL('image/jpeg', quality);
+                let attempts = 0;
+                while (dataUrl.length > maxSizeKB * 1024 * 0.75 && quality > 0.1 && attempts < 15) {
+                    quality -= 0.05;
+                    dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    attempts++;
+                }
+                resolve(dataUrl);
+            };
+            img.onerror = () => resolve('');
+        };
+        reader.onerror = () => resolve('');
+    });
+}
+
+function getStudentPhoto(student) {
+    if (student && student.photo_url && student.photo_url.startsWith('data:image')) {
+        return `<img src="${student.photo_url}" class="student-photo-img" alt="Photo" onerror="this.style.display='none'">`;
+    }
+    return `<div class="student-photo-img"><i class="fas fa-user-graduate"></i></div>`;
+}
+
 // ============= DASHBOARD =============
 async function renderDashboard() {
     let students = getStudents(), payments = getPayments(), attendance = getAttendance();
@@ -381,13 +499,18 @@ async function renderDashboard() {
     let totalExp = students.reduce((a, b) => a + (b.total_fees || 0), 0);
     let viewFinance = currentUser?.role === 'admin' || currentUser?.role === 'finance';
     let statusClass = supabaseConnected ? '' : 'error';
+    let maleCount = students.filter(s => s.gender === 'Male').length;
+    let femaleCount = students.filter(s => s.gender === 'Female').length;
+    
     document.getElementById('tabContent').innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-            <span class="supabase-status ${statusClass}">${supabaseConnected ? '✅ Supabase Connected' : '⚠️ Supabase Error'}</span>
+            <span class="supabase-status ${statusClass}">${supabaseConnected ? '✅ Connected' : '⚠️ Error'}</span>
             <button class="btn btn-sm btn-gold" onclick="refreshData()"><i class="fas fa-sync"></i> Refresh Data</button>
         </div>
         <div class="stats-grid">
             <div class="stat-card"><div class="stat-number">${students.length}</div><div class="stat-label">Total Students</div></div>
+            <div class="stat-card"><div class="stat-number">${maleCount}</div><div class="stat-label">👦 Male</div></div>
+            <div class="stat-card"><div class="stat-number">${femaleCount}</div><div class="stat-label">👧 Female</div></div>
             ${viewFinance ? `<div class="stat-card"><div class="stat-number">${formatMoney(totalInc)}</div><div class="stat-label">Revenue</div></div>
             <div class="stat-card"><div class="stat-number">${formatMoney(totalExp - totalInc)}</div><div class="stat-label">Outstanding</div></div>` : ''}
             <div class="stat-card"><div class="stat-number">${students.length - absentToday}</div><div class="stat-label">Present Today</div></div>
@@ -420,6 +543,11 @@ function getNavButtons() {
 async function renderStudents() {
     let students = getStudents(), payments = getPayments();
     let perms = ROLE_PERMS[currentUser?.role];
+    let canAdd = currentUser?.role === 'admin' || currentUser?.role === 'teacher';
+    let canEditDelete = currentUser?.role === 'admin';
+    let canEditFees = currentUser?.role === 'admin' || currentUser?.role === 'finance';
+    let viewFinance = currentUser?.role === 'admin' || currentUser?.role === 'finance';
+    
     let filtered = students.filter(s => {
         if (!globalSearch) return true;
         const term = globalSearch.toLowerCase();
@@ -428,9 +556,11 @@ async function renderStudents() {
                (s.payment_code || '').toLowerCase().includes(term) ||
                s.class.toLowerCase().includes(term) ||
                (s.parent_name || '').toLowerCase().includes(term) ||
-               (s.parent_whatsapp || '').includes(term);
+               (s.parent_whatsapp || '').includes(term) ||
+               (s.gender || '').toLowerCase().includes(term) ||
+               (s.address || '').toLowerCase().includes(term) ||
+               (s.date_of_birth || '').includes(term);
     });
-    let viewFinance = currentUser?.role === 'admin' || currentUser?.role === 'finance';
     
     document.getElementById('tabContent').innerHTML = `
         <div class="card">
@@ -439,11 +569,11 @@ async function renderStudents() {
                 <div class="flex" style="margin-bottom:0;">
                     <button class="btn btn-sm btn-gold" onclick="refreshData()"><i class="fas fa-sync"></i> Refresh</button>
                     ${perms.promote ? `<button class="btn btn-gold btn-sm" onclick="showPromoteModal()"><i class="fas fa-arrow-up"></i> Promote</button>` : ''}
-                    ${perms.editStudents ? `<button class="btn btn-primary btn-sm" onclick="showAddStudentModal()"><i class="fas fa-plus"></i> Add</button>` : ''}
+                    ${canAdd ? `<button class="btn btn-primary btn-sm" onclick="showAddStudentModal()"><i class="fas fa-plus"></i> Add Student</button>` : ''}
                 </div>
             </div>
-            <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="studentSearch" placeholder="Search name, LIN, class, parent..." value="${escapeHtml(globalSearch)}"></div>
-            <div class="data-table"><table><thead><tr><th>Photo</th><th>Name</th><th>Class</th><th>LIN</th><th>Payment Code</th>${viewFinance ? '<th>Total</th><th>Paid</th><th>Balance</th>' : ''}<th>Parent</th><th>Actions</th></tr></thead><tbody id="studentsBody"></tbody></table></div>
+            <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="studentSearch" placeholder="Search name, LIN, class, parent, gender, address..." value="${escapeHtml(globalSearch)}"></div>
+            <div class="data-table"><table><thead><tr><th>Photo</th><th>Name</th><th>DOB</th><th>Gender</th><th>Address</th><th>Class</th><th>LIN</th><th>Payment Code</th>${viewFinance ? '<th>Total</th><th>Paid</th><th>Balance</th>' : ''}<th>Parent</th><th>Actions</th></tr></thead><tbody id="studentsBody"></tbody></table></div>
         </div>`;
     
     let searchInput = document.getElementById('studentSearch');
@@ -457,23 +587,28 @@ async function renderStudents() {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:20px;color:#666;">No students found. Click Refresh to load data.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:20px;color:#666;">No students found. Click Refresh to load data.</td></tr>';
         return;
     }
     for (let s of filtered) {
         let paid = payments.filter(p => p.student_id === s.id).reduce((a, b) => a + (b.amount || 0), 0);
         let bal = (s.total_fees || 0) - paid;
         let row = tbody.insertRow();
-        let photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="student-photo-img" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : `<div class="student-photo-img"><i class="fas fa-user-circle fa-2x"></i></div>`;
+        let photoHtml = getStudentPhoto(s);
+        let genderBadge = getGenderBadge(s.gender);
         let actions = '';
-        if (perms.editStudents) {
-            actions += `<button class="btn btn-sm btn-primary" onclick="editStudent('${s.id}')">Edit</button> <button class="btn btn-sm btn-red" onclick="deleteStudent('${s.id}')">Del</button>`;
+        if (canEditDelete) {
+            actions += `<button class="btn btn-sm btn-primary" onclick="editStudent('${s.id}')"><i class="fas fa-edit"></i></button> `;
+            actions += `<button class="btn btn-sm btn-red" onclick="deleteStudent('${s.id}')"><i class="fas fa-trash"></i></button> `;
         }
         actions += `<button class="btn btn-sm btn-gold" onclick="showStudentFinancialHistory('${s.id}')"><i class="fas fa-history"></i> History</button>`;
+        if (canEditFees) {
+            actions += `<button class="btn btn-sm btn-gold" onclick="editStudentFees('${s.id}')"><i class="fas fa-coins"></i> Edit Fees</button>`;
+        }
         if (viewFinance) {
-            row.innerHTML = `<td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td>${escapeHtml(s.parent_name || '')}</td><td>${actions}</td>`;
+            row.innerHTML = `<td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.date_of_birth || ''}</td><td>${genderBadge}</td><td>${escapeHtml(s.address || '')}</td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td>${escapeHtml(s.parent_name || '')}</td><td>${actions}</td>`;
         } else {
-            row.innerHTML = `<td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${escapeHtml(s.parent_name || '')}</td><td>${actions}</td>`;
+            row.innerHTML = `<td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.date_of_birth || ''}</td><td>${genderBadge}</td><td>${escapeHtml(s.address || '')}</td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${escapeHtml(s.parent_name || '')}</td><td>${actions}</td>`;
         }
     }
 }
@@ -506,6 +641,9 @@ window.showStudentFinancialHistory = (studentId) => {
                 <div><strong>LIN:</strong> ${student.lin}</div>
                 <div><strong>Class:</strong> ${student.class}</div>
                 <div><strong>Payment Code:</strong> ${student.payment_code || 'N/A'}</div>
+                <div><strong>Gender:</strong> ${student.gender || 'N/A'}</div>
+                <div><strong>DOB:</strong> ${student.date_of_birth || 'N/A'}</div>
+                <div><strong>Address:</strong> ${student.address || 'N/A'}</div>
             </div>
             <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
                 <div style="background:#eef2ff; padding:12px 16px; border-radius:12px; flex:1; text-align:center;"><div style="font-weight:bold;">${formatMoney(student.total_fees || 0)}</div><div style="font-size:0.7rem;">Total Fees</div></div>
@@ -538,9 +676,14 @@ window.printStudentFinancialHistory = (studentId) => {
     let win = window.open('', '_blank');
     win.document.write(`<html><head><title>Financial History - ${student.first_name} ${student.last_name}</title>
         <style>body{font-family:Arial;padding:20px;}h1{color:#003366;}table{width:100%;border-collapse:collapse;margin-top:10px;}th,td{border:1px solid #ccc;padding:6px;text-align:left;}th{background:#003366;color:white;}.paid{color:#10b981;font-weight:bold;}.method-cash{background:#dbeafe;padding:2px 8px;border-radius:12px;}.method-mobile{background:#d1fae5;padding:2px 8px;border-radius:12px;}.method-bank{background:#fef3c7;padding:2px 8px;border-radius:12px;}.method-schoolpay{background:#e0e7ff;padding:2px 8px;border-radius:12px;}</style></head><body>
-        <h1>PROGRESSIVE MOTHERS SCHOOL</h1><h2>Financial History - ${student.first_name} ${student.last_name}</h2>
+        <h1>PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</h1><h2>Financial History - ${student.first_name} ${student.last_name}</h2>
         <div style="display:flex;gap:15px;flex-wrap:wrap;background:#f8fafc;padding:12px;border-radius:12px;margin-bottom:12px;">
-            <div><strong>LIN:</strong> ${student.lin}</div><div><strong>Class:</strong> ${student.class}</div><div><strong>Payment Code:</strong> ${student.payment_code || 'N/A'}</div>
+            <div><strong>LIN:</strong> ${student.lin}</div>
+            <div><strong>Class:</strong> ${student.class}</div>
+            <div><strong>Payment Code:</strong> ${student.payment_code || 'N/A'}</div>
+            <div><strong>Gender:</strong> ${student.gender || 'N/A'}</div>
+            <div><strong>DOB:</strong> ${student.date_of_birth || 'N/A'}</div>
+            <div><strong>Address:</strong> ${student.address || 'N/A'}</div>
         </div>
         <div style="display:flex;gap:15px;flex-wrap:wrap;margin-bottom:12px;">
             <div><strong>Total Fees:</strong> ${formatMoney(student.total_fees || 0)}</div>
@@ -574,7 +717,7 @@ async function renderFees() {
         ${perms.editFees ? `
         <div class="card"><h3 style="font-size:1rem;">Record Payment</h3>
         <div class="flex">
-            <div style="flex:2;min-width:120px;"><select id="payStudent" class="form-control">${students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name}</option>`).join('')}</select></div>
+            <div style="flex:2;min-width:120px;"><select id="payStudent" class="form-control">${students.map(s => `<option value="${s.id}">${s.first_name} ${s.last_name} (${s.class})</option>`).join('')}</select></div>
             <div style="flex:1;min-width:100px;"><input type="number" id="payAmount" placeholder="Amount (UGX)" class="form-control"></div>
             <div style="flex:1;min-width:100px;"><select id="payMethod" class="form-control">${PAYMENT_METHODS.map(m => `<option value="${m}">${m}</option>`).join('')}</select></div>
             <div style="flex:1;min-width:100px;"><select id="payTerm" class="form-control">${TERMS.map(t => `<option value="${t}" ${t === filterTerm ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
@@ -718,7 +861,7 @@ function printClassSummary() {
     let win = window.open('', '_blank');
     win.document.write(`<html><head><title>Class Summary - ${term} ${year}</title>
         <style>body{font-family:Arial;padding:20px;}h1{color:#003366;}.summary-card{background:#f8fafc;padding:12px;border-radius:12px;margin-bottom:10px;border-left:4px solid #003366;}.stat-row{display:flex;gap:20px;flex-wrap:wrap;margin-top:6px;}.debt{color:#dc2626;font-weight:bold;}.paid{color:#10b981;font-weight:bold;}</style></head><body>
-        <h1>PROGRESSIVE MOTHERS SCHOOL</h1><h2>Class Financial Summary - ${term} ${year}</h2><p>Generated on ${formatUgandaDateTime(getUgandaTime())}</p>${container.innerHTML}</body></html>`);
+        <h1>PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</h1><h2>Class Financial Summary - ${term} ${year}</h2><p>Generated on ${formatUgandaDateTime(getUgandaTime())}</p>${container.innerHTML}</body></html>`);
     win.document.close();
     win.print();
 }
@@ -789,7 +932,7 @@ function printFinancialHistory() {
     let win = window.open('', '_blank');
     win.document.write(`<html><head><title>Payment History</title>
         <style>body{font-family:Arial;padding:20px;}h1{color:#003366;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:6px;text-align:left;}th{background:#003366;color:white;}.paid{color:#10b981;font-weight:bold;}</style></head><body>
-        <h1>PROGRESSIVE MOTHERS SCHOOL</h1><h2>Payment History - ${term} ${year}</h2><p>Generated ${formatUgandaDateTime(getUgandaTime())}</p>
+        <h1>PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</h1><h2>Payment History - ${term} ${year}</h2><p>Generated ${formatUgandaDateTime(getUgandaTime())}</p>
         <table><thead><tr><th>Date & Time</th><th>Student</th><th>LIN</th><th>Class</th><th>Amount</th><th>Method</th><th>Receipt</th></tr></thead><tbody>
         ${filtered.map(p => {
             let s = students.find(st => st.id === p.student_id);
@@ -814,7 +957,7 @@ function printDebtorsList() {
     if (debtors.length === 0) { alert('No debtors'); return; }
     let win = window.open('', '_blank');
     win.document.write(`<html><head><title>Debtors List</title><style>body{font-family:Arial;padding:20px;}h1{color:#003366;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:6px;text-align:left;}th{background:#003366;color:white;}.debt{color:#dc2626;font-weight:bold;}</style></head><body>
-        <h1>PROGRESSIVE MOTHERS SCHOOL</h1><h2>Debtors List - ${term} ${year}</h2>
+        <h1>PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</h1><h2>Debtors List - ${term} ${year}</h2>
         <table><thead><tr><th>Name</th><th>LIN</th><th>Class</th><th>Total</th><th>Paid</th><th>Balance</th><th>WhatsApp</th></tr></thead><tbody>
         ${debtors.map(s => {
             let paid = payments.filter(p => p.student_id === s.id && p.term === term && p.academic_year === year).reduce((a, b) => a + (b.amount || 0), 0);
@@ -829,16 +972,59 @@ function printDebtorsList() {
 }
 
 window.editStudentFees = async (id) => {
+    if (currentUser?.role !== 'admin' && currentUser?.role !== 'finance') {
+        showToast('Access Denied. Only Admin and Finance can edit fees.', true);
+        return;
+    }
     let students = getStudents();
     let s = students.find(st => st.id === id);
     if (!s) return;
-    let newFees = prompt(`Edit total fees for ${s.first_name} ${s.last_name}\nCurrent: ${formatMoney(s.total_fees || 0)}\nEnter new total fees (UGX):`, s.total_fees || 0);
-    if (newFees !== null && !isNaN(parseFloat(newFees)) && parseFloat(newFees) >= 0) {
-        let result = await updateDB('students', id, { total_fees: parseFloat(newFees) });
-        if (result) {
-            updateCacheStudent({ id, total_fees: parseFloat(newFees) });
-            renderFees();
-            showToast(`Updated to ${formatMoney(parseFloat(newFees))}`);
+    let currentFees = s.total_fees || 0;
+    let currentPaid = s.fees_paid || 0;
+    let action = prompt(
+        `💰 Edit Fees for ${s.first_name} ${s.last_name} (${s.lin})\n` +
+        `Class: ${s.class}\n\n` +
+        `Total Fees: ${formatMoney(currentFees)}\n` +
+        `Paid Amount: ${formatMoney(currentPaid)}\n` +
+        `Balance: ${formatMoney(currentFees - currentPaid)}\n\n` +
+        `Enter "1" for Total Fees\n` +
+        `Enter "2" for Paid Amount\n` +
+        `Enter "3" for both`,
+        "1"
+    );
+    if (action === null) return;
+    if (action === "1") {
+        let newFees = prompt(`Enter new Total Fees:`, currentFees);
+        if (newFees !== null && !isNaN(parseFloat(newFees)) && parseFloat(newFees) >= 0) {
+            let result = await updateDB('students', id, { total_fees: parseFloat(newFees) });
+            if (result) {
+                updateCacheStudent({ id, total_fees: parseFloat(newFees) });
+                renderStudents();
+                showToast(`✅ Total Fees updated to ${formatMoney(parseFloat(newFees))}`);
+            }
+        }
+    } else if (action === "2") {
+        let newPaid = prompt(`Enter new Paid Amount:`, currentPaid);
+        if (newPaid !== null && !isNaN(parseFloat(newPaid)) && parseFloat(newPaid) >= 0) {
+            let result = await updateDB('students', id, { fees_paid: parseFloat(newPaid) });
+            if (result) {
+                updateCacheStudent({ id, fees_paid: parseFloat(newPaid) });
+                renderStudents();
+                showToast(`✅ Paid Amount updated to ${formatMoney(parseFloat(newPaid))}`);
+            }
+        }
+    } else if (action === "3") {
+        let newFees = prompt(`Enter new Total Fees:`, currentFees);
+        if (newFees !== null && !isNaN(parseFloat(newFees)) && parseFloat(newFees) >= 0) {
+            let newPaid = prompt(`Enter new Paid Amount:`, currentPaid);
+            if (newPaid !== null && !isNaN(parseFloat(newPaid)) && parseFloat(newPaid) >= 0) {
+                let result = await updateDB('students', id, { total_fees: parseFloat(newFees), fees_paid: parseFloat(newPaid) });
+                if (result) {
+                    updateCacheStudent({ id, total_fees: parseFloat(newFees), fees_paid: parseFloat(newPaid) });
+                    renderStudents();
+                    showToast(`✅ Fees updated: Total ${formatMoney(parseFloat(newFees))}, Paid ${formatMoney(parseFloat(newPaid))}`);
+                }
+            }
         }
     }
 };
@@ -878,6 +1064,10 @@ window.quickFeePayment = async (id, term, year) => {
 
 // ============= DELETE STUDENT =============
 window.deleteStudent = async (id) => {
+    if (currentUser?.role !== 'admin') {
+        showToast('Access Denied. Only Admin can delete students.', true);
+        return;
+    }
     if (confirm('Delete this student?')) {
         let marks = getMarks(), attendance = getAttendance(), payments = getPayments();
         let studentMarks = marks.filter(m => m.student_id === id);
@@ -898,6 +1088,10 @@ window.deleteStudent = async (id) => {
 
 // ============= EDIT STUDENT =============
 window.editStudent = async (id) => {
+    if (currentUser?.role !== 'admin') {
+        showToast('Access Denied. Only Admin can edit student details.', true);
+        return;
+    }
     let students = getStudents();
     let s = students.find(st => st.id === id);
     if (!s) return;
@@ -905,24 +1099,39 @@ window.editStudent = async (id) => {
     let photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="photo-upload-preview" id="editPhotoPreview">` : `<div class="photo-upload-preview" id="editPhotoPreview" style="background:#e2e8f0;"><i class="fas fa-user fa-2x" style="color:#666;"></i></div>`;
     modal.innerHTML = `
         <div class="modal-content">
-            <h3 style="font-size:1.1rem;">Edit Student</h3>
+            <h3 style="font-size:1.1rem;">✏️ Edit Student</h3>
             <div style="display:flex; flex-direction:column; gap:8px;">
                 <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
                     <div>${photoHtml}</div>
                     <div><label style="font-size:0.8rem;">Upload Photo</label><input type="file" id="editPhotoUpload" accept="image/*" class="form-control" style="padding:4px;"></div>
                 </div>
-                <div><label style="font-size:0.8rem;">First Name</label><input type="text" id="editFirstName" value="${escapeHtml(s.first_name)}" class="form-control"></div>
-                <div><label style="font-size:0.8rem;">Last Name</label><input type="text" id="editLastName" value="${escapeHtml(s.last_name)}" class="form-control"></div>
-                <div><label style="font-size:0.8rem;">LIN</label><input type="text" id="editLin" value="${s.lin}" class="form-control"></div>
-                <div><label style="font-size:0.8rem;">Payment Code</label><input type="text" id="editPaymentCode" value="${s.payment_code || ''}" class="form-control"></div>
-                <div><label style="font-size:0.8rem;">Class</label><select id="editClass" class="form-control">${CLASS_ORDER.map(c => `<option ${s.class === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
-                <div><label style="font-size:0.8rem;">Parent Name</label><input type="text" id="editParentName" value="${escapeHtml(s.parent_name || '')}" class="form-control"></div>
-                <div><label style="font-size:0.8rem;">Parent WhatsApp</label><input type="text" id="editParentWhatsapp" value="${escapeHtml(s.parent_whatsapp || '')}" class="form-control"></div>
-                <div><label style="font-size:0.8rem;">Total Fees (UGX)</label><input type="number" id="editTotalFees" value="${s.total_fees || 0}" class="form-control"></div>
+                <div class="grid-2cols">
+                    <div><label style="font-size:0.75rem;font-weight:600;">First Name</label><input type="text" id="editFirstName" value="${escapeHtml(s.first_name)}" class="form-control"></div>
+                    <div><label style="font-size:0.75rem;font-weight:600;">Last Name</label><input type="text" id="editLastName" value="${escapeHtml(s.last_name)}" class="form-control"></div>
+                </div>
+                <div class="grid-2cols">
+                    <div><label style="font-size:0.75rem;font-weight:600;">Date of Birth</label><input type="date" id="editDob" value="${s.date_of_birth || ''}" class="form-control"></div>
+                    <div><label style="font-size:0.75rem;font-weight:600;">Gender</label>
+                        <select id="editGender" class="form-control">
+                            <option value="">Select Gender</option>
+                            <option value="Male" ${s.gender === 'Male' ? 'selected' : ''}>Male</option>
+                            <option value="Female" ${s.gender === 'Female' ? 'selected' : ''}>Female</option>
+                        </select>
+                    </div>
+                </div>
+                <div><label style="font-size:0.75rem;font-weight:600;">Address</label><input type="text" id="editAddress" value="${escapeHtml(s.address || '')}" class="form-control"></div>
+                <div class="grid-2cols">
+                    <div><label style="font-size:0.75rem;font-weight:600;">LIN</label><input type="text" id="editLin" value="${s.lin}" class="form-control"></div>
+                    <div><label style="font-size:0.75rem;font-weight:600;">Payment Code</label><input type="text" id="editPaymentCode" value="${s.payment_code || ''}" class="form-control"></div>
+                </div>
+                <div><label style="font-size:0.75rem;font-weight:600;">Class</label><select id="editClass" class="form-control">${CLASS_ORDER.map(c => `<option ${s.class === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+                <div><label style="font-size:0.75rem;font-weight:600;">Parent Name</label><input type="text" id="editParentName" value="${escapeHtml(s.parent_name || '')}" class="form-control"></div>
+                <div><label style="font-size:0.75rem;font-weight:600;">Parent WhatsApp</label><input type="text" id="editParentWhatsapp" value="${escapeHtml(s.parent_whatsapp || '')}" class="form-control"></div>
+                <div><label style="font-size:0.75rem;font-weight:600;">Total Fees (UGX)</label><input type="number" id="editTotalFees" value="${s.total_fees || 0}" class="form-control"></div>
             </div>
             <div class="flex" style="justify-content:flex-end; margin-top:12px;">
-                <button class="btn btn-primary btn-sm" onclick="saveEditStudent('${s.id}')">Update</button>
-                <button class="btn btn-gold btn-sm" onclick="this.closest('.modal').remove()">Cancel</button>
+                <button class="btn btn-primary btn-sm" onclick="saveEditStudent('${s.id}')"><i class="fas fa-save"></i> Update</button>
+                <button class="btn btn-gold btn-sm" onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i> Cancel</button>
             </div>
         </div>`;
     document.body.appendChild(modal);
@@ -940,17 +1149,24 @@ window.editStudent = async (id) => {
 };
 
 window.saveEditStudent = async (id) => {
+    if (currentUser?.role !== 'admin') {
+        showToast('Access Denied. Only Admin can edit student details.', true);
+        return;
+    }
     let photoFile = document.getElementById('editPhotoUpload')?.files[0];
     let photoUrl = '';
     if (photoFile) {
         let btn = document.querySelector('.modal .btn-primary');
-        if (btn) { btn.textContent = 'Uploading...'; btn.disabled = true; }
-        photoUrl = await fileToBase64(photoFile);
+        if (btn) { btn.textContent = 'Compressing...'; btn.disabled = true; }
+        photoUrl = await compressImage(photoFile);
         if (btn) { btn.textContent = 'Update'; btn.disabled = false; }
     }
     let updates = {
         first_name: document.getElementById('editFirstName').value,
         last_name: document.getElementById('editLastName').value,
+        date_of_birth: document.getElementById('editDob').value || null,
+        gender: document.getElementById('editGender').value || null,
+        address: document.getElementById('editAddress').value || null,
         lin: document.getElementById('editLin').value.trim().toUpperCase(),
         payment_code: document.getElementById('editPaymentCode').value.trim().toUpperCase(),
         class: document.getElementById('editClass').value,
@@ -964,28 +1180,46 @@ window.saveEditStudent = async (id) => {
         updateCacheStudent({ id, ...updates });
         document.querySelector('.modal')?.remove();
         renderStudents();
-        showToast('Updated');
+        showToast('✅ Student updated successfully');
     }
 };
 
+// ============= ADD STUDENT MODAL =============
 function showAddStudentModal() {
+    if (currentUser?.role === 'finance') {
+        showToast('Access Denied. Finance cannot add students.', true);
+        return;
+    }
     let modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
-    modal.innerHTML = `<div class="modal-content"><h3 style="font-size:1.1rem;">Add Student</h3>
+    modal.innerHTML = `<div class="modal-content"><h3 style="font-size:1.1rem;">➕ Add New Student</h3>
         <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:6px;">
             <div class="photo-upload-preview" id="newPhotoPreview" style="background:#e2e8f0;"><i class="fas fa-user fa-2x" style="color:#666;"></i></div>
             <div><label style="font-size:0.8rem;">Photo</label><input type="file" id="newPhotoUpload" accept="image/*" class="form-control" style="padding:4px;"></div>
         </div>
-        <input type="text" id="newFirstName" placeholder="First Name" class="form-control">
-        <input type="text" id="newLastName" placeholder="Last Name" class="form-control">
-        <select id="newClass" class="form-control">${CLASS_ORDER.map(c => `<option>${c}</option>`).join('')}</select>
-        <input type="text" id="newLin" placeholder="LIN (auto)" class="form-control">
+        <div class="grid-2cols">
+            <input type="text" id="newFirstName" placeholder="First Name *" class="form-control">
+            <input type="text" id="newLastName" placeholder="Last Name *" class="form-control">
+        </div>
+        <div class="grid-2cols">
+            <input type="date" id="newDob" placeholder="Date of Birth" class="form-control">
+            <select id="newGender" class="form-control">
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+        </div>
+        <input type="text" id="newAddress" placeholder="Home Address" class="form-control">
+        <div class="grid-2cols">
+            <select id="newClass" class="form-control">${CLASS_ORDER.map(c => `<option>${c}</option>`).join('')}</select>
+            <input type="text" id="newLin" placeholder="LIN (auto)" class="form-control">
+        </div>
         <input type="text" id="newPaymentCode" placeholder="Payment Code (optional)" class="form-control">
         <input type="text" id="newParentName" placeholder="Parent Name" class="form-control">
         <input type="text" id="newParentWhatsapp" placeholder="Parent WhatsApp" class="form-control">
         <input type="number" id="newTotalFees" placeholder="Total Fees" class="form-control">
         <div class="flex" style="justify-content:flex-end; margin-top:10px;">
-            <button class="btn btn-primary btn-sm" onclick="saveNewStudent()">Save</button>
-            <button class="btn btn-gold btn-sm" onclick="this.closest('.modal').remove()">Cancel</button>
+            <button class="btn btn-primary btn-sm" onclick="saveNewStudent()"><i class="fas fa-save"></i> Save</button>
+            <button class="btn btn-gold btn-sm" onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i> Cancel</button>
         </div></div>`;
     document.body.appendChild(modal);
     document.getElementById('newPhotoUpload')?.addEventListener('change', function(e) {
@@ -1002,6 +1236,10 @@ function showAddStudentModal() {
 }
 
 window.saveNewStudent = async () => {
+    if (currentUser?.role === 'finance') {
+        showToast('Access Denied. Finance cannot add students.', true);
+        return;
+    }
     let first = document.getElementById('newFirstName').value.trim();
     let last = document.getElementById('newLastName').value.trim();
     if (!first || !last) { showToast('First and Last name required', true); return; }
@@ -1011,8 +1249,8 @@ window.saveNewStudent = async () => {
     let photoUrl = '';
     if (photoFile) {
         let btn = document.querySelector('.modal .btn-primary');
-        if (btn) { btn.textContent = 'Uploading...'; btn.disabled = true; }
-        photoUrl = await fileToBase64(photoFile);
+        if (btn) { btn.textContent = 'Compressing...'; btn.disabled = true; }
+        photoUrl = await compressImage(photoFile);
         if (btn) { btn.textContent = 'Save'; btn.disabled = false; }
     }
     let newStudent = {
@@ -1020,6 +1258,9 @@ window.saveNewStudent = async () => {
         school_id: SCHOOL_ID,
         first_name: first,
         last_name: last,
+        date_of_birth: document.getElementById('newDob').value || null,
+        gender: document.getElementById('newGender').value || null,
+        address: document.getElementById('newAddress').value || null,
         lin: lin,
         payment_code: paymentCode,
         class: document.getElementById('newClass').value,
@@ -1035,18 +1276,38 @@ window.saveNewStudent = async () => {
         updateCacheStudent(newStudent);
         document.querySelector('.modal')?.remove();
         renderStudents();
-        showToast('Student added');
+        showToast('✅ Student added successfully');
     }
 };
 
 // ============= PROMOTE =============
 window.showPromoteModal = () => {
+    if (currentUser?.role === 'finance') {
+        showToast('Access Denied. Finance cannot promote students.', true);
+        return;
+    }
     let modal = document.createElement('div'); modal.className = 'modal'; modal.style.display = 'flex';
-    modal.innerHTML = `<div class="modal-content"><h3>Promote Students</h3>
+    modal.innerHTML = `<div class="modal-content"><h3>📈 Promote Students</h3>
+        <p style="font-size:0.8rem;color:#666;margin-bottom:10px;">Select students to promote. P.7 → Graduated</p>
         <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="promoteSearch" placeholder="Search..."></div>
         <div id="promoteStudentsList" style="max-height:250px;overflow-y:auto;margin:10px 0;"></div>
-        <div class="flex"><label>Promote To:</label><select id="promoteToClass" class="form-control">${CLASS_ORDER.map(c => `<option>${c}</option>`).join('')}</select></div>
-        <div class="flex" style="justify-content:flex-end;"><button class="btn btn-primary btn-sm" onclick="executePromotion()">Promote</button><button class="btn btn-gold btn-sm" onclick="this.closest('.modal').remove()">Cancel</button></div>
+        <div class="flex"><label>Promote To:</label><select id="promoteToClass" class="form-control">
+            ${CLASS_ORDER.map(c => `<option>${c}</option>`).join('')}
+            <option value="Graduated">🎓 Graduated</option>
+        </select></div>
+        <div class="flex" style="justify-content:flex-end;">
+            <button class="btn btn-primary btn-sm" onclick="executePromotion()"><i class="fas fa-arrow-up"></i> Promote</button>
+            <button class="btn btn-gold btn-sm" onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i> Cancel</button>
+        </div>
+        <div style="margin-top:8px;font-size:0.7rem;color:#666;display:flex;gap:8px;flex-wrap:wrap;">
+            <span class="term-badge">💡 P.7 → Graduated</span>
+            <span class="term-badge">P.6 → P.7</span>
+            <span class="term-badge">P.5 → P.6</span>
+            <span class="term-badge">P.4 → P.5</span>
+            <span class="term-badge">P.3 → P.4</span>
+            <span class="term-badge">P.2 → P.3</span>
+            <span class="term-badge">P.1 → P.2</span>
+        </div>
     </div>`;
     document.body.appendChild(modal);
     loadPromoteList();
@@ -1058,27 +1319,42 @@ async function loadPromoteList() {
     let filtered = students.filter(s => !search || `${s.first_name} ${s.last_name}`.toLowerCase().includes(search.toLowerCase()) || s.lin.toLowerCase().includes(search.toLowerCase()));
     let container = document.getElementById('promoteStudentsList');
     if (!container) return;
-    container.innerHTML = `<table><thead><tr><th><input type="checkbox" id="promoteAll"></th><th>Name</th><th>LIN</th><th>Class</th></tr></thead><tbody>${filtered.map(s => `<tr><td><input type="checkbox" class="promote-check" data-id="${s.id}"></td><td>${s.first_name} ${s.last_name}</td><td>${s.lin}</td><td>${s.class}</td></tr>`).join('')}</tbody></table>`;
+    container.innerHTML = `<div class="data-table"><table><thead><tr><th><input type="checkbox" id="promoteAll"></th><th>Photo</th><th>Name</th><th>LIN</th><th>Class</th><th>Gender</th></tr></thead><tbody>${filtered.map(s => `<tr>
+        <td><input type="checkbox" class="promote-check" data-id="${s.id}"></td>
+        <td>${s.photo_url ? `<img src="${s.photo_url}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-circle"></i>`}</td>
+        <td>${s.first_name} ${s.last_name}</td>
+        <td>${s.lin}</td>
+        <td>${s.class}</td>
+        <td>${getGenderBadge(s.gender)}</td>
+    </tr>`).join('')}</tbody></table></div>`;
     document.getElementById('promoteAll')?.addEventListener('change', function() { document.querySelectorAll('.promote-check').forEach(c => c.checked = this.checked); });
     document.getElementById('promoteSearch')?.addEventListener('input', () => debounce('promoteSearch', loadPromoteList, 150));
 }
 
 window.executePromotion = async () => {
+    if (currentUser?.role === 'finance') {
+        showToast('Access Denied. Finance cannot promote students.', true);
+        return;
+    }
     let selected = document.querySelectorAll('.promote-check:checked');
     if (selected.length === 0) { showToast('Select students', true); return; }
     let newClass = document.getElementById('promoteToClass').value;
     let count = 0;
+    let graduated = 0;
     for (let cb of selected) {
         let id = cb.dataset.id;
         let result = await updateDB('students', id, { class: newClass });
         if (result) {
             updateCacheStudent({ id, class: newClass });
             count++;
+            if (newClass === 'Graduated') graduated++;
         }
     }
     renderStudents();
     document.querySelector('.modal')?.remove();
-    showToast(`${count} promoted to ${newClass}`);
+    let msg = `${count} promoted to ${newClass}`;
+    if (graduated > 0) msg += ` (${graduated} graduated 🎓)`;
+    showToast(msg);
 };
 
 // ============= ATTENDANCE =============
@@ -1110,12 +1386,13 @@ async function loadAttendance() {
     }
     let existing = await fetchDB('attendance', `&date=eq.${date}&status=eq.absent&school_id=eq.${SCHOOL_ID}`);
     let absentSet = new Set(existing.map(a => a.student_id));
-    let tbl = `<table><thead><tr><th>Photo</th><th>Student</th><th>LIN</th><th>Mark Absent</th></tr></thead><tbody>`;
+    let tbl = `<div class="data-table"><table><thead><tr><th>Photo</th><th>Student</th><th>LIN</th><th>Gender</th><th>Mark Absent</th></tr></thead><tbody>`;
     for (let s of classStd) {
         let photoHtml = s.photo_url ? `<img src="${s.photo_url}" style="width:35px;height:35px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-circle fa-2x"></i>`;
-        tbl += `<tr><td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td><input type="checkbox" class="absent-cb" data-id="${s.id}" ${absentSet.has(s.id) ? 'checked' : ''}></td></tr>`;
+        let genderBadge = getGenderBadge(s.gender);
+        tbl += `<tr><td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td>${genderBadge}</td><td><input type="checkbox" class="absent-cb" data-id="${s.id}" ${absentSet.has(s.id) ? 'checked' : ''}></td></tr>`;
     }
-    tbl += `</tbody></table>`;
+    tbl += `</tbody></table></div>`;
     document.getElementById('attList').innerHTML = tbl;
 }
 
@@ -1166,10 +1443,11 @@ async function renderMarks() {
         }
         let subs = SUBJECTS_BY_CLASS[cls] || [];
         let relMarks = marks.filter(m => m.term === term && m.exam_type === exam && m.academic_year === year);
-        let grid = `<div class="data-table"><table><thead><tr><th>Student</th><th>Photo</th>${subs.map(s => `<th>${s}</th>`).join('')}</thead><tbody>`;
+        let grid = `<div class="data-table"><table><thead><tr><th>Student</th><th>Photo</th><th>Gender</th>${subs.map(s => `<th>${s}</th>`).join('')}</thead><tbody>`;
         for (let s of classStd) {
             let photoHtml = s.photo_url ? `<img src="${s.photo_url}" style="width:35px;height:35px;border-radius:50%;object-fit:cover;">` : `<i class="fas fa-user-circle fa-2x"></i>`;
-            grid += `<tr><td><strong>${s.first_name} ${s.last_name}</strong><br><small>${s.lin}</small></td><td>${photoHtml}</td>`;
+            let genderBadge = getGenderBadge(s.gender);
+            grid += `<tr><td><strong>${s.first_name} ${s.last_name}</strong><br><small>${s.lin}</small></td><td>${photoHtml}</td><td>${genderBadge}</td>`;
             for (let sub of subs) {
                 let mk = relMarks.find(m => m.student_id === s.id && m.subject === sub);
                 let disabled = (currentUser?.role === 'teacher' && mk && mk.created_at && (new Date() - new Date(mk.created_at)) / 60000 > 1) ? 'disabled' : '';
@@ -1259,10 +1537,13 @@ async function renderReports() {
             classStd = classStd.filter(s => `${s.first_name} ${s.last_name}`.toLowerCase().includes(term) || s.lin.toLowerCase().includes(term));
         }
         selectedStudentIds.clear();
-        document.getElementById('studentList').innerHTML = `<div class="data-table"><table><thead><tr><th><input type="checkbox" id="headerChk"></th><th>Photo</th><th>Name</th><th>LIN</th><th>Payment Code</th><th>Parent</th><th></th></tr></thead><tbody>${classStd.map(s => `<tr>
+        document.getElementById('studentList').innerHTML = `<div class="data-table"><table><thead><tr><th><input type="checkbox" id="headerChk"></th><th>Photo</th><th>Name</th><th>LIN</th><th>Gender</th><th>Payment Code</th><th>Parent</th><th></th></tr></thead><tbody>${classStd.map(s => `<tr>
             <td><input type="checkbox" class="studentChk" data-id="${s.id}"></td>
             <td><div class="student-photo-img">${s.photo_url ? `<img src="${s.photo_url}" class="student-photo-img">` : `<i class="fas fa-user-circle fa-2x"></i>`}</div></td>
-            <td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${s.parent_name || ''}</td>
+            <td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.lin}</td>
+            <td>${getGenderBadge(s.gender)}</td>
+            <td>${s.payment_code || ''}</td>
+            <td>${s.parent_name || ''}</td>
             <td><button class="btn btn-sm btn-gold" onclick="printSingleStudentReport('${s.id}')">Print</button></td>
         `).join('')}</tbody></table></div>`;
         document.getElementById('selectionBar').style.display = 'flex';
@@ -1412,7 +1693,7 @@ async function printReports(ids) {
             <div class="report-header"><h2>PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</h2><p>"With God Everything is Possible"</p><p>Tel: 0756 585035</p></div>
             <h3 style="text-align:center;margin:6px 0;">ACADEMIC REPORT - ${term} ${year}</h3>
             <p style="text-align:center;color:#666;font-size:0.8rem;">${examSelection === 'beginning' ? 'Beginning of Term' : examSelection === 'mid' ? 'Mid Term' : 'End of Term'} Examination</p>
-            <div class="student-info">${photoHtml}<div><p><strong>Name:</strong> ${s.first_name} ${s.last_name}</p><p><strong>LIN:</strong> ${s.lin}</p><p><strong>Payment Code:</strong> ${s.payment_code || ''}</p><p><strong>Class:</strong> ${s.class}</p><p><strong>Parent:</strong> ${s.parent_name || 'N/A'}</p></div></div>
+            <div class="student-info">${photoHtml}<div><p><strong>Name:</strong> ${s.first_name} ${s.last_name}</p><p><strong>LIN:</strong> ${s.lin}</p><p><strong>Payment Code:</strong> ${s.payment_code || ''}</p><p><strong>Class:</strong> ${s.class}</p><p><strong>Gender:</strong> ${s.gender || 'N/A'}</p><p><strong>DOB:</strong> ${s.date_of_birth || 'N/A'}</p><p><strong>Address:</strong> ${s.address || 'N/A'}</p><p><strong>Parent:</strong> ${s.parent_name || 'N/A'}</p></div></div>
             <table class="grade-table"><thead><tr><th>SUBJECT</th>${exams.map(e => `<th>${e}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
             ${specialInfo}
             <div class="comment-section">
@@ -1465,7 +1746,7 @@ async function loadAbsentList() {
     grid.innerHTML = `<div style="margin-bottom:10px;"><span style="background:#dc2626;color:white;padding:2px 12px;border-radius:30px;">${absentStudents.length} absent</span></div>`;
     for (let s of absentStudents) {
         let photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="absent-photo" style="width:45px;height:45px;border-radius:50%;object-fit:cover;">` : `<div class="absent-photo"><i class="fas fa-user-graduate fa-2x"></i></div>`;
-        grid.innerHTML += `<div class="absent-card">${photoHtml}<div style="flex:1;"><p><strong>${s.first_name} ${s.last_name}</strong></p><p style="font-size:0.75rem;">LIN: ${s.lin} | ${s.class}</p><p style="font-size:0.75rem;">Parent: ${s.parent_name || 'N/A'}</p></div><button class="btn btn-sm btn-whatsapp" onclick="sendAbsentParentNotify('${s.id}','${date}')"><i class="fab fa-whatsapp"></i> Notify</button></div>`;
+        grid.innerHTML += `<div class="absent-card">${photoHtml}<div style="flex:1;"><p><strong>${s.first_name} ${s.last_name}</strong></p><p style="font-size:0.75rem;">LIN: ${s.lin} | ${s.class} | ${getGenderBadge(s.gender)}</p><p style="font-size:0.75rem;">Parent: ${s.parent_name || 'N/A'}</p></div><button class="btn btn-sm btn-whatsapp" onclick="sendAbsentParentNotify('${s.id}','${date}')"><i class="fab fa-whatsapp"></i> Notify</button></div>`;
     }
 }
 
@@ -1494,7 +1775,7 @@ function printAbsentList() {
     let win = window.open('', '_blank');
     win.document.write(`<html><head><title>Absent Students - ${date}</title><style>
         body{font-family:Arial;padding:20px;}.absent-card{background:#fef2f2;border-radius:12px;padding:12px;display:flex;gap:12px;align-items:center;border-left:4px solid #dc2626;margin-bottom:8px;}.absent-photo{width:45px;height:45px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;}h2{color:#003366;}
-    </style></head><body><h2>PROGRESSIVE MOTHERS SCHOOL - ABSENT STUDENTS</h2><p>Date: ${date}</p>${container.innerHTML}<p style="margin-top:20px;font-size:10px;">Generated ${formatUgandaDateTime(getUgandaTime())}</p></body></html>`);
+    </style></head><body><h2>PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL - ABSENT STUDENTS</h2><p>Date: ${date}</p>${container.innerHTML}<p style="margin-top:20px;font-size:10px;">Generated ${formatUgandaDateTime(getUgandaTime())}</p></body></html>`);
     win.document.close();
     win.print();
 }
@@ -1518,26 +1799,42 @@ async function renderMainApp() {
         <div class="role-badge">${currentUser.role.toUpperCase()} <button class="logout-btn" onclick="logout()">Exit</button></div>
         <div class="app-container">
             <div class="school-header">
-                <div class="school-name">🏫 PROGRESSIVE MOTHERS</div>
+                <div class="school-name">🏫 PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</div>
                 <div class="school-address">Gayaza-Kijabijjo, Kampala | 📞 ${SCHOOL_CONTACTS.join(', ')}</div>
                 <div class="datetime-row">
-                    <div><i class="far fa-calendar-alt"></i> ${now.toLocaleDateString('en-UG', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</div>
-                    <div><i class="far fa-clock"></i> <span id="liveTime">${now.toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit', hour12: true })} (EAT)</span></div>
+                    <div><i class="far fa-calendar-alt"></i> <span id="liveDate">${formatUgandaDate(now)}</span></div>
+                    <div><i class="far fa-clock"></i> <span id="liveClock" class="live-clock">${formatUgandaTime(now)} (EAT)</span></div>
                     <div class="global-search"><i class="fas fa-search"></i><input type="text" id="globalSearchInput" placeholder="Search..."></div>
                 </div>
-                <div style="margin-top:8px;display:flex;justify-content:flex-end;">
-                    <span class="supabase-status ${statusClass}">${supabaseConnected ? '✅ Supabase Connected' : '⚠️ Supabase Error - Using Local Data'}</span>
+                <div style="margin-top:8px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                    <span class="supabase-status ${statusClass}">${supabaseConnected ? '✅ Connected' : '⚠️ Error'}</span>
+                    <span style="font-size:0.65rem;color:rgba(255,255,255,0.7);">${getStudents().length} students loaded</span>
+                </div>
+                <div class="help-footer">
+                    <span><i class="fas fa-headset"></i> <strong>Need Help?</strong> Contact:</span>
+                    <span><i class="fas fa-user"></i> Eudes Media</span>
+                    <span><i class="fas fa-phone"></i> ${EUDES_MEDIA[0]}</span>
+                    <span><i class="fas fa-phone"></i> ${EUDES_MEDIA[1]}</span>
+                    <span><i class="fas fa-envelope"></i> eudesmedia@gmail.com</span>
                 </div>
             </div>
             <div class="action-buttons">${tabs.map(t => `<button class="action-btn ${activeTab === t ? 'active' : ''}" data-tab="${t}"><i class="fas ${t === 'dashboard' ? 'fa-tachometer-alt' : t === 'students' ? 'fa-user-graduate' : t === 'attendance' ? 'fa-calendar-check' : t === 'marks' ? 'fa-chart-line' : t === 'fees' ? 'fa-coins' : t === 'reports' ? 'fa-print' : 'fa-user-clock'}"></i> ${t.charAt(0).toUpperCase() + t.slice(1)}</button>`).join('')}</div>
             <div id="tabContent"></div>
         </div>`;
-    setInterval(() => { let t = document.getElementById('liveTime'); if (t) t.innerText = getUgandaTime().toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit', hour12: true }) + ' (EAT)'; }, 1000);
+    
+    // Start the live clock
+    startClock();
+    
     let search = document.getElementById('globalSearchInput');
     if (search) {
         search.addEventListener('input', (e) => {
             globalSearch = e.target.value;
             if (activeTab === 'students') debounce('globalSearch', () => renderStudents(), 150);
+            else if (activeTab === 'fees') debounce('globalSearch', () => renderFees(), 150);
+            else if (activeTab === 'attendance') debounce('globalSearch', () => renderAttendance(), 150);
+            else if (activeTab === 'marks') debounce('globalSearch', () => renderMarks(), 150);
+            else if (activeTab === 'reports') debounce('globalSearch', () => renderReports(), 150);
+            else if (activeTab === 'absentees') debounce('globalSearch', () => renderAbsentees(), 150);
         });
     }
     document.querySelectorAll('.action-btn').forEach(btn => { btn.onclick = () => { activeTab = btn.dataset.tab; renderMainApp(); }; });
@@ -1552,10 +1849,17 @@ async function renderMainApp() {
 }
 
 function switchTab(tab) { activeTab = tab; renderMainApp(); }
-function logout() { currentUser = null; sessionStorage.removeItem('progressive_user'); renderLogin(); }
+function logout() { 
+    currentUser = null; 
+    sessionStorage.removeItem('progressive_user'); 
+    if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
+    renderLogin(); 
+}
+
 function renderLogin() {
     document.getElementById('app').innerHTML = `<div class="login-container"><i class="fas fa-school fa-3x" style="color:#003366;"></i><h2>Progressive Mothers</h2><p>"With God Everything is Possible"</p><input type="text" id="username" placeholder="Username"><input type="password" id="password" placeholder="Password"><button onclick="doLogin()">Login</button></div>`;
 }
+
 function doLogin() {
     let u = document.getElementById('username').value, p = document.getElementById('password').value;
     if (u === 'admin' && p === 'admin123') { currentUser = { username: 'admin', role: 'admin' }; sessionStorage.setItem('progressive_user', JSON.stringify(currentUser)); renderMainApp(); }
@@ -1563,6 +1867,7 @@ function doLogin() {
     else if (u === 'finance' && p === 'finance123') { currentUser = { username: 'finance', role: 'finance' }; sessionStorage.setItem('progressive_user', JSON.stringify(currentUser)); renderMainApp(); }
     else alert('Invalid credentials');
 }
+
 function init() { 
     let saved = sessionStorage.getItem('progressive_user'); 
     if (saved) { 
