@@ -26,10 +26,13 @@
         .action-btn.active { background: #003366; color: white; }
         .btn { background: #003366; color: white; padding: 6px 14px; border: none; border-radius: 40px; cursor: pointer; font-weight: 500; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 5px; transition: 0.15s; }
         .btn-gold { background: #D4A017; color: #003366; }
+        .btn-green { background: #10b981; color: white; }
         .btn-red { background: #dc2626; color: white; }
         .btn-sm { padding: 3px 10px; font-size: 0.7rem; border-radius: 20px; }
         .btn-whatsapp { background: #25D366; color: white; }
         .btn-outline { background: transparent; border: 1px solid #003366; color: #003366; }
+        .btn-excel { background: #217346; color: white; }
+        .btn-excel:hover { opacity: 0.9; }
         .card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
         .flex { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 14px; }
         select, input { padding: 8px 14px; border-radius: 30px; border: 1px solid #cbd5e1; font-size: 0.85rem; background: white; min-width: 100px; }
@@ -72,11 +75,14 @@
         .help-footer { background: rgba(255,255,255,0.08); padding: 6px 14px; border-radius: 12px; margin-top: 8px; display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 0.65rem; color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.1); }
         .help-footer i { color: #D4A017; }
         .help-footer strong { color: #D4A017; }
-        .live-clock { font-weight: 600; color: #D4A017; min-width: 120px; display: inline-block; }
         .grid-2cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .gender-badge { padding: 2px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 600; }
         .gender-male { background: #dbeafe; color: #1e40af; }
         .gender-female { background: #fce7f3; color: #9d174d; }
+        .print-btn { background: #D4A017; color: #003366; }
+        .print-btn:hover { opacity: 0.9; }
+        .excel-btn { background: #217346; color: white; }
+        .excel-btn:hover { opacity: 0.9; }
         @media (max-width: 640px) {
             .school-name { font-size: 1rem; }
             .datetime-row { flex-direction: column; align-items: stretch; gap: 4px; }
@@ -109,6 +115,11 @@
         .term-badge { background: #D4A017; color: #003366; padding: 2px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
         .supabase-status { background: #10b981; color: white; padding: 2px 12px; border-radius: 20px; font-size: 0.6rem; display: inline-block; }
         .supabase-status.error { background: #ef4444; }
+        .whatsapp-link { color: #25D366; text-decoration: none; }
+        .whatsapp-link:hover { text-decoration: underline; }
+        .print-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+        .print-table th { background: #003366; color: white; padding: 8px; text-align: left; }
+        .print-table td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; }
     </style>
 </head>
 <body>
@@ -143,24 +154,13 @@ let filterTerm = 'Term I';
 let filterYear = CURRENT_ACADEMIC_YEAR;
 let debounceTimers = {};
 let supabaseConnected = false;
-let clockInterval = null;
 
 // ============================================================
-// UGANDA TIME - FIXED (UTC+3)
+// UGANDA DATE FORMAT (No Time)
 // ============================================================
-function getUgandaTime() {
+function getUgandaDate() {
     const now = new Date();
-    // Uganda is UTC+3 (East Africa Time)
     return new Date(now.getTime() + (3 * 60 * 60 * 1000));
-}
-
-function formatUgandaTime(date) {
-    return date.toLocaleTimeString('en-UG', { 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit',
-        hour12: true
-    });
 }
 
 function formatUgandaDate(date) {
@@ -174,9 +174,8 @@ function formatUgandaDate(date) {
 
 function formatUgandaDateTime(date) {
     const d = new Date(date);
-    return d.toLocaleString('en-UG', { 
-        year: 'numeric', month: 'short', day: 'numeric', 
-        hour: '2-digit', minute: '2-digit', hour12: true
+    return d.toLocaleDateString('en-UG', { 
+        year: 'numeric', month: 'short', day: 'numeric'
     });
 }
 
@@ -257,30 +256,6 @@ const ROLE_PERMS = {
 function debounce(key, fn, delay = 150) {
     clearTimeout(debounceTimers[key]);
     debounceTimers[key] = setTimeout(fn, delay);
-}
-
-// ============================================================
-// LIVE CLOCK - CORRECT UGANDA TIME
-// ============================================================
-function startClock() {
-    if (clockInterval) {
-        clearInterval(clockInterval);
-        clockInterval = null;
-    }
-    updateClock();
-    clockInterval = setInterval(updateClock, 1000);
-}
-
-function updateClock() {
-    const now = getUgandaTime();
-    const timeStr = formatUgandaTime(now);
-    const dateStr = formatUgandaDate(now);
-    
-    const clockEl = document.getElementById('liveClock');
-    if (clockEl) clockEl.textContent = timeStr + ' (EAT)';
-    
-    const dateEl = document.getElementById('liveDate');
-    if (dateEl) dateEl.textContent = dateStr;
 }
 
 // ============================================================
@@ -490,6 +465,294 @@ function getStudentPhoto(student) {
     return `<div class="student-photo-img"><i class="fas fa-user-graduate"></i></div>`;
 }
 
+// ============================================================
+// EXPORT TO EXCEL
+// ============================================================
+function exportToExcel(data, filename, headers) {
+    if (!data || data.length === 0) {
+        showToast('No data to export', true);
+        return;
+    }
+    
+    let csv = headers.join(',') + '\n';
+    for (let row of data) {
+        let rowData = [];
+        for (let key of Object.keys(row)) {
+            let val = row[key] || '';
+            if (typeof val === 'string' && val.includes(',')) {
+                val = '"' + val + '"';
+            }
+            rowData.push(val);
+        }
+        csv += rowData.join(',') + '\n';
+    }
+    
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename + '.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast('✅ Exported successfully to Excel!');
+}
+
+// ============================================================
+// EXPORT CLASS LIST TO EXCEL
+// ============================================================
+function exportClassListToExcel(cls) {
+    let students = getStudents();
+    let classStudents = students.filter(s => s.class === cls);
+    if (classStudents.length === 0) {
+        showToast('No students in this class', true);
+        return;
+    }
+    
+    let data = classStudents.map(s => ({
+        'Name': s.first_name + ' ' + s.last_name,
+        'LIN': s.lin,
+        'Class': s.class,
+        'Gender': s.gender || '',
+        'DOB': s.date_of_birth || '',
+        'Address': s.address || '',
+        'Parent': s.parent_name || '',
+        'WhatsApp': s.parent_whatsapp || '',
+        'Payment Code': s.payment_code || '',
+        'Total Fees': s.total_fees || 0,
+        'Fees Paid': s.fees_paid || 0
+    }));
+    
+    let headers = ['Name', 'LIN', 'Class', 'Gender', 'DOB', 'Address', 'Parent', 'WhatsApp', 'Payment Code', 'Total Fees', 'Fees Paid'];
+    exportToExcel(data, cls + '_Students_List', headers);
+}
+
+// ============================================================
+// EXPORT ALL STUDENTS TO EXCEL
+// ============================================================
+function exportAllStudentsToExcel() {
+    let students = getStudents();
+    if (students.length === 0) {
+        showToast('No students to export', true);
+        return;
+    }
+    
+    let data = students.map(s => ({
+        'Name': s.first_name + ' ' + s.last_name,
+        'LIN': s.lin,
+        'Class': s.class,
+        'Gender': s.gender || '',
+        'DOB': s.date_of_birth || '',
+        'Address': s.address || '',
+        'Parent': s.parent_name || '',
+        'WhatsApp': s.parent_whatsapp || '',
+        'Payment Code': s.payment_code || '',
+        'Total Fees': s.total_fees || 0,
+        'Fees Paid': s.fees_paid || 0
+    }));
+    
+    let headers = ['Name', 'LIN', 'Class', 'Gender', 'DOB', 'Address', 'Parent', 'WhatsApp', 'Payment Code', 'Total Fees', 'Fees Paid'];
+    exportToExcel(data, 'All_Students_List', headers);
+}
+
+// ============================================================
+// PRINT CLASS LIST
+// ============================================================
+function printClassList(cls) {
+    let students = getStudents();
+    let classStudents = students.filter(s => s.class === cls);
+    if (classStudents.length === 0) {
+        showToast('No students in this class', true);
+        return;
+    }
+    
+    let win = window.open('', '_blank');
+    let today = formatUgandaDate(getUgandaDate());
+    
+    let html = `
+    <html>
+    <head>
+        <title>${cls} - Student List</title>
+        <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h1 { color: #003366; text-align: center; }
+            h2 { text-align: center; color: #D4A017; }
+            .school-info { text-align: center; margin-bottom: 20px; }
+            .school-info p { margin: 2px 0; color: #666; }
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            th { background: #003366; color: white; padding: 8px; text-align: left; font-size: 11px; }
+            td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 11px; }
+            .footer { text-align: center; margin-top: 20px; font-size: 10px; color: #666; }
+            @media print {
+                body { padding: 10px; }
+                .no-print { display: none; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="school-info">
+            <h1>🏫 PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</h1>
+            <p>Gayaza-Kijabijjo, Kampala | Tel: 0756 585035</p>
+            <h2>${cls} - STUDENT LIST</h2>
+            <p>Generated on: ${today}</p>
+            <p><strong>Total Students:</strong> ${classStudents.length}</p>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>LIN</th>
+                    <th>Gender</th>
+                    <th>DOB</th>
+                    <th>Parent</th>
+                    <th>WhatsApp</th>
+                    <th>Payment Code</th>
+                </tr>
+            </thead>
+            <tbody>`;
+    
+    classStudents.forEach((s, idx) => {
+        html += `
+                <tr>
+                    <td>${idx + 1}</td>
+                    <td>${s.first_name} ${s.last_name}</td>
+                    <td>${s.lin}</td>
+                    <td>${s.gender || ''}</td>
+                    <td>${s.date_of_birth || ''}</td>
+                    <td>${s.parent_name || ''}</td>
+                    <td>${s.parent_whatsapp || ''}</td>
+                    <td>${s.payment_code || ''}</td>
+                </tr>`;
+    });
+    
+    html += `
+            </tbody>
+        </table>
+        <div class="footer">
+            <p>Generated from Progressive Mothers School Management System</p>
+            <p>Printed on ${today}</p>
+        </div>
+        <div class="no-print" style="text-align:center;margin-top:20px;">
+            <button onclick="window.print()" style="padding:10px 30px;background:#003366;color:white;border:none;border-radius:30px;cursor:pointer;font-weight:bold;">🖨️ Print</button>
+            <button onclick="window.close()" style="padding:10px 30px;background:#dc2626;color:white;border:none;border-radius:30px;cursor:pointer;font-weight:bold;margin-left:10px;">Close</button>
+        </div>
+    </body>
+    </html>`;
+    
+    win.document.write(html);
+    win.document.close();
+}
+
+// ============================================================
+// PRINT ALL CLASSES
+// ============================================================
+function printAllClasses() {
+    let students = getStudents();
+    if (students.length === 0) {
+        showToast('No students to print', true);
+        return;
+    }
+    
+    let win = window.open('', '_blank');
+    let today = formatUgandaDate(getUgandaDate());
+    
+    let html = `
+    <html>
+    <head>
+        <title>All Students - Full List</title>
+        <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h1 { color: #003366; text-align: center; }
+            h2 { text-align: center; color: #D4A017; }
+            .school-info { text-align: center; margin-bottom: 20px; }
+            .school-info p { margin: 2px 0; color: #666; }
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            th { background: #003366; color: white; padding: 8px; text-align: left; font-size: 10px; }
+            td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; font-size: 10px; }
+            .class-header { background: #D4A017; color: #003366; font-weight: bold; padding: 6px; }
+            .footer { text-align: center; margin-top: 20px; font-size: 10px; color: #666; }
+            .total-row { background: #f0f4f8; font-weight: bold; }
+            @media print {
+                body { padding: 10px; }
+                .no-print { display: none; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="school-info">
+            <h1>🏫 PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</h1>
+            <p>Gayaza-Kijabijjo, Kampala | Tel: 0756 585035</p>
+            <h2>COMPLETE STUDENT REGISTER</h2>
+            <p>Generated on: ${today}</p>
+            <p><strong>Total Students:</strong> ${students.length}</p>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>LIN</th>
+                    <th>Class</th>
+                    <th>Gender</th>
+                    <th>DOB</th>
+                    <th>Parent</th>
+                    <th>WhatsApp</th>
+                    <th>Payment Code</th>
+                </tr>
+            </thead>
+            <tbody>`;
+    
+    let count = 0;
+    for (let cls of CLASS_ORDER) {
+        let classStudents = students.filter(s => s.class === cls);
+        if (classStudents.length > 0) {
+            html += `
+                <tr>
+                    <td colspan="9" class="class-header">📚 ${cls} (${classStudents.length} students)</td>
+                </tr>`;
+            classStudents.forEach((s) => {
+                count++;
+                html += `
+                <tr>
+                    <td>${count}</td>
+                    <td>${s.first_name} ${s.last_name}</td>
+                    <td>${s.lin}</td>
+                    <td>${s.class}</td>
+                    <td>${s.gender || ''}</td>
+                    <td>${s.date_of_birth || ''}</td>
+                    <td>${s.parent_name || ''}</td>
+                    <td>${s.parent_whatsapp || ''}</td>
+                    <td>${s.payment_code || ''}</td>
+                </tr>`;
+            });
+        }
+    }
+    
+    html += `
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="9" style="text-align:center;">Total Students: ${students.length}</td>
+                </tr>
+            </tfoot>
+        </table>
+        <div class="footer">
+            <p>Generated from Progressive Mothers School Management System</p>
+            <p>Printed on ${today}</p>
+        </div>
+        <div class="no-print" style="text-align:center;margin-top:20px;">
+            <button onclick="window.print()" style="padding:10px 30px;background:#003366;color:white;border:none;border-radius:30px;cursor:pointer;font-weight:bold;">🖨️ Print</button>
+            <button onclick="window.close()" style="padding:10px 30px;background:#dc2626;color:white;border:none;border-radius:30px;cursor:pointer;font-weight:bold;margin-left:10px;">Close</button>
+        </div>
+    </body>
+    </html>`;
+    
+    win.document.write(html);
+    win.document.close();
+}
+
 // ============= DASHBOARD =============
 async function renderDashboard() {
     let students = getStudents(), payments = getPayments(), attendance = getAttendance();
@@ -547,6 +810,7 @@ async function renderStudents() {
     let canEditDelete = currentUser?.role === 'admin';
     let canEditFees = currentUser?.role === 'admin' || currentUser?.role === 'finance';
     let viewFinance = currentUser?.role === 'admin' || currentUser?.role === 'finance';
+    let isAdmin = currentUser?.role === 'admin';
     
     let filtered = students.filter(s => {
         if (!globalSearch) return true;
@@ -562,6 +826,8 @@ async function renderStudents() {
                (s.date_of_birth || '').includes(term);
     });
     
+    let classOptions = CLASS_ORDER.map(c => `<option value="${c}">${c}</option>`).join('');
+    
     document.getElementById('tabContent').innerHTML = `
         <div class="card">
             <div class="flex" style="justify-content: space-between; align-items: center;">
@@ -572,8 +838,26 @@ async function renderStudents() {
                     ${canAdd ? `<button class="btn btn-primary btn-sm" onclick="showAddStudentModal()"><i class="fas fa-plus"></i> Add Student</button>` : ''}
                 </div>
             </div>
+            <div class="flex" style="margin-bottom:10px;">
+                <div style="flex:1;min-width:150px;">
+                    <label style="font-size:0.7rem;font-weight:600;display:block;margin-bottom:2px;">Export Options</label>
+                    <button class="btn btn-excel btn-sm" onclick="exportAllStudentsToExcel()"><i class="fas fa-file-excel"></i> Export All to Excel</button>
+                    <button class="btn btn-gold btn-sm" onclick="printAllClasses()"><i class="fas fa-print"></i> Print All Classes</button>
+                </div>
+                <div style="flex:1;min-width:150px;">
+                    <label style="font-size:0.7rem;font-weight:600;display:block;margin-bottom:2px;">Print Class List</label>
+                    <div class="flex" style="margin-bottom:0;">
+                        <select id="printClassSelect" class="form-control" style="min-width:100px;">
+                            <option value="">Select Class</option>
+                            ${classOptions}
+                        </select>
+                        <button class="btn btn-gold btn-sm" onclick="printSelectedClass()"><i class="fas fa-print"></i> Print</button>
+                        <button class="btn btn-excel btn-sm" onclick="exportSelectedClass()"><i class="fas fa-file-excel"></i> Excel</button>
+                    </div>
+                </div>
+            </div>
             <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="studentSearch" placeholder="Search name, LIN, class, parent, gender, address..." value="${escapeHtml(globalSearch)}"></div>
-            <div class="data-table"><table><thead><tr><th>Photo</th><th>Name</th><th>DOB</th><th>Gender</th><th>Address</th><th>Class</th><th>LIN</th><th>Payment Code</th>${viewFinance ? '<th>Total</th><th>Paid</th><th>Balance</th>' : ''}<th>Parent</th><th>Actions</th></tr></thead><tbody id="studentsBody"></tbody></table></div>
+            <div class="data-table"><table><thead><tr><th>Photo</th><th>Name</th><th>DOB</th><th>Gender</th><th>Address</th><th>Class</th><th>LIN</th><th>Payment Code</th>${viewFinance ? '<th>Total</th><th>Paid</th><th>Balance</th>' : ''}<th>Parent</th><th>WhatsApp</th><th>Actions</th></tr></thead><tbody id="studentsBody"></tbody></table></div>
         </div>`;
     
     let searchInput = document.getElementById('studentSearch');
@@ -587,7 +871,7 @@ async function renderStudents() {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:20px;color:#666;">No students found. Click Refresh to load data.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;padding:20px;color:#666;">No students found. Click Refresh to load data.</td></tr>';
         return;
     }
     for (let s of filtered) {
@@ -605,12 +889,25 @@ async function renderStudents() {
         if (canEditFees) {
             actions += `<button class="btn btn-sm btn-gold" onclick="editStudentFees('${s.id}')"><i class="fas fa-coins"></i> Edit Fees</button>`;
         }
+        let whatsappLink = s.parent_whatsapp ? `<a href="#" onclick="sendWhatsApp('${s.parent_whatsapp}','Hello ${s.parent_name}, this is a message from Progressive Mothers School.')" class="whatsapp-link"><i class="fab fa-whatsapp"></i> ${s.parent_whatsapp}</a>` : '';
         if (viewFinance) {
-            row.innerHTML = `<td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.date_of_birth || ''}</td><td>${genderBadge}</td><td>${escapeHtml(s.address || '')}</td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td>${escapeHtml(s.parent_name || '')}</td><td>${actions}</td>`;
+            row.innerHTML = `<td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.date_of_birth || ''}</td><td>${genderBadge}</td><td>${escapeHtml(s.address || '')}</td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${formatMoney(s.total_fees || 0)}</td><td class="paid">${formatMoney(paid)}</td><td class="${bal > 0 ? 'debt' : ''}">${formatMoney(bal)}</td><td>${escapeHtml(s.parent_name || '')}</td><td>${whatsappLink}</td><td>${actions}</td>`;
         } else {
-            row.innerHTML = `<td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.date_of_birth || ''}</td><td>${genderBadge}</td><td>${escapeHtml(s.address || '')}</td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${escapeHtml(s.parent_name || '')}</td><td>${actions}</td>`;
+            row.innerHTML = `<td>${photoHtml}</td><td><strong>${s.first_name} ${s.last_name}</strong></td><td>${s.date_of_birth || ''}</td><td>${genderBadge}</td><td>${escapeHtml(s.address || '')}</td><td>${s.class}</td><td>${s.lin}</td><td>${s.payment_code || ''}</td><td>${escapeHtml(s.parent_name || '')}</td><td>${whatsappLink}</td><td>${actions}</td>`;
         }
     }
+}
+
+function printSelectedClass() {
+    let cls = document.getElementById('printClassSelect').value;
+    if (!cls) { showToast('Please select a class', true); return; }
+    printClassList(cls);
+}
+
+function exportSelectedClass() {
+    let cls = document.getElementById('printClassSelect').value;
+    if (!cls) { showToast('Please select a class', true); return; }
+    exportClassListToExcel(cls);
 }
 
 // ============= STUDENT FINANCIAL HISTORY =============
@@ -644,6 +941,8 @@ window.showStudentFinancialHistory = (studentId) => {
                 <div><strong>Gender:</strong> ${student.gender || 'N/A'}</div>
                 <div><strong>DOB:</strong> ${student.date_of_birth || 'N/A'}</div>
                 <div><strong>Address:</strong> ${student.address || 'N/A'}</div>
+                <div><strong>Parent:</strong> ${student.parent_name || 'N/A'}</div>
+                <div><strong>WhatsApp:</strong> ${student.parent_whatsapp || 'N/A'}</div>
             </div>
             <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
                 <div style="background:#eef2ff; padding:12px 16px; border-radius:12px; flex:1; text-align:center;"><div style="font-weight:bold;">${formatMoney(student.total_fees || 0)}</div><div style="font-size:0.7rem;">Total Fees</div></div>
@@ -656,7 +955,7 @@ window.showStudentFinancialHistory = (studentId) => {
                     let list = groupedPayments[key];
                     let total = list.reduce((a,b) => a + (b.amount || 0), 0);
                     return `<div style="margin-bottom:12px;"><div style="background:#003366;color:white;padding:4px 12px;border-radius:10px;display:flex;justify-content:space-between;font-size:0.8rem;"><strong>${key}</strong><span>${formatMoney(total)}</span></div>
-                    <table class="history-table"><thead><tr><th>Date & Time</th><th>Amount</th><th>Method</th><th>Receipt</th></tr></thead><tbody>
+                    <table class="history-table"><thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Receipt</th></tr></thead><tbody>
                     ${list.map(p => `<tr><td>${formatUgandaDateTime(p.payment_date)}</td><td class="paid">${formatMoney(p.amount)}</td><td>${getPaymentMethodBadge(p.payment_method)}</td><td>${p.receipt_number || 'N/A'}</td></tr>`).join('')}
                     </tbody></table></div>`;
                 }).join('')}
@@ -684,6 +983,8 @@ window.printStudentFinancialHistory = (studentId) => {
             <div><strong>Gender:</strong> ${student.gender || 'N/A'}</div>
             <div><strong>DOB:</strong> ${student.date_of_birth || 'N/A'}</div>
             <div><strong>Address:</strong> ${student.address || 'N/A'}</div>
+            <div><strong>Parent:</strong> ${student.parent_name || 'N/A'}</div>
+            <div><strong>WhatsApp:</strong> ${student.parent_whatsapp || 'N/A'}</div>
         </div>
         <div style="display:flex;gap:15px;flex-wrap:wrap;margin-bottom:12px;">
             <div><strong>Total Fees:</strong> ${formatMoney(student.total_fees || 0)}</div>
@@ -691,10 +992,10 @@ window.printStudentFinancialHistory = (studentId) => {
             <div><strong>Balance:</strong> ${formatMoney(balance)}</div>
         </div>
         ${studentPayments.length === 0 ? '<p>No payment records</p>' : `
-        <table><thead><tr><th>Date & Time</th><th>Amount</th><th>Method</th><th>Receipt No</th><th>Term</th><th>Year</th></tr></thead><tbody>
+        <table><thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Receipt No</th><th>Term</th><th>Year</th></tr></thead><tbody>
         ${studentPayments.map(p => `<tr><td>${formatUgandaDateTime(p.payment_date)}</td><td class="paid">${formatMoney(p.amount)}</td><td><span class="${p.payment_method === 'Cash' ? 'method-cash' : p.payment_method === 'Mobile Money' ? 'method-mobile' : p.payment_method === 'Bank Transfer' ? 'method-bank' : 'method-schoolpay'}">${p.payment_method || 'Cash'}</span></td><td>${p.receipt_number || 'N/A'}</td><td>${p.term || 'Term I'}</td><td>${p.academic_year || CURRENT_ACADEMIC_YEAR}</td></tr>`).join('')}
         </tbody></table>`}
-        <p style="margin-top:20px;font-size:10px;">Generated on ${formatUgandaDateTime(getUgandaTime())}</p>
+        <p style="margin-top:20px;font-size:10px;">Generated on ${formatUgandaDateTime(getUgandaDate())}</p>
     </body></html>`);
     win.document.close();
     win.print();
@@ -751,7 +1052,7 @@ async function renderFees() {
             <button class="btn btn-sm btn-primary" id="applyHistoryFilter">Filter</button>
             <button class="btn btn-sm btn-gold" id="printHistoryBtn"><i class="fas fa-print"></i> Print</button>
         </div></div>
-        <div class="data-table"><table class="history-table"><thead><tr><th>Date & Time</th><th>Student</th><th>LIN</th><th>Class</th><th>Amount</th><th>Method</th><th>Receipt</th><th>Term</th><th>Year</th></tr></thead><tbody id="historyBody"></tbody></table></div></div>
+        <div class="data-table"><table class="history-table"><thead><tr><th>Date</th><th>Student</th><th>LIN</th><th>Class</th><th>Amount</th><th>Method</th><th>Receipt</th><th>Term</th><th>Year</th></tr></thead><tbody id="historyBody"></tbody></table></div></div>
     `;
     
     document.getElementById('updateClassSummary')?.addEventListener('click', () => renderClassSummary());
@@ -861,7 +1162,7 @@ function printClassSummary() {
     let win = window.open('', '_blank');
     win.document.write(`<html><head><title>Class Summary - ${term} ${year}</title>
         <style>body{font-family:Arial;padding:20px;}h1{color:#003366;}.summary-card{background:#f8fafc;padding:12px;border-radius:12px;margin-bottom:10px;border-left:4px solid #003366;}.stat-row{display:flex;gap:20px;flex-wrap:wrap;margin-top:6px;}.debt{color:#dc2626;font-weight:bold;}.paid{color:#10b981;font-weight:bold;}</style></head><body>
-        <h1>PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</h1><h2>Class Financial Summary - ${term} ${year}</h2><p>Generated on ${formatUgandaDateTime(getUgandaTime())}</p>${container.innerHTML}</body></html>`);
+        <h1>PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</h1><h2>Class Financial Summary - ${term} ${year}</h2><p>Generated on ${formatUgandaDateTime(getUgandaDate())}</p>${container.innerHTML}</body></html>`);
     win.document.close();
     win.print();
 }
@@ -932,8 +1233,8 @@ function printFinancialHistory() {
     let win = window.open('', '_blank');
     win.document.write(`<html><head><title>Payment History</title>
         <style>body{font-family:Arial;padding:20px;}h1{color:#003366;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:6px;text-align:left;}th{background:#003366;color:white;}.paid{color:#10b981;font-weight:bold;}</style></head><body>
-        <h1>PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</h1><h2>Payment History - ${term} ${year}</h2><p>Generated ${formatUgandaDateTime(getUgandaTime())}</p>
-        <table><thead><tr><th>Date & Time</th><th>Student</th><th>LIN</th><th>Class</th><th>Amount</th><th>Method</th><th>Receipt</th></tr></thead><tbody>
+        <h1>PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</h1><h2>Payment History - ${term} ${year}</h2><p>Generated ${formatUgandaDateTime(getUgandaDate())}</p>
+        <table><thead><tr><th>Date</th><th>Student</th><th>LIN</th><th>Class</th><th>Amount</th><th>Method</th><th>Receipt</th></tr></thead><tbody>
         ${filtered.map(p => {
             let s = students.find(st => st.id === p.student_id);
             if (!s) return '';
@@ -1693,14 +1994,14 @@ async function printReports(ids) {
             <div class="report-header"><h2>PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL</h2><p>"With God Everything is Possible"</p><p>Tel: 0756 585035</p></div>
             <h3 style="text-align:center;margin:6px 0;">ACADEMIC REPORT - ${term} ${year}</h3>
             <p style="text-align:center;color:#666;font-size:0.8rem;">${examSelection === 'beginning' ? 'Beginning of Term' : examSelection === 'mid' ? 'Mid Term' : 'End of Term'} Examination</p>
-            <div class="student-info">${photoHtml}<div><p><strong>Name:</strong> ${s.first_name} ${s.last_name}</p><p><strong>LIN:</strong> ${s.lin}</p><p><strong>Payment Code:</strong> ${s.payment_code || ''}</p><p><strong>Class:</strong> ${s.class}</p><p><strong>Gender:</strong> ${s.gender || 'N/A'}</p><p><strong>DOB:</strong> ${s.date_of_birth || 'N/A'}</p><p><strong>Address:</strong> ${s.address || 'N/A'}</p><p><strong>Parent:</strong> ${s.parent_name || 'N/A'}</p></div></div>
+            <div class="student-info">${photoHtml}<div><p><strong>Name:</strong> ${s.first_name} ${s.last_name}</p><p><strong>LIN:</strong> ${s.lin}</p><p><strong>Payment Code:</strong> ${s.payment_code || ''}</p><p><strong>Class:</strong> ${s.class}</p><p><strong>Gender:</strong> ${s.gender || 'N/A'}</p><p><strong>DOB:</strong> ${s.date_of_birth || 'N/A'}</p><p><strong>Address:</strong> ${s.address || 'N/A'}</p><p><strong>Parent:</strong> ${s.parent_name || 'N/A'}</p><p><strong>WhatsApp:</strong> ${s.parent_whatsapp || 'N/A'}</p></div></div>
             <table class="grade-table"><thead><tr><th>SUBJECT</th>${exams.map(e => `<th>${e}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
             ${specialInfo}
             <div class="comment-section">
                 <div class="comment-box"><strong>👩‍🏫 CLASS TEACHER</strong><div style="height:40px;border-bottom:1px solid #000;margin:8px 0;"></div>Signature: ____________________</div>
                 <div class="comment-box"><strong>👨‍🎓 HEAD TEACHER</strong><div style="height:40px;border-bottom:1px solid #000;margin:8px 0;"></div>Signature: ____________________</div>
             </div>
-            <div style="text-align:center;margin-top:12px;font-size:8px;color:#666;border-top:1px solid #eee;padding-top:10px;">Generated ${formatUgandaDateTime(getUgandaTime())}</div>
+            <div style="text-align:center;margin-top:12px;font-size:8px;color:#666;border-top:1px solid #eee;padding-top:10px;">Generated ${formatUgandaDateTime(getUgandaDate())}</div>
         </div>`;
     }
     html += `</body></html>`;
@@ -1746,7 +2047,7 @@ async function loadAbsentList() {
     grid.innerHTML = `<div style="margin-bottom:10px;"><span style="background:#dc2626;color:white;padding:2px 12px;border-radius:30px;">${absentStudents.length} absent</span></div>`;
     for (let s of absentStudents) {
         let photoHtml = s.photo_url ? `<img src="${s.photo_url}" class="absent-photo" style="width:45px;height:45px;border-radius:50%;object-fit:cover;">` : `<div class="absent-photo"><i class="fas fa-user-graduate fa-2x"></i></div>`;
-        grid.innerHTML += `<div class="absent-card">${photoHtml}<div style="flex:1;"><p><strong>${s.first_name} ${s.last_name}</strong></p><p style="font-size:0.75rem;">LIN: ${s.lin} | ${s.class} | ${getGenderBadge(s.gender)}</p><p style="font-size:0.75rem;">Parent: ${s.parent_name || 'N/A'}</p></div><button class="btn btn-sm btn-whatsapp" onclick="sendAbsentParentNotify('${s.id}','${date}')"><i class="fab fa-whatsapp"></i> Notify</button></div>`;
+        grid.innerHTML += `<div class="absent-card">${photoHtml}<div style="flex:1;"><p><strong>${s.first_name} ${s.last_name}</strong></p><p style="font-size:0.75rem;">LIN: ${s.lin} | ${s.class} | ${getGenderBadge(s.gender)}</p><p style="font-size:0.75rem;">Parent: ${s.parent_name || 'N/A'}</p><p style="font-size:0.75rem;">WhatsApp: ${s.parent_whatsapp || 'N/A'}</p></div><button class="btn btn-sm btn-whatsapp" onclick="sendAbsentParentNotify('${s.id}','${date}')"><i class="fab fa-whatsapp"></i> Notify</button></div>`;
     }
 }
 
@@ -1775,7 +2076,7 @@ function printAbsentList() {
     let win = window.open('', '_blank');
     win.document.write(`<html><head><title>Absent Students - ${date}</title><style>
         body{font-family:Arial;padding:20px;}.absent-card{background:#fef2f2;border-radius:12px;padding:12px;display:flex;gap:12px;align-items:center;border-left:4px solid #dc2626;margin-bottom:8px;}.absent-photo{width:45px;height:45px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;}h2{color:#003366;}
-    </style></head><body><h2>PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL - ABSENT STUDENTS</h2><p>Date: ${date}</p>${container.innerHTML}<p style="margin-top:20px;font-size:10px;">Generated ${formatUgandaDateTime(getUgandaTime())}</p></body></html>`);
+    </style></head><body><h2>PROGRESSIVE MOTHERS NURSERY & PRIMARY SCHOOL - ABSENT STUDENTS</h2><p>Date: ${date}</p>${container.innerHTML}<p style="margin-top:20px;font-size:10px;">Generated ${formatUgandaDateTime(getUgandaDate())}</p></body></html>`);
     win.document.close();
     win.print();
 }
@@ -1793,7 +2094,7 @@ async function renderMainApp() {
     if (perms.absentees) tabs.push('absentees');
     if (!tabs.includes(activeTab)) activeTab = 'dashboard';
     
-    let now = getUgandaTime();
+    let now = getUgandaDate();
     let statusClass = supabaseConnected ? '' : 'error';
     document.getElementById('app').innerHTML = `
         <div class="role-badge">${currentUser.role.toUpperCase()} <button class="logout-btn" onclick="logout()">Exit</button></div>
@@ -1803,7 +2104,6 @@ async function renderMainApp() {
                 <div class="school-address">Gayaza-Kijabijjo, Kampala | 📞 ${SCHOOL_CONTACTS.join(', ')}</div>
                 <div class="datetime-row">
                     <div><i class="far fa-calendar-alt"></i> <span id="liveDate">${formatUgandaDate(now)}</span></div>
-                    <div><i class="far fa-clock"></i> <span id="liveClock" class="live-clock">${formatUgandaTime(now)} (EAT)</span></div>
                     <div class="global-search"><i class="fas fa-search"></i><input type="text" id="globalSearchInput" placeholder="Search..."></div>
                 </div>
                 <div style="margin-top:8px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
@@ -1821,9 +2121,6 @@ async function renderMainApp() {
             <div class="action-buttons">${tabs.map(t => `<button class="action-btn ${activeTab === t ? 'active' : ''}" data-tab="${t}"><i class="fas ${t === 'dashboard' ? 'fa-tachometer-alt' : t === 'students' ? 'fa-user-graduate' : t === 'attendance' ? 'fa-calendar-check' : t === 'marks' ? 'fa-chart-line' : t === 'fees' ? 'fa-coins' : t === 'reports' ? 'fa-print' : 'fa-user-clock'}"></i> ${t.charAt(0).toUpperCase() + t.slice(1)}</button>`).join('')}</div>
             <div id="tabContent"></div>
         </div>`;
-    
-    // Start the live clock
-    startClock();
     
     let search = document.getElementById('globalSearchInput');
     if (search) {
@@ -1852,7 +2149,6 @@ function switchTab(tab) { activeTab = tab; renderMainApp(); }
 function logout() { 
     currentUser = null; 
     sessionStorage.removeItem('progressive_user'); 
-    if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
     renderLogin(); 
 }
 
