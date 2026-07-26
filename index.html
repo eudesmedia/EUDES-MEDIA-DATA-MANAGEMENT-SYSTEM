@@ -227,10 +227,10 @@
 
     <script>
         // ============================================================
-        // SUPABASE CONFIG
+        // SUPABASE CONFIG - UPDATED WITH YOUR NEW CREDENTIALS
         // ============================================================
-        const SUPABASE_URL = 'https://nkdbcwzzdijpgstewnft.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_MDDkqeCp7VnpsrCLVFI3mQ_mpd8iLx8';
+        const SUPABASE_URL = 'https://wabeempxckdtjvrkzhpv.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_n0uAm0Gcq7qR2dJM4jMZGQ_wiV__Cfp';
 
         // ============================================================
         // STATE
@@ -275,13 +275,19 @@
                 options.body = JSON.stringify(data);
             }
 
-            const response = await fetch(url, options);
-            if (!response.ok) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.warn(`HTTP ${response.status}: ${text}`);
+                    return null;
+                }
                 const text = await response.text();
-                throw new Error(`HTTP ${response.status}: ${text}`);
+                return text ? JSON.parse(text) : [];
+            } catch (error) {
+                console.warn('Supabase query failed:', error);
+                return null;
             }
-            const text = await response.text();
-            return text ? JSON.parse(text) : [];
         }
 
         // ============================================================
@@ -384,25 +390,30 @@
             try {
                 // Try Supabase
                 const [custData, staffData, txData, creditData, priceData] = await Promise.all([
-                    supabaseQuery('customers?select=*&order=created_at.desc'),
-                    supabaseQuery('staff?select=*&order=created_at.desc'),
-                    supabaseQuery('transactions?select=*&order=created_at.desc&limit=500'),
-                    supabaseQuery('credit_requests?select=*&order=created_at.desc'),
-                    supabaseQuery('fuel_prices?select=*&order=created_at.desc&limit=1')
+                    supabaseQuery('customers'),
+                    supabaseQuery('staff'),
+                    supabaseQuery('transactions'),
+                    supabaseQuery('credit_requests'),
+                    supabaseQuery('fuel_prices')
                 ]);
 
-                customers = custData || [];
-                staff = staffData || [];
-                transactions = txData || [];
-                creditRequests = creditData || [];
-                if (priceData && priceData.length > 0) {
-                    const p = priceData[0];
-                    fuelPrices = { petrol: p.petrol || 5800, diesel: p.diesel || 5200, kerosene: p.kerosene || 4800, discount: p.discount || 30 };
+                if (custData) {
+                    customers = custData || [];
+                    staff = staffData || [];
+                    transactions = txData || [];
+                    creditRequests = creditData || [];
+                    if (priceData && priceData.length > 0) {
+                        const p = priceData[0];
+                        fuelPrices = { petrol: p.petrol || 5800, diesel: p.diesel || 5200, kerosene: p.kerosene || 4800, discount: p.discount || 30 };
+                    }
+                    supabaseConnected = true;
+                    useSupabase = true;
+                    document.getElementById('syncStatus').textContent = '☁️ Synced';
+                    document.getElementById('syncStatus').className = 'status-badge online';
+                    showToast('✅ Connected to Supabase!', 'success');
+                } else {
+                    throw new Error('No data from Supabase');
                 }
-                supabaseConnected = true;
-                useSupabase = true;
-                document.getElementById('syncStatus').textContent = '☁️ Synced';
-                document.getElementById('syncStatus').className = 'status-badge online';
 
             } catch (e) {
                 console.warn('Supabase load failed:', e);
@@ -571,7 +582,8 @@
 
             try {
                 if (useSupabase) {
-                    await supabaseQuery('customers', 'POST', newCustomer);
+                    const result = await supabaseQuery('customers', 'POST', newCustomer);
+                    if (!result) throw new Error('Supabase insert failed');
                 }
                 customers.unshift(newCustomer);
                 saveAll();
@@ -1118,6 +1130,12 @@
                 }
             }, 1000);
 
+            // Generate WhatsApp links
+            const waMessage = `🧾 YY PARTSHAN FUELS - OTP Verification\n\nYour OTP is: ${otp}\nAmount: ${formatCurrency(fuelTxState.amount)}\nFuel: ${getFuelName(fuelTxState.fuel)}\nVehicle: ${fuelTxState.vehicle}\n\nValid for 5 minutes.`;
+            const waLink = `https://wa.me/256${customer.phone}?text=${encodeURIComponent(waMessage)}`;
+            document.getElementById('waLinkDisplay').textContent = waLink;
+            document.getElementById('waMessagePreview').textContent = waMessage;
+
             pending.push({
                 customer: customer.name,
                 amount: fuelTxState.amount,
@@ -1650,6 +1668,8 @@
         // ============================================================
         async function init() {
             console.log('🚀 Starting YY PARTSHAN FUELS...');
+            console.log('🔗 Supabase URL:', SUPABASE_URL);
+            console.log('🔑 Supabase Key:', SUPABASE_ANON_KEY.substring(0, 20) + '...');
             buildTabs();
             await loadData();
         }
@@ -1657,4 +1677,4 @@
         init();
     </script>
 </body>
-</html>
+    </html>
