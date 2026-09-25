@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root{--bg:#f4f6fb;--surface:#fff;--line:#e5e9f0;--line2:#eef1f6;--text:#0b1220;--text2:#334155;--muted:#64748b;--brand:#4f46e5;--brand2:#4338ca;--brandsoft:#eef2ff;--ring:rgba(79,70,229,.15);--ok:#059669;--oksoft:#ecfdf5;--warn:#d97706;--warnsoft:#fffbeb;--bad:#dc2626;--badsoft:#fef2f2;--radius:14px}
+:root{--bg:#f4f6fb;--line:#e5e9f0;--line2:#eef1f6;--text:#0b1220;--text2:#334155;--muted:#64748b;--brand:#4f46e5;--brand2:#4338ca;--brandsoft:#eef2ff;--ring:rgba(79,70,229,.15);--ok:#059669;--oksoft:#ecfdf5;--warn:#d97706;--warnsoft:#fffbeb;--bad:#dc2626;--badsoft:#fef2f2;--radius:14px}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;min-height:100%;font-family:'Inter',system-ui,sans-serif}
 body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
@@ -42,7 +42,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px}
 .page-head .sub{color:var(--muted);font-size:13px;margin-top:3px}
 .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:0 1px 3px rgba(15,23,42,.05)}
 .grid{display:grid;gap:16px}
-.grid-kpi{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.grid-kpi{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
 .grid-2{grid-template-columns:1fr 1fr}
 .grid-3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
 @media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}}
@@ -54,6 +54,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px}
 .badge.bad{background:var(--badsoft);color:#b91c1c;border:1px solid #fecaca}
 .badge.info{background:var(--brandsoft);color:var(--brand2);border:1px solid #c7d2fe}
 .badge.warn{background:var(--warnsoft);color:#92400e;border:1px solid #fde68a}
+.badge.req{background:#e0e7ff;color:#3730a3;border:1px solid #a5b4fc}
 .btn{background:var(--brand);color:#fff;padding:10px 16px;border-radius:10px;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:6px}
 .btn:hover{background:var(--brand2)}
 .btn:disabled{opacity:.5;cursor:not-allowed}
@@ -79,11 +80,8 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px}
 .loading{padding:60px;text-align:center;color:var(--muted);font-size:14px}
 .empty{text-align:center;padding:50px 20px;color:var(--muted);font-size:14px}
 .modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
-.modal{background:#fff;border-radius:16px;max-width:720px;width:100%;max-height:92vh;overflow:auto;padding:26px;box-shadow:0 30px 60px -20px rgba(0,0,0,.4)}
+.modal{background:#fff;border-radius:16px;max-width:760px;width:100%;max-height:92vh;overflow:auto;padding:26px;box-shadow:0 30px 60px -20px rgba(0,0,0,.4)}
 .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--line2);flex-wrap:wrap}
-.settings-section{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px;margin-bottom:16px}
-.danger-zone{border-color:#fecaca;background:#fef2f2}
-.danger-zone h3{color:#b91c1c}
 .tab-bar{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:20px;overflow-x:auto}
 .tab-bar button{padding:10px 16px;font-size:13.5px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
 .tab-bar button.active{color:var(--brand);border-bottom-color:var(--brand)}
@@ -114,7 +112,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px}
       <button id="tabRegister" onclick="switchTab('register')">Register School</button>
     </div>
     <div id="loginForm">
-      <div><label>Email</label><input id="loginEmail" type="email" placeholder="you@gmail.com"></div>
+      <div><label>Email</label><input id="loginEmail" type="email"></div>
       <div style="margin-top:12px"><label>Password</label><input id="loginPass" type="password"></div>
       <div id="loginErr" class="err" style="display:none"></div>
       <button class="btn" id="loginBtn" style="width:100%;justify-content:center;padding:12px;margin-top:18px" onclick="doLogin()">Sign In</button>
@@ -127,11 +125,8 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px}
       <div><label>School Name</label><input id="regSchool"></div>
       <div style="margin-top:12px"><label>Short Name (no spaces)</label><input id="regSlug"></div>
       <div style="margin-top:12px"><label>Address</label><input id="regAddr"></div>
-      <div class="grid grid-2" style="margin-top:12px">
-        <div><label>Telephone</label><input id="regPhone"></div>
-        <div><label>Head Teacher</label><input id="regHead"></div>
-      </div>
-      <div style="margin-top:12px"><label>School Motto</label><input id="regMotto" placeholder="e.g. Education for Excellence"></div>
+      <div class="grid grid-2" style="margin-top:12px"><div><label>Telephone</label><input id="regPhone"></div><div><label>Head Teacher</label><input id="regHead"></div></div>
+      <div style="margin-top:12px"><label>School Motto</label><input id="regMotto"></div>
       <div id="regErr" class="err" style="display:none"></div>
       <div id="regOk" class="ok" style="display:none"></div>
       <button class="btn" id="regBtn" style="width:100%;justify-content:center;padding:12px;margin-top:18px" onclick="doRegister()">Create School</button>
@@ -141,13 +136,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px}
 
 <div id="app" style="display:none">
   <aside id="sidebar">
-    <div class="brand">
-      <div class="mark">E</div>
-      <div>
-        <div class="name">Eudes S.M.</div>
-        <div class="sub">Powered by Eudes</div>
-      </div>
-    </div>
+    <div class="brand"><div class="mark">E</div><div><div class="name">Eudes S.M.</div><div class="sub">Powered by Eudes</div></div></div>
     <div id="schoolBadge"></div>
     <nav id="nav"></nav>
     <a class="logout" href="#" onclick="doLogout();return false;">⎋ &nbsp;Sign Out</a>
@@ -165,14 +154,13 @@ const SUPA_KEY = 'sb_publishable_n0uAm0Gcq7qR2dJM4jMZGQ_wiV__Cfp';
 
 let _memoryStore = {};
 const safeStorage = {
-  getItem: function(key) { try { return localStorage.getItem(key); } catch(e) { return _memoryStore[key] || null; } },
-  setItem: function(key, value) { try { localStorage.setItem(key, value); } catch(e) { _memoryStore[key] = String(value); } },
-  removeItem: function(key) { try { localStorage.removeItem(key); } catch(e) { delete _memoryStore[key]; } }
+  getItem: function(k) { try { return localStorage.getItem(k); } catch(e) { return _memoryStore[k] || null; } },
+  setItem: function(k, v) { try { localStorage.setItem(k, v); } catch(e) { _memoryStore[k] = String(v); } },
+  removeItem: function(k) { try { localStorage.removeItem(k); } catch(e) { delete _memoryStore[k]; } }
 };
-
 function getToken(){ const s = safeStorage.getItem('eudes_session'); if(!s) return null; try { return JSON.parse(s).access_token; } catch(e){ return null; } }
 function getUser(){ const s = safeStorage.getItem('eudes_session'); if(!s) return null; try { return JSON.parse(s).user; } catch(e){ return null; } }
-function setSession(data){ if(data){ safeStorage.setItem('eudes_session', JSON.stringify(data)); } else { safeStorage.removeItem('eudes_session'); } }
+function setSession(d){ if(d){ safeStorage.setItem('eudes_session', JSON.stringify(d)); } else { safeStorage.removeItem('eudes_session'); } }
 
 async function rest(path, options){
   options = options || {};
@@ -183,34 +171,19 @@ async function rest(path, options){
   const text = await res.text();
   let data = null;
   try { data = text ? JSON.parse(text) : null; } catch(e){ data = text; }
-  
   if(!res.ok){
-    // ✅ AUTOMATIC JWT EXPIRATION HANDLING
-    if (res.status === 401 || (data && data.message && (data.message.includes('JWT') || data.message.includes('token')))) {
-      setSession(null);
-      alert('Your session has expired. Please log in again.');
-      window.location.reload();
-      throw new Error('Session expired');
-    }
+    if (res.status === 401) { setSession(null); alert('Session expired. Please log in again.'); window.location.reload(); throw new Error('Session expired'); }
     const msg = (data && (data.message || data.msg || data.error_description || data.error)) || text || ('HTTP ' + res.status);
     throw new Error(msg);
   }
   return data;
 }
-
 async function auth(path, body){
-  const res = await fetch(SUPA_URL + path, {
-    method: 'POST',
-    headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
+  const res = await fetch(SUPA_URL + path, { method: 'POST', headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   const text = await res.text();
   let data = null;
   try { data = text ? JSON.parse(text) : null; } catch(e){ data = text; }
-  if(!res.ok){
-    const msg = (data && (data.message || data.msg || data.error_description || data.error)) || text || ('HTTP ' + res.status);
-    throw new Error(msg);
-  }
+  if(!res.ok){ const msg = (data && (data.message || data.msg || data.error_description || data.error)) || text || ('HTTP ' + res.status); throw new Error(msg); }
   return data;
 }
 
@@ -230,8 +203,8 @@ function modal(html){
 }
 function closeModal(){ document.getElementById('modalRoot').innerHTML = ''; }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-function age(dob){ if(!dob) return '—'; return Math.floor((Date.now()-new Date(dob).getTime())/(365.25*24*3600*1000)) + ' yrs'; }
 function fmtUGX(n){ return 'UGX ' + (Number(n)||0).toLocaleString(); }
+function fmtDateTime(ts){ if (!ts) return '—'; const d = new Date(ts); const day = String(d.getDate()).padStart(2,'0'); const month = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]; const year = d.getFullYear(); let h = d.getHours(); const m = String(d.getMinutes()).padStart(2,'0'); const ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return day + ' ' + month + ' ' + year + ' · ' + h + ':' + m + ' ' + ampm; }
 window.toast = toast; window.modal = modal; window.closeModal = closeModal;
 
 function switchTab(which){
@@ -252,11 +225,8 @@ async function doLogin(){
   err.style.display = 'none';
   if(!email || !pass){ err.textContent = 'Enter email and password'; err.style.display = 'block'; return; }
   btn.disabled = true; btn.textContent = 'Signing in…';
-  try {
-    const data = await auth('/auth/v1/token?grant_type=password', { email: email, password: pass });
-    setSession(data);
-    await boot();
-  } catch(e){ err.textContent = e.message; err.style.display = 'block'; }
+  try { const data = await auth('/auth/v1/token?grant_type=password', { email: email, password: pass }); setSession(data); await boot(); }
+  catch(e){ err.textContent = e.message; err.style.display = 'block'; }
   btn.disabled = false; btn.textContent = 'Sign In';
 }
 window.doLogin = doLogin;
@@ -280,16 +250,10 @@ async function doRegister(){
   btn.disabled = true; btn.textContent = 'Creating…';
   try {
     const data = await auth('/auth/v1/signup', { email: email, password: pass, data: { full_name: name } });
-    if(!data.access_token){
-      ok.textContent = 'Check your email to confirm, then sign in.'; ok.style.display = 'block';
-      btn.disabled = false; btn.textContent = 'Create School'; return;
-    }
+    if(!data.access_token){ ok.textContent = 'Check your email to confirm, then sign in.'; ok.style.display = 'block'; btn.disabled = false; btn.textContent = 'Create School'; return; }
     setSession(data);
-    await rest('/rest/v1/rpc/create_school_and_become_owner', {
-      method: 'POST',
-      body: JSON.stringify({ p_school_name: school, p_school_slug: slug, p_motto: motto || null, p_address: addr || null, p_telephone: phone || null, p_email: email, p_head_teacher: head || null })
-    });
-    ok.textContent = 'School created. Waiting for approval. Contact us on WhatsApp +254757208077 to activate.'; ok.style.display = 'block';
+    await rest('/rest/v1/rpc/create_school_and_become_owner', { method: 'POST', body: JSON.stringify({ p_school_name: school, p_school_slug: slug, p_motto: motto || null, p_address: addr || null, p_telephone: phone || null, p_email: email, p_head_teacher: head || null }) });
+    ok.textContent = 'School created. Waiting for approval. WhatsApp +254757208077.'; ok.style.display = 'block';
     setTimeout(boot, 500);
   } catch(e){ err.textContent = e.message; err.style.display = 'block'; }
   btn.disabled = false; btn.textContent = 'Create School';
@@ -298,61 +262,38 @@ window.doRegister = doRegister;
 
 async function doLogout(){
   try { const token = getToken(); if(token){ await fetch(SUPA_URL + '/auth/v1/logout', { method: 'POST', headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + token } }); } } catch(e){}
-  setSession(null);
-  SESSION = null; _profile = null; _school = null; _schoolId = null; _role = null;
+  setSession(null); SESSION = null; _profile = null; _school = null; _schoolId = null; _role = null;
   document.getElementById('app').style.display = 'none';
   document.getElementById('authScreen').style.display = 'flex';
 }
 window.doLogout = doLogout;
 
 async function boot(){
-  const user = getUser();
-  const token = getToken();
+  const user = getUser(); const token = getToken();
   if(!user || !token){ document.getElementById('authScreen').style.display = 'flex'; document.getElementById('app').style.display = 'none'; return; }
   SESSION = user;
-  try {
-    const profiles = await rest('/rest/v1/profiles?id=eq.' + user.id + '&select=*');
-    _profile = profiles && profiles[0];
-  } catch(e){
-    document.getElementById('authScreen').style.display = 'flex';
-    document.getElementById('loginErr').textContent = 'Profile not found. Error: ' + e.message;
-    document.getElementById('loginErr').style.display = 'block'; return;
-  }
-  if(!_profile){
-    document.getElementById('authScreen').style.display = 'flex';
-    document.getElementById('loginErr').textContent = 'Profile not found. Trigger may not have run.';
-    document.getElementById('loginErr').style.display = 'block'; return;
-  }
-  _schoolId = _profile.school_id;
-  _role = _profile.role;
+  try { const profiles = await rest('/rest/v1/profiles?id=eq.' + user.id + '&select=*'); _profile = profiles && profiles[0]; }
+  catch(e){ document.getElementById('authScreen').style.display = 'flex'; document.getElementById('loginErr').textContent = 'Profile not found: ' + e.message; document.getElementById('loginErr').style.display = 'block'; return; }
+  if(!_profile){ document.getElementById('authScreen').style.display = 'flex'; document.getElementById('loginErr').textContent = 'Profile not found.'; document.getElementById('loginErr').style.display = 'block'; return; }
+  _schoolId = _profile.school_id; _role = _profile.role;
   if(!_schoolId){
-    document.getElementById('authScreen').style.display = 'flex';
-    switchTab('register');
-    document.getElementById('regErr').textContent = 'Your account is not linked to a school. Create one below.';
-    document.getElementById('regErr').style.display = 'block';
+    document.getElementById('authScreen').style.display = 'flex'; switchTab('register');
+    document.getElementById('regErr').textContent = 'Your account is not linked to a school. Create one below.'; document.getElementById('regErr').style.display = 'block';
     document.getElementById('regName').parentElement.style.display = 'none';
     document.getElementById('regEmail').parentElement.style.display = 'none';
     document.getElementById('regPass').parentElement.style.display = 'none';
-    document.getElementById('regBtn').textContent = 'Create School';
-    document.getElementById('regBtn').onclick = createSchoolOnly;
+    document.getElementById('regBtn').textContent = 'Create School'; document.getElementById('regBtn').onclick = createSchoolOnly;
     return;
   }
   try { const schools = await rest('/rest/v1/schools?id=eq.' + _schoolId + '&select=*'); _school = schools && schools[0]; } catch(e){}
-  
-  // ✅ APPROVAL CHECK
   if (!_school.is_approved) {
-    document.getElementById('authScreen').style.display = 'flex';
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('loginErr').innerHTML = '⏳ Your school registration is <b>pending approval</b>.<br><br>Please contact support on WhatsApp <b>+254757208077</b> to activate your account.';
-    document.getElementById('loginErr').style.display = 'block';
-    return;
+    document.getElementById('authScreen').style.display = 'flex'; document.getElementById('app').style.display = 'none';
+    document.getElementById('loginErr').innerHTML = '⏳ Your school registration is <b>pending approval</b>.<br><br>WhatsApp <b>+254757208077</b>.';
+    document.getElementById('loginErr').style.display = 'block'; return;
   }
-
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
-  renderBadge();
-  renderNav();
-  await nav('dashboard');
+  renderBadge(); renderNav(); await nav('dashboard');
 }
 window.boot = boot;
 
@@ -363,16 +304,12 @@ async function createSchoolOnly(){
   const phone = document.getElementById('regPhone').value.trim();
   const head = document.getElementById('regHead').value.trim();
   const motto = document.getElementById('regMotto').value.trim();
-  const err = document.getElementById('regErr');
-  const btn = document.getElementById('regBtn');
+  const err = document.getElementById('regErr'); const btn = document.getElementById('regBtn');
   err.style.display = 'none';
   if(!school || !slug){ err.textContent = 'Fill school name and short name'; err.style.display = 'block'; return; }
   btn.disabled = true; btn.textContent = 'Creating…';
   try {
-    await rest('/rest/v1/rpc/create_school_and_become_owner', {
-      method: 'POST',
-      body: JSON.stringify({ p_school_name: school, p_school_slug: slug, p_motto: motto || null, p_address: addr || null, p_telephone: phone || null, p_email: _profile.email || null, p_head_teacher: head || null })
-    });
+    await rest('/rest/v1/rpc/create_school_and_become_owner', { method: 'POST', body: JSON.stringify({ p_school_name: school, p_school_slug: slug, p_motto: motto || null, p_address: addr || null, p_telephone: phone || null, p_email: _profile.email || null, p_head_teacher: head || null }) });
     toast('School created. Pending approval.', 'ok');
     setTimeout(boot, 500);
   } catch(e){ err.textContent = e.message; err.style.display = 'block'; }
@@ -383,78 +320,91 @@ window.createSchoolOnly = createSchoolOnly;
 function renderBadge(){
   const el = document.getElementById('schoolBadge');
   if(!_school){ el.innerHTML = '<b>School</b>'; return; }
-  el.innerHTML = '<b>' + esc(_school.name) + '</b>' +
-    '<div class="muted">' + esc(_school.address || '') + '</div>' +
-    '<div class="muted" style="margin-top:3px">' + esc(_profile.full_name || SESSION.email) + ' · ' + esc((_profile.role||'').replace(/_/g,' ')) + '</div>';
+  el.innerHTML = '<b>' + esc(_school.name) + '</b><div class="muted">' + esc(_school.address || '') + '</div><div class="muted" style="margin-top:3px">' + esc(_profile.full_name || SESSION.email) + ' · ' + esc((_profile.role||'').replace(/_/g,' ')) + '</div>';
 }
 window.renderBadge = renderBadge;
 
 const ROUTES = {
   dashboard: { label:'Dashboard', icon:'📊', render: pageDashboard },
   students:  { label:'Pupils', icon:'🎓', render: pageStudents },
+  fees:      { label:'Fees', icon:'💰', render: pageFees },
   classes:   { label:'Classes', icon:'🏫', render: pageClasses },
   subjects:  { label:'Subjects', icon:'📚', render: pageSubjects },
   exams:     { label:'Exams', icon:'📝', render: pageExams },
   marks:     { label:'Marks Entry', icon:'✍️', render: pageMarks },
   reports:   { label:'Report Cards', icon:'📄', render: pageReports },
-  fees:      { label:'Fees', icon:'💰', render: pageFees },
   staff:     { label:'Staff', icon:'👨‍🏫', render: pageStaff },
   settings:  { label:'Settings', icon:'⚙️', render: pageSettings },
 };
-
 let activeRoute = 'dashboard';
 async function nav(route){
   if(!ROUTES[route]) return;
-  activeRoute = route;
-  renderNav();
+  activeRoute = route; renderNav();
   const main = document.getElementById('main');
   main.innerHTML = '<div class="loading">Loading…</div>';
   try { await ROUTES[route].render(main); }
   catch(e){ main.innerHTML = '<div class="card"><h3>Error</h3><p class="muted">' + esc(e.message) + '</p></div>'; }
 }
 window.nav = nav;
-
 function renderNav(){
   document.getElementById('nav').innerHTML = Object.entries(ROUTES).map(function(p){
     const k = p[0], r = p[1];
-    return '<a href="#" class="' + (k === activeRoute ? 'active' : '') + '" onclick="nav(\'' + k + '\');return false;">' +
-      '<span style="width:18px;text-align:center">' + r.icon + '</span><span>' + esc(r.label) + '</span></a>';
+    return '<a href="#" class="' + (k === activeRoute ? 'active' : '') + '" onclick="nav(\'' + k + '\');return false;"><span style="width:18px;text-align:center">' + r.icon + '</span><span>' + esc(r.label) + '</span></a>';
   }).join('');
 }
 
+// ==================== HELPERS ====================
+function functionalStatusBadge(status){
+  if (status === 'cash') return '<span class="badge ok">💵 Cash Paid</span>';
+  if (status === 'requirements') return '<span class="badge req">📦 Requirements</span>';
+  return '<span class="badge bad">⏳ Pending</span>';
+}
+window.functionalStatusBadge = functionalStatusBadge;
+
+// ==================== DASHBOARD ====================
 async function pageDashboard(root){
   const data = await Promise.all([
-    rest('/rest/v1/students?school_id=eq.' + _schoolId + '&select=id,gender,status,current_balance,total_expected,class_id'),
+    rest('/rest/v1/students?school_id=eq.' + _schoolId + '&select=id,gender,status,functional_fee,functional_fee_status,class_id,balance_bf,actual_fee,transport_fee'),
     rest('/rest/v1/classes?school_id=eq.' + _schoolId + '&select=id,name&order=sort_order'),
     rest('/rest/v1/subjects?school_id=eq.' + _schoolId + '&select=id'),
     rest('/rest/v1/exams?school_id=eq.' + _schoolId + '&select=id'),
-    rest('/rest/v1/staff?school_id=eq.' + _schoolId + '&select=id').catch(() => [])
+    rest('/rest/v1/staff?school_id=eq.' + _schoolId + '&select=id').catch(() => []),
+    rest('/rest/v1/payments?school_id=eq.' + _schoolId + '&select=student_id,amount,payment_for')
   ]);
-  let students = data[0] || [];
-  let classes = data[1] || [];
-  let subjects = data[2] || [];
-  let exams = data[3] || [];
-  let staff = data[4] || [];
-  
-  const active = students.filter(function(s){ return s.status === 'active'; });
-  const male = active.filter(function(s){ return s.gender === 'male'; }).length;
-  const female = active.filter(function(s){ return s.gender === 'female'; }).length;
-  
-  const totalOutstanding = active.reduce((sum, s) => sum + (Number(s.current_balance) || 0), 0);
-  const totalExpected = active.reduce((sum, s) => sum + (Number(s.total_expected) || 0), 0);
-  const totalCollected = totalExpected - totalOutstanding;
+  let students = data[0] || [], classes = data[1] || [], subjects = data[2] || [], exams = data[3] || [], staff = data[4] || [], payments = data[5] || [];
+  const active = students.filter(s => s.status === 'active');
+  const male = active.filter(s => s.gender === 'male').length;
+  const female = active.filter(s => s.gender === 'female').length;
+  const paidByStudent = {};
+  payments.forEach(p => { if (!paidByStudent[p.student_id]) paidByStudent[p.student_id] = { school: 0, func: 0 }; if (p.payment_for === 'Functional Fees') paidByStudent[p.student_id].func += Number(p.amount); else paidByStudent[p.student_id].school += Number(p.amount); });
+
+  let totalExpected = 0, totalCollected = 0;
+  let totalFunctionalExpected = 0, totalFunctionalCollected = 0;
+  let funcReqCount = 0, funcReqValue = 0, funcCashCount = 0, funcPendingCount = 0, funcPendingValue = 0;
+
+  active.forEach(s => {
+    const schoolFee = (Number(s.balance_bf)||0) + (Number(s.actual_fee)||0) + (Number(s.transport_fee)||0);
+    const funcFee = Number(s.functional_fee)||0;
+    const paid = paidByStudent[s.id] || { school: 0, func: 0 };
+    totalExpected += schoolFee; totalCollected += paid.school;
+    totalFunctionalExpected += funcFee; totalFunctionalCollected += paid.func;
+    if (s.functional_fee_status === 'requirements'){ funcReqCount++; funcReqValue += funcFee; }
+    else if (s.functional_fee_status === 'cash'){ funcCashCount++; }
+    else { funcPendingCount++; funcPendingValue += funcFee; }
+  });
+  const totalOutstanding = totalExpected - totalCollected;
 
   const classStats = classes.map(c => {
     const inClass = active.filter(s => s.class_id === c.id);
-    const owed = inClass.reduce((sum, s) => sum + (Number(s.current_balance) || 0), 0);
+    let owed = 0;
+    inClass.forEach(s => { const schoolFee = (Number(s.balance_bf)||0) + (Number(s.actual_fee)||0) + (Number(s.transport_fee)||0); const paid = paidByStudent[s.id] || { school: 0 }; owed += schoolFee - paid.school; });
     return { name: c.name, count: inClass.length, owed: owed };
   });
 
   root.innerHTML =
     '<div class="page-head"><div><h1>' + esc(_school.name) + '</h1>' +
-      '<div class="sub">📍 ' + esc(_school.address || 'No address set') + ' · 📞 ' + esc(_school.telephone || 'No phone set') + '</div>' +
-      '<div class="sub" style="font-style:italic;color:var(--brand);margin-top:4px">✝️ ' + esc(_school.motto || 'No motto set') + '</div>' +
-    '</div></div>' +
+      '<div class="sub">📍 ' + esc(_school.address || 'No address') + ' · 📞 ' + esc(_school.telephone || 'No phone') + '</div>' +
+      '<div class="sub" style="font-style:italic;color:var(--brand);margin-top:4px">' + esc(_school.motto || '') + '</div></div></div>' +
     '<div class="grid grid-kpi">' +
       '<div class="kpi"><div class="v">' + active.length + '</div><div class="l">Active Pupils</div></div>' +
       '<div class="kpi"><div class="v">' + male + '</div><div class="l">Boys</div></div>' +
@@ -463,52 +413,53 @@ async function pageDashboard(root){
       '<div class="kpi"><div class="v">' + staff.length + '</div><div class="l">Staff</div></div>' +
       '<div class="kpi"><div class="v">' + exams.length + '</div><div class="l">Exams</div></div>' +
     '</div>' +
-    '<div class="grid grid-3" style="margin-top:16px">' +
-      '<div class="kpi" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#a7f3d0">' +
-        '<div class="l" style="color:#047857">Total Expected Fees</div>' +
-        '<div class="v" style="color:#065f46;font-size:20px;margin-top:4px">' + fmtUGX(totalExpected) + '</div>' +
-      '</div>' +
-      '<div class="kpi" style="background:linear-gradient(135deg,#eef2ff,#c7d2fe);border-color:#a5b4fc">' +
-        '<div class="l" style="color:#4338ca">Total Collected</div>' +
-        '<div class="v" style="color:#3730a3;font-size:20px;margin-top:4px">' + fmtUGX(totalCollected) + '</div>' +
-      '</div>' +
-      '<div class="kpi" style="background:linear-gradient(135deg,#fef2f2,#fecaca);border-color:#fca5a5">' +
-        '<div class="l" style="color:#b91c1c">Total Outstanding</div>' +
-        '<div class="v" style="color:#7f1d1d;font-size:20px;margin-top:4px">' + fmtUGX(totalOutstanding) + '</div>' +
-      '</div>' +
+    '<h3 style="margin-top:24px;margin-bottom:12px">📚 School Fees</h3>' +
+    '<div class="grid grid-3">' +
+      '<div class="kpi" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#a7f3d0"><div class="l" style="color:#047857">Expected</div><div class="v" style="color:#065f46;font-size:20px;margin-top:4px">' + fmtUGX(totalExpected) + '</div></div>' +
+      '<div class="kpi" style="background:linear-gradient(135deg,#eef2ff,#c7d2fe);border-color:#a5b4fc"><div class="l" style="color:#4338ca">Collected</div><div class="v" style="color:#3730a3;font-size:20px;margin-top:4px">' + fmtUGX(totalCollected) + '</div></div>' +
+      '<div class="kpi" style="background:linear-gradient(135deg,#fef2f2,#fecaca);border-color:#fca5a5"><div class="l" style="color:#b91c1c">Outstanding</div><div class="v" style="color:#7f1d1d;font-size:20px;margin-top:4px">' + fmtUGX(totalOutstanding) + '</div></div>' +
     '</div>' +
-    (classStats.length ? '<div class="card" style="margin-top:20px"><h3>Class Breakdown</h3>' +
+    '<h3 style="margin-top:20px;margin-bottom:12px">🧾 Functional Fee (Requirements)</h3>' +
+    '<div class="grid grid-kpi">' +
+      '<div class="kpi"><div class="l">Total Requirement Value</div><div class="v" style="font-size:18px;margin-top:4px">' + fmtUGX(totalFunctionalExpected) + '</div></div>' +
+      '<div class="kpi" style="background:var(--oksoft);border-color:#a7f3d0"><div class="l" style="color:#047857">💵 Paid in Cash</div><div class="v" style="font-size:18px;color:#065f46;margin-top:4px">' + fmtUGX(totalFunctionalCollected) + '</div><div class="muted" style="margin-top:2px">' + funcCashCount + ' pupils</div></div>' +
+      '<div class="kpi" style="background:#e0e7ff;border-color:#a5b4fc"><div class="l" style="color:#3730a3">📦 Provided Items</div><div class="v" style="font-size:18px;color:#312e81;margin-top:4px">' + funcReqCount + ' pupils</div><div class="muted" style="margin-top:2px">Value: ' + fmtUGX(funcReqValue) + '</div></div>' +
+      '<div class="kpi" style="background:var(--badsoft);border-color:#fecaca"><div class="l" style="color:#b91c1c">⏳ Still Pending</div><div class="v" style="font-size:18px;color:#7f1d1d;margin-top:4px">' + funcPendingCount + ' pupils</div><div class="muted" style="margin-top:2px">Value: ' + fmtUGX(funcPendingValue) + '</div></div>' +
+    '</div>' +
+    (classStats.length ? '<div class="card" style="margin-top:20px"><h3>Class Breakdown (School Fees)</h3>' +
       '<div class="table-wrap"><table><thead><tr><th>Class</th><th>Pupils</th><th style="text-align:right">Outstanding</th></tr></thead>' +
-      '<tbody>' + classStats.map(cs => '<tr><td><b>' + esc(cs.name) + '</b></td><td><span class="badge info">' + cs.count + ' pupils</span></td><td style="text-align:right"><span class="badge ' + (cs.owed > 0 ? 'bad' : 'ok') + '">' + fmtUGX(cs.owed) + '</span></td></tr>').join('') + '</tbody></table></div>' +
-      '</div>' : '');
+      '<tbody>' + classStats.map(cs => '<tr><td><b>' + esc(cs.name) + '</b></td><td><span class="badge info">' + cs.count + ' pupils</span></td><td style="text-align:right"><span class="badge ' + (cs.owed > 0 ? 'bad' : 'ok') + '">' + fmtUGX(cs.owed) + '</span></td></tr>').join('') + '</tbody></table></div></div>' : '');
 }
 window.pageDashboard = pageDashboard;
 
+// ==================== STUDENTS ====================
 async function loadClasses(){
   if(_classesCache) return _classesCache;
   const data = await rest('/rest/v1/classes?school_id=eq.' + _schoolId + '&select=id,name&order=sort_order');
   _classesCache = data || [];
   return _classesCache;
 }
-
 async function pageStudents(root){
   const classes = await loadClasses();
-  const students = await rest('/rest/v1/students?school_id=eq.' + _schoolId + '&select=*&order=created_at.desc');
+  const [students, payments] = await Promise.all([
+    rest('/rest/v1/students?school_id=eq.' + _schoolId + '&select=*&order=created_at.desc'),
+    rest('/rest/v1/payments?school_id=eq.' + _schoolId + '&select=student_id,amount,payment_for')
+  ]);
   window._allStudents = students || [];
-
+  const paidByStudent = {};
+  payments.forEach(p => { if (!paidByStudent[p.student_id]) paidByStudent[p.student_id] = { school: 0, func: 0 }; if (p.payment_for === 'Functional Fees') paidByStudent[p.student_id].func += Number(p.amount); else paidByStudent[p.student_id].school += Number(p.amount); });
+  window._paidByStudent = paidByStudent;
   root.innerHTML =
     '<div class="page-head"><div><h1>Pupils</h1><div class="sub" id="studentCount">Loading…</div></div>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
-        '<button class="btn ghost" onclick="document.getElementById(\'excelInput\').click()">📄 Bulk Import Excel</button>' +
+        '<button class="btn ghost" onclick="document.getElementById(\'excelInput\').click()">📄 Bulk Import</button>' +
         '<button class="btn" onclick="addStudent()">＋ Register Pupil</button>' +
       '</div></div>' +
     '<div class="card">' +
-      '<div class="grid grid-2" style="margin-bottom:16px">' +
-        '<input id="studentSearchInput" placeholder="Search name, adm no, LIN, parent…" value="' + esc(window._stFilterSearch||'') + '" oninput="filterStudentsTable(this.value)">' +
-        '<select id="studentClassFilter" onchange="filterStudentsTable(document.getElementById(\'studentSearchInput\').value, this.value)">' +
-          '<option value="">All classes</option>' +
-          classes.map(function(c){ return '<option value="' + c.id + '">' + esc(c.name) + '</option>'; }).join('') +
-        '</select>' +
+      '<div class="grid grid-3" style="margin-bottom:16px">' +
+        '<input id="studentSearchInput" placeholder="Search name, adm no, LIN…" value="' + esc(window._stFilterSearch||'') + '" oninput="filterStudentsTable(this.value)">' +
+        '<select id="studentClassFilter" onchange="filterStudentsTable(document.getElementById(\'studentSearchInput\').value, this.value)"><option value="">All classes</option>' + classes.map(c=>'<option value="' + c.id + '">' + esc(c.name) + '</option>').join('') + '</select>' +
+        '<select id="studentFuncFilter" onchange="filterStudentsTable(document.getElementById(\'studentSearchInput\').value)"><option value="">All functional statuses</option><option value="pending">⏳ Pending</option><option value="cash">💵 Cash Paid</option><option value="requirements">📦 Requirements</option></select>' +
       '</div>' +
       '<div id="studentsTableContainer"></div>' +
     '</div>';
@@ -516,65 +467,78 @@ async function pageStudents(root){
 }
 window.pageStudents = pageStudents;
 
-function filterStudentsTable(q, fClass) {
-  q = (q || '').toLowerCase();
-  fClass = fClass || '';
-  window._stFilterSearch = q;
-  window._stFilterClass = fClass;
-
+function filterStudentsTable(q, fClass){
+  q = (q || '').toLowerCase(); fClass = fClass || '';
+  window._stFilterSearch = q; window._stFilterClass = fClass;
+  const fFunc = document.getElementById('studentFuncFilter')?.value || '';
   const classes = _classesCache || [];
+  const paid = window._paidByStudent || {};
   const filtered = (window._allStudents || []).filter(function(s){
     if(fClass && s.class_id !== fClass) return false;
+    if(fFunc && s.functional_fee_status !== fFunc) return false;
     if(q){
       const hay = (s.first_name + ' ' + (s.last_name||'') + ' ' + s.admission_no + ' ' + (s.lin||'') + ' ' + (s.parent_name||'') + ' ' + (s.parent_contact||'')).toLowerCase();
       if(hay.indexOf(q) === -1) return false;
     }
     return true;
   });
-
   document.getElementById('studentCount').textContent = (window._allStudents||[]).length + ' total · ' + filtered.length + ' shown';
-  
   const container = document.getElementById('studentsTableContainer');
-  if (!filtered.length) {
-    container.innerHTML = '<div class="empty">No pupils match your search.</div>';
-    return;
-  }
-
+  if (!filtered.length) { container.innerHTML = '<div class="empty">No pupils match your search.</div>'; return; }
   container.innerHTML = '<div class="table-wrap"><table>' +
-    '<thead><tr><th>Adm No</th><th>LIN</th><th>Name</th><th>Class</th><th>Status</th><th>Contact</th><th style="text-align:right">Balance</th><th style="text-align:right">Actions</th></tr></thead>' +
-    '<tbody>' + filtered.map(function(s){ return studentRow(s, classes); }).join('') + '</tbody>' +
+    '<thead><tr><th>Adm No</th><th>Name</th><th>Class</th><th style="text-align:right">School Bal</th><th>Functional</th><th style="text-align:right">Actions</th></tr></thead>' +
+    '<tbody>' + filtered.map(function(s){ return studentRow(s, classes, paid); }).join('') + '</tbody>' +
   '</table></div>';
 }
 window.filterStudentsTable = filterStudentsTable;
 
-function studentRow(s, classes){
+function studentRow(s, classes, paidByStudent){
   const cls = (classes||[]).find(function(c){ return c.id === s.class_id; });
-  const bal = Number(s.current_balance) || 0;
+  const schoolFee = (Number(s.balance_bf)||0) + (Number(s.actual_fee)||0) + (Number(s.transport_fee)||0);
+  const p = paidByStudent[s.id] || { school: 0, func: 0 };
+  const schoolBal = schoolFee - p.school;
   return '<tr>' +
     '<td><b>' + esc(s.admission_no) + '</b></td>' +
-    '<td style="font-family:monospace;font-size:12px">' + esc(s.lin||'—') + '</td>' +
-    '<td><b>' + esc(s.first_name + ' ' + (s.last_name||'')) + '</b></td>' +
+    '<td><b>' + esc(s.first_name + ' ' + (s.last_name||'')) + '</b><div class="muted" style="font-family:monospace;font-size:11px">' + esc(s.lin||'') + '</div></td>' +
     '<td><span class="badge info">' + esc(cls?cls.name:'—') + '</span></td>' +
-    '<td>' + esc(s.boarding_status||'Day') + '</td>' +
-    '<td>' + esc(s.parent_contact||'—') + '</td>' +
-    '<td style="text-align:right"><span class="badge ' + (bal > 0 ? 'bad' : 'ok') + '">' + bal.toLocaleString() + '</span></td>' +
+    '<td style="text-align:right"><span class="badge ' + (schoolBal > 0 ? 'bad' : 'ok') + '">' + schoolBal.toLocaleString() + '</span></td>' +
+    '<td>' + functionalStatusBadge(s.functional_fee_status) + '</td>' +
     '<td style="text-align:right;white-space:nowrap">' +
+      '<button class="btn sm" onclick="recordPayment(\'' + s.id + '\')">💵 Pay</button> ' +
+      '<button class="btn sm ghost" onclick="markFunctionalFee(\'' + s.id + '\',\'' + esc(s.first_name + ' ' + (s.last_name||'')) + '\',\'' + (s.functional_fee||0) + '\',\'' + (s.functional_fee_status||'pending') + '\')">🧾 Func</button> ' +
       '<button class="btn sm ghost" onclick="editStudent(\'' + s.id + '\')">Edit</button> ' +
       '<button class="btn sm danger" onclick="deleteStudent(\'' + s.id + '\')">✕</button>' +
     '</td></tr>';
 }
 
-function generateLIN(firstName){
-  const initial = firstName ? firstName.charAt(0).toUpperCase() : 'X';
-  const digits = Math.floor(1000 + Math.random() * 9000);
-  return 'PM' + initial + digits;
+async function markFunctionalFee(id, name, funcFee, currentStatus){
+  modal('<h3>🧾 Functional Fee — ' + esc(name) + '</h3>' +
+    '<p class="muted" style="margin-bottom:16px">Requirement value: <b>' + fmtUGX(funcFee) + '</b></p>' +
+    '<div style="display:flex;flex-direction:column;gap:10px">' +
+      '<button class="btn ' + (currentStatus === 'cash' ? '' : 'ghost') + '" style="justify-content:flex-start;padding:14px" onclick="setFunctionalStatus(\'' + id + '\',\'cash\')">💵 <b>Paid in Cash</b><br><span class="muted" style="font-weight:400">Record as a cash payment — counts as money collected</span></button>' +
+      '<button class="btn ' + (currentStatus === 'requirements' ? '' : 'ghost') + '" style="justify-content:flex-start;padding:14px" onclick="setFunctionalStatus(\'' + id + '\',\'requirements\')">📦 <b>Provided Requirements</b><br><span class="muted" style="font-weight:400">Items given (books, brooms, etc.) — no money counted</span></button>' +
+      '<button class="btn ' + (currentStatus === 'pending' ? '' : 'ghost') + '" style="justify-content:flex-start;padding:14px" onclick="setFunctionalStatus(\'' + id + '\',\'pending\')">⏳ <b>Pending</b><br><span class="muted" style="font-weight:400">Not yet paid or provided</span></button>' +
+    '</div>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Close</button></div>');
 }
+window.markFunctionalFee = markFunctionalFee;
+
+async function setFunctionalStatus(id, status){
+  try {
+    await rest('/rest/v1/students?id=eq.' + id, { method: 'PATCH', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({ functional_fee_status: status }) });
+    toast('Functional fee status updated', 'ok');
+    closeModal();
+    nav(activeRoute);
+  } catch(e){ toast(e.message, 'bad'); }
+}
+window.setFunctionalStatus = setFunctionalStatus;
+
+function generateLIN(firstName){ const initial = firstName ? firstName.charAt(0).toUpperCase() : 'X'; const digits = Math.floor(1000 + Math.random() * 9000); return 'PM' + initial + digits; }
 window.generateLIN = generateLIN;
 
 async function handleExcelUpload(input){
   if (!input.files || input.files.length === 0) return;
-  const file = input.files[0];
-  const reader = new FileReader();
+  const file = input.files[0]; const reader = new FileReader();
   reader.onload = async function(e){
     try {
       toast('Reading Excel file...', 'ok');
@@ -584,70 +548,58 @@ async function handleExcelUpload(input){
       const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
       if (!rows || rows.length < 2) { toast('No data found', 'bad'); return; }
       const classes = await loadClasses();
-      const studentsToInsert = [];
+      const studentsToInsert = []; const paymentPlans = [];
       for (let i = 1; i < rows.length; i++){
         const row = rows[i];
         if (!row || !row[1] || String(row[1]).trim() === '' || String(row[1]).trim() === 'Name') continue;
-        const fullName = String(row[1]).trim();
-        const nameParts = fullName.split(' ');
-        const firstName = nameParts[0];
-        const lastName = nameParts.slice(1).join(' ') || null;
+        const fullName = String(row[1]).trim(); const parts = fullName.split(' ');
+        const fn = parts[0]; const ln = parts.slice(1).join(' ') || null;
         const className = String(row[2] || '').trim();
         let classId = null;
         if (className){
           const matched = classes.find(c => c.name.toLowerCase() === className.toLowerCase());
           if (matched){ classId = matched.id; }
-          else {
-            try {
-              const newClass = await rest('/rest/v1/classes', { method: 'POST', headers: { 'Prefer': 'return=representation' }, body: JSON.stringify({ school_id: _schoolId, name: className, sort_order: 99 }) });
-              if (newClass && newClass[0]){ classId = newClass[0].id; classes.push({ id: classId, name: className }); _classesCache = classes; }
-            } catch(err){ console.error(err); }
-          }
+          else { try { const newClass = await rest('/rest/v1/classes', { method: 'POST', headers: { 'Prefer': 'return=representation' }, body: JSON.stringify({ school_id: _schoolId, name: className, sort_order: 99 }) }); if (newClass && newClass[0]){ classId = newClass[0].id; classes.push({ id: classId, name: className }); _classesCache = classes; } } catch(err){} }
         }
-        const getNum = (val) => {
-          if (val === undefined || val === null || val === '') return 0;
-          const cleaned = String(val).replace(/[^0-9.-]/g, '');
-          const num = parseFloat(cleaned);
-          return isNaN(num) ? 0 : num;
-        };
+        const getNum = (v) => { if (v===undefined||v===null||v==='') return 0; const c = String(v).replace(/[^0-9.-]/g,''); const n = parseFloat(c); return isNaN(n)?0:n; };
         const boardingStatus = String(row[3] || 'Day').trim();
         const parentContact = row[4] ? String(row[4]).trim() : null;
-        const balanceBf = getNum(row[5]);
-        const actualFee = getNum(row[7]);
-        const functionalFee = getNum(row[10]);
-        const transportFee = getNum(row[12]);
-        const dep1 = getNum(row[13]);
-        const dep2 = getNum(row[14]);
-        const dep3 = getNum(row[15]);
-        let totalExpected = getNum(row[16]);
-        if (totalExpected === 0) totalExpected = balanceBf + actualFee + functionalFee + transportFee;
-        let currentBalance = getNum(row[17]);
-        if (currentBalance === 0 && totalExpected > 0) currentBalance = totalExpected - dep1 - dep2 - dep3;
+        const balanceBf = getNum(row[5]); const actualFee = getNum(row[7]);
+        const functionalFee = getNum(row[10]); const transportFee = getNum(row[12]);
+        const dep1 = getNum(row[13]); const dep2 = getNum(row[14]); const dep3 = getNum(row[15]);
+        const totalExpected = balanceBf + actualFee + transportFee;
+        const studentIndex = studentsToInsert.length;
         studentsToInsert.push({
-          school_id: _schoolId,
-          admission_no: row[0] ? 'ADM-' + String(row[0]).trim() : 'ADM-' + Math.floor(Math.random() * 10000),
-          first_name: firstName, last_name: lastName, lin: generateLIN(firstName),
-          class_id: classId, boarding_status: boardingStatus, parent_contact: parentContact,
-          balance_bf: balanceBf, actual_fee: actualFee, functional_fee: functionalFee, transport_fee: transportFee,
-          deposit_1: dep1, deposit_2: dep2, deposit_3: dep3,
-          total_expected: totalExpected, current_balance: currentBalance, status: 'active'
+          school_id: _schoolId, admission_no: row[0] ? 'ADM-' + String(row[0]).trim() : 'ADM-' + Math.floor(Math.random()*10000),
+          first_name: fn, last_name: ln, lin: generateLIN(fn), class_id: classId, boarding_status: boardingStatus,
+          parent_contact: parentContact, balance_bf: balanceBf, actual_fee: actualFee, functional_fee: functionalFee,
+          transport_fee: transportFee, total_expected: totalExpected, current_balance: totalExpected,
+          functional_fee_status: 'pending', status: 'active'
         });
+        if (dep1 > 0) paymentPlans.push({ tempIndex: studentIndex, amount: dep1, note: 'Imported (1st deposit)' });
+        if (dep2 > 0) paymentPlans.push({ tempIndex: studentIndex, amount: dep2, note: 'Imported (2nd deposit)' });
+        if (dep3 > 0) paymentPlans.push({ tempIndex: studentIndex, amount: dep3, note: 'Imported (3rd deposit)' });
       }
-      if (studentsToInsert.length === 0){ toast('No valid student records found', 'bad'); return; }
+      if (!studentsToInsert.length){ toast('No valid records', 'bad'); return; }
       toast('Importing ' + studentsToInsert.length + ' students...', 'ok');
-      const chunkSize = 50;
-      for (let i = 0; i < studentsToInsert.length; i += chunkSize){
-        const chunk = studentsToInsert.slice(i, i + chunkSize);
-        await rest('/rest/v1/students', { method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify(chunk) });
+      const insertedIds = [];
+      for (let i = 0; i < studentsToInsert.length; i += 50){
+        const chunk = studentsToInsert.slice(i, i + 50);
+        const res = await rest('/rest/v1/students', { method: 'POST', headers: { 'Prefer': 'return=representation' }, body: JSON.stringify(chunk) });
+        if (Array.isArray(res)) res.forEach(r => insertedIds.push(r.id));
       }
+      if (paymentPlans.length){
+        const paymentRows = paymentPlans.map(p => ({ school_id: _schoolId, student_id: insertedIds[p.tempIndex], amount: p.amount, payment_for: 'School Fees', payment_method: 'Cash', notes: p.note })).filter(r => r.student_id);
+        for (let i = 0; i < paymentRows.length; i += 50){ const chunk = paymentRows.slice(i, i + 50); await rest('/rest/v1/payments', { method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify(chunk) }); }
+      }
+      const allStudents = await rest('/rest/v1/students?school_id=eq.' + _schoolId + '&select=id,total_expected');
+      const allPayments = await rest('/rest/v1/payments?school_id=eq.' + _schoolId + '&select=student_id,amount,payment_for');
+      const paidMap = {};
+      allPayments.forEach(p => { if (p.payment_for !== 'Functional Fees') paidMap[p.student_id] = (paidMap[p.student_id]||0) + Number(p.amount); });
+      for (const s of allStudents){ const bal = (Number(s.total_expected)||0) - (paidMap[s.id]||0); await rest('/rest/v1/students?id=eq.' + s.id, { method: 'PATCH', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({ current_balance: bal }) }); }
       toast('Successfully imported ' + studentsToInsert.length + ' students!', 'ok');
-      input.value = '';
-      nav('students');
-    } catch (err){
-      console.error(err);
-      toast('Error importing: ' + err.message, 'bad');
-      input.value = '';
-    }
+      input.value = ''; nav('students');
+    } catch (err){ toast('Error importing: ' + err.message, 'bad'); input.value = ''; }
   };
   reader.readAsArrayBuffer(file);
 }
@@ -657,27 +609,21 @@ async function addStudent(){
   const classes = await loadClasses();
   if(!classes.length){ toast('No classes yet','bad'); return; }
   const nextNo = 'ADM-' + new Date().getFullYear() + '-' + String(Date.now()).slice(-3);
-  modal('<h3>Register New Pupil</h3>' +
-    '<div class="grid grid-2">' +
+  modal('<h3>Register New Pupil</h3><div class="grid grid-2">' +
       '<div><label>Admission No *</label><input id="s_adm" value="' + esc(nextNo) + '"></div>' +
       '<div><label>First Name *</label><input id="s_fn"></div>' +
       '<div><label>Last Name</label><input id="s_ln"></div>' +
       '<div><label>Gender</label><select id="s_gender"><option value="male">Male</option><option value="female">Female</option></select></div>' +
       '<div><label>Date of Birth</label><input id="s_dob" type="date"></div>' +
       '<div><label>Class</label><select id="s_class">' + classes.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('') + '</select></div>' +
-      '<div><label>Boarding Status</label><select id="s_boarding"><option value="Day">Day</option><option value="Boarding">Boarding</option></select></div>' +
-      '<div><label>Parent/Guardian Name</label><input id="s_parent_name"></div>' +
+      '<div><label>Boarding</label><select id="s_boarding"><option>Day</option><option>Boarding</option></select></div>' +
+      '<div><label>Parent Name</label><input id="s_parent_name"></div>' +
       '<div><label>Parent Contact</label><input id="s_parent_contact"></div>' +
       '<div><label>Balance B/F</label><input id="s_balance_bf" type="number" value="0"></div>' +
       '<div><label>Actual Fee</label><input id="s_actual_fee" type="number" value="0"></div>' +
-      '<div><label>Functional Fee</label><input id="s_functional_fee" type="number" value="0"></div>' +
       '<div><label>Transport Fee</label><input id="s_transport_fee" type="number" value="0"></div>' +
-      '<div><label>1st Deposit</label><input id="s_dep1" type="number" value="0"></div>' +
-      '<div><label>2nd Deposit</label><input id="s_dep2" type="number" value="0"></div>' +
-      '<div><label>3rd Deposit</label><input id="s_dep3" type="number" value="0"></div>' +
-    '</div>' +
-    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
-      '<button class="btn" onclick="saveNewStudent()">Register Pupil</button></div>');
+      '<div><label>Functional Fee</label><input id="s_functional_fee" type="number" value="0"></div>' +
+    '</div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveNewStudent()">Register Pupil</button></div>');
 }
 window.addStudent = addStudent;
 
@@ -686,38 +632,30 @@ async function saveNewStudent(){
   const fn = document.getElementById('s_fn').value.trim();
   if(!adm || !fn){ toast('Admission No and First Name required','bad'); return; }
   const generatedLin = generateLIN(fn);
-  const getNum = (id) => { const val = parseFloat(document.getElementById(id).value); return isNaN(val) ? 0 : val; };
-  const balanceBf = getNum('s_balance_bf'), actualFee = getNum('s_actual_fee'), functionalFee = getNum('s_functional_fee'), transportFee = getNum('s_transport_fee');
-  const dep1 = getNum('s_dep1'), dep2 = getNum('s_dep2'), dep3 = getNum('s_dep3');
-  const totalExpected = balanceBf + actualFee + functionalFee + transportFee;
-  const currentBalance = totalExpected - dep1 - dep2 - dep3;
+  const getNum = (id) => { const v = parseFloat(document.getElementById(id).value); return isNaN(v)?0:v; };
+  const balanceBf = getNum('s_balance_bf'), actualFee = getNum('s_actual_fee'), transportFee = getNum('s_transport_fee'), functionalFee = getNum('s_functional_fee');
+  const totalExpected = balanceBf + actualFee + transportFee;
   try {
     await rest('/rest/v1/students', { method: 'POST', headers: { 'Prefer': 'return=representation' }, body: JSON.stringify({
       school_id: _schoolId, admission_no: adm, first_name: fn, lin: generatedLin,
       last_name: document.getElementById('s_ln').value.trim() || null,
-      gender: document.getElementById('s_gender').value,
-      date_of_birth: document.getElementById('s_dob').value || null,
-      class_id: document.getElementById('s_class').value || null,
-      boarding_status: document.getElementById('s_boarding').value,
+      gender: document.getElementById('s_gender').value, date_of_birth: document.getElementById('s_dob').value || null,
+      class_id: document.getElementById('s_class').value || null, boarding_status: document.getElementById('s_boarding').value,
       parent_name: document.getElementById('s_parent_name').value.trim() || null,
       parent_contact: document.getElementById('s_parent_contact').value.trim() || null,
       balance_bf: balanceBf, actual_fee: actualFee, functional_fee: functionalFee, transport_fee: transportFee,
-      deposit_1: dep1, deposit_2: dep2, deposit_3: dep3,
-      total_expected: totalExpected, current_balance: currentBalance, status: 'active'
+      total_expected: totalExpected, current_balance: totalExpected, functional_fee_status: 'pending', status: 'active'
     })});
-    toast('Registered · LIN: ' + generatedLin, 'ok');
-    closeModal(); nav('students');
+    toast('Registered · LIN: ' + generatedLin, 'ok'); closeModal(); nav('students');
   } catch(e){ toast(e.message, 'bad'); }
 }
 window.saveNewStudent = saveNewStudent;
 
 async function editStudent(id){
   const students = await rest('/rest/v1/students?id=eq.' + id + '&select=*');
-  const s = students[0];
-  if(!s) return;
+  const s = students[0]; if(!s) return;
   const classes = await loadClasses();
-  modal('<h3>Edit Pupil</h3>' +
-    '<div class="grid grid-2">' +
+  modal('<h3>Edit Pupil</h3><div class="grid grid-2">' +
       '<div><label>Admission No</label><input id="e_adm" value="' + esc(s.admission_no) + '"></div>' +
       '<div><label>LIN</label><input value="' + esc(s.lin||'') + '" disabled></div>' +
       '<div><label>First Name</label><input id="e_fn" value="' + esc(s.first_name) + '"></div>' +
@@ -725,71 +663,310 @@ async function editStudent(id){
       '<div><label>Gender</label><select id="e_gender"><option value="male"' + (s.gender==='male'?' selected':'') + '>Male</option><option value="female"' + (s.gender==='female'?' selected':'') + '>Female</option></select></div>' +
       '<div><label>Date of Birth</label><input id="e_dob" type="date" value="' + (s.date_of_birth||'') + '"></div>' +
       '<div><label>Class</label><select id="e_class">' + classes.map(c=>'<option value="'+c.id+'"'+(c.id===s.class_id?' selected':'')+'>'+esc(c.name)+'</option>').join('') + '</select></div>' +
-      '<div><label>Boarding Status</label><select id="e_boarding">' + ['Day','Boarding','BAR'].map(x=>'<option value="'+x+'"'+(x===s.boarding_status?' selected':'')+'>'+x+'</option>').join('') + '</select></div>' +
-      '<div><label>Parent/Guardian Name</label><input id="e_parent_name" value="' + esc(s.parent_name||'') + '"></div>' +
+      '<div><label>Boarding</label><select id="e_boarding">' + ['Day','Boarding','BAR'].map(x=>'<option value="'+x+'"'+(x===s.boarding_status?' selected':'')+'>'+x+'</option>').join('') + '</select></div>' +
+      '<div><label>Parent Name</label><input id="e_parent_name" value="' + esc(s.parent_name||'') + '"></div>' +
       '<div><label>Parent Contact</label><input id="e_parent_contact" value="' + esc(s.parent_contact||'') + '"></div>' +
       '<div><label>Balance B/F</label><input id="e_balance_bf" type="number" value="' + (s.balance_bf||0) + '"></div>' +
       '<div><label>Actual Fee</label><input id="e_actual_fee" type="number" value="' + (s.actual_fee||0) + '"></div>' +
-      '<div><label>Functional Fee</label><input id="e_functional_fee" type="number" value="' + (s.functional_fee||0) + '"></div>' +
       '<div><label>Transport Fee</label><input id="e_transport_fee" type="number" value="' + (s.transport_fee||0) + '"></div>' +
-      '<div><label>1st Deposit</label><input id="e_dep1" type="number" value="' + (s.deposit_1||0) + '"></div>' +
-      '<div><label>2nd Deposit</label><input id="e_dep2" type="number" value="' + (s.deposit_2||0) + '"></div>' +
-      '<div><label>3rd Deposit</label><input id="e_dep3" type="number" value="' + (s.deposit_3||0) + '"></div>' +
+      '<div><label>Functional Fee</label><input id="e_functional_fee" type="number" value="' + (s.functional_fee||0) + '"></div>' +
+      '<div><label>Functional Status</label><select id="e_func_status"><option value="pending"' + (s.functional_fee_status==='pending'?' selected':'') + '>Pending</option><option value="cash"' + (s.functional_fee_status==='cash'?' selected':'') + '>Paid in Cash</option><option value="requirements"' + (s.functional_fee_status==='requirements'?' selected':'') + '>Provided Requirements</option></select></div>' +
       '<div><label>Status</label><select id="e_status">' + ['active','transferred','graduated','withdrawn','archived'].map(x=>'<option value="'+x+'"'+(x===s.status?' selected':'')+'>'+x+'</option>').join('') + '</select></div>' +
-    '</div>' +
-    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
-      '<button class="btn" onclick="updateStudent(\'' + id + '\')">Save</button></div>');
+    '</div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="updateStudent(\'' + id + '\')">Save</button></div>');
 }
 window.editStudent = editStudent;
 
 async function updateStudent(id){
-  const getNum = (i) => { const v = parseFloat(document.getElementById(i).value); return isNaN(v) ? 0 : v; };
-  const balanceBf = getNum('e_balance_bf'), actualFee = getNum('e_actual_fee'), functionalFee = getNum('e_functional_fee'), transportFee = getNum('e_transport_fee');
-  const dep1 = getNum('e_dep1'), dep2 = getNum('e_dep2'), dep3 = getNum('e_dep3');
-  const totalExpected = balanceBf + actualFee + functionalFee + transportFee;
-  const currentBalance = totalExpected - dep1 - dep2 - dep3;
+  const getNum = (i) => { const v = parseFloat(document.getElementById(i).value); return isNaN(v)?0:v; };
+  const balanceBf = getNum('e_balance_bf'), actualFee = getNum('e_actual_fee'), transportFee = getNum('e_transport_fee'), functionalFee = getNum('e_functional_fee');
+  const totalExpected = balanceBf + actualFee + transportFee;
   try {
     await rest('/rest/v1/students?id=eq.' + id, { method: 'PATCH', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({
       admission_no: document.getElementById('e_adm').value.trim(),
       first_name: document.getElementById('e_fn').value.trim(),
       last_name: document.getElementById('e_ln').value.trim() || null,
-      gender: document.getElementById('e_gender').value,
-      date_of_birth: document.getElementById('e_dob').value || null,
+      gender: document.getElementById('e_gender').value, date_of_birth: document.getElementById('e_dob').value || null,
       class_id: document.getElementById('e_class').value || null,
       boarding_status: document.getElementById('e_boarding').value,
       parent_name: document.getElementById('e_parent_name').value.trim() || null,
       parent_contact: document.getElementById('e_parent_contact').value.trim() || null,
       balance_bf: balanceBf, actual_fee: actualFee, functional_fee: functionalFee, transport_fee: transportFee,
-      deposit_1: dep1, deposit_2: dep2, deposit_3: dep3,
-      total_expected: totalExpected, current_balance: currentBalance,
-      status: document.getElementById('e_status').value,
-      updated_at: new Date().toISOString()
+      total_expected: totalExpected,
+      functional_fee_status: document.getElementById('e_func_status').value,
+      status: document.getElementById('e_status').value, updated_at: new Date().toISOString()
     })});
+    const payments = await rest('/rest/v1/payments?student_id=eq.' + id + '&select=amount,payment_for');
+    const paid = payments.filter(p => p.payment_for !== 'Functional Fees').reduce((s,p) => s + Number(p.amount), 0);
+    await rest('/rest/v1/students?id=eq.' + id, { method: 'PATCH', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({ current_balance: totalExpected - paid }) });
     toast('Updated successfully', 'ok'); closeModal(); nav('students');
   } catch(e){ toast(e.message, 'bad'); }
 }
 window.updateStudent = updateStudent;
 
 async function deleteStudent(id){
-  modal('<h3>Delete Pupil</h3>' +
-    '<p class="muted" style="margin-bottom:16px">Are you sure you want to delete this pupil? This cannot be undone.</p>' +
-    '<div class="actions">' +
-      '<button class="btn ghost" onclick="closeModal()">Cancel</button>' +
-      '<button class="btn danger" onclick="confirmDeleteStudent(\'' + id + '\')">Yes, Delete</button>' +
-    '</div>');
+  modal('<h3>Delete Pupil</h3><p class="muted" style="margin-bottom:16px">Delete this pupil and all payment records? Cannot be undone.</p>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="confirmDeleteStudent(\'' + id + '\')">Yes, Delete</button></div>');
 }
 window.deleteStudent = deleteStudent;
-
 async function confirmDeleteStudent(id){
   closeModal();
-  try {
-    await rest('/rest/v1/students?id=eq.' + id, { method: 'DELETE' });
-    toast('Pupil deleted', 'ok');
-    nav('students');
-  } catch(e){ toast(e.message, 'bad'); }
+  try { await rest('/rest/v1/payments?student_id=eq.' + id, { method: 'DELETE' }); await rest('/rest/v1/students?id=eq.' + id, { method: 'DELETE' }); toast('Pupil deleted', 'ok'); nav('students'); }
+  catch(e){ toast(e.message, 'bad'); }
 }
 window.confirmDeleteStudent = confirmDeleteStudent;
 
+// ==================== FEES PAGE ====================
+async function pageFees(root){
+  const [students, classes, payments] = await Promise.all([
+    rest('/rest/v1/students?school_id=eq.' + _schoolId + '&select=*&status=eq.active&order=first_name'),
+    rest('/rest/v1/classes?school_id=eq.' + _schoolId + '&select=id,name&order=sort_order'),
+    rest('/rest/v1/payments?school_id=eq.' + _schoolId + '&select=*&order=paid_at.desc')
+  ]);
+  window._allFeeStudents = students || [];
+  window._allClassesForFees = classes || [];
+  const paidByStudent = {};
+  (payments||[]).forEach(p => { if (!paidByStudent[p.student_id]) paidByStudent[p.student_id] = { school: 0, func: 0 }; if (p.payment_for === 'Functional Fees') paidByStudent[p.student_id].func += Number(p.amount); else paidByStudent[p.student_id].school += Number(p.amount); });
+  window._paidByStudentFees = paidByStudent;
+
+  let totExpected = 0, totCollected = 0;
+  let totFuncExpected = 0, totFuncCash = 0, totFuncReq = 0, funcReqCount = 0, funcCashCount = 0, funcPendingCount = 0;
+  (students||[]).forEach(s => {
+    const schoolFee = (Number(s.balance_bf)||0) + (Number(s.actual_fee)||0) + (Number(s.transport_fee)||0);
+    const funcFee = Number(s.functional_fee)||0;
+    const p = paidByStudent[s.id] || { school: 0, func: 0 };
+    totExpected += schoolFee; totCollected += p.school;
+    totFuncExpected += funcFee; totFuncCash += p.func;
+    if (s.functional_fee_status === 'requirements'){ totFuncReq += funcFee; funcReqCount++; }
+    else if (s.functional_fee_status === 'cash'){ funcCashCount++; }
+    else { funcPendingCount++; }
+  });
+  const totOutstanding = totExpected - totCollected;
+
+  root.innerHTML =
+    '<div class="page-head"><div><h1>Fees Management</h1><div class="sub">School fees and functional requirements</div></div>' +
+      '<button class="btn ghost" onclick="exportFeesToExcel()">📥 Export to Excel</button></div>' +
+    '<h3 style="margin-bottom:10px">📚 School Fees</h3>' +
+    '<div class="grid grid-kpi" style="margin-bottom:20px">' +
+      '<div class="kpi" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#a7f3d0"><div class="l" style="color:#047857">Expected</div><div class="v" style="font-size:20px;color:#065f46;margin-top:4px">' + fmtUGX(totExpected) + '</div></div>' +
+      '<div class="kpi" style="background:linear-gradient(135deg,#eef2ff,#c7d2fe);border-color:#a5b4fc"><div class="l" style="color:#4338ca">Collected</div><div class="v" style="font-size:20px;color:#3730a3;margin-top:4px">' + fmtUGX(totCollected) + '</div></div>' +
+      '<div class="kpi" style="background:linear-gradient(135deg,#fef2f2,#fecaca);border-color:#fca5a5"><div class="l" style="color:#b91c1c">Outstanding</div><div class="v" style="font-size:20px;color:#7f1d1d;margin-top:4px">' + fmtUGX(totOutstanding) + '</div></div>' +
+    '</div>' +
+    '<h3 style="margin-bottom:10px">🧾 Functional Fees (Requirements)</h3>' +
+    '<div class="grid grid-kpi" style="margin-bottom:20px">' +
+      '<div class="kpi"><div class="l">Total Requirement Value</div><div class="v" style="font-size:18px;margin-top:4px">' + fmtUGX(totFuncExpected) + '</div></div>' +
+      '<div class="kpi" style="background:var(--oksoft);border-color:#a7f3d0"><div class="l" style="color:#047857">💵 Paid in Cash</div><div class="v" style="font-size:18px;color:#065f46;margin-top:4px">' + fmtUGX(totFuncCash) + '</div><div class="muted" style="margin-top:2px">' + funcCashCount + ' pupils</div></div>' +
+      '<div class="kpi" style="background:#e0e7ff;border-color:#a5b4fc"><div class="l" style="color:#3730a3">📦 Provided Items</div><div class="v" style="font-size:18px;color:#312e81;margin-top:4px">' + funcReqCount + ' pupils</div><div class="muted" style="margin-top:2px">Value: ' + fmtUGX(totFuncReq) + '</div></div>' +
+      '<div class="kpi" style="background:var(--badsoft);border-color:#fecaca"><div class="l" style="color:#b91c1c">⏳ Pending</div><div class="v" style="font-size:18px;color:#7f1d1d;margin-top:4px">' + funcPendingCount + ' pupils</div></div>' +
+    '</div>' +
+    '<div class="card">' +
+      '<div class="grid grid-3" style="margin-bottom:16px">' +
+        '<div><label>Filter by Class</label><select id="feesClassFilter" onchange="filterFeesTable()"><option value="">All classes</option>' + (classes||[]).map(c => '<option value="' + c.id + '">' + esc(c.name) + '</option>').join('') + '</select></div>' +
+        '<div><label>Show</label><select id="feesOwingFilter" onchange="filterFeesTable()"><option value="all">All pupils</option><option value="owing">Only those owing school fees</option><option value="func_pending">Only functional pending</option></select></div>' +
+        '<div style="display:flex;align-items:flex-end"><button class="btn ghost" style="width:100%" onclick="document.getElementById(\'feesClassFilter\').value=\'\';document.getElementById(\'feesOwingFilter\').value=\'all\';filterFeesTable()">Reset</button></div>' +
+      '</div>' +
+      '<div id="feesTableContainer"></div>' +
+    '</div>';
+  filterFeesTable();
+}
+window.pageFees = pageFees;
+
+function exportFeesToExcel(){
+  const list = window._allFeeStudents || [];
+  const paid = window._paidByStudentFees || {};
+  const classes = window._allClassesForFees || [];
+  if (!list.length){ toast('No data to export', 'bad'); return; }
+  const exportData = list.map(s => {
+    const cls = classes.find(c => c.id === s.class_id);
+    const schoolFee = (Number(s.balance_bf)||0) + (Number(s.actual_fee)||0) + (Number(s.transport_fee)||0);
+    const funcFee = Number(s.functional_fee)||0;
+    const p = paid[s.id] || { school: 0, func: 0 };
+    const schoolBal = schoolFee - p.school;
+    let funcStatus = 'Pending';
+    if (s.functional_fee_status === 'cash') funcStatus = 'Paid in Cash';
+    else if (s.functional_fee_status === 'requirements') funcStatus = 'Provided Requirements';
+    return {
+      "Adm No": s.admission_no, "Name": s.first_name + ' ' + (s.last_name || ''), "Class": cls ? cls.name : '—', "LIN": s.lin || '—',
+      "School Fee Expected": schoolFee, "School Fee Paid": p.school, "School Fee Balance": schoolBal,
+      "Functional Status": funcStatus,
+      "Functional Fee Value": funcFee,
+      "Functional Fee Cash Paid": p.func
+    };
+  });
+  const ws = XLSX.utils.json_to_sheet(exportData);
+  ws['!cols'] = [{wch:12},{wch:25},{wch:10},{wch:12},{wch:20},{wch:18},{wch:18},{wch:22},{wch:20},{wch:22}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Fees Report");
+  XLSX.writeFile(wb, "Fees_Report_" + new Date().toISOString().slice(0,10) + ".xlsx");
+  toast('Exported to Excel!', 'ok');
+}
+window.exportFeesToExcel = exportFeesToExcel;
+
+function filterFeesTable(){
+  const fClass = document.getElementById('feesClassFilter')?.value || '';
+  const mode = document.getElementById('feesOwingFilter')?.value || 'all';
+  const paid = window._paidByStudentFees || {};
+  let list = window._allFeeStudents || [];
+  if (fClass) list = list.filter(s => s.class_id === fClass);
+  if (mode === 'owing') list = list.filter(s => { const schoolFee = (Number(s.balance_bf)||0) + (Number(s.actual_fee)||0) + (Number(s.transport_fee)||0); const p = paid[s.id] || { school: 0 }; return (schoolFee - p.school) > 0; });
+  if (mode === 'func_pending') list = list.filter(s => s.functional_fee_status === 'pending' || !s.functional_fee_status);
+  const container = document.getElementById('feesTableContainer');
+  if (!list.length){ container.innerHTML = '<div class="empty">No pupils match filters.</div>'; return; }
+  container.innerHTML = '<div class="table-wrap"><table>' +
+    '<thead><tr><th>Adm No</th><th>Name</th><th>Class</th><th style="text-align:right">School Exp.</th><th style="text-align:right">Paid</th><th style="text-align:right">School Bal</th><th>Functional</th><th style="text-align:right">Actions</th></tr></thead>' +
+    '<tbody>' + list.map(s => {
+      const cls = (window._allClassesForFees||[]).find(c => c.id === s.class_id);
+      const schoolFee = (Number(s.balance_bf)||0) + (Number(s.actual_fee)||0) + (Number(s.transport_fee)||0);
+      const p = paid[s.id] || { school: 0, func: 0 };
+      const schoolBal = schoolFee - p.school;
+      return '<tr><td><b>' + esc(s.admission_no) + '</b></td>' +
+        '<td>' + esc(s.first_name + ' ' + (s.last_name||'')) + '</td>' +
+        '<td><span class="badge info">' + esc(cls?cls.name:'—') + '</span></td>' +
+        '<td style="text-align:right">' + schoolFee.toLocaleString() + '</td>' +
+        '<td style="text-align:right;color:#047857">' + p.school.toLocaleString() + '</td>' +
+        '<td style="text-align:right"><span class="badge ' + (schoolBal > 0 ? 'bad' : 'ok') + '">' + schoolBal.toLocaleString() + '</span></td>' +
+        '<td>' + functionalStatusBadge(s.functional_fee_status) + '</td>' +
+        '<td style="text-align:right;white-space:nowrap">' +
+          '<button class="btn sm" onclick="recordPayment(\'' + s.id + '\')">💵</button> ' +
+          '<button class="btn sm ghost" onclick="markFunctionalFee(\'' + s.id + '\',\'' + esc(s.first_name + ' ' + (s.last_name||'')) + '\',\'' + (s.functional_fee||0) + '\',\'' + (s.functional_fee_status||'pending') + '\')">🧾</button> ' +
+          '<button class="btn sm ghost" onclick="viewPaymentHistory(\'' + s.id + '\')">📋</button>' +
+        '</td></tr>';
+    }).join('') + '</tbody></table></div>';
+}
+window.filterFeesTable = filterFeesTable;
+
+// ==================== RECORD PAYMENT ====================
+async function recordPayment(id){
+  const [students, payments] = await Promise.all([
+    rest('/rest/v1/students?id=eq.' + id + '&select=*'),
+    rest('/rest/v1/payments?student_id=eq.' + id + '&select=amount,payment_for')
+  ]);
+  const s = students[0]; if(!s) return;
+  const schoolFee = (Number(s.balance_bf)||0) + (Number(s.actual_fee)||0) + (Number(s.transport_fee)||0);
+  const funcFee = Number(s.functional_fee)||0;
+  const schoolPaid = payments.filter(p => p.payment_for !== 'Functional Fees').reduce((sum,p) => sum + Number(p.amount), 0);
+  const funcPaid = payments.filter(p => p.payment_for === 'Functional Fees').reduce((sum,p) => sum + Number(p.amount), 0);
+  const schoolBal = schoolFee - schoolPaid;
+  const now = new Date(); const tz = now.getTimezoneOffset() * 60000; const localISO = new Date(now - tz).toISOString().slice(0,16);
+  modal('<h3>💵 Record Payment — ' + esc(s.first_name + ' ' + (s.last_name||'')) + '</h3>' +
+    '<div style="background:var(--brandsoft);padding:12px;border-radius:10px;margin-bottom:16px;font-size:13px;line-height:1.8">' +
+      '<div>📚 <b>School Fees Balance:</b> ' + fmtUGX(schoolBal) + '</div>' +
+      '<div>🧾 <b>Functional Status:</b> ' + functionalStatusBadge(s.functional_fee_status) + ' (Value ' + fmtUGX(funcFee) + ')</div>' +
+    '</div>' +
+    '<div class="grid grid-2">' +
+      '<div><label>Payment For *</label><select id="p_for"><option value="School Fees">📚 School Fees</option><option value="Functional Fees">🧾 Functional Fee (Cash)</option></select></div>' +
+      '<div><label>Amount (UGX) *</label><input id="p_amount" type="number"></div>' +
+      '<div><label>Payment Method *</label><select id="p_method" onchange="toggleTxnIdField()"><option value="Cash">💵 Cash</option><option value="Mobile Money">📱 Mobile Money</option><option value="Bank Transfer">🏦 Bank Transfer</option><option value="Cheque">📝 Cheque</option></select></div>' +
+      '<div><label>Date & Time Paid *</label><input id="p_date" type="datetime-local" value="' + localISO + '"></div>' +
+      '<div id="txnIdField" style="display:none"><label>Transaction ID / Reference *</label><input id="p_txn"></div>' +
+      '<div><label>Notes (Optional)</label><input id="p_notes"></div>' +
+    '</div>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
+      '<button class="btn ok" onclick="savePayment(\'' + id + '\')">💾 Save Payment</button></div>');
+}
+window.recordPayment = recordPayment;
+
+function toggleTxnIdField(){
+  const method = document.getElementById('p_method').value;
+  const field = document.getElementById('txnIdField');
+  if (method === 'Cash'){ field.style.display = 'none'; document.getElementById('p_txn').value = ''; }
+  else { field.style.display = 'block'; }
+}
+window.toggleTxnIdField = toggleTxnIdField;
+
+async function savePayment(id){
+  const payFor = document.getElementById('p_for').value;
+  const amount = parseFloat(document.getElementById('p_amount').value);
+  const method = document.getElementById('p_method').value;
+  const txn = (document.getElementById('p_txn')?.value || '').trim();
+  const dateVal = document.getElementById('p_date').value;
+  const notes = document.getElementById('p_notes').value.trim();
+  if (!amount || amount <= 0){ toast('Enter a valid amount', 'bad'); return; }
+  if (method !== 'Cash' && !txn){ toast('Transaction ID required for ' + method, 'bad'); return; }
+  if (!dateVal){ toast('Select the payment date', 'bad'); return; }
+  try {
+    await rest('/rest/v1/payments', { method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({
+      school_id: _schoolId, student_id: id, amount: amount, payment_for: payFor, payment_method: method,
+      transaction_id: txn || null, notes: notes || null, paid_at: new Date(dateVal).toISOString()
+    })});
+    const [students, payments] = await Promise.all([
+      rest('/rest/v1/students?id=eq.' + id + '&select=total_expected,functional_fee'),
+      rest('/rest/v1/payments?student_id=eq.' + id + '&select=amount,payment_for')
+    ]);
+    const totalExpected = Number(students[0].total_expected) || 0;
+    const schoolPaid = payments.filter(p => p.payment_for !== 'Functional Fees').reduce((sum,p) => sum + Number(p.amount), 0);
+    const funcPaid = payments.filter(p => p.payment_for === 'Functional Fees').reduce((sum,p) => sum + Number(p.amount), 0);
+    const update = { current_balance: totalExpected - schoolPaid, functional_fee_paid: funcPaid };
+    if (payFor === 'Functional Fees') update.functional_fee_status = 'cash';
+    await rest('/rest/v1/students?id=eq.' + id, { method: 'PATCH', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify(update) });
+    toast('Payment recorded: ' + fmtUGX(amount), 'ok'); closeModal(); nav(activeRoute);
+  } catch(e){ toast(e.message, 'bad'); }
+}
+window.savePayment = savePayment;
+
+// ==================== PAYMENT HISTORY ====================
+async function viewPaymentHistory(studentId){
+  const [student, payments] = await Promise.all([
+    rest('/rest/v1/students?id=eq.' + studentId + '&select=*').then(r => r[0]),
+    rest('/rest/v1/payments?student_id=eq.' + studentId + '&select=*&order=paid_at.desc')
+  ]);
+  if (!student) return;
+  const schoolPaid = (payments||[]).filter(p => p.payment_for !== 'Functional Fees').reduce((sum,p) => sum + Number(p.amount), 0);
+  const funcPaid = (payments||[]).filter(p => p.payment_for === 'Functional Fees').reduce((sum,p) => sum + Number(p.amount), 0);
+  const schoolFee = (Number(student.balance_bf)||0) + (Number(student.actual_fee)||0) + (Number(student.transport_fee)||0);
+  const funcFee = Number(student.functional_fee)||0;
+  const rows = (payments||[]).map(p => {
+    const methodClass = p.payment_method === 'Cash' ? 'info' : p.payment_method === 'Mobile Money' ? 'ok' : 'req';
+    return '<tr>' +
+      '<td style="font-size:12.5px">' + fmtDateTime(p.paid_at) + '</td>' +
+      '<td>' + (p.payment_for === 'Functional Fees' ? '<span class="badge warn">🧾 Functional</span>' : '<span class="badge info">📚 School</span>') + '</td>' +
+      '<td style="text-align:right"><b>' + Number(p.amount).toLocaleString() + '</b></td>' +
+      '<td><span class="badge ' + methodClass + '">' + esc(p.payment_method||'—') + '</span></td>' +
+      '<td style="font-family:monospace;font-size:12px">' + esc(p.transaction_id || '—') + '</td>' +
+      '<td style="font-size:12px;color:var(--muted)">' + esc(p.notes || '') + '</td>' +
+      '<td style="text-align:right"><button class="btn sm danger" onclick="deletePayment(\'' + p.id + '\',\'' + studentId + '\')">✕</button></td>' +
+    '</tr>';
+  }).join('');
+  modal('<h3>📋 Payment History — ' + esc(student.first_name + ' ' + (student.last_name||'')) + '</h3>' +
+    '<div style="background:var(--brandsoft);padding:12px;border-radius:10px;margin-bottom:16px;font-size:13px;line-height:1.9">' +
+      '<div>📚 <b>School Fees:</b> ' + schoolPaid.toLocaleString() + ' paid of ' + schoolFee.toLocaleString() + ' — <b style="color:#b91c1c">Bal: ' + (schoolFee - schoolPaid).toLocaleString() + '</b></div>' +
+      '<div>🧾 <b>Functional Status:</b> ' + functionalStatusBadge(student.functional_fee_status) + ' · Cash Paid: ' + fmtUGX(funcPaid) + ' of ' + fmtUGX(funcFee) + '</div>' +
+    '</div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
+      '<span class="muted">' + (payments||[]).length + ' payment(s)</span>' +
+      '<div style="display:flex;gap:6px"><button class="btn sm ghost" onclick="closeModal();markFunctionalFee(\'' + studentId + '\',\'' + esc(student.first_name + ' ' + (student.last_name||'')) + '\',\'' + (student.functional_fee||0) + '\',\'' + (student.functional_fee_status||'pending') + '\')">🧾 Func Status</button>' +
+      '<button class="btn sm" onclick="closeModal();recordPayment(\'' + studentId + '\')">＋ Payment</button></div>' +
+    '</div>' +
+    ((payments||[]).length ?
+      '<div class="table-wrap"><table><thead><tr><th>Date & Time</th><th>For</th><th style="text-align:right">Amount</th><th>Method</th><th>Transaction ID</th><th>Notes</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+      : '<div class="empty">No payments recorded yet.</div>') +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Close</button></div>');
+}
+window.viewPaymentHistory = viewPaymentHistory;
+
+async function deletePayment(paymentId, studentId){
+  modal('<h3>Delete Payment</h3><p class="muted" style="margin-bottom:16px">Delete this payment? Balances will be recalculated.</p>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal();viewPaymentHistory(\'' + studentId + '\')">Cancel</button>' +
+    '<button class="btn danger" onclick="confirmDeletePayment(\'' + paymentId + '\',\'' + studentId + '\')">Yes, Delete</button></div>');
+}
+window.deletePayment = deletePayment;
+async function confirmDeletePayment(paymentId, studentId){
+  closeModal();
+  try {
+    await rest('/rest/v1/payments?id=eq.' + paymentId, { method: 'DELETE' });
+    const [students, payments] = await Promise.all([
+      rest('/rest/v1/students?id=eq.' + studentId + '&select=total_expected,functional_fee'),
+      rest('/rest/v1/payments?student_id=eq.' + studentId + '&select=amount,payment_for')
+    ]);
+    const totalExpected = Number(students[0].total_expected) || 0;
+    const schoolPaid = payments.filter(p => p.payment_for !== 'Functional Fees').reduce((s,p) => s + Number(p.amount), 0);
+    const funcPaid = payments.filter(p => p.payment_for === 'Functional Fees').reduce((s,p) => s + Number(p.amount), 0);
+    await rest('/rest/v1/students?id=eq.' + studentId, { method: 'PATCH', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({ current_balance: totalExpected - schoolPaid, functional_fee_paid: funcPaid }) });
+    toast('Payment deleted', 'ok'); viewPaymentHistory(studentId);
+  } catch(e){ toast(e.message, 'bad'); }
+}
+window.confirmDeletePayment = confirmDeletePayment;
+
+// ==================== CLASSES ====================
 async function pageClasses(root){
   const classes = await rest('/rest/v1/classes?school_id=eq.' + _schoolId + '&select=*&order=sort_order');
   _classesCache = classes || [];
@@ -799,154 +976,89 @@ async function pageClasses(root){
   root.innerHTML =
     '<div class="page-head"><div><h1>Classes</h1><div class="sub">' + (classes||[]).length + ' classes</div></div>' +
       '<button class="btn" onclick="addClass()">＋ Add Class</button></div>' +
-    '<div class="card"><div class="table-wrap"><table>' +
-      '<thead><tr><th>Class</th><th>Pupils</th><th style="text-align:right">Actions</th></tr></thead>' +
-      '<tbody>' + (classes||[]).map(c =>
-        '<tr><td><b>' + esc(c.name) + '</b></td>' +
-        '<td><span class="badge info">' + (counts[c.id]||0) + ' pupils</span></td>' +
-        '<td style="text-align:right"><button class="btn sm danger" onclick="deleteClass(\'' + c.id + '\',' + (counts[c.id]||0) + ')">✕</button></td></tr>'
-      ).join('') + '</tbody></table></div></div>';
+    '<div class="card"><div class="table-wrap"><table><thead><tr><th>Class</th><th>Pupils</th><th style="text-align:right">Actions</th></tr></thead>' +
+      '<tbody>' + (classes||[]).map(c => '<tr><td><b>' + esc(c.name) + '</b></td><td><span class="badge info">' + (counts[c.id]||0) + ' pupils</span></td>' +
+        '<td style="text-align:right"><button class="btn sm danger" onclick="deleteClass(\'' + c.id + '\',' + (counts[c.id]||0) + ')">✕</button></td></tr>').join('') + '</tbody></table></div></div>';
 }
-function addClass(){
-  modal('<h3>Add Class</h3>' +
-    '<div><label>Class Name</label><input id="c_name"></div>' +
-    '<div style="margin-top:12px"><label>Sort Order</label><input id="c_sort" type="number" value="0"></div>' +
-    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
-      '<button class="btn" onclick="saveNewClass()">Save</button></div>');
-}
+function addClass(){ modal('<h3>Add Class</h3><div><label>Class Name</label><input id="c_name"></div><div style="margin-top:12px"><label>Sort Order</label><input id="c_sort" type="number" value="0"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveNewClass()">Save</button></div>'); }
 window.addClass = addClass;
 async function saveNewClass(){
   const name = document.getElementById('c_name').value.trim();
   if(!name){ toast('Name required','bad'); return; }
-  try {
-    await rest('/rest/v1/classes', { method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({ school_id: _schoolId, name: name, sort_order: parseInt(document.getElementById('c_sort').value)||0 }) });
-    _classesCache = null; toast('Added','ok'); closeModal(); nav('classes');
-  } catch(e){ toast(e.message, 'bad'); }
+  try { await rest('/rest/v1/classes', { method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({ school_id: _schoolId, name: name, sort_order: parseInt(document.getElementById('c_sort').value)||0 }) }); _classesCache = null; toast('Added','ok'); closeModal(); nav('classes'); }
+  catch(e){ toast(e.message, 'bad'); }
 }
 window.saveNewClass = saveNewClass;
 async function deleteClass(id, count){
   if(count > 0){ toast('Cannot delete — has pupils','bad'); return; }
-  modal('<h3>Delete Class</h3>' +
-    '<p class="muted" style="margin-bottom:16px">Delete this class?</p>' +
-    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
-    '<button class="btn danger" onclick="confirmDeleteClass(\'' + id + '\')">Delete</button></div>');
+  modal('<h3>Delete Class</h3><p class="muted" style="margin-bottom:16px">Delete this class?</p><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="confirmDeleteClass(\'' + id + '\')">Delete</button></div>');
 }
 window.deleteClass = deleteClass;
-async function confirmDeleteClass(id){
-  closeModal();
-  try { await rest('/rest/v1/classes?id=eq.' + id, { method: 'DELETE' }); _classesCache = null; toast('Deleted','ok'); nav('classes'); }
-  catch(e){ toast(e.message, 'bad'); }
-}
+async function confirmDeleteClass(id){ closeModal(); try { await rest('/rest/v1/classes?id=eq.' + id, { method: 'DELETE' }); _classesCache = null; toast('Deleted','ok'); nav('classes'); } catch(e){ toast(e.message, 'bad'); } }
 window.confirmDeleteClass = confirmDeleteClass;
 
+// ==================== SUBJECTS ====================
 async function pageSubjects(root){
   const subjects = await rest('/rest/v1/subjects?school_id=eq.' + _schoolId + '&select=*&order=code');
   root.innerHTML =
     '<div class="page-head"><div><h1>Subjects</h1><div class="sub">' + (subjects||[]).length + ' subjects</div></div>' +
       '<button class="btn" onclick="addSubject()">＋ Add Subject</button></div>' +
-    '<div class="card"><div class="table-wrap"><table>' +
-      '<thead><tr><th>Code</th><th>Name</th><th>Compulsory</th><th style="text-align:right">Actions</th></tr></thead>' +
-      '<tbody>' + (subjects||[]).map(s =>
-        '<tr><td><span class="badge info">' + esc(s.code) + '</span></td>' +
-        '<td><b>' + esc(s.name) + '</b></td>' +
+    '<div class="card"><div class="table-wrap"><table><thead><tr><th>Code</th><th>Name</th><th>Compulsory</th><th style="text-align:right">Actions</th></tr></thead>' +
+      '<tbody>' + (subjects||[]).map(s => '<tr><td><span class="badge info">' + esc(s.code) + '</span></td><td><b>' + esc(s.name) + '</b></td>' +
         '<td>' + (s.is_compulsory ? '<span class="badge ok">Yes</span>' : '<span class="badge">No</span>') + '</td>' +
-        '<td style="text-align:right"><button class="btn sm danger" onclick="deleteSubject(\'' + s.id + '\')">✕</button></td></tr>'
-      ).join('') + '</tbody></table></div></div>';
+        '<td style="text-align:right"><button class="btn sm danger" onclick="deleteSubject(\'' + s.id + '\')">✕</button></td></tr>').join('') + '</tbody></table></div></div>';
 }
-function addSubject(){
-  modal('<h3>Add Subject</h3>' +
-    '<div class="grid grid-2">' +
-      '<div><label>Code</label><input id="sb_code" placeholder="ENG"></div>' +
-      '<div><label>Name</label><input id="sb_name" placeholder="English"></div>' +
-    '</div>' +
-    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
-      '<button class="btn" onclick="saveNewSubject()">Save</button></div>');
-}
+function addSubject(){ modal('<h3>Add Subject</h3><div class="grid grid-2"><div><label>Code</label><input id="sb_code" placeholder="ENG"></div><div><label>Name</label><input id="sb_name" placeholder="English"></div></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveNewSubject()">Save</button></div>'); }
 window.addSubject = addSubject;
 async function saveNewSubject(){
   const code = document.getElementById('sb_code').value.trim().toUpperCase();
   const name = document.getElementById('sb_name').value.trim();
   if(!code || !name){ toast('Fill both','bad'); return; }
-  try {
-    await rest('/rest/v1/subjects', { method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({ school_id: _schoolId, code: code, name: name, is_compulsory: true }) });
-    toast('Added','ok'); closeModal(); nav('subjects');
-  } catch(e){ toast(e.message, 'bad'); }
-}
-window.saveNewSubject = saveNewSubject;
-async function deleteSubject(id){
-  modal('<h3>Delete Subject</h3>' +
-    '<p class="muted" style="margin-bottom:16px">Delete this subject?</p>' +
-    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
-    '<button class="btn danger" onclick="confirmDeleteSubject(\'' + id + '\')">Delete</button></div>');
-}
-window.deleteSubject = deleteSubject;
-async function confirmDeleteSubject(id){
-  closeModal();
-  try { await rest('/rest/v1/subjects?id=eq.' + id, { method: 'DELETE' }); toast('Deleted','ok'); nav('subjects'); }
+  try { await rest('/rest/v1/subjects', { method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({ school_id: _schoolId, code: code, name: name, is_compulsory: true }) }); toast('Added','ok'); closeModal(); nav('subjects'); }
   catch(e){ toast(e.message, 'bad'); }
 }
+window.saveNewSubject = saveNewSubject;
+async function deleteSubject(id){ modal('<h3>Delete Subject</h3><p class="muted" style="margin-bottom:16px">Delete this subject?</p><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="confirmDeleteSubject(\'' + id + '\')">Delete</button></div>'); }
+window.deleteSubject = deleteSubject;
+async function confirmDeleteSubject(id){ closeModal(); try { await rest('/rest/v1/subjects?id=eq.' + id, { method: 'DELETE' }); toast('Deleted','ok'); nav('subjects'); } catch(e){ toast(e.message, 'bad'); } }
 window.confirmDeleteSubject = confirmDeleteSubject;
 
+// ==================== EXAMS ====================
 async function pageExams(root){
   const exams = await rest('/rest/v1/exams?school_id=eq.' + _schoolId + '&select=*&order=created_at.desc');
   root.innerHTML =
     '<div class="page-head"><div><h1>Exams</h1><div class="sub">' + (exams||[]).length + ' exams</div></div>' +
       '<button class="btn" onclick="addExam()">＋ Create Exam</button></div>' +
-    '<div class="card">' +
-      ((exams||[]).length ? '<div class="table-wrap"><table>' +
-        '<thead><tr><th>Name</th><th>Type</th><th>Year · Term</th><th style="text-align:right">Actions</th></tr></thead>' +
-        '<tbody>' + exams.map(e =>
-          '<tr><td><b>' + esc(e.name) + '</b></td>' +
-          '<td><span class="badge info">' + esc(e.type) + '</span></td>' +
-          '<td>' + e.year + ' · T' + e.term + '</td>' +
-          '<td style="text-align:right;white-space:nowrap">' +
-            '<button class="btn sm" onclick="window._marksExamId=\'' + e.id + '\';nav(\'marks\')">Marks</button> ' +
-            '<button class="btn sm danger" onclick="deleteExam(\'' + e.id + '\')">✕</button>' +
-          '</td></tr>'
-        ).join('') + '</tbody></table></div>' : '<div class="empty">No exams yet. Click "Create Exam" to begin.</div>') +
-    '</div>';
+    '<div class="card">' + ((exams||[]).length ?
+      '<div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th>Year · Term</th><th style="text-align:right">Actions</th></tr></thead>' +
+      '<tbody>' + exams.map(e => '<tr><td><b>' + esc(e.name) + '</b></td><td><span class="badge info">' + esc(e.type) + '</span></td>' +
+        '<td>' + e.year + ' · T' + e.term + '</td>' +
+        '<td style="text-align:right;white-space:nowrap"><button class="btn sm" onclick="window._marksExamId=\'' + e.id + '\';nav(\'marks\')">Marks</button> ' +
+        '<button class="btn sm danger" onclick="deleteExam(\'' + e.id + '\')">✕</button></td></tr>').join('') + '</tbody></table></div>'
+      : '<div class="empty">No exams yet.</div>') + '</div>';
 }
 function addExam(){
   const year = new Date().getFullYear();
-  modal('<h3>Create Exam</h3>' +
-    '<div><label>Exam Name</label><input id="ex_name" placeholder="End of Term Exam"></div>' +
-    '<div class="grid grid-2" style="margin-top:12px">' +
-      '<div><label>Type</label><select id="ex_type">' + ['Test','Mid-Term','End of Term','Mock','Final'].map(t=>'<option>'+t+'</option>').join('') + '</select></div>' +
-      '<div><label>Term</label><select id="ex_term"><option>1</option><option selected>2</option><option>3</option></select></div>' +
-    '</div>' +
+  modal('<h3>Create Exam</h3><div><label>Exam Name</label><input id="ex_name"></div>' +
+    '<div class="grid grid-2" style="margin-top:12px"><div><label>Type</label><select id="ex_type">' + ['Test','Mid-Term','End of Term','Mock','Final'].map(t=>'<option>'+t+'</option>').join('') + '</select></div>' +
+    '<div><label>Term</label><select id="ex_term"><option>1</option><option selected>2</option><option>3</option></select></div></div>' +
     '<div style="margin-top:12px"><label>Year</label><input id="ex_year" type="number" value="' + year + '"></div>' +
-    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
-      '<button class="btn" onclick="saveNewExam()">Create</button></div>');
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveNewExam()">Create</button></div>');
 }
 window.addExam = addExam;
 async function saveNewExam(){
   const name = document.getElementById('ex_name').value.trim();
   if(!name){ toast('Name required','bad'); return; }
-  try {
-    await rest('/rest/v1/exams', { method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({
-      school_id: _schoolId, name: name,
-      type: document.getElementById('ex_type').value,
-      year: parseInt(document.getElementById('ex_year').value),
-      term: parseInt(document.getElementById('ex_term').value)
-    })});
-    toast('Created','ok'); closeModal(); nav('exams');
-  } catch(e){ toast(e.message, 'bad'); }
-}
-window.saveNewExam = saveNewExam;
-async function deleteExam(id){
-  modal('<h3>Delete Exam</h3>' +
-    '<p class="muted" style="margin-bottom:16px">Delete this exam and all its marks?</p>' +
-    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
-    '<button class="btn danger" onclick="confirmDeleteExam(\'' + id + '\')">Delete</button></div>');
-}
-window.deleteExam = deleteExam;
-async function confirmDeleteExam(id){
-  closeModal();
-  try { await rest('/rest/v1/exams?id=eq.' + id, { method: 'DELETE' }); toast('Deleted','ok'); nav('exams'); }
+  try { await rest('/rest/v1/exams', { method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({ school_id: _schoolId, name: name, type: document.getElementById('ex_type').value, year: parseInt(document.getElementById('ex_year').value), term: parseInt(document.getElementById('ex_term').value) })}); toast('Created','ok'); closeModal(); nav('exams'); }
   catch(e){ toast(e.message, 'bad'); }
 }
+window.saveNewExam = saveNewExam;
+async function deleteExam(id){ modal('<h3>Delete Exam</h3><p class="muted" style="margin-bottom:16px">Delete this exam and all its marks?</p><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="confirmDeleteExam(\'' + id + '\')">Delete</button></div>'); }
+window.deleteExam = deleteExam;
+async function confirmDeleteExam(id){ closeModal(); try { await rest('/rest/v1/exams?id=eq.' + id, { method: 'DELETE' }); toast('Deleted','ok'); nav('exams'); } catch(e){ toast(e.message, 'bad'); } }
 window.confirmDeleteExam = confirmDeleteExam;
 
+// ==================== MARKS ====================
 async function pageMarks(root){
   const [exams, classes, subjects] = await Promise.all([
     rest('/rest/v1/exams?school_id=eq.' + _schoolId + '&select=*&order=created_at.desc'),
@@ -954,8 +1066,7 @@ async function pageMarks(root){
     rest('/rest/v1/subjects?school_id=eq.' + _schoolId + '&select=*&order=code')
   ]);
   if(!(exams||[]).length || !(classes||[]).length || !(subjects||[]).length){
-    root.innerHTML = '<div class="page-head"><div><h1>Marks Entry</h1></div></div><div class="card"><div class="empty">Create an exam, class, and subject first.</div></div>';
-    return;
+    root.innerHTML = '<div class="page-head"><div><h1>Marks Entry</h1></div></div><div class="card"><div class="empty">Create an exam, class, and subject first.</div></div>'; return;
   }
   const examId = window._marksExamId || exams[0].id;
   const classId = window._marksClassId || classes[0].id;
@@ -968,33 +1079,27 @@ async function pageMarks(root){
     rest('/rest/v1/marks?school_id=eq.' + _schoolId + '&exam_id=eq.' + exam.id + '&subject_id=eq.' + subj.id + '&select=*')
   ]);
   root.innerHTML =
-    '<div class="page-head"><div><h1>Marks Entry</h1>' +
-      '<div class="sub">' + esc(exam.name) + ' · ' + esc(cls.name) + ' · ' + esc(subj.name) + '</div></div>' +
+    '<div class="page-head"><div><h1>Marks Entry</h1><div class="sub">' + esc(exam.name) + ' · ' + esc(cls.name) + ' · ' + esc(subj.name) + '</div></div>' +
       '<button class="btn" onclick="saveMarksGrid()">💾 Save All</button></div>' +
     '<div class="card" style="margin-bottom:16px"><div class="grid grid-3">' +
       '<div><label>Exam</label><select onchange="window._marksExamId=this.value;nav(\'marks\')">' + exams.map(e=>'<option value="'+e.id+'"'+(e.id===exam.id?' selected':'')+'>'+esc(e.name)+'</option>').join('') + '</select></div>' +
       '<div><label>Class</label><select onchange="window._marksClassId=this.value;nav(\'marks\')">' + classes.map(c=>'<option value="'+c.id+'"'+(c.id===cls.id?' selected':'')+'>'+esc(c.name)+'</option>').join('') + '</select></div>' +
       '<div><label>Subject</label><select onchange="window._marksSubjectId=this.value;nav(\'marks\')">' + subjects.map(s=>'<option value="'+s.id+'"'+(s.id===subj.id?' selected':'')+'>'+esc(s.code)+' — '+esc(s.name)+'</option>').join('') + '</select></div>' +
     '</div></div>' +
-    '<div class="card">' +
-      ((students||[]).length ? '<div class="table-wrap"><table>' +
-        '<thead><tr><th>#</th><th>Adm No</th><th>Name</th><th>Score / 100</th></tr></thead>' +
-        '<tbody>' + students.map((s, i) => {
-          const m = (marks||[]).find(x => x.student_id === s.id);
-          return '<tr><td>' + (i+1) + '</td><td><b>' + esc(s.admission_no) + '</b></td><td>' + esc(s.first_name + ' ' + (s.last_name||'')) + '</td>' +
-            '<td><input type="number" min="0" max="100" class="mk-input" data-student="' + s.id + '" value="' + (m ? m.score : '') + '" style="max-width:130px"></td></tr>';
-        }).join('') + '</tbody></table></div>' : '<div class="empty">No pupils in this class.</div>') +
-    '</div>';
+    '<div class="card">' + ((students||[]).length ?
+      '<div class="table-wrap"><table><thead><tr><th>#</th><th>Adm No</th><th>Name</th><th>Score / 100</th></tr></thead>' +
+      '<tbody>' + students.map((s, i) => {
+        const m = (marks||[]).find(x => x.student_id === s.id);
+        return '<tr><td>' + (i+1) + '</td><td><b>' + esc(s.admission_no) + '</b></td><td>' + esc(s.first_name + ' ' + (s.last_name||'')) + '</td>' +
+          '<td><input type="number" min="0" max="100" class="mk-input" data-student="' + s.id + '" value="' + (m ? m.score : '') + '" style="max-width:130px"></td></tr>';
+      }).join('') + '</tbody></table></div>' : '<div class="empty">No pupils.</div>') + '</div>';
 }
 async function saveMarksGrid(){
-  const examId = window._marksExamId;
-  const subjectId = window._marksSubjectId;
+  const examId = window._marksExamId, subjectId = window._marksSubjectId;
   const rows = [];
   document.querySelectorAll('.mk-input').forEach(inp => {
-    const v = inp.value.trim();
-    if(v === '') return;
-    const score = parseFloat(v);
-    if(isNaN(score) || score < 0 || score > 100) return;
+    const v = inp.value.trim(); if(v === '') return;
+    const score = parseFloat(v); if(isNaN(score) || score < 0 || score > 100) return;
     rows.push({ school_id: _schoolId, exam_id: examId, subject_id: subjectId, student_id: inp.dataset.student, score: score });
   });
   if(!rows.length){ toast('Nothing to save','bad'); return; }
@@ -1006,14 +1111,14 @@ async function saveMarksGrid(){
 }
 window.saveMarksGrid = saveMarksGrid;
 
+// ==================== REPORTS ====================
 async function pageReports(root){
   const [exams, classes] = await Promise.all([
     rest('/rest/v1/exams?school_id=eq.' + _schoolId + '&select=*&order=created_at.desc'),
     rest('/rest/v1/classes?school_id=eq.' + _schoolId + '&select=*&order=sort_order')
   ]);
   if(!(exams||[]).length || !(classes||[]).length){
-    root.innerHTML = '<div class="page-head"><div><h1>Report Cards</h1></div></div><div class="card"><div class="empty">Create an exam and class first.</div></div>';
-    return;
+    root.innerHTML = '<div class="page-head"><div><h1>Report Cards</h1></div></div><div class="card"><div class="empty">Create an exam and class first.</div></div>'; return;
   }
   const examId = window._rcExamId || exams[0].id;
   const classId = window._rcClassId || classes[0].id;
@@ -1026,12 +1131,11 @@ async function pageReports(root){
       '<div><label>Exam</label><select onchange="window._rcExamId=this.value;nav(\'reports\')">' + exams.map(e=>'<option value="'+e.id+'"'+(e.id===exam.id?' selected':'')+'>'+esc(e.name)+'</option>').join('') + '</select></div>' +
       '<div><label>Class</label><select onchange="window._rcClassId=this.value;nav(\'reports\')">' + classes.map(c=>'<option value="'+c.id+'"'+(c.id===cls.id?' selected':'')+'>'+esc(c.name)+'</option>').join('') + '</select></div>' +
     '</div></div>' +
-    '<div class="card">' +
-      ((students||[]).length ? '<div class="table-wrap"><table>' +
-        '<thead><tr><th>Adm No</th><th>Name</th><th style="text-align:right">Actions</th></tr></thead>' +
-        '<tbody>' + students.map(s => '<tr><td><b>' + esc(s.admission_no) + '</b></td><td>' + esc(s.first_name + ' ' + (s.last_name||'')) + '</td>' +
-          '<td style="text-align:right"><button class="btn sm" onclick="viewReport(\'' + s.id + '\',\'' + exam.id + '\')">View</button></td></tr>').join('') + '</tbody></table></div>' : '<div class="empty">No pupils in this class.</div>') +
-    '</div>';
+    '<div class="card">' + ((students||[]).length ?
+      '<div class="table-wrap"><table><thead><tr><th>Adm No</th><th>Name</th><th style="text-align:right">Actions</th></tr></thead>' +
+      '<tbody>' + students.map(s => '<tr><td><b>' + esc(s.admission_no) + '</b></td><td>' + esc(s.first_name + ' ' + (s.last_name||'')) + '</td>' +
+        '<td style="text-align:right"><button class="btn sm" onclick="viewReport(\'' + s.id + '\',\'' + exam.id + '\')">View</button></td></tr>').join('') + '</tbody></table></div>'
+      : '<div class="empty">No pupils.</div>') + '</div>';
 }
 async function viewReport(studentId, examId){
   const [student, exam, subjects, marks, rules] = await Promise.all([
@@ -1056,249 +1160,98 @@ async function viewReport(studentId, examId){
     '<div style="text-align:center;padding-bottom:12px;border-bottom:2px solid #111;margin-bottom:14px">' +
       '<h2 style="margin:0;font-size:20px">' + esc(_school.name) + '</h2>' +
       '<div style="font-size:12px">' + esc(_school.address||'') + ' · ' + esc(_school.telephone||'') + '</div>' +
-      '<div style="margin-top:8px;font-weight:700">REPORT CARD</div>' +
-    '</div>' +
+      '<div style="margin-top:8px;font-weight:700">REPORT CARD</div></div>' +
     '<div style="font-size:13px;line-height:1.9;margin-bottom:12px">' +
       '<div><b>Name:</b> ' + esc(student.first_name + ' ' + (student.last_name||'')) + '</div>' +
       '<div><b>Adm No:</b> ' + esc(student.admission_no) + ' · <b>LIN:</b> ' + esc(student.lin||'—') + '</div>' +
-      '<div><b>Exam:</b> ' + esc(exam.name) + ' · <b>Year:</b> ' + exam.year + ' T' + exam.term + '</div>' +
-    '</div>' +
-    '<table style="width:100%;border-collapse:collapse;font-size:13px">' +
-      '<thead><tr style="background:#f1f5f9">' +
-        '<th style="border:1px solid #cbd5e1;padding:7px;text-align:left">Subject</th>' +
-        '<th style="border:1px solid #cbd5e1;padding:7px">Score</th>' +
-        '<th style="border:1px solid #cbd5e1;padding:7px">Grade</th>' +
-        '<th style="border:1px solid #cbd5e1;padding:7px;text-align:left">Remark</th>' +
-      '</tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<div><b>Exam:</b> ' + esc(exam.name) + ' · <b>Year:</b> ' + exam.year + ' T' + exam.term + '</div></div>' +
+    '<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#f1f5f9">' +
+      '<th style="border:1px solid #cbd5e1;padding:7px;text-align:left">Subject</th><th style="border:1px solid #cbd5e1;padding:7px">Score</th>' +
+      '<th style="border:1px solid #cbd5e1;padding:7px">Grade</th><th style="border:1px solid #cbd5e1;padding:7px;text-align:left">Remark</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table>' +
     '<div style="margin-top:12px;padding:10px;background:#f1f5f9;border-radius:8px;font-size:13px;display:flex;justify-content:space-between">' +
-      '<div><b>Total:</b> ' + total.toFixed(1) + '</div>' +
-      '<div><b>Average:</b> ' + avg.toFixed(1) + '</div>' +
-      '<div><b>Overall:</b> ' + (overall ? overall.grade : '—') + '</div>' +
-    '</div>' +
-    '<div style="text-align:center;font-size:10px;margin-top:16px;color:#64748b">Powered by EUDES MEDIA</div>' +
-  '</div>' +
-  '<div class="actions"><button class="btn ghost" onclick="closeModal()">Close</button>' +
+      '<div><b>Total:</b> ' + total.toFixed(1) + '</div><div><b>Average:</b> ' + avg.toFixed(1) + '</div>' +
+      '<div><b>Overall:</b> ' + (overall ? overall.grade : '—') + '</div></div>' +
+    '<div style="text-align:center;font-size:10px;margin-top:16px;color:#64748b">Powered by EUDES MEDIA</div></div>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Close</button>' +
     '<button class="btn" onclick="printEl(\'rcPrint\')">🖨️ Print</button></div>');
 }
 window.viewReport = viewReport;
 function printEl(id){ const el = document.getElementById(id); if(!el) return; try { window.print(); } catch(e){} }
 window.printEl = printEl;
 
-async function pageFees(root){
-  const [students, classes] = await Promise.all([
-    rest('/rest/v1/students?school_id=eq.' + _schoolId + '&select=id,first_name,last_name,admission_no,lin,class_id,current_balance,total_expected,deposit_1,deposit_2,deposit_3&status=eq.active&order=first_name'),
-    rest('/rest/v1/classes?school_id=eq.' + _schoolId + '&select=id,name&order=sort_order')
-  ]);
-  window._allFeeStudents = students || [];
-  window._allClassesForFees = classes || [];
-
-  const totalExpected = (students||[]).reduce((sum, s) => sum + (Number(s.total_expected) || 0), 0);
-  const totalOwed = (students||[]).reduce((sum, s) => sum + (Number(s.current_balance) || 0), 0);
-  const totalPaid = totalExpected - totalOwed;
-
-  root.innerHTML =
-    '<div class="page-head"><div><h1>Fees Management</h1><div class="sub">Track payments and outstanding balances</div></div></div>' +
-    '<div class="grid grid-kpi" style="margin-bottom:20px">' +
-      '<div class="kpi"><div class="l">Total Expected</div><div class="v" style="font-size:20px">' + fmtUGX(totalExpected) + '</div></div>' +
-      '<div class="kpi" style="background:var(--oksoft);border-color:#a7f3d0"><div class="l" style="color:#047857">Total Collected</div><div class="v" style="font-size:20px;color:#065f46">' + fmtUGX(totalPaid) + '</div></div>' +
-      '<div class="kpi" style="background:var(--badsoft);border-color:#fecaca"><div class="l" style="color:#b91c1c">Total Outstanding</div><div class="v" style="font-size:20px;color:#7f1d1d">' + fmtUGX(totalOwed) + '</div></div>' +
-    '</div>' +
-    '<div class="card">' +
-      '<div class="grid grid-3" style="margin-bottom:16px">' +
-        '<div><label>Filter by Class</label><select id="feesClassFilter" onchange="filterFeesTable()">' +
-          '<option value="">All classes</option>' +
-          (classes||[]).map(c => '<option value="' + c.id + '">' + esc(c.name) + '</option>').join('') +
-        '</select></div>' +
-        '<div><label>Show</label><select id="feesOwingFilter" onchange="filterFeesTable()">' +
-          '<option value="all">All pupils</option>' +
-          '<option value="owing">Only those owing</option>' +
-        '</select></div>' +
-        '<div style="display:flex;align-items:flex-end"><button class="btn ghost" style="width:100%" onclick="document.getElementById(\'feesClassFilter\').value=\'\';document.getElementById(\'feesOwingFilter\').value=\'all\';filterFeesTable()">Reset Filters</button></div>' +
-      '</div>' +
-      '<div id="feesTableContainer"></div>' +
-    '</div>';
-  filterFeesTable();
-}
-window.pageFees = pageFees;
-
-function filterFeesTable() {
-  const fClass = document.getElementById('feesClassFilter')?.value || '';
-  const onlyOwing = document.getElementById('feesOwingFilter')?.value === 'owing';
-  let list = window._allFeeStudents || [];
-  if (fClass) list = list.filter(s => s.class_id === fClass);
-  if (onlyOwing) list = list.filter(s => Number(s.current_balance) > 0);
-
-  const container = document.getElementById('feesTableContainer');
-  if (!list.length) {
-    container.innerHTML = '<div class="empty">No pupils match filters.</div>';
-    return;
-  }
-  container.innerHTML = '<div class="table-wrap"><table>' +
-    '<thead><tr><th>Adm No</th><th>Name</th><th>Class</th><th style="text-align:right">Expected</th><th style="text-align:right">Paid</th><th style="text-align:right">Balance</th><th style="text-align:right">Action</th></tr></thead>' +
-    '<tbody>' + list.map(s => {
-      const cls = (window._allClassesForFees||[]).find(c => c.id === s.class_id);
-      const paid = (Number(s.deposit_1)||0) + (Number(s.deposit_2)||0) + (Number(s.deposit_3)||0);
-      const bal = Number(s.current_balance) || 0;
-      return '<tr><td><b>' + esc(s.admission_no) + '</b></td>' +
-        '<td>' + esc(s.first_name + ' ' + (s.last_name||'')) + '</td>' +
-        '<td><span class="badge info">' + esc(cls?cls.name:'—') + '</span></td>' +
-        '<td style="text-align:right">' + (Number(s.total_expected)||0).toLocaleString() + '</td>' +
-        '<td style="text-align:right;color:#047857">' + paid.toLocaleString() + '</td>' +
-        '<td style="text-align:right"><span class="badge ' + (bal > 0 ? 'bad' : 'ok') + '">' + bal.toLocaleString() + '</span></td>' +
-        '<td style="text-align:right"><button class="btn sm" onclick="recordPayment(\'' + s.id + '\')">💵 Pay</button></td></tr>';
-    }).join('') + '</tbody></table></div>';
-}
-window.filterFeesTable = filterFeesTable;
-
-async function recordPayment(id){
-  const students = await rest('/rest/v1/students?id=eq.' + id + '&select=*');
-  const s = students[0]; if(!s) return;
-  modal('<h3>Record Payment — ' + esc(s.first_name + ' ' + (s.last_name||'')) + '</h3>' +
-    '<div class="grid grid-2">' +
-      '<div><label>Total Expected</label><input value="' + (Number(s.total_expected)||0).toLocaleString() + '" disabled></div>' +
-      '<div><label>Current Balance</label><input value="' + (Number(s.current_balance)||0).toLocaleString() + '" disabled></div>' +
-      '<div><label>1st Deposit</label><input id="p_d1" type="number" value="' + (s.deposit_1||0) + '"></div>' +
-      '<div><label>2nd Deposit</label><input id="p_d2" type="number" value="' + (s.deposit_2||0) + '"></div>' +
-      '<div><label>3rd Deposit</label><input id="p_d3" type="number" value="' + (s.deposit_3||0) + '"></div>' +
-    '</div>' +
-    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
-      '<button class="btn ok" onclick="savePayment(\'' + id + '\')">Save Payment</button></div>');
-}
-window.recordPayment = recordPayment;
-
-async function savePayment(id){
-  const students = await rest('/rest/v1/students?id=eq.' + id + '&select=total_expected');
-  const totalExpected = Number(students[0].total_expected) || 0;
-  const getNum = (i) => { const v = parseFloat(document.getElementById(i).value); return isNaN(v) ? 0 : v; };
-  const d1 = getNum('p_d1'), d2 = getNum('p_d2'), d3 = getNum('p_d3');
-  const balance = totalExpected - d1 - d2 - d3;
-  try {
-    await rest('/rest/v1/students?id=eq.' + id, { method: 'PATCH', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({
-      deposit_1: d1, deposit_2: d2, deposit_3: d3, current_balance: balance, updated_at: new Date().toISOString()
-    })});
-    toast('Payment recorded. New balance: ' + balance.toLocaleString(), 'ok');
-    closeModal(); nav('fees');
-  } catch(e){ toast(e.message, 'bad'); }
-}
-window.savePayment = savePayment;
-
+// ==================== STAFF ====================
 async function pageStaff(root){
   let staff = [];
   try { staff = await rest('/rest/v1/staff?school_id=eq.' + _schoolId + '&select=*&order=full_name'); } catch(e){}
   root.innerHTML =
-    '<div class="page-head"><div><h1>Staff</h1><div class="sub">' + (staff||[]).length + ' staff members</div></div>' +
+    '<div class="page-head"><div><h1>Staff</h1><div class="sub">' + (staff||[]).length + ' members</div></div>' +
       '<button class="btn" onclick="addStaff()">＋ Add Staff</button></div>' +
-    '<div class="card">' +
-      ((staff||[]).length ? '<div class="table-wrap"><table>' +
-        '<thead><tr><th>Name</th><th>Role</th><th>Telephone</th><th>Email</th><th style="text-align:right">Actions</th></tr></thead>' +
-        '<tbody>' + staff.map(s => '<tr><td><b>' + esc(s.full_name) + '</b></td><td><span class="badge info">' + esc(s.role||'Staff') + '</span></td><td>' + esc(s.telephone||'—') + '</td><td>' + esc(s.email||'—') + '</td>' +
-          '<td style="text-align:right"><button class="btn sm danger" onclick="deleteStaff(\'' + s.id + '\')">✕</button></td></tr>').join('') + '</tbody></table></div>' : '<div class="empty">No staff yet. Click "Add Staff" to begin.</div>') +
-    '</div>';
+    '<div class="card">' + ((staff||[]).length ?
+      '<div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Telephone</th><th>Email</th><th style="text-align:right">Actions</th></tr></thead>' +
+      '<tbody>' + staff.map(s => '<tr><td><b>' + esc(s.full_name) + '</b></td><td><span class="badge info">' + esc(s.role||'Staff') + '</span></td>' +
+        '<td>' + esc(s.telephone||'—') + '</td><td>' + esc(s.email||'—') + '</td>' +
+        '<td style="text-align:right"><button class="btn sm danger" onclick="deleteStaff(\'' + s.id + '\')">✕</button></td></tr>').join('') + '</tbody></table></div>'
+      : '<div class="empty">No staff yet.</div>') + '</div>';
 }
 function addStaff(){
-  modal('<h3>Add Staff Member</h3>' +
-    '<div class="grid grid-2">' +
-      '<div><label>Full Name *</label><input id="st_name"></div>' +
-      '<div><label>Role</label><select id="st_role"><option>Teacher</option><option>Head Teacher</option><option>Deputy</option><option>Bursar</option><option>Support Staff</option><option>Director</option></select></div>' +
-      '<div><label>Telephone</label><input id="st_phone"></div>' +
-      '<div><label>Email</label><input id="st_email" type="email"></div>' +
-    '</div>' +
-    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
-      '<button class="btn" onclick="saveNewStaff()">Save</button></div>');
+  modal('<h3>Add Staff</h3><div class="grid grid-2"><div><label>Full Name *</label><input id="st_name"></div>' +
+    '<div><label>Role</label><select id="st_role"><option>Teacher</option><option>Head Teacher</option><option>Deputy</option><option>Bursar</option><option>Support Staff</option></select></div>' +
+    '<div><label>Telephone</label><input id="st_phone"></div><div><label>Email</label><input id="st_email" type="email"></div></div>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveNewStaff()">Save</button></div>');
 }
 window.addStaff = addStaff;
 async function saveNewStaff(){
   const name = document.getElementById('st_name').value.trim();
   if(!name){ toast('Name required','bad'); return; }
-  try {
-    await rest('/rest/v1/staff', { method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({
-      school_id: _schoolId, full_name: name,
-      role: document.getElementById('st_role').value,
-      telephone: document.getElementById('st_phone').value.trim() || null,
-      email: document.getElementById('st_email').value.trim() || null
-    })});
-    toast('Added','ok'); closeModal(); nav('staff');
-  } catch(e){ toast(e.message, 'bad'); }
-}
-window.saveNewStaff = saveNewStaff;
-async function deleteStaff(id){
-  modal('<h3>Delete Staff</h3>' +
-    '<p class="muted" style="margin-bottom:16px">Delete this staff member?</p>' +
-    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
-    '<button class="btn danger" onclick="confirmDeleteStaff(\'' + id + '\')">Delete</button></div>');
-}
-window.deleteStaff = deleteStaff;
-async function confirmDeleteStaff(id){
-  closeModal();
-  try { await rest('/rest/v1/staff?id=eq.' + id, { method: 'DELETE' }); toast('Deleted','ok'); nav('staff'); }
+  try { await rest('/rest/v1/staff', { method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({ school_id: _schoolId, full_name: name, role: document.getElementById('st_role').value, telephone: document.getElementById('st_phone').value.trim() || null, email: document.getElementById('st_email').value.trim() || null })}); toast('Added','ok'); closeModal(); nav('staff'); }
   catch(e){ toast(e.message, 'bad'); }
 }
+window.saveNewStaff = saveNewStaff;
+async function deleteStaff(id){ modal('<h3>Delete Staff</h3><p class="muted" style="margin-bottom:16px">Delete this staff member?</p><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="confirmDeleteStaff(\'' + id + '\')">Delete</button></div>'); }
+window.deleteStaff = deleteStaff;
+async function confirmDeleteStaff(id){ closeModal(); try { await rest('/rest/v1/staff?id=eq.' + id, { method: 'DELETE' }); toast('Deleted','ok'); nav('staff'); } catch(e){ toast(e.message, 'bad'); } }
 window.confirmDeleteStaff = confirmDeleteStaff;
 
+// ==================== SETTINGS ====================
 let _settingsTab = 'school';
 async function pageSettings(root){
   const [rules] = await Promise.all([
     rest('/rest/v1/grading_rules?school_id=eq.' + _schoolId + '&select=*&order=min_score.desc').catch(() => [])
   ]);
   root.innerHTML =
-    '<div class="page-head"><div><h1>Settings</h1><div class="sub">Manage your school configuration</div></div></div>' +
+    '<div class="page-head"><div><h1>Settings</h1></div></div>' +
     '<div class="tab-bar">' +
-      '<button class="' + (_settingsTab === 'school' ? 'active' : '') + '" onclick="_settingsTab=\'school\';nav(\'settings\')">🏫 School Profile</button>' +
-      '<button class="' + (_settingsTab === 'grading' ? 'active' : '') + '" onclick="_settingsTab=\'grading\';nav(\'settings\')">📊 Grading Rules</button>' +
-      '<button class="' + (_settingsTab === 'account' ? 'active' : '') + '" onclick="_settingsTab=\'account\';nav(\'settings\')">👤 My Account</button>' +
-      '<button class="' + (_settingsTab === 'danger' ? 'active' : '') + '" onclick="_settingsTab=\'danger\';nav(\'settings\')">⚠️ Danger Zone</button>' +
-    '</div>' +
-    '<div id="settingsContent"></div>';
+      '<button class="' + (_settingsTab === 'school' ? 'active' : '') + '" onclick="_settingsTab=\'school\';nav(\'settings\')">🏫 School</button>' +
+      '<button class="' + (_settingsTab === 'grading' ? 'active' : '') + '" onclick="_settingsTab=\'grading\';nav(\'settings\')">📊 Grading</button>' +
+      '<button class="' + (_settingsTab === 'account' ? 'active' : '') + '" onclick="_settingsTab=\'account\';nav(\'settings\')">👤 Account</button>' +
+      '<button class="' + (_settingsTab === 'danger' ? 'active' : '') + '" onclick="_settingsTab=\'danger\';nav(\'settings\')">⚠️ Danger</button>' +
+    '</div><div id="settingsContent"></div>';
   const content = document.getElementById('settingsContent');
   if (_settingsTab === 'school'){
-    content.innerHTML = '<div class="settings-section">' +
-      '<h3>School Profile</h3>' +
-      '<div class="grid grid-2">' +
-        '<div><label>School Name</label><input id="set_name" value="' + esc(_school.name||'') + '"></div>' +
-        '<div><label>Telephone</label><input id="set_phone" value="' + esc(_school.telephone||'') + '"></div>' +
-        '<div><label>Address</label><input id="set_addr" value="' + esc(_school.address||'') + '"></div>' +
-        '<div><label>Email</label><input id="set_email" value="' + esc(_school.email||'') + '"></div>' +
-        '<div><label>Head Teacher</label><input id="set_head" value="' + esc(_school.head_teacher||'') + '"></div>' +
-        '<div><label>Motto</label><input id="set_motto" value="' + esc(_school.motto||'') + '"></div>' +
-      '</div>' +
-      '<div class="actions"><button class="btn" onclick="saveSchoolInfo()">💾 Save Changes</button></div>' +
-    '</div>';
+    content.innerHTML = '<div class="settings-section" style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px"><h3>School Profile</h3><div class="grid grid-2">' +
+      '<div><label>School Name</label><input id="set_name" value="' + esc(_school.name||'') + '"></div>' +
+      '<div><label>Telephone</label><input id="set_phone" value="' + esc(_school.telephone||'') + '"></div>' +
+      '<div><label>Address</label><input id="set_addr" value="' + esc(_school.address||'') + '"></div>' +
+      '<div><label>Email</label><input id="set_email" value="' + esc(_school.email||'') + '"></div>' +
+      '<div><label>Head Teacher</label><input id="set_head" value="' + esc(_school.head_teacher||'') + '"></div>' +
+      '<div><label>Motto</label><input id="set_motto" value="' + esc(_school.motto||'') + '"></div></div>' +
+      '<div class="actions"><button class="btn" onclick="saveSchoolInfo()">💾 Save</button></div></div>';
   } else if (_settingsTab === 'grading'){
-    content.innerHTML = '<div class="settings-section">' +
-      '<h3>Grading Rules</h3>' +
-      '<p class="muted" style="margin-bottom:14px">These determine how marks translate to grades on report cards.</p>' +
-      '<div class="table-wrap"><table><thead><tr><th>Min Score</th><th>Max Score</th><th>Grade</th><th>Remark</th></tr></thead>' +
-      '<tbody>' + (rules||[]).map(r => '<tr><td>' + r.min_score + '</td><td>' + r.max_score + '</td><td><b>' + esc(r.grade) + '</b></td><td>' + esc(r.remark||'') + '</td></tr>').join('') + '</tbody></table></div>' +
-    '</div>';
+    content.innerHTML = '<div class="settings-section" style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px"><h3>Grading Rules</h3>' +
+      '<div class="table-wrap"><table><thead><tr><th>Min</th><th>Max</th><th>Grade</th><th>Remark</th></tr></thead>' +
+      '<tbody>' + (rules||[]).map(r => '<tr><td>' + r.min_score + '</td><td>' + r.max_score + '</td><td><b>' + esc(r.grade) + '</b></td><td>' + esc(r.remark||'') + '</td></tr>').join('') + '</tbody></table></div></div>';
   } else if (_settingsTab === 'account'){
-    content.innerHTML = '<div class="settings-section">' +
-      '<h3>My Account</h3>' +
-      '<div class="grid grid-2">' +
-        '<div><label>Full Name</label><input value="' + esc(_profile.full_name||'') + '" disabled></div>' +
-        '<div><label>Email</label><input value="' + esc(_profile.email || SESSION.email || '') + '" disabled></div>' +
-        '<div><label>Role</label><input value="' + esc((_profile.role||'').replace(/_/g,' ')) + '" disabled></div>' +
-        '<div><label>School ID</label><input value="' + esc(_schoolId||'') + '" disabled style="font-family:monospace;font-size:11px"></div>' +
-      '</div>' +
-    '</div>';
+    content.innerHTML = '<div class="settings-section" style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px"><h3>My Account</h3><div class="grid grid-2">' +
+      '<div><label>Full Name</label><input value="' + esc(_profile.full_name||'') + '" disabled></div>' +
+      '<div><label>Email</label><input value="' + esc(_profile.email || SESSION.email || '') + '" disabled></div>' +
+      '<div><label>Role</label><input value="' + esc((_profile.role||'').replace(/_/g,' ')) + '" disabled></div></div></div>';
   } else if (_settingsTab === 'danger'){
-    content.innerHTML = '<div class="settings-section danger-zone">' +
-      '<h3>⚠️ Danger Zone</h3>' +
-      '<p class="muted" style="margin-bottom:16px">These actions cannot be undone. Please be careful.</p>' +
+    content.innerHTML = '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:14px;padding:22px"><h3 style="color:#b91c1c">⚠️ Danger Zone</h3>' +
       '<div style="display:flex;flex-direction:column;gap:12px">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#fff;border-radius:10px;flex-wrap:wrap;gap:10px">' +
-          '<div><b>Delete All Pupils</b><div class="muted">Removes all students from your school</div></div>' +
-          '<button class="btn danger" onclick="wipeStudents()">Delete All</button>' +
-        '</div>' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#fff;border-radius:10px;flex-wrap:wrap;gap:10px">' +
-          '<div><b>Delete All Marks</b><div class="muted">Removes all marks but keeps students and exams</div></div>' +
-          '<button class="btn danger" onclick="wipeMarks()">Delete All</button>' +
-        '</div>' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#fff;border-radius:10px;flex-wrap:wrap;gap:10px">' +
-          '<div><b>Delete All Exams</b><div class="muted">Removes all exams (and their marks)</div></div>' +
-          '<button class="btn danger" onclick="wipeExams()">Delete All</button>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#fff;border-radius:10px;flex-wrap:wrap;gap:10px"><div><b>Delete All Pupils</b><div class="muted">Removes all students and payments</div></div><button class="btn danger" onclick="wipeStudents()">Delete All</button></div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#fff;border-radius:10px;flex-wrap:wrap;gap:10px"><div><b>Delete All Payments</b><div class="muted">Clears all payment records</div></div><button class="btn danger" onclick="wipePayments()">Delete All</button></div>' +
+      '</div></div>';
   }
 }
 window.pageSettings = pageSettings;
@@ -1308,63 +1261,24 @@ async function saveSchoolInfo(){
   if (!name){ toast('School name required', 'bad'); return; }
   try {
     await rest('/rest/v1/schools?id=eq.' + _schoolId, { method: 'PATCH', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({
-      name: name,
-      telephone: document.getElementById('set_phone').value.trim() || null,
-      address: document.getElementById('set_addr').value.trim() || null,
-      email: document.getElementById('set_email').value.trim() || null,
-      head_teacher: document.getElementById('set_head').value.trim() || null,
-      motto: document.getElementById('set_motto').value.trim() || null
+      name: name, telephone: document.getElementById('set_phone').value.trim() || null, address: document.getElementById('set_addr').value.trim() || null,
+      email: document.getElementById('set_email').value.trim() || null, head_teacher: document.getElementById('set_head').value.trim() || null, motto: document.getElementById('set_motto').value.trim() || null
     })});
     const schools = await rest('/rest/v1/schools?id=eq.' + _schoolId + '&select=*');
-    _school = schools[0];
-    renderBadge();
-    toast('School info saved', 'ok');
+    _school = schools[0]; renderBadge(); toast('Saved', 'ok');
   } catch(e){ toast(e.message, 'bad'); }
 }
 window.saveSchoolInfo = saveSchoolInfo;
-
-async function wipeStudents(){
-  modal('<h3>⚠️ Delete All Pupils</h3>' +
-    '<p class="muted" style="margin-bottom:16px">This will permanently delete ALL pupils from your school. There is no undo.</p>' +
-    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
-    '<button class="btn danger" onclick="confirmWipeStudents()">Yes, Delete Everything</button></div>');
-}
+async function wipeStudents(){ modal('<h3>⚠️ Delete All Pupils</h3><p class="muted" style="margin-bottom:16px">Permanently delete ALL pupils and payments?</p><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="confirmWipeStudents()">Yes</button></div>'); }
 window.wipeStudents = wipeStudents;
-async function confirmWipeStudents(){
-  closeModal();
-  try { await rest('/rest/v1/students?school_id=eq.' + _schoolId, { method: 'DELETE' }); toast('All pupils deleted', 'ok'); nav('settings'); }
-  catch(e){ toast(e.message, 'bad'); }
-}
+async function confirmWipeStudents(){ closeModal(); try { await rest('/rest/v1/payments?school_id=eq.' + _schoolId, { method: 'DELETE' }); await rest('/rest/v1/students?school_id=eq.' + _schoolId, { method: 'DELETE' }); toast('All pupils deleted', 'ok'); nav('settings'); } catch(e){ toast(e.message, 'bad'); } }
 window.confirmWipeStudents = confirmWipeStudents;
+async function wipePayments(){ modal('<h3>⚠️ Delete All Payments</h3><p class="muted" style="margin-bottom:16px">Delete all payment records?</p><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="confirmWipePayments()">Yes</button></div>'); }
+window.wipePayments = wipePayments;
+async function confirmWipePayments(){ closeModal(); try { await rest('/rest/v1/payments?school_id=eq.' + _schoolId, { method: 'DELETE' }); toast('All payments deleted', 'ok'); } catch(e){ toast(e.message, 'bad'); } }
+window.confirmWipePayments = confirmWipePayments;
 
-async function wipeMarks(){
-  modal('<h3>⚠️ Delete All Marks</h3>' +
-    '<p class="muted" style="margin-bottom:16px">Delete all marks? Students and exams will remain.</p>' +
-    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
-    '<button class="btn danger" onclick="confirmWipeMarks()">Yes, Delete All</button></div>');
-}
-window.wipeMarks = wipeMarks;
-async function confirmWipeMarks(){
-  closeModal();
-  try { await rest('/rest/v1/marks?school_id=eq.' + _schoolId, { method: 'DELETE' }); toast('All marks deleted', 'ok'); }
-  catch(e){ toast(e.message, 'bad'); }
-}
-window.confirmWipeMarks = confirmWipeMarks;
-
-async function wipeExams(){
-  modal('<h3>⚠️ Delete All Exams</h3>' +
-    '<p class="muted" style="margin-bottom:16px">Delete all exams and their marks?</p>' +
-    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
-    '<button class="btn danger" onclick="confirmWipeExams()">Yes, Delete All</button></div>');
-}
-window.wipeExams = wipeExams;
-async function confirmWipeExams(){
-  closeModal();
-  try { await rest('/rest/v1/exams?school_id=eq.' + _schoolId, { method: 'DELETE' }); toast('All exams deleted', 'ok'); nav('settings'); }
-  catch(e){ toast(e.message, 'bad'); }
-}
-window.confirmWipeExams = confirmWipeExams;
-
+// ==================== STARTUP ====================
 async function handleAuthRedirect(){
   const hash = window.location.hash;
   if (hash && hash.includes('access_token')){
@@ -1375,12 +1289,7 @@ async function handleAuthRedirect(){
       try {
         const res = await fetch(SUPA_URL + '/auth/v1/user', { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + access_token } });
         const user = await res.json();
-        if (user && user.id){
-          setSession({ access_token: access_token, refresh_token: refresh_token, user: user });
-          window.history.replaceState(null, '', window.location.pathname);
-          await boot();
-          return;
-        }
+        if (user && user.id){ setSession({ access_token: access_token, refresh_token: refresh_token, user: user }); window.history.replaceState(null, '', window.location.pathname); await boot(); return; }
       } catch (e){ console.error(e); }
     }
   }
