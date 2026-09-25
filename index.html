@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Eudes School Management</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<!-- SheetJS Library for reading Excel files -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{--bg:#f4f6fb;--surface:#fff;--line:#e5e9f0;--line2:#eef1f6;--text:#0b1220;--text2:#334155;--muted:#64748b;--brand:#4f46e5;--brand2:#4338ca;--brandsoft:#eef2ff;--ring:rgba(79,70,229,.15);--ok:#059669;--oksoft:#ecfdf5;--warn:#d97706;--warnsoft:#fffbeb;--bad:#dc2626;--badsoft:#fef2f2;--radius:14px}
@@ -13,8 +12,8 @@
 html,body{margin:0;padding:0;min-height:100%;font-family:'Inter',system-ui,sans-serif}
 body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;transition:all .15s}
-input,select{font-family:inherit;width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--line);background:#fff;color:var(--text);font-size:14px}
-input:focus,select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 4px var(--ring)}
+input,select,textarea{font-family:inherit;width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--line);background:#fff;color:var(--text);font-size:14px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 4px var(--ring)}
 label{display:block;font-size:12.5px;color:var(--text2);margin-bottom:6px;font-weight:600}
 table{width:100%;border-collapse:collapse}
 th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line2);font-size:13.5px}
@@ -54,15 +53,19 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px}
 .badge.ok{background:var(--oksoft);color:#047857;border:1px solid #a7f3d0}
 .badge.bad{background:var(--badsoft);color:#b91c1c;border:1px solid #fecaca}
 .badge.info{background:var(--brandsoft);color:var(--brand2);border:1px solid #c7d2fe}
+.badge.warn{background:var(--warnsoft);color:#92400e;border:1px solid #fde68a}
 .btn{background:var(--brand);color:#fff;padding:10px 16px;border-radius:10px;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:6px}
 .btn:hover{background:var(--brand2)}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .btn.ghost{background:#fff;border:1.5px solid var(--line);color:var(--text2)}
+.btn.ghost:hover{background:#f9fafb}
 .btn.danger{background:var(--bad)}
+.btn.ok{background:var(--ok)}
 .btn.sm{padding:6px 11px;font-size:12px;border-radius:8px}
 .table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--line);background:#fff}
 .toast{position:fixed;bottom:20px;left:20px;background:#0f172a;color:#fff;padding:12px 18px;border-radius:12px;z-index:100;font-size:13.5px;font-weight:500;box-shadow:0 20px 40px -12px rgba(15,23,42,.5)}
 .toast.bad{background:#7f1d1d}
+.toast.ok{background:#065f46}
 .auth-bg{position:fixed;inset:0;background:radial-gradient(circle at 20% 20%,#4f46e5 0%,transparent 50%),radial-gradient(circle at 80% 80%,#7c3aed 0%,transparent 50%),#0b1220;display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;overflow:auto}
 .auth-card{background:#fff;border-radius:20px;padding:36px;width:100%;max-width:440px;box-shadow:0 40px 80px -20px rgba(0,0,0,.5)}
 .auth-card .logo{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:grid;place-items:center;color:#fff;font-weight:800;font-size:22px;margin:0 auto 16px}
@@ -76,8 +79,16 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px}
 .loading{padding:60px;text-align:center;color:var(--muted);font-size:14px}
 .empty{text-align:center;padding:50px 20px;color:var(--muted);font-size:14px}
 .modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
-.modal{background:#fff;border-radius:16px;max-width:640px;width:100%;max-height:92vh;overflow:auto;padding:26px;box-shadow:0 30px 60px -20px rgba(0,0,0,.4)}
+.modal{background:#fff;border-radius:16px;max-width:720px;width:100%;max-height:92vh;overflow:auto;padding:26px;box-shadow:0 30px 60px -20px rgba(0,0,0,.4)}
 .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--line2);flex-wrap:wrap}
+.settings-section{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px;margin-bottom:16px}
+.danger-zone{border-color:#fecaca;background:#fef2f2}
+.danger-zone h3{color:#b91c1c}
+.tab-bar{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:20px;overflow-x:auto}
+.tab-bar button{padding:10px 16px;font-size:13.5px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.tab-bar button.active{color:var(--brand);border-bottom-color:var(--brand)}
+.wa-float{position:fixed;bottom:20px;right:20px;background:#25D366;color:#fff;padding:12px 18px;border-radius:50px;font-weight:600;z-index:999;text-decoration:none;box-shadow:0 10px 20px rgba(0,0,0,.2);display:flex;align-items:center;gap:8px;font-size:14px}
+.wa-float:hover{background:#20BA5A;color:#fff}
 @media(max-width:900px){
   #app{flex-direction:column}
   #sidebar{width:100%;flex-direction:column;padding:12px}
@@ -91,36 +102,36 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px}
 </head>
 <body>
 
+<a href="https://wa.me/254757208077" target="_blank" class="wa-float">💬 Need Help? WhatsApp Us</a>
+
 <div class="auth-bg" id="authScreen">
   <div class="auth-card">
     <div class="logo">E</div>
     <h1>Eudes School Management</h1>
     <div class="sub">Powered by Eudes Media</div>
-
     <div class="tabs">
       <button id="tabLogin" class="active" onclick="switchTab('login')">Sign In</button>
       <button id="tabRegister" onclick="switchTab('register')">Register School</button>
     </div>
-
     <div id="loginForm">
       <div><label>Email</label><input id="loginEmail" type="email" placeholder="you@gmail.com"></div>
       <div style="margin-top:12px"><label>Password</label><input id="loginPass" type="password"></div>
       <div id="loginErr" class="err" style="display:none"></div>
       <button class="btn" id="loginBtn" style="width:100%;justify-content:center;padding:12px;margin-top:18px" onclick="doLogin()">Sign In</button>
     </div>
-
     <div id="registerForm" style="display:none">
       <div><label>Your Full Name</label><input id="regName"></div>
-      <div style="margin-top:12px"><label>Email (use a real email you own)</label><input id="regEmail" type="email"></div>
+      <div style="margin-top:12px"><label>Email</label><input id="regEmail" type="email"></div>
       <div style="margin-top:12px"><label>Password (min 8 characters)</label><input id="regPass" type="password"></div>
-      <h3 style="margin-top:18px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">School Information</h3>
-      <div><label>School Name</label><input id="regSchool" placeholder="Progressive Mother's Nursery and Primary School"></div>
-      <div style="margin-top:12px"><label>Short Name (no spaces)</label><input id="regSlug" placeholder="progressive-mothers"></div>
-      <div style="margin-top:12px"><label>Address</label><input id="regAddr" placeholder="Gayaza Kijabijo, Wakiso"></div>
+      <h3 style="margin-top:18px;font-size:13px;color:var(--muted);text-transform:uppercase">School Information</h3>
+      <div><label>School Name</label><input id="regSchool"></div>
+      <div style="margin-top:12px"><label>Short Name (no spaces)</label><input id="regSlug"></div>
+      <div style="margin-top:12px"><label>Address</label><input id="regAddr"></div>
       <div class="grid grid-2" style="margin-top:12px">
         <div><label>Telephone</label><input id="regPhone"></div>
         <div><label>Head Teacher</label><input id="regHead"></div>
       </div>
+      <div style="margin-top:12px"><label>School Motto</label><input id="regMotto" placeholder="e.g. Education for Excellence"></div>
       <div id="regErr" class="err" style="display:none"></div>
       <div id="regOk" class="ok" style="display:none"></div>
       <button class="btn" id="regBtn" style="width:100%;justify-content:center;padding:12px;margin-top:18px" onclick="doRegister()">Create School</button>
@@ -149,61 +160,25 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px}
 <input type="file" id="excelInput" accept=".xlsx, .xls" style="display:none;" onchange="handleExcelUpload(this)">
 
 <script>
-/* ============================================================
-   CONFIGURATION
-   ============================================================ */
 const SUPA_URL = 'https://wabeempxckdtjvrkzhpv.supabase.co';
 const SUPA_KEY = 'sb_publishable_n0uAm0Gcq7qR2dJM4jMZGQ_wiV__Cfp';
 
-/* ============================================================
-   SAFE STORAGE WRAPPER
-   ============================================================ */
 let _memoryStore = {};
 const safeStorage = {
-  getItem: function(key) {
-    try { return localStorage.getItem(key); } 
-    catch(e) { return _memoryStore[key] || null; }
-  },
-  setItem: function(key, value) {
-    try { localStorage.setItem(key, value); } 
-    catch(e) { _memoryStore[key] = String(value); }
-  },
-  removeItem: function(key) {
-    try { localStorage.removeItem(key); } 
-    catch(e) { delete _memoryStore[key]; }
-  }
+  getItem: function(key) { try { return localStorage.getItem(key); } catch(e) { return _memoryStore[key] || null; } },
+  setItem: function(key, value) { try { localStorage.setItem(key, value); } catch(e) { _memoryStore[key] = String(value); } },
+  removeItem: function(key) { try { localStorage.removeItem(key); } catch(e) { delete _memoryStore[key]; } }
 };
 
-/* ============================================================
-   LOW-LEVEL FETCH HELPERS
-   ============================================================ */
-function getToken(){
-  const s = safeStorage.getItem('eudes_session');
-  if(!s) return null;
-  try { return JSON.parse(s).access_token; } catch(e){ return null; }
-}
-function getUser(){
-  const s = safeStorage.getItem('eudes_session');
-  if(!s) return null;
-  try { return JSON.parse(s).user; } catch(e){ return null; }
-}
-function setSession(data){
-  if(data){
-    safeStorage.setItem('eudes_session', JSON.stringify(data));
-  } else {
-    safeStorage.removeItem('eudes_session');
-  }
-}
+function getToken(){ const s = safeStorage.getItem('eudes_session'); if(!s) return null; try { return JSON.parse(s).access_token; } catch(e){ return null; } }
+function getUser(){ const s = safeStorage.getItem('eudes_session'); if(!s) return null; try { return JSON.parse(s).user; } catch(e){ return null; } }
+function setSession(data){ if(data){ safeStorage.setItem('eudes_session', JSON.stringify(data)); } else { safeStorage.removeItem('eudes_session'); } }
 
 async function rest(path, options){
   options = options || {};
-  const headers = Object.assign({
-    'apikey': SUPA_KEY,
-    'Content-Type': 'application/json'
-  }, options.headers || {});
+  const headers = Object.assign({ 'apikey': SUPA_KEY, 'Content-Type': 'application/json' }, options.headers || {});
   const token = getToken();
   headers['Authorization'] = 'Bearer ' + (token || SUPA_KEY);
-
   const res = await fetch(SUPA_URL + path, Object.assign({}, options, { headers: headers }));
   const text = await res.text();
   let data = null;
@@ -231,38 +206,26 @@ async function auth(path, body){
   return data;
 }
 
-/* ============================================================
-   STATE
-   ============================================================ */
-let SESSION = null;
-let _profile = null;
-let _school = null;
-let _schoolId = null;
-let _role = null;
-let _classesCache = null;
+let SESSION = null, _profile = null, _school = null, _schoolId = null, _role = null, _classesCache = null;
 
 function toast(msg, type){
   const el = document.createElement('div');
-  el.className = 'toast' + (type === 'bad' ? ' bad' : '');
+  el.className = 'toast' + (type === 'bad' ? ' bad' : (type === 'ok' ? ' ok' : ''));
   el.textContent = msg;
   document.getElementById('toastRoot').appendChild(el);
-  setTimeout(function(){ el.remove(); }, 3200);
+  setTimeout(function(){ el.remove(); }, 3500);
 }
 function modal(html){
   const root = document.getElementById('modalRoot');
   root.innerHTML = '<div class="modal-bg"><div class="modal">' + html + '</div></div>';
-  root.querySelector('.modal-bg').addEventListener('click', function(e){
-    if(e.target.classList.contains('modal-bg')) closeModal();
-  });
+  root.querySelector('.modal-bg').addEventListener('click', function(e){ if(e.target.classList.contains('modal-bg')) closeModal(); });
 }
 function closeModal(){ document.getElementById('modalRoot').innerHTML = ''; }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 function age(dob){ if(!dob) return '—'; return Math.floor((Date.now()-new Date(dob).getTime())/(365.25*24*3600*1000)) + ' yrs'; }
+function fmtUGX(n){ return 'UGX ' + (Number(n)||0).toLocaleString(); }
 window.toast = toast; window.modal = modal; window.closeModal = closeModal;
 
-/* ============================================================
-   AUTH SCREEN
-   ============================================================ */
 function switchTab(which){
   document.getElementById('tabLogin').classList.toggle('active', which === 'login');
   document.getElementById('tabRegister').classList.toggle('active', which === 'register');
@@ -285,10 +248,7 @@ async function doLogin(){
     const data = await auth('/auth/v1/token?grant_type=password', { email: email, password: pass });
     setSession(data);
     await boot();
-  } catch(e){
-    err.textContent = e.message;
-    err.style.display = 'block';
-  }
+  } catch(e){ err.textContent = e.message; err.style.display = 'block'; }
   btn.disabled = false; btn.textContent = 'Sign In';
 }
 window.doLogin = doLogin;
@@ -302,68 +262,34 @@ async function doRegister(){
   const addr = document.getElementById('regAddr').value.trim();
   const phone = document.getElementById('regPhone').value.trim();
   const head = document.getElementById('regHead').value.trim();
+  const motto = document.getElementById('regMotto').value.trim();
   const err = document.getElementById('regErr');
   const ok = document.getElementById('regOk');
   const btn = document.getElementById('regBtn');
   err.style.display = 'none'; ok.style.display = 'none';
-
-  if(!name || !email || !pass || !school || !slug){
-    err.textContent = 'Fill all required fields'; err.style.display = 'block'; return;
-  }
-  if(pass.length < 8){
-    err.textContent = 'Password must be at least 8 characters'; err.style.display = 'block'; return;
-  }
-
+  if(!name || !email || !pass || !school || !slug){ err.textContent = 'Fill all required fields'; err.style.display = 'block'; return; }
+  if(pass.length < 8){ err.textContent = 'Password must be at least 8 characters'; err.style.display = 'block'; return; }
   btn.disabled = true; btn.textContent = 'Creating…';
   try {
-    const data = await auth('/auth/v1/signup', {
-      email: email, password: pass,
-      data: { full_name: name }
-    });
-    
+    const data = await auth('/auth/v1/signup', { email: email, password: pass, data: { full_name: name } });
     if(!data.access_token){
-      ok.textContent = 'Check your email to confirm, then sign in.';
-      ok.style.display = 'block';
-      btn.disabled = false; btn.textContent = 'Create School';
-      return;
+      ok.textContent = 'Check your email to confirm, then sign in.'; ok.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Create School'; return;
     }
-    
     setSession(data);
-
     await rest('/rest/v1/rpc/create_school_and_become_owner', {
       method: 'POST',
-      body: JSON.stringify({
-        p_school_name: school,
-        p_school_slug: slug,
-        p_motto: null,
-        p_address: addr || null,
-        p_telephone: phone || null,
-        p_email: email,
-        p_head_teacher: head || null
-      })
+      body: JSON.stringify({ p_school_name: school, p_school_slug: slug, p_motto: motto || null, p_address: addr || null, p_telephone: phone || null, p_email: email, p_head_teacher: head || null })
     });
-
-    ok.textContent = 'School created. Loading dashboard…';
-    ok.style.display = 'block';
+    ok.textContent = 'School created. Waiting for approval. Contact us on WhatsApp +254757208077 to activate.'; ok.style.display = 'block';
     setTimeout(boot, 500);
-  } catch(e){
-    err.textContent = e.message;
-    err.style.display = 'block';
-  }
+  } catch(e){ err.textContent = e.message; err.style.display = 'block'; }
   btn.disabled = false; btn.textContent = 'Create School';
 }
 window.doRegister = doRegister;
 
 async function doLogout(){
-  try {
-    const token = getToken();
-    if(token){
-      await fetch(SUPA_URL + '/auth/v1/logout', {
-        method: 'POST',
-        headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + token }
-      });
-    }
-  } catch(e){}
+  try { const token = getToken(); if(token){ await fetch(SUPA_URL + '/auth/v1/logout', { method: 'POST', headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + token } }); } } catch(e){}
   setSession(null);
   SESSION = null; _profile = null; _school = null; _schoolId = null; _role = null;
   document.getElementById('app').style.display = 'none';
@@ -371,38 +297,26 @@ async function doLogout(){
 }
 window.doLogout = doLogout;
 
-/* ============================================================
-   BOOT
-   ============================================================ */
 async function boot(){
   const user = getUser();
   const token = getToken();
-  if(!user || !token){
-    document.getElementById('authScreen').style.display = 'flex';
-    document.getElementById('app').style.display = 'none';
-    return;
-  }
+  if(!user || !token){ document.getElementById('authScreen').style.display = 'flex'; document.getElementById('app').style.display = 'none'; return; }
   SESSION = user;
-
   try {
     const profiles = await rest('/rest/v1/profiles?id=eq.' + user.id + '&select=*');
     _profile = profiles && profiles[0];
   } catch(e){
     document.getElementById('authScreen').style.display = 'flex';
     document.getElementById('loginErr').textContent = 'Profile not found. Error: ' + e.message;
-    document.getElementById('loginErr').style.display = 'block';
-    return;
+    document.getElementById('loginErr').style.display = 'block'; return;
   }
-
   if(!_profile){
     document.getElementById('authScreen').style.display = 'flex';
-    document.getElementById('loginErr').textContent = 'Profile not found. The trigger may not have run.';
-    document.getElementById('loginErr').style.display = 'block';
-    return;
+    document.getElementById('loginErr').textContent = 'Profile not found. Trigger may not have run.';
+    document.getElementById('loginErr').style.display = 'block'; return;
   }
   _schoolId = _profile.school_id;
   _role = _profile.role;
-
   if(!_schoolId){
     document.getElementById('authScreen').style.display = 'flex';
     switchTab('register');
@@ -415,15 +329,19 @@ async function boot(){
     document.getElementById('regBtn').onclick = createSchoolOnly;
     return;
   }
-
-  try {
-    const schools = await rest('/rest/v1/schools?id=eq.' + _schoolId + '&select=*');
-    _school = schools && schools[0];
-  } catch(e){}
+  try { const schools = await rest('/rest/v1/schools?id=eq.' + _schoolId + '&select=*'); _school = schools && schools[0]; } catch(e){}
+  
+  // ✅ APPROVAL CHECK
+  if (!_school.is_approved) {
+    document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('loginErr').innerHTML = '⏳ Your school registration is <b>pending approval</b>.<br><br>Please contact support on WhatsApp <b>+254757208077</b> to activate your account.';
+    document.getElementById('loginErr').style.display = 'block';
+    return;
+  }
 
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
-
   renderBadge();
   renderNav();
   await nav('dashboard');
@@ -436,6 +354,7 @@ async function createSchoolOnly(){
   const addr = document.getElementById('regAddr').value.trim();
   const phone = document.getElementById('regPhone').value.trim();
   const head = document.getElementById('regHead').value.trim();
+  const motto = document.getElementById('regMotto').value.trim();
   const err = document.getElementById('regErr');
   const btn = document.getElementById('regBtn');
   err.style.display = 'none';
@@ -444,41 +363,35 @@ async function createSchoolOnly(){
   try {
     await rest('/rest/v1/rpc/create_school_and_become_owner', {
       method: 'POST',
-      body: JSON.stringify({
-        p_school_name: school, p_school_slug: slug, p_motto: null,
-        p_address: addr || null, p_telephone: phone || null,
-        p_email: _profile.email || null, p_head_teacher: head || null
-      })
+      body: JSON.stringify({ p_school_name: school, p_school_slug: slug, p_motto: motto || null, p_address: addr || null, p_telephone: phone || null, p_email: _profile.email || null, p_head_teacher: head || null })
     });
-    toast('School created');
+    toast('School created. Pending approval.', 'ok');
     setTimeout(boot, 500);
-  } catch(e){
-    err.textContent = e.message; err.style.display = 'block';
-  }
+  } catch(e){ err.textContent = e.message; err.style.display = 'block'; }
   btn.disabled = false; btn.textContent = 'Create School';
 }
 window.createSchoolOnly = createSchoolOnly;
 
-/* ============================================================
-   BADGE + NAV
-   ============================================================ */
 function renderBadge(){
   const el = document.getElementById('schoolBadge');
   if(!_school){ el.innerHTML = '<b>School</b>'; return; }
-  el.innerHTML =
-    '<b>' + esc(_school.name) + '</b>' +
+  el.innerHTML = '<b>' + esc(_school.name) + '</b>' +
     '<div class="muted">' + esc(_school.address || '') + '</div>' +
     '<div class="muted" style="margin-top:3px">' + esc(_profile.full_name || SESSION.email) + ' · ' + esc((_profile.role||'').replace(/_/g,' ')) + '</div>';
 }
+window.renderBadge = renderBadge;
 
 const ROUTES = {
   dashboard: { label:'Dashboard', icon:'📊', render: pageDashboard },
-  students:  { label:'Pupils',    icon:'🎓', render: pageStudents },
-  classes:   { label:'Classes',   icon:'🏫', render: pageClasses },
-  subjects:  { label:'Subjects',  icon:'📚', render: pageSubjects },
-  exams:     { label:'Exams',     icon:'📝', render: pageExams },
+  students:  { label:'Pupils', icon:'🎓', render: pageStudents },
+  classes:   { label:'Classes', icon:'🏫', render: pageClasses },
+  subjects:  { label:'Subjects', icon:'📚', render: pageSubjects },
+  exams:     { label:'Exams', icon:'📝', render: pageExams },
   marks:     { label:'Marks Entry', icon:'✍️', render: pageMarks },
   reports:   { label:'Report Cards', icon:'📄', render: pageReports },
+  fees:      { label:'Fees', icon:'💰', render: pageFees },
+  staff:     { label:'Staff', icon:'👨‍🏫', render: pageStaff },
+  settings:  { label:'Settings', icon:'⚙️', render: pageSettings },
 };
 
 let activeRoute = 'dashboard';
@@ -501,45 +414,68 @@ function renderNav(){
   }).join('');
 }
 
-/* ============================================================
-   PAGE: DASHBOARD
-   ============================================================ */
 async function pageDashboard(root){
-  const [students, classes, subjects, exams] = await Promise.all([
-    rest('/rest/v1/students?school_id=eq.' + _schoolId + '&select=id,gender,status,current_balance'),
-    rest('/rest/v1/classes?school_id=eq.' + _schoolId + '&select=id'),
+  const data = await Promise.all([
+    rest('/rest/v1/students?school_id=eq.' + _schoolId + '&select=id,gender,status,current_balance,total_expected,class_id'),
+    rest('/rest/v1/classes?school_id=eq.' + _schoolId + '&select=id,name&order=sort_order'),
     rest('/rest/v1/subjects?school_id=eq.' + _schoolId + '&select=id'),
-    rest('/rest/v1/exams?school_id=eq.' + _schoolId + '&select=id')
+    rest('/rest/v1/exams?school_id=eq.' + _schoolId + '&select=id'),
+    rest('/rest/v1/staff?school_id=eq.' + _schoolId + '&select=id').catch(() => [])
   ]);
-  students = students || []; classes = classes || [];
-  subjects = subjects || []; exams = exams || [];
+  let students = data[0] || [];
+  let classes = data[1] || [];
+  let subjects = data[2] || [];
+  let exams = data[3] || [];
+  let staff = data[4] || [];
+  
   const active = students.filter(function(s){ return s.status === 'active'; });
   const male = active.filter(function(s){ return s.gender === 'male'; }).length;
   const female = active.filter(function(s){ return s.gender === 'female'; }).length;
+  
   const totalOutstanding = active.reduce((sum, s) => sum + (Number(s.current_balance) || 0), 0);
+  const totalExpected = active.reduce((sum, s) => sum + (Number(s.total_expected) || 0), 0);
+  const totalCollected = totalExpected - totalOutstanding;
+
+  const classStats = classes.map(c => {
+    const inClass = active.filter(s => s.class_id === c.id);
+    const owed = inClass.reduce((sum, s) => sum + (Number(s.current_balance) || 0), 0);
+    return { name: c.name, count: inClass.length, owed: owed };
+  });
 
   root.innerHTML =
     '<div class="page-head"><div><h1>' + esc(_school.name) + '</h1>' +
-      '<div class="sub">' + esc(_school.address || '') + '</div></div></div>' +
+      '<div class="sub">📍 ' + esc(_school.address || 'No address set') + ' · 📞 ' + esc(_school.telephone || 'No phone set') + '</div>' +
+      '<div class="sub" style="font-style:italic;color:var(--brand);margin-top:4px">✝️ ' + esc(_school.motto || 'No motto set') + '</div>' +
+    '</div></div>' +
     '<div class="grid grid-kpi">' +
       '<div class="kpi"><div class="v">' + active.length + '</div><div class="l">Active Pupils</div></div>' +
-      '<div class="kpi"><div class="v">' + female + '</div><div class="l">Girls</div></div>' +
       '<div class="kpi"><div class="v">' + male + '</div><div class="l">Boys</div></div>' +
+      '<div class="kpi"><div class="v">' + female + '</div><div class="l">Girls</div></div>' +
       '<div class="kpi"><div class="v">' + classes.length + '</div><div class="l">Classes</div></div>' +
-      '<div class="kpi"><div class="v">' + subjects.length + '</div><div class="l">Subjects</div></div>' +
+      '<div class="kpi"><div class="v">' + staff.length + '</div><div class="l">Staff</div></div>' +
       '<div class="kpi"><div class="v">' + exams.length + '</div><div class="l">Exams</div></div>' +
-      '<div class="kpi" style="background:var(--brandsoft);border-color:#c7d2fe"><div class="v" style="color:var(--brand2)">UGX ' + totalOutstanding.toLocaleString() + '</div><div class="l" style="color:var(--brand2)">Total Outstanding Fees</div></div>' +
     '</div>' +
-    (active.length === 0 ? '<div class="card" style="margin-top:20px"><h3>Getting Started</h3>' +
-      '<ol style="color:var(--text2);line-height:2.2"><li>Your classes are already created</li>' +
-      '<li>Go to <b>Pupils</b> and click <b>Bulk Import Excel</b> to load your term 3 student list</li>' +
-      '<li>Go to <b>Subjects</b> to verify subject list</li>' +
-      '<li>Create an <b>Exam</b>, then enter marks</li></ol></div>' : '');
+    '<div class="grid grid-3" style="margin-top:16px">' +
+      '<div class="kpi" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#a7f3d0">' +
+        '<div class="l" style="color:#047857">Total Expected Fees</div>' +
+        '<div class="v" style="color:#065f46;font-size:20px;margin-top:4px">' + fmtUGX(totalExpected) + '</div>' +
+      '</div>' +
+      '<div class="kpi" style="background:linear-gradient(135deg,#eef2ff,#c7d2fe);border-color:#a5b4fc">' +
+        '<div class="l" style="color:#4338ca">Total Collected</div>' +
+        '<div class="v" style="color:#3730a3;font-size:20px;margin-top:4px">' + fmtUGX(totalCollected) + '</div>' +
+      '</div>' +
+      '<div class="kpi" style="background:linear-gradient(135deg,#fef2f2,#fecaca);border-color:#fca5a5">' +
+        '<div class="l" style="color:#b91c1c">Total Outstanding</div>' +
+        '<div class="v" style="color:#7f1d1d;font-size:20px;margin-top:4px">' + fmtUGX(totalOutstanding) + '</div>' +
+      '</div>' +
+    '</div>' +
+    (classStats.length ? '<div class="card" style="margin-top:20px"><h3>Class Breakdown</h3>' +
+      '<div class="table-wrap"><table><thead><tr><th>Class</th><th>Pupils</th><th style="text-align:right">Outstanding</th></tr></thead>' +
+      '<tbody>' + classStats.map(cs => '<tr><td><b>' + esc(cs.name) + '</b></td><td><span class="badge info">' + cs.count + ' pupils</span></td><td style="text-align:right"><span class="badge ' + (cs.owed > 0 ? 'bad' : 'ok') + '">' + fmtUGX(cs.owed) + '</span></td></tr>').join('') + '</tbody></table></div>' +
+      '</div>' : '');
 }
+window.pageDashboard = pageDashboard;
 
-/* ============================================================
-   PAGE: STUDENTS
-   ============================================================ */
 async function loadClasses(){
   if(_classesCache) return _classesCache;
   const data = await rest('/rest/v1/classes?school_id=eq.' + _schoolId + '&select=id,name&order=sort_order');
@@ -550,39 +486,58 @@ async function loadClasses(){
 async function pageStudents(root){
   const classes = await loadClasses();
   const students = await rest('/rest/v1/students?school_id=eq.' + _schoolId + '&select=*&order=created_at.desc');
-
-  const q = (window._stFilterSearch || '').toLowerCase();
-  const fClass = window._stFilterClass || '';
-  const filtered = (students || []).filter(function(s){
-    if(fClass && s.class_id !== fClass) return false;
-    if(q){
-      const hay = (s.first_name + ' ' + (s.last_name||'') + ' ' + s.admission_no + ' ' + (s.lin||'') + ' ' + (s.parent_name||'')).toLowerCase();
-      if(hay.indexOf(q) === -1) return false;
-    }
-    return true;
-  });
+  window._allStudents = students || [];
 
   root.innerHTML =
-    '<div class="page-head"><div><h1>Pupils</h1>' +
-      '<div class="sub">' + (students||[]).length + ' total · ' + filtered.length + ' shown</div></div>' +
-      '<div style="display:flex;gap:8px;">' +
+    '<div class="page-head"><div><h1>Pupils</h1><div class="sub" id="studentCount">Loading…</div></div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
         '<button class="btn ghost" onclick="document.getElementById(\'excelInput\').click()">📄 Bulk Import Excel</button>' +
         '<button class="btn" onclick="addStudent()">＋ Register Pupil</button>' +
       '</div></div>' +
     '<div class="card">' +
       '<div class="grid grid-2" style="margin-bottom:16px">' +
-        '<input placeholder="Search name, admission no, LIN…" value="' + esc(window._stFilterSearch||'') + '" oninput="window._stFilterSearch=this.value;nav(\'students\')">' +
-        '<select onchange="window._stFilterClass=this.value;nav(\'students\')">' +
+        '<input id="studentSearchInput" placeholder="Search name, adm no, LIN, parent…" value="' + esc(window._stFilterSearch||'') + '" oninput="filterStudentsTable(this.value)">' +
+        '<select id="studentClassFilter" onchange="filterStudentsTable(document.getElementById(\'studentSearchInput\').value, this.value)">' +
           '<option value="">All classes</option>' +
-          classes.map(function(c){ return '<option value="' + c.id + '"' + (c.id===fClass?' selected':'') + '>' + esc(c.name) + '</option>'; }).join('') +
+          classes.map(function(c){ return '<option value="' + c.id + '">' + esc(c.name) + '</option>'; }).join('') +
         '</select>' +
       '</div>' +
-      (filtered.length ? '<div class="table-wrap"><table>' +
-        '<thead><tr><th>Adm No</th><th>LIN</th><th>Name</th><th>Class</th><th>Status</th><th>Contact</th><th>Balance</th><th style="text-align:right">Actions</th></tr></thead>' +
-        '<tbody>' + filtered.map(function(s){ return studentRow(s, classes); }).join('') + '</tbody>' +
-      '</table></div>' : '<div class="empty">No pupils yet. Click "Bulk Import Excel" to load your list.</div>') +
+      '<div id="studentsTableContainer"></div>' +
     '</div>';
+  filterStudentsTable(window._stFilterSearch || '', window._stFilterClass || '');
 }
+window.pageStudents = pageStudents;
+
+function filterStudentsTable(q, fClass) {
+  q = (q || '').toLowerCase();
+  fClass = fClass || '';
+  window._stFilterSearch = q;
+  window._stFilterClass = fClass;
+
+  const classes = _classesCache || [];
+  const filtered = (window._allStudents || []).filter(function(s){
+    if(fClass && s.class_id !== fClass) return false;
+    if(q){
+      const hay = (s.first_name + ' ' + (s.last_name||'') + ' ' + s.admission_no + ' ' + (s.lin||'') + ' ' + (s.parent_name||'') + ' ' + (s.parent_contact||'')).toLowerCase();
+      if(hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('studentCount').textContent = (window._allStudents||[]).length + ' total · ' + filtered.length + ' shown';
+  
+  const container = document.getElementById('studentsTableContainer');
+  if (!filtered.length) {
+    container.innerHTML = '<div class="empty">No pupils match your search.</div>';
+    return;
+  }
+
+  container.innerHTML = '<div class="table-wrap"><table>' +
+    '<thead><tr><th>Adm No</th><th>LIN</th><th>Name</th><th>Class</th><th>Status</th><th>Contact</th><th style="text-align:right">Balance</th><th style="text-align:right">Actions</th></tr></thead>' +
+    '<tbody>' + filtered.map(function(s){ return studentRow(s, classes); }).join('') + '</tbody>' +
+  '</table></div>';
+}
+window.filterStudentsTable = filterStudentsTable;
 
 function studentRow(s, classes){
   const cls = (classes||[]).find(function(c){ return c.id === s.class_id; });
@@ -594,151 +549,95 @@ function studentRow(s, classes){
     '<td><span class="badge info">' + esc(cls?cls.name:'—') + '</span></td>' +
     '<td>' + esc(s.boarding_status||'Day') + '</td>' +
     '<td>' + esc(s.parent_contact||'—') + '</td>' +
-    '<td><span class="badge ' + (bal > 0 ? 'bad' : 'ok') + '">' + bal.toLocaleString() + '</span></td>' +
+    '<td style="text-align:right"><span class="badge ' + (bal > 0 ? 'bad' : 'ok') + '">' + bal.toLocaleString() + '</span></td>' +
     '<td style="text-align:right;white-space:nowrap">' +
       '<button class="btn sm ghost" onclick="editStudent(\'' + s.id + '\')">Edit</button> ' +
       '<button class="btn sm danger" onclick="deleteStudent(\'' + s.id + '\')">✕</button>' +
-    '</td>' +
-  '</tr>';
+    '</td></tr>';
 }
 
-function generateLIN(firstName) {
+function generateLIN(firstName){
   const initial = firstName ? firstName.charAt(0).toUpperCase() : 'X';
   const digits = Math.floor(1000 + Math.random() * 9000);
   return 'PM' + initial + digits;
 }
+window.generateLIN = generateLIN;
 
-/* ============================================================
-   BULK IMPORT EXCEL LOGIC (DIRECT FROM YOUR FILE)
-   ============================================================ */
-async function handleExcelUpload(input) {
+async function handleExcelUpload(input){
   if (!input.files || input.files.length === 0) return;
   const file = input.files[0];
   const reader = new FileReader();
-
-  reader.onload = async function(e) {
+  reader.onload = async function(e){
     try {
-      toast('Reading Excel file...', 'info');
+      toast('Reading Excel file...', 'ok');
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: 'array' });
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      
-      // Convert to array of arrays (header: 1) to easily access columns by index
       const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-      if (!rows || rows.length < 2) { toast('No data found in the file', 'bad'); return; }
-
+      if (!rows || rows.length < 2) { toast('No data found', 'bad'); return; }
       const classes = await loadClasses();
       const studentsToInsert = [];
-
-      // Loop starting from index 1 (skip header)
-      for (let i = 1; i < rows.length; i++) {
+      for (let i = 1; i < rows.length; i++){
         const row = rows[i];
-        // Skip empty rows or rows without a name (Column B is index 1)
         if (!row || !row[1] || String(row[1]).trim() === '' || String(row[1]).trim() === 'Name') continue;
-
         const fullName = String(row[1]).trim();
         const nameParts = fullName.split(' ');
         const firstName = nameParts[0];
         const lastName = nameParts.slice(1).join(' ') || null;
-        
         const className = String(row[2] || '').trim();
         let classId = null;
-        
-        // Match or create the class
-        if (className) {
+        if (className){
           const matched = classes.find(c => c.name.toLowerCase() === className.toLowerCase());
-          if (matched) {
-            classId = matched.id;
-          } else {
+          if (matched){ classId = matched.id; }
+          else {
             try {
-              const newClass = await rest('/rest/v1/classes', {
-                method: 'POST',
-                headers: { 'Prefer': 'return=representation' },
-                body: JSON.stringify({ school_id: _schoolId, name: className, sort_order: 99 })
-              });
-              if (newClass && newClass[0]) {
-                classId = newClass[0].id;
-                classes.push({ id: classId, name: className });
-                _classesCache = classes;
-              }
-            } catch(err) { console.error('Error creating class:', className, err); }
+              const newClass = await rest('/rest/v1/classes', { method: 'POST', headers: { 'Prefer': 'return=representation' }, body: JSON.stringify({ school_id: _schoolId, name: className, sort_order: 99 }) });
+              if (newClass && newClass[0]){ classId = newClass[0].id; classes.push({ id: classId, name: className }); _classesCache = classes; }
+            } catch(err){ console.error(err); }
           }
         }
-
-        // Helper to safely parse numbers from Excel
         const getNum = (val) => {
           if (val === undefined || val === null || val === '') return 0;
-          // Remove any formulas or non-numeric characters
           const cleaned = String(val).replace(/[^0-9.-]/g, '');
           const num = parseFloat(cleaned);
           return isNaN(num) ? 0 : num;
         };
-
-        // Map Excel columns to database fields based on your specific file
-        const boardingStatus = String(row[3] || 'Day').trim(); // Col D (Status)
-        const parentContact = row[4] ? String(row[4]).trim() : null; // Col E (Parent tel)
-        const balanceBf = getNum(row[5]); // Col F
-        const actualFee = getNum(row[7]); // Col H
-        const functionalFee = getNum(row[10]); // Col K
-        const transportFee = getNum(row[12]); // Col M
-        const dep1 = getNum(row[13]); // Col N
-        const dep2 = getNum(row[14]); // Col O
-        const dep3 = getNum(row[15]); // Col P
-        
-        // If Excel has a total (Col Q) use it, otherwise calculate
-        let totalExpected = getNum(row[16]); // Col Q
-        if (totalExpected === 0) {
-          totalExpected = balanceBf + actualFee + functionalFee + transportFee;
-        }
-        
-        let currentBalance = getNum(row[17]); // Col R
-        if (currentBalance === 0 && totalExpected > 0) {
-          currentBalance = totalExpected - dep1 - dep2 - dep3;
-        }
-
+        const boardingStatus = String(row[3] || 'Day').trim();
+        const parentContact = row[4] ? String(row[4]).trim() : null;
+        const balanceBf = getNum(row[5]);
+        const actualFee = getNum(row[7]);
+        const functionalFee = getNum(row[10]);
+        const transportFee = getNum(row[12]);
+        const dep1 = getNum(row[13]);
+        const dep2 = getNum(row[14]);
+        const dep3 = getNum(row[15]);
+        let totalExpected = getNum(row[16]);
+        if (totalExpected === 0) totalExpected = balanceBf + actualFee + functionalFee + transportFee;
+        let currentBalance = getNum(row[17]);
+        if (currentBalance === 0 && totalExpected > 0) currentBalance = totalExpected - dep1 - dep2 - dep3;
         studentsToInsert.push({
           school_id: _schoolId,
           admission_no: row[0] ? 'ADM-' + String(row[0]).trim() : 'ADM-' + Math.floor(Math.random() * 10000),
-          first_name: firstName,
-          last_name: lastName,
-          lin: generateLIN(firstName),
-          class_id: classId,
-          boarding_status: boardingStatus,
-          parent_contact: parentContact,
-          balance_bf: balanceBf,
-          actual_fee: actualFee,
-          functional_fee: functionalFee,
-          transport_fee: transportFee,
-          deposit_1: dep1,
-          deposit_2: dep2,
-          deposit_3: dep3,
-          total_expected: totalExpected,
-          current_balance: currentBalance,
-          status: 'active'
+          first_name: firstName, last_name: lastName, lin: generateLIN(firstName),
+          class_id: classId, boarding_status: boardingStatus, parent_contact: parentContact,
+          balance_bf: balanceBf, actual_fee: actualFee, functional_fee: functionalFee, transport_fee: transportFee,
+          deposit_1: dep1, deposit_2: dep2, deposit_3: dep3,
+          total_expected: totalExpected, current_balance: currentBalance, status: 'active'
         });
       }
-
-      if (studentsToInsert.length === 0) { toast('No valid student records found', 'bad'); return; }
-
-      toast('Importing ' + studentsToInsert.length + ' students...', 'info');
-
-      // Batch insert in chunks of 50 to avoid payload limits
+      if (studentsToInsert.length === 0){ toast('No valid student records found', 'bad'); return; }
+      toast('Importing ' + studentsToInsert.length + ' students...', 'ok');
       const chunkSize = 50;
-      for (let i = 0; i < studentsToInsert.length; i += chunkSize) {
+      for (let i = 0; i < studentsToInsert.length; i += chunkSize){
         const chunk = studentsToInsert.slice(i, i + chunkSize);
-        await rest('/rest/v1/students', {
-          method: 'POST',
-          headers: { 'Prefer': 'return=minimal' },
-          body: JSON.stringify(chunk)
-        });
+        await rest('/rest/v1/students', { method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify(chunk) });
       }
-
-      toast('Successfully imported ' + studentsToInsert.length + ' students!');
-      input.value = ''; 
-      nav('students'); 
-    } catch (err) {
-      console.error('Excel import error:', err);
-      toast('Error importing Excel: ' + err.message, 'bad');
+      toast('Successfully imported ' + studentsToInsert.length + ' students!', 'ok');
+      input.value = '';
+      nav('students');
+    } catch (err){
+      console.error(err);
+      toast('Error importing: ' + err.message, 'bad');
       input.value = '';
     }
   };
@@ -757,9 +656,7 @@ async function addStudent(){
       '<div><label>Last Name</label><input id="s_ln"></div>' +
       '<div><label>Gender</label><select id="s_gender"><option value="male">Male</option><option value="female">Female</option></select></div>' +
       '<div><label>Date of Birth</label><input id="s_dob" type="date"></div>' +
-      '<div><label>Class</label><select id="s_class">' +
-        classes.map(function(c){ return '<option value="' + c.id + '">' + esc(c.name) + '</option>'; }).join('') +
-      '</select></div>' +
+      '<div><label>Class</label><select id="s_class">' + classes.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('') + '</select></div>' +
       '<div><label>Boarding Status</label><select id="s_boarding"><option value="Day">Day</option><option value="Boarding">Boarding</option></select></div>' +
       '<div><label>Parent/Guardian Name</label><input id="s_parent_name"></div>' +
       '<div><label>Parent Contact</label><input id="s_parent_contact"></div>' +
@@ -780,50 +677,28 @@ async function saveNewStudent(){
   const adm = document.getElementById('s_adm').value.trim();
   const fn = document.getElementById('s_fn').value.trim();
   if(!adm || !fn){ toast('Admission No and First Name required','bad'); return; }
-  
   const generatedLin = generateLIN(fn);
   const getNum = (id) => { const val = parseFloat(document.getElementById(id).value); return isNaN(val) ? 0 : val; };
-  
-  const balanceBf = getNum('s_balance_bf');
-  const actualFee = getNum('s_actual_fee');
-  const functionalFee = getNum('s_functional_fee');
-  const transportFee = getNum('s_transport_fee');
-  const dep1 = getNum('s_dep1');
-  const dep2 = getNum('s_dep2');
-  const dep3 = getNum('s_dep3');
-  
+  const balanceBf = getNum('s_balance_bf'), actualFee = getNum('s_actual_fee'), functionalFee = getNum('s_functional_fee'), transportFee = getNum('s_transport_fee');
+  const dep1 = getNum('s_dep1'), dep2 = getNum('s_dep2'), dep3 = getNum('s_dep3');
   const totalExpected = balanceBf + actualFee + functionalFee + transportFee;
   const currentBalance = totalExpected - dep1 - dep2 - dep3;
-
   try {
-    await rest('/rest/v1/students', {
-      method: 'POST',
-      headers: { 'Prefer': 'return=representation' },
-      body: JSON.stringify({
-        school_id: _schoolId, admission_no: adm, first_name: fn,
-        lin: generatedLin,
-        last_name: document.getElementById('s_ln').value.trim() || null,
-        gender: document.getElementById('s_gender').value,
-        date_of_birth: document.getElementById('s_dob').value || null,
-        class_id: document.getElementById('s_class').value || null,
-        boarding_status: document.getElementById('s_boarding').value,
-        parent_name: document.getElementById('s_parent_name').value.trim() || null,
-        parent_contact: document.getElementById('s_parent_contact').value.trim() || null,
-        balance_bf: balanceBf,
-        actual_fee: actualFee,
-        functional_fee: functionalFee,
-        transport_fee: transportFee,
-        deposit_1: dep1,
-        deposit_2: dep2,
-        deposit_3: dep3,
-        total_expected: totalExpected,
-        current_balance: currentBalance,
-        status: 'active'
-      })
-    });
-    toast('Registered successfully! LIN: ' + generatedLin);
-    closeModal();
-    nav('students');
+    await rest('/rest/v1/students', { method: 'POST', headers: { 'Prefer': 'return=representation' }, body: JSON.stringify({
+      school_id: _schoolId, admission_no: adm, first_name: fn, lin: generatedLin,
+      last_name: document.getElementById('s_ln').value.trim() || null,
+      gender: document.getElementById('s_gender').value,
+      date_of_birth: document.getElementById('s_dob').value || null,
+      class_id: document.getElementById('s_class').value || null,
+      boarding_status: document.getElementById('s_boarding').value,
+      parent_name: document.getElementById('s_parent_name').value.trim() || null,
+      parent_contact: document.getElementById('s_parent_contact').value.trim() || null,
+      balance_bf: balanceBf, actual_fee: actualFee, functional_fee: functionalFee, transport_fee: transportFee,
+      deposit_1: dep1, deposit_2: dep2, deposit_3: dep3,
+      total_expected: totalExpected, current_balance: currentBalance, status: 'active'
+    })});
+    toast('Registered · LIN: ' + generatedLin, 'ok');
+    closeModal(); nav('students');
   } catch(e){ toast(e.message, 'bad'); }
 }
 window.saveNewStudent = saveNewStudent;
@@ -841,12 +716,8 @@ async function editStudent(id){
       '<div><label>Last Name</label><input id="e_ln" value="' + esc(s.last_name||'') + '"></div>' +
       '<div><label>Gender</label><select id="e_gender"><option value="male"' + (s.gender==='male'?' selected':'') + '>Male</option><option value="female"' + (s.gender==='female'?' selected':'') + '>Female</option></select></div>' +
       '<div><label>Date of Birth</label><input id="e_dob" type="date" value="' + (s.date_of_birth||'') + '"></div>' +
-      '<div><label>Class</label><select id="e_class">' +
-        classes.map(function(c){ return '<option value="' + c.id + '"' + (c.id===s.class_id?' selected':'') + '>' + esc(c.name) + '</option>'; }).join('') +
-      '</select></div>' +
-      '<div><label>Boarding Status</label><select id="e_boarding">' +
-        ['Day','Boarding','BAR'].map(function(x){ return '<option value="' + x + '"' + (x===s.boarding_status?' selected':'') + '>' + x + '</option>'; }).join('') +
-      '</select></div>' +
+      '<div><label>Class</label><select id="e_class">' + classes.map(c=>'<option value="'+c.id+'"'+(c.id===s.class_id?' selected':'')+'>'+esc(c.name)+'</option>').join('') + '</select></div>' +
+      '<div><label>Boarding Status</label><select id="e_boarding">' + ['Day','Boarding','BAR'].map(x=>'<option value="'+x+'"'+(x===s.boarding_status?' selected':'')+'>'+x+'</option>').join('') + '</select></div>' +
       '<div><label>Parent/Guardian Name</label><input id="e_parent_name" value="' + esc(s.parent_name||'') + '"></div>' +
       '<div><label>Parent Contact</label><input id="e_parent_contact" value="' + esc(s.parent_contact||'') + '"></div>' +
       '<div><label>Balance B/F</label><input id="e_balance_bf" type="number" value="' + (s.balance_bf||0) + '"></div>' +
@@ -856,9 +727,7 @@ async function editStudent(id){
       '<div><label>1st Deposit</label><input id="e_dep1" type="number" value="' + (s.deposit_1||0) + '"></div>' +
       '<div><label>2nd Deposit</label><input id="e_dep2" type="number" value="' + (s.deposit_2||0) + '"></div>' +
       '<div><label>3rd Deposit</label><input id="e_dep3" type="number" value="' + (s.deposit_3||0) + '"></div>' +
-      '<div><label>Status</label><select id="e_status">' +
-        ['active','transferred','graduated','withdrawn','archived'].map(function(x){ return '<option value="' + x + '"' + (x===s.status?' selected':'') + '>' + x + '</option>'; }).join('') +
-      '</select></div>' +
+      '<div><label>Status</label><select id="e_status">' + ['active','transferred','graduated','withdrawn','archived'].map(x=>'<option value="'+x+'"'+(x===s.status?' selected':'')+'>'+x+'</option>').join('') + '</select></div>' +
     '</div>' +
     '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
       '<button class="btn" onclick="updateStudent(\'' + id + '\')">Save</button></div>');
@@ -866,83 +735,70 @@ async function editStudent(id){
 window.editStudent = editStudent;
 
 async function updateStudent(id){
-  const getNum = (id) => { const val = parseFloat(document.getElementById(id).value); return isNaN(val) ? 0 : val; };
-  
-  const balanceBf = getNum('e_balance_bf');
-  const actualFee = getNum('e_actual_fee');
-  const functionalFee = getNum('e_functional_fee');
-  const transportFee = getNum('e_transport_fee');
-  const dep1 = getNum('e_dep1');
-  const dep2 = getNum('e_dep2');
-  const dep3 = getNum('e_dep3');
-  
+  const getNum = (i) => { const v = parseFloat(document.getElementById(i).value); return isNaN(v) ? 0 : v; };
+  const balanceBf = getNum('e_balance_bf'), actualFee = getNum('e_actual_fee'), functionalFee = getNum('e_functional_fee'), transportFee = getNum('e_transport_fee');
+  const dep1 = getNum('e_dep1'), dep2 = getNum('e_dep2'), dep3 = getNum('e_dep3');
   const totalExpected = balanceBf + actualFee + functionalFee + transportFee;
   const currentBalance = totalExpected - dep1 - dep2 - dep3;
-
   try {
-    await rest('/rest/v1/students?id=eq.' + id, {
-      method: 'PATCH',
-      headers: { 'Prefer': 'return=minimal' },
-      body: JSON.stringify({
-        admission_no: document.getElementById('e_adm').value.trim(),
-        first_name: document.getElementById('e_fn').value.trim(),
-        last_name: document.getElementById('e_ln').value.trim() || null,
-        gender: document.getElementById('e_gender').value,
-        date_of_birth: document.getElementById('e_dob').value || null,
-        class_id: document.getElementById('e_class').value || null,
-        boarding_status: document.getElementById('e_boarding').value,
-        parent_name: document.getElementById('e_parent_name').value.trim() || null,
-        parent_contact: document.getElementById('e_parent_contact').value.trim() || null,
-        balance_bf: balanceBf,
-        actual_fee: actualFee,
-        functional_fee: functionalFee,
-        transport_fee: transportFee,
-        deposit_1: dep1,
-        deposit_2: dep2,
-        deposit_3: dep3,
-        total_expected: totalExpected,
-        current_balance: currentBalance,
-        status: document.getElementById('e_status').value,
-        updated_at: new Date().toISOString()
-      })
-    });
-    toast('Updated successfully'); closeModal(); nav('students');
+    await rest('/rest/v1/students?id=eq.' + id, { method: 'PATCH', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({
+      admission_no: document.getElementById('e_adm').value.trim(),
+      first_name: document.getElementById('e_fn').value.trim(),
+      last_name: document.getElementById('e_ln').value.trim() || null,
+      gender: document.getElementById('e_gender').value,
+      date_of_birth: document.getElementById('e_dob').value || null,
+      class_id: document.getElementById('e_class').value || null,
+      boarding_status: document.getElementById('e_boarding').value,
+      parent_name: document.getElementById('e_parent_name').value.trim() || null,
+      parent_contact: document.getElementById('e_parent_contact').value.trim() || null,
+      balance_bf: balanceBf, actual_fee: actualFee, functional_fee: functionalFee, transport_fee: transportFee,
+      deposit_1: dep1, deposit_2: dep2, deposit_3: dep3,
+      total_expected: totalExpected, current_balance: currentBalance,
+      status: document.getElementById('e_status').value,
+      updated_at: new Date().toISOString()
+    })});
+    toast('Updated successfully', 'ok'); closeModal(); nav('students');
   } catch(e){ toast(e.message, 'bad'); }
 }
 window.updateStudent = updateStudent;
 
 async function deleteStudent(id){
-  if(!confirm('Are you sure you want to delete this pupil? This cannot be undone.')) return;
-  try {
-    await rest('/rest/v1/students?id=eq.' + id, { method: 'DELETE' });
-    toast('Pupil deleted'); nav('students');
-  } catch(e){ toast(e.message, 'bad'); }
+  modal('<h3>Delete Pupil</h3>' +
+    '<p class="muted" style="margin-bottom:16px">Are you sure you want to delete this pupil? This cannot be undone.</p>' +
+    '<div class="actions">' +
+      '<button class="btn ghost" onclick="closeModal()">Cancel</button>' +
+      '<button class="btn danger" onclick="confirmDeleteStudent(\'' + id + '\')">Yes, Delete</button>' +
+    '</div>');
 }
 window.deleteStudent = deleteStudent;
 
-/* ============================================================
-   PAGE: CLASSES
-   ============================================================ */
+async function confirmDeleteStudent(id){
+  closeModal();
+  try {
+    await rest('/rest/v1/students?id=eq.' + id, { method: 'DELETE' });
+    toast('Pupil deleted', 'ok');
+    nav('students');
+  } catch(e){ toast(e.message, 'bad'); }
+}
+window.confirmDeleteStudent = confirmDeleteStudent;
+
 async function pageClasses(root){
   const classes = await rest('/rest/v1/classes?school_id=eq.' + _schoolId + '&select=*&order=sort_order');
   _classesCache = classes || [];
   const students = await rest('/rest/v1/students?school_id=eq.' + _schoolId + '&select=class_id,status');
   const counts = {};
   (students||[]).forEach(function(s){ if(s.status === 'active' && s.class_id) counts[s.class_id] = (counts[s.class_id]||0)+1; });
-
   root.innerHTML =
     '<div class="page-head"><div><h1>Classes</h1><div class="sub">' + (classes||[]).length + ' classes</div></div>' +
       '<button class="btn" onclick="addClass()">＋ Add Class</button></div>' +
     '<div class="card"><div class="table-wrap"><table>' +
       '<thead><tr><th>Class</th><th>Pupils</th><th style="text-align:right">Actions</th></tr></thead>' +
-      '<tbody>' + (classes||[]).map(function(c){
-        return '<tr><td><b>' + esc(c.name) + '</b></td>' +
-          '<td><span class="badge info">' + (counts[c.id]||0) + ' pupils</span></td>' +
-          '<td style="text-align:right"><button class="btn sm danger" onclick="deleteClass(\'' + c.id + '\',' + (counts[c.id]||0) + ')">✕</button></td></tr>';
-      }).join('') + '</tbody>' +
-    '</table></div></div>';
+      '<tbody>' + (classes||[]).map(c =>
+        '<tr><td><b>' + esc(c.name) + '</b></td>' +
+        '<td><span class="badge info">' + (counts[c.id]||0) + ' pupils</span></td>' +
+        '<td style="text-align:right"><button class="btn sm danger" onclick="deleteClass(\'' + c.id + '\',' + (counts[c.id]||0) + ')">✕</button></td></tr>'
+      ).join('') + '</tbody></table></div></div>';
 }
-
 function addClass(){
   modal('<h3>Add Class</h3>' +
     '<div><label>Class Name</label><input id="c_name"></div>' +
@@ -951,36 +807,30 @@ function addClass(){
       '<button class="btn" onclick="saveNewClass()">Save</button></div>');
 }
 window.addClass = addClass;
-
 async function saveNewClass(){
   const name = document.getElementById('c_name').value.trim();
   if(!name){ toast('Name required','bad'); return; }
   try {
-    await rest('/rest/v1/classes', {
-      method: 'POST',
-      headers: { 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ school_id: _schoolId, name: name, sort_order: parseInt(document.getElementById('c_sort').value)||0 })
-    });
-    _classesCache = null;
-    toast('Added'); closeModal(); nav('classes');
+    await rest('/rest/v1/classes', { method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({ school_id: _schoolId, name: name, sort_order: parseInt(document.getElementById('c_sort').value)||0 }) });
+    _classesCache = null; toast('Added','ok'); closeModal(); nav('classes');
   } catch(e){ toast(e.message, 'bad'); }
 }
 window.saveNewClass = saveNewClass;
-
 async function deleteClass(id, count){
   if(count > 0){ toast('Cannot delete — has pupils','bad'); return; }
-  if(!confirm('Delete this class?')) return;
-  try {
-    await rest('/rest/v1/classes?id=eq.' + id, { method: 'DELETE' });
-    _classesCache = null;
-    toast('Deleted'); nav('classes');
-  } catch(e){ toast(e.message, 'bad'); }
+  modal('<h3>Delete Class</h3>' +
+    '<p class="muted" style="margin-bottom:16px">Delete this class?</p>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
+    '<button class="btn danger" onclick="confirmDeleteClass(\'' + id + '\')">Delete</button></div>');
 }
 window.deleteClass = deleteClass;
+async function confirmDeleteClass(id){
+  closeModal();
+  try { await rest('/rest/v1/classes?id=eq.' + id, { method: 'DELETE' }); _classesCache = null; toast('Deleted','ok'); nav('classes'); }
+  catch(e){ toast(e.message, 'bad'); }
+}
+window.confirmDeleteClass = confirmDeleteClass;
 
-/* ============================================================
-   PAGE: SUBJECTS
-   ============================================================ */
 async function pageSubjects(root){
   const subjects = await rest('/rest/v1/subjects?school_id=eq.' + _schoolId + '&select=*&order=code');
   root.innerHTML =
@@ -988,15 +838,13 @@ async function pageSubjects(root){
       '<button class="btn" onclick="addSubject()">＋ Add Subject</button></div>' +
     '<div class="card"><div class="table-wrap"><table>' +
       '<thead><tr><th>Code</th><th>Name</th><th>Compulsory</th><th style="text-align:right">Actions</th></tr></thead>' +
-      '<tbody>' + (subjects||[]).map(function(s){
-        return '<tr><td><span class="badge info">' + esc(s.code) + '</span></td>' +
-          '<td><b>' + esc(s.name) + '</b></td>' +
-          '<td>' + (s.is_compulsory ? '<span class="badge ok">Yes</span>' : '<span class="badge">No</span>') + '</td>' +
-          '<td style="text-align:right"><button class="btn sm danger" onclick="deleteSubject(\'' + s.id + '\')">✕</button></td></tr>';
-      }).join('') + '</tbody>' +
-    '</table></div></div>';
+      '<tbody>' + (subjects||[]).map(s =>
+        '<tr><td><span class="badge info">' + esc(s.code) + '</span></td>' +
+        '<td><b>' + esc(s.name) + '</b></td>' +
+        '<td>' + (s.is_compulsory ? '<span class="badge ok">Yes</span>' : '<span class="badge">No</span>') + '</td>' +
+        '<td style="text-align:right"><button class="btn sm danger" onclick="deleteSubject(\'' + s.id + '\')">✕</button></td></tr>'
+      ).join('') + '</tbody></table></div></div>';
 }
-
 function addSubject(){
   modal('<h3>Add Subject</h3>' +
     '<div class="grid grid-2">' +
@@ -1007,34 +855,30 @@ function addSubject(){
       '<button class="btn" onclick="saveNewSubject()">Save</button></div>');
 }
 window.addSubject = addSubject;
-
 async function saveNewSubject(){
   const code = document.getElementById('sb_code').value.trim().toUpperCase();
   const name = document.getElementById('sb_name').value.trim();
   if(!code || !name){ toast('Fill both','bad'); return; }
   try {
-    await rest('/rest/v1/subjects', {
-      method: 'POST',
-      headers: { 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ school_id: _schoolId, code: code, name: name, is_compulsory: true })
-    });
-    toast('Added'); closeModal(); nav('subjects');
+    await rest('/rest/v1/subjects', { method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({ school_id: _schoolId, code: code, name: name, is_compulsory: true }) });
+    toast('Added','ok'); closeModal(); nav('subjects');
   } catch(e){ toast(e.message, 'bad'); }
 }
 window.saveNewSubject = saveNewSubject;
-
 async function deleteSubject(id){
-  if(!confirm('Delete subject?')) return;
-  try {
-    await rest('/rest/v1/subjects?id=eq.' + id, { method: 'DELETE' });
-    toast('Deleted'); nav('subjects');
-  } catch(e){ toast(e.message, 'bad'); }
+  modal('<h3>Delete Subject</h3>' +
+    '<p class="muted" style="margin-bottom:16px">Delete this subject?</p>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
+    '<button class="btn danger" onclick="confirmDeleteSubject(\'' + id + '\')">Delete</button></div>');
 }
 window.deleteSubject = deleteSubject;
+async function confirmDeleteSubject(id){
+  closeModal();
+  try { await rest('/rest/v1/subjects?id=eq.' + id, { method: 'DELETE' }); toast('Deleted','ok'); nav('subjects'); }
+  catch(e){ toast(e.message, 'bad'); }
+}
+window.confirmDeleteSubject = confirmDeleteSubject;
 
-/* ============================================================
-   PAGE: EXAMS
-   ============================================================ */
 async function pageExams(root){
   const exams = await rest('/rest/v1/exams?school_id=eq.' + _schoolId + '&select=*&order=created_at.desc');
   root.innerHTML =
@@ -1043,26 +887,23 @@ async function pageExams(root){
     '<div class="card">' +
       ((exams||[]).length ? '<div class="table-wrap"><table>' +
         '<thead><tr><th>Name</th><th>Type</th><th>Year · Term</th><th style="text-align:right">Actions</th></tr></thead>' +
-        '<tbody>' + exams.map(function(e){
-          return '<tr><td><b>' + esc(e.name) + '</b></td>' +
-            '<td><span class="badge info">' + esc(e.type) + '</span></td>' +
-            '<td>' + e.year + ' · T' + e.term + '</td>' +
-            '<td style="text-align:right;white-space:nowrap">' +
-              '<button class="btn sm" onclick="window._marksExamId=\'' + e.id + '\';nav(\'marks\')">Marks</button> ' +
-              '<button class="btn sm danger" onclick="deleteExam(\'' + e.id + '\')">✕</button>' +
-            '</td></tr>';
-        }).join('') + '</tbody></table></div>' : '<div class="empty">No exams yet.</div>') +
+        '<tbody>' + exams.map(e =>
+          '<tr><td><b>' + esc(e.name) + '</b></td>' +
+          '<td><span class="badge info">' + esc(e.type) + '</span></td>' +
+          '<td>' + e.year + ' · T' + e.term + '</td>' +
+          '<td style="text-align:right;white-space:nowrap">' +
+            '<button class="btn sm" onclick="window._marksExamId=\'' + e.id + '\';nav(\'marks\')">Marks</button> ' +
+            '<button class="btn sm danger" onclick="deleteExam(\'' + e.id + '\')">✕</button>' +
+          '</td></tr>'
+        ).join('') + '</tbody></table></div>' : '<div class="empty">No exams yet. Click "Create Exam" to begin.</div>') +
     '</div>';
 }
-
 function addExam(){
   const year = new Date().getFullYear();
   modal('<h3>Create Exam</h3>' +
     '<div><label>Exam Name</label><input id="ex_name" placeholder="End of Term Exam"></div>' +
     '<div class="grid grid-2" style="margin-top:12px">' +
-      '<div><label>Type</label><select id="ex_type">' +
-        ['Test','Mid-Term','End of Term','Mock','Final'].map(function(t){ return '<option>' + t + '</option>'; }).join('') +
-      '</select></div>' +
+      '<div><label>Type</label><select id="ex_type">' + ['Test','Mid-Term','End of Term','Mock','Final'].map(t=>'<option>'+t+'</option>').join('') + '</select></div>' +
       '<div><label>Term</label><select id="ex_term"><option>1</option><option selected>2</option><option>3</option></select></div>' +
     '</div>' +
     '<div style="margin-top:12px"><label>Year</label><input id="ex_year" type="number" value="' + year + '"></div>' +
@@ -1070,38 +911,34 @@ function addExam(){
       '<button class="btn" onclick="saveNewExam()">Create</button></div>');
 }
 window.addExam = addExam;
-
 async function saveNewExam(){
   const name = document.getElementById('ex_name').value.trim();
   if(!name){ toast('Name required','bad'); return; }
   try {
-    await rest('/rest/v1/exams', {
-      method: 'POST',
-      headers: { 'Prefer': 'return=minimal' },
-      body: JSON.stringify({
-        school_id: _schoolId, name: name,
-        type: document.getElementById('ex_type').value,
-        year: parseInt(document.getElementById('ex_year').value),
-        term: parseInt(document.getElementById('ex_term').value)
-      })
-    });
-    toast('Created'); closeModal(); nav('exams');
+    await rest('/rest/v1/exams', { method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({
+      school_id: _schoolId, name: name,
+      type: document.getElementById('ex_type').value,
+      year: parseInt(document.getElementById('ex_year').value),
+      term: parseInt(document.getElementById('ex_term').value)
+    })});
+    toast('Created','ok'); closeModal(); nav('exams');
   } catch(e){ toast(e.message, 'bad'); }
 }
 window.saveNewExam = saveNewExam;
-
 async function deleteExam(id){
-  if(!confirm('Delete this exam and its marks?')) return;
-  try {
-    await rest('/rest/v1/exams?id=eq.' + id, { method: 'DELETE' });
-    toast('Deleted'); nav('exams');
-  } catch(e){ toast(e.message, 'bad'); }
+  modal('<h3>Delete Exam</h3>' +
+    '<p class="muted" style="margin-bottom:16px">Delete this exam and all its marks?</p>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
+    '<button class="btn danger" onclick="confirmDeleteExam(\'' + id + '\')">Delete</button></div>');
 }
 window.deleteExam = deleteExam;
+async function confirmDeleteExam(id){
+  closeModal();
+  try { await rest('/rest/v1/exams?id=eq.' + id, { method: 'DELETE' }); toast('Deleted','ok'); nav('exams'); }
+  catch(e){ toast(e.message, 'bad'); }
+}
+window.confirmDeleteExam = confirmDeleteExam;
 
-/* ============================================================
-   PAGE: MARKS ENTRY
-   ============================================================ */
 async function pageMarks(root){
   const [exams, classes, subjects] = await Promise.all([
     rest('/rest/v1/exams?school_id=eq.' + _schoolId + '&select=*&order=created_at.desc'),
@@ -1109,148 +946,104 @@ async function pageMarks(root){
     rest('/rest/v1/subjects?school_id=eq.' + _schoolId + '&select=*&order=code')
   ]);
   if(!(exams||[]).length || !(classes||[]).length || !(subjects||[]).length){
-    root.innerHTML = '<div class="page-head"><div><h1>Marks Entry</h1></div></div>' +
-      '<div class="card"><div class="empty">Create an exam, class, and subject first.</div></div>';
+    root.innerHTML = '<div class="page-head"><div><h1>Marks Entry</h1></div></div><div class="card"><div class="empty">Create an exam, class, and subject first.</div></div>';
     return;
   }
   const examId = window._marksExamId || exams[0].id;
   const classId = window._marksClassId || classes[0].id;
   const subjectId = window._marksSubjectId || subjects[0].id;
-  const exam = exams.find(function(e){ return e.id === examId; }) || exams[0];
-  const cls = classes.find(function(c){ return c.id === classId; }) || classes[0];
-  const subj = subjects.find(function(s){ return s.id === subjectId; }) || subjects[0];
-
+  const exam = exams.find(e => e.id === examId) || exams[0];
+  const cls = classes.find(c => c.id === classId) || classes[0];
+  const subj = subjects.find(s => s.id === subjectId) || subjects[0];
   const [students, marks] = await Promise.all([
     rest('/rest/v1/students?school_id=eq.' + _schoolId + '&class_id=eq.' + cls.id + '&status=eq.active&select=*&order=first_name'),
     rest('/rest/v1/marks?school_id=eq.' + _schoolId + '&exam_id=eq.' + exam.id + '&subject_id=eq.' + subj.id + '&select=*')
   ]);
-
   root.innerHTML =
     '<div class="page-head"><div><h1>Marks Entry</h1>' +
       '<div class="sub">' + esc(exam.name) + ' · ' + esc(cls.name) + ' · ' + esc(subj.name) + '</div></div>' +
-      (exam.is_locked ? '<span class="badge bad">Locked</span>' :
-      '<button class="btn" onclick="saveMarksGrid()">💾 Save All</button>') + '</div>' +
+      '<button class="btn" onclick="saveMarksGrid()">💾 Save All</button></div>' +
     '<div class="card" style="margin-bottom:16px"><div class="grid grid-3">' +
-      '<div><label>Exam</label><select onchange="window._marksExamId=this.value;nav(\'marks\')">' +
-        exams.map(function(e){ return '<option value="' + e.id + '"' + (e.id===exam.id?' selected':'') + '>' + esc(e.name) + '</option>'; }).join('') +
-      '</select></div>' +
-      '<div><label>Class</label><select onchange="window._marksClassId=this.value;nav(\'marks\')">' +
-        classes.map(function(c){ return '<option value="' + c.id + '"' + (c.id===cls.id?' selected':'') + '>' + esc(c.name) + '</option>'; }).join('') +
-      '</select></div>' +
-      '<div><label>Subject</label><select onchange="window._marksSubjectId=this.value;nav(\'marks\')">' +
-        subjects.map(function(s){ return '<option value="' + s.id + '"' + (s.id===subj.id?' selected':'') + '>' + esc(s.code) + ' — ' + esc(s.name) + '</option>'; }).join('') +
-      '</select></div>' +
+      '<div><label>Exam</label><select onchange="window._marksExamId=this.value;nav(\'marks\')">' + exams.map(e=>'<option value="'+e.id+'"'+(e.id===exam.id?' selected':'')+'>'+esc(e.name)+'</option>').join('') + '</select></div>' +
+      '<div><label>Class</label><select onchange="window._marksClassId=this.value;nav(\'marks\')">' + classes.map(c=>'<option value="'+c.id+'"'+(c.id===cls.id?' selected':'')+'>'+esc(c.name)+'</option>').join('') + '</select></div>' +
+      '<div><label>Subject</label><select onchange="window._marksSubjectId=this.value;nav(\'marks\')">' + subjects.map(s=>'<option value="'+s.id+'"'+(s.id===subj.id?' selected':'')+'>'+esc(s.code)+' — '+esc(s.name)+'</option>').join('') + '</select></div>' +
     '</div></div>' +
     '<div class="card">' +
       ((students||[]).length ? '<div class="table-wrap"><table>' +
         '<thead><tr><th>#</th><th>Adm No</th><th>Name</th><th>Score / 100</th></tr></thead>' +
-        '<tbody>' + students.map(function(s, i){
-          const m = (marks||[]).find(function(x){ return x.student_id === s.id; });
-          return '<tr><td>' + (i+1) + '</td>' +
-            '<td><b>' + esc(s.admission_no) + '</b></td>' +
-            '<td>' + esc(s.first_name + ' ' + (s.last_name||'')) + '</td>' +
-            '<td><input type="number" min="0" max="100" class="mk-input" data-student="' + s.id + '" value="' + (m ? m.score : '') + '" style="max-width:130px"></td>' +
-          '</tr>';
+        '<tbody>' + students.map((s, i) => {
+          const m = (marks||[]).find(x => x.student_id === s.id);
+          return '<tr><td>' + (i+1) + '</td><td><b>' + esc(s.admission_no) + '</b></td><td>' + esc(s.first_name + ' ' + (s.last_name||'')) + '</td>' +
+            '<td><input type="number" min="0" max="100" class="mk-input" data-student="' + s.id + '" value="' + (m ? m.score : '') + '" style="max-width:130px"></td></tr>';
         }).join('') + '</tbody></table></div>' : '<div class="empty">No pupils in this class.</div>') +
     '</div>';
 }
-
 async function saveMarksGrid(){
   const examId = window._marksExamId;
   const subjectId = window._marksSubjectId;
   const rows = [];
-  document.querySelectorAll('.mk-input').forEach(function(inp){
+  document.querySelectorAll('.mk-input').forEach(inp => {
     const v = inp.value.trim();
     if(v === '') return;
     const score = parseFloat(v);
     if(isNaN(score) || score < 0 || score > 100) return;
-    rows.push({
-      school_id: _schoolId,
-      exam_id: examId,
-      subject_id: subjectId,
-      student_id: inp.dataset.student,
-      score: score
-    });
+    rows.push({ school_id: _schoolId, exam_id: examId, subject_id: subjectId, student_id: inp.dataset.student, score: score });
   });
   if(!rows.length){ toast('Nothing to save','bad'); return; }
-
   try {
     await rest('/rest/v1/marks?school_id=eq.' + _schoolId + '&exam_id=eq.' + examId + '&subject_id=eq.' + subjectId, { method: 'DELETE' });
-    await rest('/rest/v1/marks', {
-      method: 'POST',
-      headers: { 'Prefer': 'return=minimal' },
-      body: JSON.stringify(rows)
-    });
-    toast(rows.length + ' marks saved');
+    await rest('/rest/v1/marks', { method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify(rows) });
+    toast(rows.length + ' marks saved', 'ok');
   } catch(e){ toast(e.message, 'bad'); }
 }
 window.saveMarksGrid = saveMarksGrid;
 
-/* ============================================================
-   PAGE: REPORT CARDS
-   ============================================================ */
 async function pageReports(root){
   const [exams, classes] = await Promise.all([
     rest('/rest/v1/exams?school_id=eq.' + _schoolId + '&select=*&order=created_at.desc'),
     rest('/rest/v1/classes?school_id=eq.' + _schoolId + '&select=*&order=sort_order')
   ]);
   if(!(exams||[]).length || !(classes||[]).length){
-    root.innerHTML = '<div class="page-head"><div><h1>Report Cards</h1></div></div>' +
-      '<div class="card"><div class="empty">Create an exam and class first.</div></div>';
+    root.innerHTML = '<div class="page-head"><div><h1>Report Cards</h1></div></div><div class="card"><div class="empty">Create an exam and class first.</div></div>';
     return;
   }
   const examId = window._rcExamId || exams[0].id;
   const classId = window._rcClassId || classes[0].id;
-  const exam = exams.find(function(e){ return e.id === examId; }) || exams[0];
-  const cls = classes.find(function(c){ return c.id === classId; }) || classes[0];
+  const exam = exams.find(e => e.id === examId) || exams[0];
+  const cls = classes.find(c => c.id === classId) || classes[0];
   const students = await rest('/rest/v1/students?school_id=eq.' + _schoolId + '&class_id=eq.' + cls.id + '&status=eq.active&select=*&order=first_name');
-
   root.innerHTML =
     '<div class="page-head"><div><h1>Report Cards</h1><div class="sub">Pick exam + class</div></div></div>' +
     '<div class="card" style="margin-bottom:16px"><div class="grid grid-2">' +
-      '<div><label>Exam</label><select onchange="window._rcExamId=this.value;nav(\'reports\')">' +
-        exams.map(function(e){ return '<option value="' + e.id + '"' + (e.id===exam.id?' selected':'') + '>' + esc(e.name) + '</option>'; }).join('') +
-      '</select></div>' +
-      '<div><label>Class</label><select onchange="window._rcClassId=this.value;nav(\'reports\')">' +
-        classes.map(function(c){ return '<option value="' + c.id + '"' + (c.id===cls.id?' selected':'') + '>' + esc(c.name) + '</option>'; }).join('') +
-      '</select></div>' +
+      '<div><label>Exam</label><select onchange="window._rcExamId=this.value;nav(\'reports\')">' + exams.map(e=>'<option value="'+e.id+'"'+(e.id===exam.id?' selected':'')+'>'+esc(e.name)+'</option>').join('') + '</select></div>' +
+      '<div><label>Class</label><select onchange="window._rcClassId=this.value;nav(\'reports\')">' + classes.map(c=>'<option value="'+c.id+'"'+(c.id===cls.id?' selected':'')+'>'+esc(c.name)+'</option>').join('') + '</select></div>' +
     '</div></div>' +
     '<div class="card">' +
       ((students||[]).length ? '<div class="table-wrap"><table>' +
         '<thead><tr><th>Adm No</th><th>Name</th><th style="text-align:right">Actions</th></tr></thead>' +
-        '<tbody>' + students.map(function(s){
-          return '<tr><td><b>' + esc(s.admission_no) + '</b></td>' +
-            '<td>' + esc(s.first_name + ' ' + (s.last_name||'')) + '</td>' +
-            '<td style="text-align:right"><button class="btn sm" onclick="viewReport(\'' + s.id + '\',\'' + exam.id + '\')">View</button></td></tr>';
-        }).join('') + '</tbody></table></div>' : '<div class="empty">No pupils in this class.</div>') +
+        '<tbody>' + students.map(s => '<tr><td><b>' + esc(s.admission_no) + '</b></td><td>' + esc(s.first_name + ' ' + (s.last_name||'')) + '</td>' +
+          '<td style="text-align:right"><button class="btn sm" onclick="viewReport(\'' + s.id + '\',\'' + exam.id + '\')">View</button></td></tr>').join('') + '</tbody></table></div>' : '<div class="empty">No pupils in this class.</div>') +
     '</div>';
 }
-
 async function viewReport(studentId, examId){
   const [student, exam, subjects, marks, rules] = await Promise.all([
-    rest('/rest/v1/students?id=eq.' + studentId + '&select=*').then(function(r){ return r[0]; }),
-    rest('/rest/v1/exams?id=eq.' + examId + '&select=*').then(function(r){ return r[0]; }),
+    rest('/rest/v1/students?id=eq.' + studentId + '&select=*').then(r => r[0]),
+    rest('/rest/v1/exams?id=eq.' + examId + '&select=*').then(r => r[0]),
     rest('/rest/v1/subjects?school_id=eq.' + _schoolId + '&select=*&order=code'),
     rest('/rest/v1/marks?school_id=eq.' + _schoolId + '&exam_id=eq.' + examId + '&student_id=eq.' + studentId + '&select=*'),
     rest('/rest/v1/grading_rules?school_id=eq.' + _schoolId + '&select=*&order=min_score.desc')
   ]);
-  function gradeFor(score){
-    return (rules||[]).find(function(r){ return score >= Number(r.min_score) && score <= Number(r.max_score); });
-  }
+  function gradeFor(score){ return (rules||[]).find(r => score >= Number(r.min_score) && score <= Number(r.max_score)); }
   let total = 0, count = 0;
-  const rows = (subjects||[]).map(function(sub){
-    const m = (marks||[]).find(function(x){ return x.subject_id === sub.id; });
+  const rows = (subjects||[]).map(sub => {
+    const m = (marks||[]).find(x => x.subject_id === sub.id);
     const score = m ? Number(m.score) : null;
     if(score != null){ total += score; count++; }
     const g = score != null ? gradeFor(score) : null;
-    return '<tr><td>' + esc(sub.name) + '</td>' +
-      '<td style="text-align:center">' + (score != null ? score : '—') + '</td>' +
-      '<td style="text-align:center"><b>' + (g ? g.grade : '—') + '</b></td>' +
-      '<td>' + (g ? esc(g.remark||'') : '') + '</td></tr>';
+    return '<tr><td>' + esc(sub.name) + '</td><td style="text-align:center">' + (score != null ? score : '—') + '</td><td style="text-align:center"><b>' + (g ? g.grade : '—') + '</b></td><td>' + (g ? esc(g.remark||'') : '') + '</td></tr>';
   }).join('');
   const avg = count ? total/count : 0;
   const overall = gradeFor(avg);
-
   modal('<div id="rcPrint" style="background:#fff;color:#111;padding:24px;font-family:Inter,sans-serif">' +
     '<div style="text-align:center;padding-bottom:12px;border-bottom:2px solid #111;margin-bottom:14px">' +
       '<h2 style="margin:0;font-size:20px">' + esc(_school.name) + '</h2>' +
@@ -1268,9 +1061,7 @@ async function viewReport(studentId, examId){
         '<th style="border:1px solid #cbd5e1;padding:7px">Score</th>' +
         '<th style="border:1px solid #cbd5e1;padding:7px">Grade</th>' +
         '<th style="border:1px solid #cbd5e1;padding:7px;text-align:left">Remark</th>' +
-      '</tr></thead>' +
-      '<tbody>' + rows + '</tbody>' +
-    '</table>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>' +
     '<div style="margin-top:12px;padding:10px;background:#f1f5f9;border-radius:8px;font-size:13px;display:flex;justify-content:space-between">' +
       '<div><b>Total:</b> ' + total.toFixed(1) + '</div>' +
       '<div><b>Average:</b> ' + avg.toFixed(1) + '</div>' +
@@ -1282,59 +1073,313 @@ async function viewReport(studentId, examId){
     '<button class="btn" onclick="printEl(\'rcPrint\')">🖨️ Print</button></div>');
 }
 window.viewReport = viewReport;
-
-function printEl(id){
-  const el = document.getElementById(id);
-  if(!el) return;
-  el.classList.add('printing');
-  try { window.print(); } catch(e){}
-  setTimeout(function(){ el.classList.remove('printing'); }, 300);
-}
+function printEl(id){ const el = document.getElementById(id); if(!el) return; try { window.print(); } catch(e){} }
 window.printEl = printEl;
 
-/* ============================================================
-   STARTUP & AUTH REDIRECT HANDLING
-   ============================================================ */
-async function handleAuthRedirect() {
+async function pageFees(root){
+  const [students, classes] = await Promise.all([
+    rest('/rest/v1/students?school_id=eq.' + _schoolId + '&select=id,first_name,last_name,admission_no,lin,class_id,current_balance,total_expected,deposit_1,deposit_2,deposit_3&status=eq.active&order=first_name'),
+    rest('/rest/v1/classes?school_id=eq.' + _schoolId + '&select=id,name&order=sort_order')
+  ]);
+  window._allFeeStudents = students || [];
+  window._allClassesForFees = classes || [];
+
+  const totalExpected = (students||[]).reduce((sum, s) => sum + (Number(s.total_expected) || 0), 0);
+  const totalOwed = (students||[]).reduce((sum, s) => sum + (Number(s.current_balance) || 0), 0);
+  const totalPaid = totalExpected - totalOwed;
+
+  root.innerHTML =
+    '<div class="page-head"><div><h1>Fees Management</h1><div class="sub">Track payments and outstanding balances</div></div></div>' +
+    '<div class="grid grid-kpi" style="margin-bottom:20px">' +
+      '<div class="kpi"><div class="l">Total Expected</div><div class="v" style="font-size:20px">' + fmtUGX(totalExpected) + '</div></div>' +
+      '<div class="kpi" style="background:var(--oksoft);border-color:#a7f3d0"><div class="l" style="color:#047857">Total Collected</div><div class="v" style="font-size:20px;color:#065f46">' + fmtUGX(totalPaid) + '</div></div>' +
+      '<div class="kpi" style="background:var(--badsoft);border-color:#fecaca"><div class="l" style="color:#b91c1c">Total Outstanding</div><div class="v" style="font-size:20px;color:#7f1d1d">' + fmtUGX(totalOwed) + '</div></div>' +
+    '</div>' +
+    '<div class="card">' +
+      '<div class="grid grid-3" style="margin-bottom:16px">' +
+        '<div><label>Filter by Class</label><select id="feesClassFilter" onchange="filterFeesTable()">' +
+          '<option value="">All classes</option>' +
+          (classes||[]).map(c => '<option value="' + c.id + '">' + esc(c.name) + '</option>').join('') +
+        '</select></div>' +
+        '<div><label>Show</label><select id="feesOwingFilter" onchange="filterFeesTable()">' +
+          '<option value="all">All pupils</option>' +
+          '<option value="owing">Only those owing</option>' +
+        '</select></div>' +
+        '<div style="display:flex;align-items:flex-end"><button class="btn ghost" style="width:100%" onclick="document.getElementById(\'feesClassFilter\').value=\'\';document.getElementById(\'feesOwingFilter\').value=\'all\';filterFeesTable()">Reset Filters</button></div>' +
+      '</div>' +
+      '<div id="feesTableContainer"></div>' +
+    '</div>';
+  filterFeesTable();
+}
+window.pageFees = pageFees;
+
+function filterFeesTable() {
+  const fClass = document.getElementById('feesClassFilter')?.value || '';
+  const onlyOwing = document.getElementById('feesOwingFilter')?.value === 'owing';
+  let list = window._allFeeStudents || [];
+  if (fClass) list = list.filter(s => s.class_id === fClass);
+  if (onlyOwing) list = list.filter(s => Number(s.current_balance) > 0);
+
+  const container = document.getElementById('feesTableContainer');
+  if (!list.length) {
+    container.innerHTML = '<div class="empty">No pupils match filters.</div>';
+    return;
+  }
+  container.innerHTML = '<div class="table-wrap"><table>' +
+    '<thead><tr><th>Adm No</th><th>Name</th><th>Class</th><th style="text-align:right">Expected</th><th style="text-align:right">Paid</th><th style="text-align:right">Balance</th><th style="text-align:right">Action</th></tr></thead>' +
+    '<tbody>' + list.map(s => {
+      const cls = (window._allClassesForFees||[]).find(c => c.id === s.class_id);
+      const paid = (Number(s.deposit_1)||0) + (Number(s.deposit_2)||0) + (Number(s.deposit_3)||0);
+      const bal = Number(s.current_balance) || 0;
+      return '<tr><td><b>' + esc(s.admission_no) + '</b></td>' +
+        '<td>' + esc(s.first_name + ' ' + (s.last_name||'')) + '</td>' +
+        '<td><span class="badge info">' + esc(cls?cls.name:'—') + '</span></td>' +
+        '<td style="text-align:right">' + (Number(s.total_expected)||0).toLocaleString() + '</td>' +
+        '<td style="text-align:right;color:#047857">' + paid.toLocaleString() + '</td>' +
+        '<td style="text-align:right"><span class="badge ' + (bal > 0 ? 'bad' : 'ok') + '">' + bal.toLocaleString() + '</span></td>' +
+        '<td style="text-align:right"><button class="btn sm" onclick="recordPayment(\'' + s.id + '\')">💵 Pay</button></td></tr>';
+    }).join('') + '</tbody></table></div>';
+}
+window.filterFeesTable = filterFeesTable;
+
+async function recordPayment(id){
+  const students = await rest('/rest/v1/students?id=eq.' + id + '&select=*');
+  const s = students[0]; if(!s) return;
+  modal('<h3>Record Payment — ' + esc(s.first_name + ' ' + (s.last_name||'')) + '</h3>' +
+    '<div class="grid grid-2">' +
+      '<div><label>Total Expected</label><input value="' + (Number(s.total_expected)||0).toLocaleString() + '" disabled></div>' +
+      '<div><label>Current Balance</label><input value="' + (Number(s.current_balance)||0).toLocaleString() + '" disabled></div>' +
+      '<div><label>1st Deposit</label><input id="p_d1" type="number" value="' + (s.deposit_1||0) + '"></div>' +
+      '<div><label>2nd Deposit</label><input id="p_d2" type="number" value="' + (s.deposit_2||0) + '"></div>' +
+      '<div><label>3rd Deposit</label><input id="p_d3" type="number" value="' + (s.deposit_3||0) + '"></div>' +
+    '</div>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
+      '<button class="btn ok" onclick="savePayment(\'' + id + '\')">Save Payment</button></div>');
+}
+window.recordPayment = recordPayment;
+
+async function savePayment(id){
+  const students = await rest('/rest/v1/students?id=eq.' + id + '&select=total_expected');
+  const totalExpected = Number(students[0].total_expected) || 0;
+  const getNum = (i) => { const v = parseFloat(document.getElementById(i).value); return isNaN(v) ? 0 : v; };
+  const d1 = getNum('p_d1'), d2 = getNum('p_d2'), d3 = getNum('p_d3');
+  const balance = totalExpected - d1 - d2 - d3;
+  try {
+    await rest('/rest/v1/students?id=eq.' + id, { method: 'PATCH', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({
+      deposit_1: d1, deposit_2: d2, deposit_3: d3, current_balance: balance, updated_at: new Date().toISOString()
+    })});
+    toast('Payment recorded. New balance: ' + balance.toLocaleString(), 'ok');
+    closeModal(); nav('fees');
+  } catch(e){ toast(e.message, 'bad'); }
+}
+window.savePayment = savePayment;
+
+async function pageStaff(root){
+  let staff = [];
+  try { staff = await rest('/rest/v1/staff?school_id=eq.' + _schoolId + '&select=*&order=full_name'); } catch(e){}
+  root.innerHTML =
+    '<div class="page-head"><div><h1>Staff</h1><div class="sub">' + (staff||[]).length + ' staff members</div></div>' +
+      '<button class="btn" onclick="addStaff()">＋ Add Staff</button></div>' +
+    '<div class="card">' +
+      ((staff||[]).length ? '<div class="table-wrap"><table>' +
+        '<thead><tr><th>Name</th><th>Role</th><th>Telephone</th><th>Email</th><th style="text-align:right">Actions</th></tr></thead>' +
+        '<tbody>' + staff.map(s => '<tr><td><b>' + esc(s.full_name) + '</b></td><td><span class="badge info">' + esc(s.role||'Staff') + '</span></td><td>' + esc(s.telephone||'—') + '</td><td>' + esc(s.email||'—') + '</td>' +
+          '<td style="text-align:right"><button class="btn sm danger" onclick="deleteStaff(\'' + s.id + '\')">✕</button></td></tr>').join('') + '</tbody></table></div>' : '<div class="empty">No staff yet. Click "Add Staff" to begin.</div>') +
+    '</div>';
+}
+function addStaff(){
+  modal('<h3>Add Staff Member</h3>' +
+    '<div class="grid grid-2">' +
+      '<div><label>Full Name *</label><input id="st_name"></div>' +
+      '<div><label>Role</label><select id="st_role"><option>Teacher</option><option>Head Teacher</option><option>Deputy</option><option>Bursar</option><option>Support Staff</option><option>Director</option></select></div>' +
+      '<div><label>Telephone</label><input id="st_phone"></div>' +
+      '<div><label>Email</label><input id="st_email" type="email"></div>' +
+    '</div>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
+      '<button class="btn" onclick="saveNewStaff()">Save</button></div>');
+}
+window.addStaff = addStaff;
+async function saveNewStaff(){
+  const name = document.getElementById('st_name').value.trim();
+  if(!name){ toast('Name required','bad'); return; }
+  try {
+    await rest('/rest/v1/staff', { method: 'POST', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({
+      school_id: _schoolId, full_name: name,
+      role: document.getElementById('st_role').value,
+      telephone: document.getElementById('st_phone').value.trim() || null,
+      email: document.getElementById('st_email').value.trim() || null
+    })});
+    toast('Added','ok'); closeModal(); nav('staff');
+  } catch(e){ toast(e.message, 'bad'); }
+}
+window.saveNewStaff = saveNewStaff;
+async function deleteStaff(id){
+  modal('<h3>Delete Staff</h3>' +
+    '<p class="muted" style="margin-bottom:16px">Delete this staff member?</p>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
+    '<button class="btn danger" onclick="confirmDeleteStaff(\'' + id + '\')">Delete</button></div>');
+}
+window.deleteStaff = deleteStaff;
+async function confirmDeleteStaff(id){
+  closeModal();
+  try { await rest('/rest/v1/staff?id=eq.' + id, { method: 'DELETE' }); toast('Deleted','ok'); nav('staff'); }
+  catch(e){ toast(e.message, 'bad'); }
+}
+window.confirmDeleteStaff = confirmDeleteStaff;
+
+let _settingsTab = 'school';
+async function pageSettings(root){
+  const [rules] = await Promise.all([
+    rest('/rest/v1/grading_rules?school_id=eq.' + _schoolId + '&select=*&order=min_score.desc').catch(() => [])
+  ]);
+  root.innerHTML =
+    '<div class="page-head"><div><h1>Settings</h1><div class="sub">Manage your school configuration</div></div></div>' +
+    '<div class="tab-bar">' +
+      '<button class="' + (_settingsTab === 'school' ? 'active' : '') + '" onclick="_settingsTab=\'school\';nav(\'settings\')">🏫 School Profile</button>' +
+      '<button class="' + (_settingsTab === 'grading' ? 'active' : '') + '" onclick="_settingsTab=\'grading\';nav(\'settings\')">📊 Grading Rules</button>' +
+      '<button class="' + (_settingsTab === 'account' ? 'active' : '') + '" onclick="_settingsTab=\'account\';nav(\'settings\')">👤 My Account</button>' +
+      '<button class="' + (_settingsTab === 'danger' ? 'active' : '') + '" onclick="_settingsTab=\'danger\';nav(\'settings\')">⚠️ Danger Zone</button>' +
+    '</div>' +
+    '<div id="settingsContent"></div>';
+  const content = document.getElementById('settingsContent');
+  if (_settingsTab === 'school'){
+    content.innerHTML = '<div class="settings-section">' +
+      '<h3>School Profile</h3>' +
+      '<div class="grid grid-2">' +
+        '<div><label>School Name</label><input id="set_name" value="' + esc(_school.name||'') + '"></div>' +
+        '<div><label>Telephone</label><input id="set_phone" value="' + esc(_school.telephone||'') + '"></div>' +
+        '<div><label>Address</label><input id="set_addr" value="' + esc(_school.address||'') + '"></div>' +
+        '<div><label>Email</label><input id="set_email" value="' + esc(_school.email||'') + '"></div>' +
+        '<div><label>Head Teacher</label><input id="set_head" value="' + esc(_school.head_teacher||'') + '"></div>' +
+        '<div><label>Motto</label><input id="set_motto" value="' + esc(_school.motto||'') + '"></div>' +
+      '</div>' +
+      '<div class="actions"><button class="btn" onclick="saveSchoolInfo()">💾 Save Changes</button></div>' +
+    '</div>';
+  } else if (_settingsTab === 'grading'){
+    content.innerHTML = '<div class="settings-section">' +
+      '<h3>Grading Rules</h3>' +
+      '<p class="muted" style="margin-bottom:14px">These determine how marks translate to grades on report cards.</p>' +
+      '<div class="table-wrap"><table><thead><tr><th>Min Score</th><th>Max Score</th><th>Grade</th><th>Remark</th></tr></thead>' +
+      '<tbody>' + (rules||[]).map(r => '<tr><td>' + r.min_score + '</td><td>' + r.max_score + '</td><td><b>' + esc(r.grade) + '</b></td><td>' + esc(r.remark||'') + '</td></tr>').join('') + '</tbody></table></div>' +
+    '</div>';
+  } else if (_settingsTab === 'account'){
+    content.innerHTML = '<div class="settings-section">' +
+      '<h3>My Account</h3>' +
+      '<div class="grid grid-2">' +
+        '<div><label>Full Name</label><input value="' + esc(_profile.full_name||'') + '" disabled></div>' +
+        '<div><label>Email</label><input value="' + esc(_profile.email || SESSION.email || '') + '" disabled></div>' +
+        '<div><label>Role</label><input value="' + esc((_profile.role||'').replace(/_/g,' ')) + '" disabled></div>' +
+        '<div><label>School ID</label><input value="' + esc(_schoolId||'') + '" disabled style="font-family:monospace;font-size:11px"></div>' +
+      '</div>' +
+    '</div>';
+  } else if (_settingsTab === 'danger'){
+    content.innerHTML = '<div class="settings-section danger-zone">' +
+      '<h3>⚠️ Danger Zone</h3>' +
+      '<p class="muted" style="margin-bottom:16px">These actions cannot be undone. Please be careful.</p>' +
+      '<div style="display:flex;flex-direction:column;gap:12px">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#fff;border-radius:10px;flex-wrap:wrap;gap:10px">' +
+          '<div><b>Delete All Pupils</b><div class="muted">Removes all students from your school</div></div>' +
+          '<button class="btn danger" onclick="wipeStudents()">Delete All</button>' +
+        '</div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#fff;border-radius:10px;flex-wrap:wrap;gap:10px">' +
+          '<div><b>Delete All Marks</b><div class="muted">Removes all marks but keeps students and exams</div></div>' +
+          '<button class="btn danger" onclick="wipeMarks()">Delete All</button>' +
+        '</div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#fff;border-radius:10px;flex-wrap:wrap;gap:10px">' +
+          '<div><b>Delete All Exams</b><div class="muted">Removes all exams (and their marks)</div></div>' +
+          '<button class="btn danger" onclick="wipeExams()">Delete All</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+}
+window.pageSettings = pageSettings;
+
+async function saveSchoolInfo(){
+  const name = document.getElementById('set_name').value.trim();
+  if (!name){ toast('School name required', 'bad'); return; }
+  try {
+    await rest('/rest/v1/schools?id=eq.' + _schoolId, { method: 'PATCH', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify({
+      name: name,
+      telephone: document.getElementById('set_phone').value.trim() || null,
+      address: document.getElementById('set_addr').value.trim() || null,
+      email: document.getElementById('set_email').value.trim() || null,
+      head_teacher: document.getElementById('set_head').value.trim() || null,
+      motto: document.getElementById('set_motto').value.trim() || null
+    })});
+    const schools = await rest('/rest/v1/schools?id=eq.' + _schoolId + '&select=*');
+    _school = schools[0];
+    renderBadge();
+    toast('School info saved', 'ok');
+  } catch(e){ toast(e.message, 'bad'); }
+}
+window.saveSchoolInfo = saveSchoolInfo;
+
+async function wipeStudents(){
+  modal('<h3>⚠️ Delete All Pupils</h3>' +
+    '<p class="muted" style="margin-bottom:16px">This will permanently delete ALL pupils from your school. There is no undo.</p>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
+    '<button class="btn danger" onclick="confirmWipeStudents()">Yes, Delete Everything</button></div>');
+}
+window.wipeStudents = wipeStudents;
+async function confirmWipeStudents(){
+  closeModal();
+  try { await rest('/rest/v1/students?school_id=eq.' + _schoolId, { method: 'DELETE' }); toast('All pupils deleted', 'ok'); nav('settings'); }
+  catch(e){ toast(e.message, 'bad'); }
+}
+window.confirmWipeStudents = confirmWipeStudents;
+
+async function wipeMarks(){
+  modal('<h3>⚠️ Delete All Marks</h3>' +
+    '<p class="muted" style="margin-bottom:16px">Delete all marks? Students and exams will remain.</p>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
+    '<button class="btn danger" onclick="confirmWipeMarks()">Yes, Delete All</button></div>');
+}
+window.wipeMarks = wipeMarks;
+async function confirmWipeMarks(){
+  closeModal();
+  try { await rest('/rest/v1/marks?school_id=eq.' + _schoolId, { method: 'DELETE' }); toast('All marks deleted', 'ok'); }
+  catch(e){ toast(e.message, 'bad'); }
+}
+window.confirmWipeMarks = confirmWipeMarks;
+
+async function wipeExams(){
+  modal('<h3>⚠️ Delete All Exams</h3>' +
+    '<p class="muted" style="margin-bottom:16px">Delete all exams and their marks?</p>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
+    '<button class="btn danger" onclick="confirmWipeExams()">Yes, Delete All</button></div>');
+}
+window.wipeExams = wipeExams;
+async function confirmWipeExams(){
+  closeModal();
+  try { await rest('/rest/v1/exams?school_id=eq.' + _schoolId, { method: 'DELETE' }); toast('All exams deleted', 'ok'); nav('settings'); }
+  catch(e){ toast(e.message, 'bad'); }
+}
+window.confirmWipeExams = confirmWipeExams;
+
+async function handleAuthRedirect(){
   const hash = window.location.hash;
-  
-  if (hash && hash.includes('access_token')) {
+  if (hash && hash.includes('access_token')){
     const params = new URLSearchParams(hash.substring(1));
     const access_token = params.get('access_token');
     const refresh_token = params.get('refresh_token');
-    
-    if (access_token) {
+    if (access_token){
       try {
-        const res = await fetch(SUPA_URL + '/auth/v1/user', {
-          headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + access_token }
-        });
+        const res = await fetch(SUPA_URL + '/auth/v1/user', { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + access_token } });
         const user = await res.json();
-        
-        if (user && user.id) {
-          const sessionData = {
-            access_token: access_token,
-            refresh_token: refresh_token,
-            user: user
-          };
-          
-          setSession(sessionData);
+        if (user && user.id){
+          setSession({ access_token: access_token, refresh_token: refresh_token, user: user });
           window.history.replaceState(null, '', window.location.pathname);
           await boot();
           return;
         }
-      } catch (e) {
-        console.error('Error handling auth redirect', e);
-      }
+      } catch (e){ console.error(e); }
     }
   }
-  
   const s = safeStorage.getItem('eudes_session');
-  if(s){ 
-    try { await boot(); } catch(e){ console.error(e); } 
-  }
+  if(s){ try { await boot(); } catch(e){ console.error(e); } }
 }
-
 handleAuthRedirect();
 </script>
 </body>
-</html>
+  </html>
