@@ -1,1928 +1,1117 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>YY PARTSHAN FUELS – Nabyewanga</title>
-    <style>
-        /* ----- Simple, clean styles ----- */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f1f5f9; padding: 20px; }
-        .app { max-width: 1300px; margin: 0 auto; background: white; border-radius: 20px; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #0b1120, #1a253b); color: white; padding: 16px 24px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
-        .header h1 { font-size: 22px; }
-        .header h1 .highlight { color: #f6ad55; }
-        .header .info { display: flex; align-items: center; gap: 15px; font-size: 14px; flex-wrap: wrap; }
-        .header .info .dot { width: 10px; height: 10px; background: #48bb78; border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-        .header .info .role-badge { background: #f6ad55; color: #1a202c; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; }
-        .header .info .status-badge { background: #2d3748; padding: 4px 14px; border-radius: 20px; font-size: 11px; color: #a0aec0; }
-        .header .info .status-badge.online { background: #48bb78; color: white; }
-        .stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: #f7fafc; padding: 15px; border-radius: 10px; text-align: center; border-left: 4px solid #f6ad55; }
-        .stat-card .label { font-size: 11px; color: #718096; text-transform: uppercase; font-weight: 600; }
-        .stat-card .value { font-size: 20px; font-weight: 700; color: #2d3748; margin-top: 4px; }
-        .panel { background: #f7fafc; border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
-        .panel h3 { font-size: 16px; color: #2d3748; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .panel h3 .badge { background: #e2e8f0; padding: 2px 12px; border-radius: 20px; font-size: 13px; }
-        .form-group { margin-bottom: 6px; }
-        .form-group label { display: block; font-weight: 600; font-size: 13px; color: #4a5568; margin-bottom: 3px; }
-        input, select { width: 100%; padding: 10px 14px; margin: 6px 0; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 15px; box-sizing: border-box; background: white; }
-        input:focus, select:focus { outline: none; border-color: #f6ad55; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.2s; margin-top: 6px; }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .btn-success { background: #28a745; color: white; }
-        .btn-primary { background: #f6ad55; color: #1a202c; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-sm { padding: 6px 12px; font-size: 12px; width: auto; margin-top: 0; }
-        .btn-approve { background: #38a169; color: white; }
-        .btn-reject { background: #e53e3e; color: white; }
-        .btn-void { background: #e53e3e; color: white; }
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; font-size: 14px; }
-        th { background: #f6ad55; color: #1a202c; padding: 12px; text-align: left; }
-        td { padding: 10px 12px; border-bottom: 1px solid #edf2f7; }
-        tr:hover { background: #f8fafc; }
-        .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
-        .badge-credit { background: #fefcbf; color: #744210; }
-        .badge-cash { background: #c6f6d5; color: #22543d; }
-        .badge-void { background: #fed7d7; color: #9b2c2c; }
-        .badge-pending { background: #fefcbf; color: #744210; }
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(4px); }
-        .modal-overlay.show { display: flex; }
-        .modal { background: white; border-radius: 16px; padding: 30px; max-width: 550px; width: 100%; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease; }
-        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .modal .close { float: right; background: none; border: none; font-size: 28px; cursor: pointer; color: #a0aec0; line-height: 1; }
-        .modal .close:hover { color: #e53e3e; }
-        .modal h2 { margin-bottom: 20px; color: #2d3748; }
-        .toast { position: fixed; bottom: 30px; right: 30px; padding: 14px 24px; border-radius: 10px; background: #2d3748; color: white; font-weight: 500; display: none; z-index: 9999; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-width: 90%; }
-        .toast.show { display: block; animation: slideIn 0.3s ease; }
-        @keyframes slideIn { from { transform: translateX(80px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .toast.success { background: #48bb78; }
-        .toast.error { background: #fc8181; }
-        .toast.info { background: #4299e1; }
-        .tab-bar { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab-bar .tab { padding: 10px 20px; background: #e2e8f0; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 600; transition: 0.2s; border: none; font-size: 14px; }
-        .tab-bar .tab.active { background: #f6ad55; color: #1a202c; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .customer-selected { background: #c6f6d5 !important; border: 2px solid #38a169 !important; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; }
-        .customer-selected .name { font-weight: 700; font-size: 16px; color: #22543d; }
-        .customer-selected .details { font-size: 13px; color: #276749; }
-        .credit-flow-box { background: #f0fdf4; border: 2px solid #86efac; border-radius: 10px; padding: 16px; margin: 12px 0; }
-        .credit-flow-box .shortfall { font-size: 18px; font-weight: 700; color: #e53e3e; margin: 6px 0; }
-        .credit-flow-box .actions { display: flex; gap: 10px; margin-top: 10px; }
-        .credit-flow-box .actions .btn { margin-top: 0; flex: 1; }
-        .price-display { display: inline-block; background: #e2e8f0; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; color: #2d3748; }
-        .footer { text-align: center; color: #f6ad55; margin-top: 30px; font-weight: bold; padding: 16px; border-top: 1px solid #e2e8f0; }
-        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: flex; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; gap: 16px; }
-        .loading-overlay .spinner { width: 50px; height: 50px; border: 5px solid #e2e8f0; border-top-color: #f6ad55; border-radius: 50%; animation: spin 0.8s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-overlay p { color: #2d3748; font-weight: 600; }
-        .loading-overlay.hidden { display: none; }
-        .vehicle-tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; background: #c6f6d5; color: #22543d; }
-        .edit-btn { background: #4299e1; color: white; border: none; padding: 2px 10px; border-radius: 12px; font-size: 11px; cursor: pointer; margin-left: 6px; }
-        .edit-btn:hover { background: #3182ce; }
-        .receipt-box { background: #f7fafc; border-radius: 10px; padding: 20px; border: 1px dashed #cbd5e0; font-family: monospace; font-size: 13px; margin-top: 16px; }
-        .receipt-box .line { display: flex; justify-content: space-between; padding: 3px 0; }
-        .receipt-box .divider { border-top: 1px dashed #cbd5e0; margin: 8px 0; }
-        .vehicle-qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-top: 10px; }
-        .vehicle-qr-card { background: white; border-radius: 10px; padding: 12px; border: 1px solid #e2e8f0; text-align: center; }
-        .vehicle-qr-card .plate { font-weight: 700; font-size: 16px; color: #2d3748; }
-        .vehicle-qr-card .customer { font-size: 13px; color: #718096; }
-        .vehicle-qr-card .qr { margin: 8px auto; display: inline-block; }
-        .vehicle-qr-card .btn-download { margin-top: 6px; padding: 4px 12px; font-size: 12px; width: auto; }
-        .login-container { max-width: 450px; margin: 100px auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.1); }
-        .login-container h1 { font-size: 24px; color: #f6ad55; text-align: center; margin-bottom: 20px; }
-        .login-container .error { color: #fc8181; font-size: 14px; text-align: center; margin-top: 8px; }
-        .system-qr-header { display: flex; align-items: center; gap: 12px; }
-        .system-qr-header canvas { border: 2px solid #e2e8f0; border-radius: 8px; padding: 4px; background: white; max-width: 70px; height: auto; }
-        .password-wrapper { position: relative; width: 100%; }
-        .password-wrapper input { padding-right: 44px; }
-        .password-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; cursor: pointer; color: #718096; padding: 4px; }
-        .password-toggle:hover { color: #2d3748; }
-        @media (max-width: 600px) { .vehicle-qr-grid { grid-template-columns: 1fr 1fr; } .stats { grid-template-columns: 1fr 1fr; } .header { flex-direction: column; align-items: flex-start; } .header .info { width: 100%; justify-content: space-between; } .form-row { grid-template-columns: 1fr; } .credit-flow-box .actions { flex-direction: column; } .modal { padding: 20px; } table { font-size: 12px; } th, td { padding: 6px 8px; } .system-qr-header canvas { max-width: 50px; } }
-    </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Eudes School Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6fb;--surface:#fff;--line:#e5e9f0;--line2:#eef1f6;--text:#0b1220;--text2:#334155;--muted:#64748b;--brand:#4f46e5;--brand2:#4338ca;--brandsoft:#eef2ff;--ring:rgba(79,70,229,.15);--ok:#059669;--oksoft:#ecfdf5;--warn:#d97706;--warnsoft:#fffbeb;--bad:#dc2626;--badsoft:#fef2f2;--radius:14px}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%;font-family:'Inter',system-ui,sans-serif}
+body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;transition:all .15s}
+input,select{font-family:inherit;width:100%;padding:11px 14px;border-radius:8px;border:1.5px solid var(--line);background:#fff;color:var(--text);font-size:14px}
+input:focus,select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 4px var(--ring)}
+label{display:block;font-size:12.5px;color:var(--text2);margin-bottom:6px;font-weight:600}
+table{width:100%;border-collapse:collapse}
+th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line2);font-size:13.5px}
+th{color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;background:#f9fafb}
+tbody tr:hover{background:#f9fafb}
+h1{font-size:22px;font-weight:700;margin:0 0 4px}
+h3{font-size:15px;font-weight:700;margin:0 0 12px}
+.muted{color:var(--muted);font-size:12.5px}
+#app{display:flex;min-height:100vh;flex-direction:row-reverse}
+#sidebar{width:250px;background:#0f172a;color:#cbd5e1;display:flex;flex-direction:column;padding:20px 14px;flex-shrink:0}
+#sidebar .brand{display:flex;align-items:center;gap:10px;padding:6px 10px 20px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:16px}
+#sidebar .brand .mark{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:grid;place-items:center;color:#fff;font-weight:800;font-size:16px}
+#sidebar .brand .name{font-size:13.5px;font-weight:700;color:#fff}
+#sidebar .brand .sub{font-size:10px;color:#94a3b8;letter-spacing:.06em;text-transform:uppercase}
+#schoolBadge{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);padding:12px;border-radius:12px;margin-bottom:16px;font-size:12px;color:#e2e8f0}
+#schoolBadge b{display:block;font-size:12.5px;font-weight:600;color:#fff;margin-bottom:3px;line-height:1.3}
+#schoolBadge .muted{color:#8ea1bb;font-size:11px}
+#sidebar nav{display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1}
+#sidebar nav a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;font-size:13px;color:#cbd5e1;font-weight:500}
+#sidebar nav a:hover{background:rgba(255,255,255,.06);color:#fff}
+#sidebar nav a.active{background:linear-gradient(135deg,#4f46e5,#6366f1);color:#fff;font-weight:600}
+#sidebar .logout{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;font-size:13px;color:#94a3b8;margin-top:8px;border-top:1px solid rgba(255,255,255,.06);padding-top:14px}
+#sidebar .logout:hover{color:#fca5a5}
+#main{flex:1;padding:28px 36px;overflow:auto;min-width:0}
+.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.page-head .sub{color:var(--muted);font-size:13px;margin-top:3px}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:0 1px 3px rgba(15,23,42,.05)}
+.grid{display:grid;gap:16px}
+.grid-kpi{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.grid-2{grid-template-columns:1fr 1fr}
+.grid-3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.kpi .v{font-size:24px;font-weight:700;letter-spacing:-.02em}
+.kpi .l{color:var(--muted);font-size:12px;margin-top:4px;font-weight:500}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600}
+.badge.ok{background:var(--oksoft);color:#047857;border:1px solid #a7f3d0}
+.badge.bad{background:var(--badsoft);color:#b91c1c;border:1px solid #fecaca}
+.badge.info{background:var(--brandsoft);color:var(--brand2);border:1px solid #c7d2fe}
+.btn{background:var(--brand);color:#fff;padding:10px 16px;border-radius:10px;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--brand2)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.ghost{background:#fff;border:1.5px solid var(--line);color:var(--text2)}
+.btn.danger{background:var(--bad)}
+.btn.sm{padding:6px 11px;font-size:12px;border-radius:8px}
+.table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--line);background:#fff}
+.toast{position:fixed;bottom:20px;left:20px;background:#0f172a;color:#fff;padding:12px 18px;border-radius:12px;z-index:100;font-size:13.5px;font-weight:500;box-shadow:0 20px 40px -12px rgba(15,23,42,.5)}
+.toast.bad{background:#7f1d1d}
+.auth-bg{position:fixed;inset:0;background:radial-gradient(circle at 20% 20%,#4f46e5 0%,transparent 50%),radial-gradient(circle at 80% 80%,#7c3aed 0%,transparent 50%),#0b1220;display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;overflow:auto}
+.auth-card{background:#fff;border-radius:20px;padding:36px;width:100%;max-width:440px;box-shadow:0 40px 80px -20px rgba(0,0,0,.5)}
+.auth-card .logo{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:grid;place-items:center;color:#fff;font-weight:800;font-size:22px;margin:0 auto 16px}
+.auth-card h1{text-align:center;font-size:19px;margin:0 0 6px}
+.auth-card .sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:22px}
+.tabs{display:flex;border-bottom:1px solid var(--line);margin-bottom:22px}
+.tabs button{flex:1;padding:11px;font-size:14px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent}
+.tabs button.active{color:var(--brand);border-bottom-color:var(--brand)}
+.err{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;padding:11px 14px;border-radius:10px;margin-top:14px;font-size:13px}
+.ok{background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;padding:11px 14px;border-radius:10px;margin-top:14px;font-size:13px}
+.loading{padding:60px;text-align:center;color:var(--muted);font-size:14px}
+.empty{text-align:center;padding:50px 20px;color:var(--muted);font-size:14px}
+.modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal{background:#fff;border-radius:16px;max-width:640px;width:100%;max-height:92vh;overflow:auto;padding:26px;box-shadow:0 30px 60px -20px rgba(0,0,0,.4)}
+.modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--line2);flex-wrap:wrap}
+@media(max-width:900px){
+  #app{flex-direction:column}
+  #sidebar{width:100%;flex-direction:column;padding:12px}
+  #sidebar .brand{padding:0 0 10px;margin:0}
+  #sidebar nav{flex-direction:row;overflow-x:auto;gap:6px;padding:6px 0}
+  #sidebar nav a{flex:0 0 auto;padding:8px 12px;font-size:12.5px;background:rgba(255,255,255,.05);border-radius:999px}
+  #main{padding:16px}
+  .grid-kpi{grid-template-columns:repeat(2,1fr)}
+}
+</style>
 </head>
 <body>
-    <!-- LOADING OVERLAY -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-        <p>⛽ YY PARTSHAN FUELS</p>
-        <p id="loadingStatus" style="font-size:14px;color:#4a5568;">Loading...</p>
+
+<div class="auth-bg" id="authScreen">
+  <div class="auth-card">
+    <div class="logo">E</div>
+    <h1>Eudes School Management</h1>
+    <div class="sub">Powered by Eudes Media</div>
+
+    <div class="tabs">
+      <button id="tabLogin" class="active" onclick="switchTab('login')">Sign In</button>
+      <button id="tabRegister" onclick="switchTab('register')">Register School</button>
     </div>
 
-    <div class="toast" id="toast"></div>
-
-    <!-- LOGIN SCREEN -->
-    <div id="loginScreen" class="login-container">
-        <h1>⛽ YY PARTSHAN FUELS</h1>
-        <p style="text-align:center;color:#718096;margin-bottom:20px;">Nabyewanga, Masaka Road</p>
-        <div class="form-group"><label>Username</label><input type="text" id="loginUsername" placeholder="admin or attendant" /></div>
-        <div class="form-group"><label>Password</label><input type="password" id="loginPassword" placeholder="Enter password" /></div>
-        <div id="loginError" class="error"></div>
-        <button class="btn btn-success" onclick="login()">🔐 Login</button>
-        <div style="margin-top:12px;font-size:12px;color:#94a3b8;text-align:center;">
-            <div>Admin: admin / admin123</div>
-            <div>Attendant: attendant / attend123</div>
-        </div>
+    <div id="loginForm">
+      <div><label>Email</label><input id="loginEmail" type="email" placeholder="you@gmail.com"></div>
+      <div style="margin-top:12px"><label>Password</label><input id="loginPass" type="password"></div>
+      <div id="loginErr" class="err" style="display:none"></div>
+      <button class="btn" id="loginBtn" style="width:100%;justify-content:center;padding:12px;margin-top:18px" onclick="doLogin()">Sign In</button>
     </div>
 
-    <!-- MAIN APP -->
-    <div id="mainApp" class="app" style="display:none;">
-        <div class="header">
-            <h1>⛽ YY PARTSHAN <span class="highlight">FUELS</span> <span style="font-size:14px;font-weight:400;color:#a0aec0;">Nabyewanga</span></h1>
-            <div class="info">
-                <span><span class="dot"></span> <span id="statusText">Online</span></span>
-                <span id="clockDisplay">--:--</span>
-                <span id="txCounter">Sales: 0</span>
-                <span id="roleBadge" class="role-badge">👤 Admin</span>
-                <span id="syncStatus" class="status-badge online">☁️ Synced</span>
-                <div class="system-qr-header">
-                    <canvas id="headerQRCanvas" style="display:none;"></canvas>
-                    <button onclick="downloadSystemQR()" class="btn btn-sm btn-download" style="padding:2px 10px;font-size:11px;margin:0;">📱 QR</button>
-                </div>
-                <button onclick="syncAllData()" style="background:#f6ad55;color:#1a202c;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-weight:600;">🔄 Sync</button>
-                <button onclick="logout()" style="background:#e53e3e;color:white;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-weight:600;">🚪 Logout</button>
-            </div>
-        </div>
-
-        <div class="stats" id="statsContainer">
-            <div class="stat-card"><div class="label">💰 Cash Sales</div><div class="value" id="statCashSales">UGX 0</div></div>
-            <div class="stat-card"><div class="label">📋 Credit Sales</div><div class="value" id="statCreditSales">UGX 0</div></div>
-            <div class="stat-card"><div class="label">💳 Total Debt</div><div class="value" id="statTotalDebt">UGX 0</div></div>
-            <div class="stat-card"><div class="label">👥 Customers</div><div class="value" id="statCustomers">0</div></div>
-            <div class="stat-card"><div class="label">⛽ Fuel Sold</div><div class="value" id="statFuel">0 Ltrs</div></div>
-            <div class="stat-card"><div class="label">⏳ Credit Requests</div><div class="value" id="statCreditRequests">0</div></div>
-        </div>
-
-        <div class="tab-bar">
-            <button class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</button>
-            <button class="tab" onclick="switchTab('register')">👤 Register</button>
-            <button class="tab" onclick="switchTab('deposit')">💰 Deposit</button>
-            <button class="tab" onclick="switchTab('staff')">👥 Staff</button>
-            <button class="tab" onclick="switchTab('fuel')">⛽ Sell Fuel</button>
-            <button class="tab" onclick="switchTab('admin')">⚙️ Admin</button>
-            <button class="tab" onclick="switchTab('creditrequests')">📋 Credit</button>
-            <button class="tab" onclick="switchTab('prices')">💲 Prices</button>
-            <button class="tab" onclick="switchTab('vehicleqr')">📱 Vehicle QR</button>
-        </div>
-
-        <div id="tabContent"></div>
-
-        <div class="footer">
-            <p>⛽ YY PARTSHAN FUELS | Nabyewanga, Masaka Road</p>
-        </div>
+    <div id="registerForm" style="display:none">
+      <div><label>Your Full Name</label><input id="regName"></div>
+      <div style="margin-top:12px"><label>Email (use a real email you own)</label><input id="regEmail" type="email"></div>
+      <div style="margin-top:12px"><label>Password (min 8 characters)</label><input id="regPass" type="password"></div>
+      <h3 style="margin-top:18px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">School Information</h3>
+      <div><label>School Name</label><input id="regSchool" placeholder="Progressive Mother's Nursery and Primary School"></div>
+      <div style="margin-top:12px"><label>Short Name (no spaces)</label><input id="regSlug" placeholder="progressive-mothers"></div>
+      <div style="margin-top:12px"><label>Address</label><input id="regAddr" placeholder="Gayaza Kijabijo, Wakiso"></div>
+      <div class="grid grid-2" style="margin-top:12px">
+        <div><label>Telephone</label><input id="regPhone"></div>
+        <div><label>Head Teacher</label><input id="regHead"></div>
+      </div>
+      <div id="regErr" class="err" style="display:none"></div>
+      <div id="regOk" class="ok" style="display:none"></div>
+      <button class="btn" id="regBtn" style="width:100%;justify-content:center;padding:12px;margin-top:18px" onclick="doRegister()">Create School</button>
     </div>
+  </div>
+</div>
 
-    <!-- ===== MODALS ===== -->
-    <!-- PIN Modal -->
-    <div class="modal-overlay" id="pinModal">
-        <div class="modal">
-            <button class="close" onclick="closePINModal()">✕</button>
-            <h2>🔑 Enter Customer PIN</h2>
-            <p>Please enter the customer's PIN to authorize this transaction.</p>
-            <div class="form-group"><label>PIN (4-6 digits)</label>
-                <div class="password-wrapper">
-                    <input type="password" id="pinInput" placeholder="Enter PIN" maxlength="6" style="text-align:center;font-size:24px;letter-spacing:4px;" />
-                    <button type="button" class="password-toggle" onclick="togglePassword('pinInput', this)">👁️</button>
-                </div>
-            </div>
-            <div id="pinMsg" class="msg"></div>
-            <button class="btn btn-success" onclick="verifyPIN()">✅ Verify & Complete</button>
-            <button class="btn btn-secondary" style="margin-top:8px;background:#e2e8f0;color:#333;" onclick="closePINModal()">Cancel</button>
-        </div>
+<div id="app" style="display:none">
+  <aside id="sidebar">
+    <div class="brand">
+      <div class="mark">E</div>
+      <div>
+        <div class="name">Eudes S.M.</div>
+        <div class="sub">Powered by Eudes</div>
+      </div>
     </div>
-
-    <!-- Deposit for Fuel Modal -->
-    <div class="modal-overlay" id="depositForFuelModal">
-        <div class="modal">
-            <button class="close" onclick="closeModal('depositForFuelModal')">✕</button>
-            <h2>💰 Top Up for Fuel</h2>
-            <p>Customer needs <strong id="topupNeeded">UGX 0</strong> to complete this purchase.</p>
-            <div class="form-group"><label>Amount to Deposit (UGX)</label><input type="number" id="topupAmount" placeholder="Enter amount"></div>
-            <div class="form-group"><label>Payment Method</label>
-                <select id="topupMethod">
-                    <option value="cash">💵 Cash</option>
-                    <option value="mobile">📱 Mobile Money</option>
-                    <option value="bank">🏦 Bank Transfer</option>
-                    <option value="card">💳 Card</option>
-                </select>
-            </div>
-            <button class="btn btn-success" onclick="completeTopup()">✅ Complete Top Up</button>
-            <button class="btn btn-secondary" style="margin-top:8px;background:#e2e8f0;color:#333;" onclick="closeModal('depositForFuelModal')">Cancel</button>
-        </div>
-    </div>
-
-    <!-- Void Modal -->
-    <div class="modal-overlay" id="voidModal">
-        <div class="modal">
-            <button class="close" onclick="closeModal('voidModal')">✕</button>
-            <h2>🗑️ Void Transaction</h2>
-            <div id="voidMsg" class="msg"></div>
-            <p><strong style="color:#e53e3e;">This action cannot be undone!</strong></p>
-            <div style="background:#f7fafc;padding:12px;border-radius:8px;margin-bottom:16px;">
-                <div><strong>Transaction:</strong> <span id="voidTxId">-</span></div>
-                <div><strong>Customer:</strong> <span id="voidTxCustomer">-</span></div>
-                <div><strong>Amount:</strong> <span id="voidTxAmount">-</span></div>
-            </div>
-            <div class="form-group"><label>Reason *</label><input type="text" id="voidReason" placeholder="Reason for voiding"></div>
-            <button class="btn btn-danger" onclick="confirmVoid()">🗑️ Void Transaction</button>
-            <button class="btn btn-secondary" style="margin-top:8px;background:#e2e8f0;color:#333;" onclick="closeModal('voidModal')">Cancel</button>
-        </div>
-    </div>
-
-    <!-- Receipt Modal -->
-    <div class="modal-overlay" id="receiptModal">
-        <div class="modal" style="max-width:420px;">
-            <button class="close" onclick="closeReceiptModal()">✕</button>
-            <h2>🧾 Transaction Receipt</h2>
-            <div class="receipt-box" id="receiptContent"></div>
-            <button class="btn btn-primary" style="margin-top:16px;" onclick="printReceipt()">🖨️ Print</button>
-            <button class="btn btn-secondary" style="margin-top:8px;background:#e2e8f0;color:#333;" onclick="closeReceiptModal()">Close</button>
-        </div>
-    </div>
-
-    <script>
-        // ============================================================
-        // SUPABASE CONFIG
-        // ============================================================
-        const SUPABASE_URL = 'https://wabeempxckdtjvrkzhpv.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_n0uAm0Gcq7qR2dJM4jMZGQ_wiV__Cfp';
-
-        // ============================================================
-        // TOGGLE PASSWORD VISIBILITY
-        // ============================================================
-        function togglePassword(inputId, btn) {
-            const input = document.getElementById(inputId);
-            if (!input) return;
-            if (input.type === 'password') {
-                input.type = 'text';
-                btn.textContent = '🙈';
-            } else {
-                input.type = 'password';
-                btn.textContent = '👁️';
-            }
-        }
-
-        // ============================================================
-        // STATE
-        // ============================================================
-        let customers = [];
-        let staff = [];
-        let transactions = [];
-        let pending = [];
-        let creditRequests = [];
-        let fuelPrices = { petrol: 5800, diesel: 5200, kerosene: 4800, discount: 30 };
-        let priceHistory = [];
-        let transactionCounter = 1;
-        let creditRequestCounter = 1;
-        let useSupabase = true;
-        let supabaseConnected = false;
-        let isLoading = false;
-        let currentUser = null;
-
-        let fuelTxState = { customer: null, vehicle: null, fuel: null, litres: 0, amount: 0, pump: null, attendant: null, shift: null, shortfall: 0, balance: 0 };
-        let pinVerified = false;
-
-        const USERS = {
-            admin: { password: 'admin123', role: 'admin' },
-            attendant: { password: 'attend123', role: 'attendant' }
-        };
-
-        // ============================================================
-        // HELPERS
-        // ============================================================
-        function formatCurrency(amount) { return 'UGX ' + Number(amount).toLocaleString(); }
-        function getFuelName(type) { return { petrol: 'Petrol', diesel: 'Diesel', kerosene: 'Kerosene' } [type] || type; }
-        function findCustomerByPhone(phone) { return customers.find(c => c.phone === phone); }
-        function findCustomerByAccount(acc) { return customers.find(c => c.accountNumber === acc); }
-        function generateAccountNumber() { let num = 100000; while (customers.some(c => c.accountNumber === String(num))) { num++; if (num > 999999) num = 100000; } return String(num); }
-        function getCustomerDebt(customer) { let debt = 0; for (let t of transactions) { if (t.customer === customer.name && t.transaction_type === 'credit' && t.status !== 'void') { debt += t.amount; } } return debt; }
-        function getTotalDebt() { let total = 0; for (let c of customers) total += getCustomerDebt(c); return total; }
-        function getPendingCreditRequests() { return creditRequests.filter(r => r.status === 'pending'); }
-
-        function saveAll() {
-            try {
-                localStorage.setItem('yy_customers', JSON.stringify(customers));
-                localStorage.setItem('yy_staff', JSON.stringify(staff));
-                localStorage.setItem('yy_transactions', JSON.stringify(transactions));
-                localStorage.setItem('yy_pending', JSON.stringify(pending));
-                localStorage.setItem('yy_creditRequests', JSON.stringify(creditRequests));
-                localStorage.setItem('yy_fuelPrices', JSON.stringify(fuelPrices));
-                localStorage.setItem('yy_priceHistory', JSON.stringify(priceHistory));
-            } catch(e) {}
-        }
-
-        function loadLocalData() {
-            try {
-                const c = localStorage.getItem('yy_customers');
-                if (c) customers = JSON.parse(c);
-                const s = localStorage.getItem('yy_staff');
-                if (s) staff = JSON.parse(s);
-                const t = localStorage.getItem('yy_transactions');
-                if (t) transactions = JSON.parse(t);
-                const cr = localStorage.getItem('yy_creditRequests');
-                if (cr) creditRequests = JSON.parse(cr);
-                const fp = localStorage.getItem('yy_fuelPrices');
-                if (fp) fuelPrices = JSON.parse(fp);
-                const ph = localStorage.getItem('yy_priceHistory');
-                if (ph) priceHistory = JSON.parse(ph);
-            } catch(e) {}
-        }
-
-        // ============================================================
-        // SUPABASE API
-        // ============================================================
-        async function supabaseQuery(table, method = 'GET', data = null, id = null) {
-            let url = `${SUPABASE_URL}/rest/v1/${table}`;
-            const headers = {
-                'apikey': SUPABASE_ANON_KEY,
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                'Content-Type': 'application/json'
-            };
-            if (id) url += `?id=eq.${id}`;
-            const options = { method, headers };
-            if (data && (method === 'POST' || method === 'PATCH')) {
-                options.body = JSON.stringify(data);
-            }
-            try {
-                const response = await fetch(url, options);
-                if (!response.ok) {
-                    const text = await response.text();
-                    console.warn(`HTTP ${response.status}: ${text}`);
-                    return null;
-                }
-                const text = await response.text();
-                return text ? JSON.parse(text) : [];
-            } catch (error) {
-                console.warn('Supabase query failed:', error);
-                return null;
-            }
-        }
-
-        // ============================================================
-        // TOAST & MODALS
-        // ============================================================
-        function showToast(msg, type) {
-            const toast = document.getElementById('toast');
-            toast.textContent = msg;
-            toast.className = 'toast show ' + (type || 'success');
-            clearTimeout(toast._timeout);
-            toast._timeout = setTimeout(() => toast.className = 'toast', 4000);
-        }
-
-        function openModal(id) { document.getElementById(id).classList.add('show'); document.body.style.overflow = 'hidden'; }
-        function closeModal(id) { document.getElementById(id).classList.remove('show'); document.body.style.overflow = ''; }
-
-        // ============================================================
-        // CLOCK
-        // ============================================================
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('clockDisplay').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
-
-        // ============================================================
-        // LOGIN / LOGOUT
-        // ============================================================
-        function login() {
-            const username = document.getElementById('loginUsername').value.trim().toLowerCase();
-            const password = document.getElementById('loginPassword').value;
-            const errorEl = document.getElementById('loginError');
-            errorEl.textContent = '';
-            if (!username || !password) { errorEl.textContent = '❌ Please enter username and password'; return; }
-            const user = USERS[username];
-            if (!user || user.password !== password) { errorEl.textContent = '❌ Invalid username or password'; return; }
-            currentUser = { username, role: user.role };
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            document.getElementById('roleBadge').textContent = '👤 ' + user.role.charAt(0).toUpperCase() + user.role.slice(1);
-            applyRoleRestrictions();
-            document.getElementById('loadingOverlay').classList.add('hidden');
-            render();
-            populateAttendantDropdown();
-            loadFuelPrices();
-            handleURLParams();
-            loadData();
-            showToast('✅ Logged in as ' + user.role, 'success');
-            setTimeout(() => generateSystemQR(), 500);
-        }
-
-        function logout() {
-            currentUser = null;
-            document.getElementById('mainApp').style.display = 'none';
-            document.getElementById('loginScreen').style.display = 'block';
-            document.getElementById('loginPassword').value = '';
-            document.getElementById('loginError').textContent = '';
-            showToast('🔒 Logged out', 'info');
-        }
-
-        function applyRoleRestrictions() {
-            const isAdmin = currentUser && currentUser.role === 'admin';
-            document.querySelectorAll('.admin-only').forEach(el => { el.style.display = isAdmin ? 'inline-block' : 'none'; });
-            const statsDiv = document.getElementById('statsContainer');
-            if (statsDiv) statsDiv.style.display = isAdmin ? 'grid' : 'none';
-            const txCounter = document.getElementById('txCounter');
-            if (txCounter) txCounter.style.display = isAdmin ? 'inline' : 'none';
-            const dashTab = document.querySelector('.tab[onclick="switchTab(\'dashboard\')"]');
-            if (dashTab) dashTab.style.display = isAdmin ? 'inline-block' : 'none';
-            if (!isAdmin) {
-                const activeTab = document.querySelector('.tab-content.active');
-                if (activeTab && activeTab.id === 'tab-dashboard') { switchTab('fuel'); }
-            }
-        }
-
-        // ============================================================
-        // TABS
-        // ============================================================
-        function switchTab(tab) {
-            if (currentUser && currentUser.role === 'attendant') {
-                const restricted = ['dashboard', 'deposit', 'staff', 'admin', 'creditrequests', 'prices', 'vehicleqr'];
-                if (restricted.includes(tab)) { showToast('⛔ Attendants cannot access this section', 'error'); return; }
-            }
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            const tabBtn = document.querySelector(`.tab[onclick="switchTab('${tab}')"]`);
-            if (tabBtn) tabBtn.classList.add('active');
-            const tabContent = document.getElementById('tab-' + tab);
-            if (tabContent) tabContent.classList.add('active');
-            render();
-            if (tab === 'fuel') { populateAttendantDropdown(); calculateFuelPrice(); }
-            if (tab === 'staff') renderStaffList();
-            if (tab === 'creditrequests') renderCreditRequests();
-            if (tab === 'prices') loadFuelPrices();
-            if (tab === 'vehicleqr') renderVehicleQRs();
-        }
-
-        // ============================================================
-        // LOAD DATA
-        // ============================================================
-        async function loadData() {
-            if (isLoading) return;
-            isLoading = true;
-            document.getElementById('loadingStatus').textContent = 'Loading data from Supabase...';
-            try {
-                const [custData, staffData, txData, creditData, priceData] = await Promise.all([
-                    supabaseQuery('customers'),
-                    supabaseQuery('staff'),
-                    supabaseQuery('transactions'),
-                    supabaseQuery('credit_requests'),
-                    supabaseQuery('fuel_prices')
-                ]);
-
-                if (custData) {
-                    customers = custData || [];
-                    staff = staffData || [];
-                    transactions = txData || [];
-                    creditRequests = creditData || [];
-                    if (priceData && priceData.length > 0) {
-                        const p = priceData[0];
-                        fuelPrices = { petrol: p.petrol || 5800, diesel: p.diesel || 5200, kerosene: p.kerosene || 4800, discount: p.discount || 30 };
-                    }
-                    supabaseConnected = true;
-                    useSupabase = true;
-                    document.getElementById('syncStatus').textContent = '☁️ Synced';
-                    document.getElementById('syncStatus').className = 'status-badge online';
-                    showToast('✅ Connected to Supabase!', 'success');
-                } else {
-                    throw new Error('No data from Supabase');
-                }
-
-            } catch (e) {
-                console.warn('Supabase load failed:', e);
-                loadLocalData();
-                supabaseConnected = false;
-                useSupabase = false;
-                document.getElementById('syncStatus').textContent = '📁 Offline';
-                document.getElementById('syncStatus').className = 'status-badge';
-                showToast('⚠️ Offline mode - using local data', 'warning');
-            }
-
-            isLoading = false;
-            document.getElementById('loadingOverlay').classList.add('hidden');
-            render();
-            populateAttendantDropdown();
-            loadFuelPrices();
-            handleURLParams();
-        }
-
-        // ============================================================
-        // QR GENERATION
-        // ============================================================
-        function generateSystemQR() {
-            const url = window.location.href.split('?')[0];
-            const headerCanvas = document.getElementById('headerQRCanvas');
-            if (headerCanvas && typeof QRCode !== 'undefined' && currentUser) {
-                try {
-                    const tempDiv = document.createElement('div');
-                    tempDiv.style.display = 'none';
-                    document.body.appendChild(tempDiv);
-                    new QRCode(tempDiv, {
-                        text: url,
-                        width: 80,
-                        height: 80,
-                        colorDark: "#1a202c",
-                        colorLight: "#ffffff",
-                        correctLevel: QRCode.CorrectLevel.H
-                    });
-                    const canvas = tempDiv.querySelector('canvas');
-                    if (canvas) {
-                        const ctx = headerCanvas.getContext('2d');
-                        headerCanvas.width = 80;
-                        headerCanvas.height = 80;
-                        ctx.drawImage(canvas, 0, 0, 80, 80);
-                        headerCanvas.style.display = 'block';
-                    }
-                    document.body.removeChild(tempDiv);
-                } catch (e) { console.warn('Header QR error:', e); }
-            }
-        }
-
-        function downloadSystemQR() {
-            let canvas = document.getElementById('headerQRCanvas');
-            if (!canvas || !canvas.style.display || canvas.style.display === 'none') {
-                showToast('QR not generated yet.', 'error');
-                return;
-            }
-            const link = document.createElement('a');
-            link.download = 'YY_System_QR.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-            showToast('✅ System QR downloaded', 'success');
-        }
-
-        // ============================================================
-        // SYNC
-        // ============================================================
-        async function syncAllData() {
-            if (!useSupabase) { showToast('❌ Supabase not available', 'error'); return; }
-            showToast('⏳ Syncing...', 'info');
-            try {
-                for (const c of customers) await supabaseQuery('customers', 'POST', c);
-                for (const s of staff) await supabaseQuery('staff', 'POST', s);
-                for (const t of transactions) { if (t.id) await supabaseQuery('transactions', 'POST', t); }
-                for (const cr of creditRequests) await supabaseQuery('credit_requests', 'POST', cr);
-                showToast('✅ Synced to Supabase!', 'success');
-                document.getElementById('syncStatus').textContent = '☁️ Synced';
-                document.getElementById('syncStatus').className = 'status-badge online';
-            } catch(e) { showToast('❌ Sync failed: ' + e.message, 'error'); }
-        }
-
-        // ============================================================
-        // RENDER
-        // ============================================================
-        function render() {
-            const isAdmin = currentUser && currentUser.role === 'admin';
-            if (isAdmin) {
-                let cashSales = 0, creditSales = 0, totalLitres = 0;
-                transactions.forEach(t => {
-                    if (t.status === 'void') return;
-                    if (t.transaction_type === 'credit') creditSales += t.amount || 0;
-                    else cashSales += t.amount || 0;
-                    totalLitres += (t.litres || 0);
-                });
-                const totalDebt = getTotalDebt();
-                const pendingCredits = getPendingCreditRequests();
-
-                document.getElementById('statCashSales').textContent = formatCurrency(cashSales);
-                document.getElementById('statCreditSales').textContent = formatCurrency(creditSales);
-                document.getElementById('statTotalDebt').textContent = formatCurrency(totalDebt);
-                document.getElementById('statCustomers').textContent = customers.length;
-                document.getElementById('statFuel').textContent = totalLitres.toFixed(0) + ' Ltrs';
-                document.getElementById('statCreditRequests').textContent = pendingCredits.length;
-                document.getElementById('txCounter').textContent = 'Sales: ' + transactions.filter(t => t.status !== 'void').length;
-
-                const tList = document.getElementById('transactionList');
-                if (tList) {
-                    tList.innerHTML = transactions.length === 0 ? 
-                        '<tr><td colspan="10" style="text-align:center;color:#a0aec0;">No transactions</td></tr>' :
-                        transactions.slice(-15).reverse().map(t => `
-                            <tr>
-                                <td>${t.time || '--:--'}</td>
-                                <td>${t.attendant || 'N/A'}</td>
-                                <td>${t.shift || 'N/A'}</td>
-                                <td><strong>${t.customer}</strong></td>
-                                <td>${t.vehicle}</td>
-                                <td>${getFuelName(t.type)}</td>
-                                <td>${t.litres || '?'}</td>
-                                <td>${formatCurrency(t.amount)}</td>
-                                <td><span class="badge ${t.transaction_type === 'credit' ? 'badge-credit' : 'badge-cash'}">${t.transaction_type || 'cash'}</span></td>
-                                <td>${t.status === 'void' ? '<span class="badge badge-void">Void</span>' : '✅ Active'}</td>
-                            </tr>
-                        `).join('');
-                }
-
-                const cList = document.getElementById('customerList');
-                if (cList) {
-                    cList.innerHTML = customers.length === 0 ?
-                        '<tr><td colspan="5" style="text-align:center;color:#a0aec0;">No customers</td></tr>' :
-                        customers.map(c => `
-                            <tr>
-                                <td><strong>${c.name}</strong></td>
-                                <td>${c.accountNumber || 'N/A'}</td>
-                                <td>${c.phone}</td>
-                                <td>${c.vehicles?.join(', ') || 'None'}</td>
-                                <td style="color:#48bb78;">${formatCurrency(c.balance || 0)}</td>
-                                <td style="color:${getCustomerDebt(c) > 0 ? '#ed8936' : '#48bb78'};">${getCustomerDebt(c) > 0 ? formatCurrency(getCustomerDebt(c)) : 'UGX 0'}</td>
-                            </tr>
-                        `).join('');
-                }
-                document.getElementById('custCount').textContent = customers.length;
-                document.getElementById('transCount').textContent = transactions.filter(t => t.status !== 'void').length;
-
-                // pending list (no OTP)
-                const pList = document.getElementById('pendingList');
-                if (pList) {
-                    pList.innerHTML = '<li style="color:#a0aec0;padding:10px;">No pending transactions (OTP removed)</li>';
-                }
-
-                renderAdminList();
-                renderStaffList();
-                renderCreditRequests();
-            }
-            populateAttendantDropdown();
-            const activeTab = document.querySelector('.tab-content.active');
-            if (activeTab && activeTab.id === 'tab-vehicleqr') renderVehicleQRs();
-        }
-
-        // ============================================================
-        // REGISTER CUSTOMER
-        // ============================================================
-        async function registerCustomer() {
-            const name = document.getElementById('regName').value.trim();
-            const username = document.getElementById('regUsername').value.trim().toLowerCase();
-            const password = document.getElementById('regPassword').value;
-            const phone = document.getElementById('regPhone').value.trim();
-            const vehicle = document.getElementById('regVehicle').value.trim().toUpperCase();
-            const pin = document.getElementById('regPIN').value.trim();
-
-            if (!name || !username || !password || !phone || !vehicle || !pin) {
-                showToast('❌ Please fill all fields', 'error');
-                return;
-            }
-            if (pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)) {
-                showToast('❌ PIN must be 4-6 digits', 'error');
-                return;
-            }
-
-            if (customers.some(c => c.username === username)) {
-                showToast('❌ Username taken!', 'error');
-                return;
-            }
-            if (customers.some(c => c.phone === phone)) {
-                showToast('❌ Phone already registered!', 'error');
-                return;
-            }
-
-            const accountNumber = generateAccountNumber();
-
-            const newCustomer = {
-                id: 'AC-' + String(Date.now()).slice(-4),
-                accountNumber,
-                name, username, password, phone,
-                vehicles: [vehicle],
-                balance: 0,
-                pin: pin,
-                created_at: new Date().toISOString()
-            };
-
-            try {
-                if (useSupabase) {
-                    const result = await supabaseQuery('customers', 'POST', newCustomer);
-                    if (!result) throw new Error('Supabase insert failed');
-                }
-                customers.unshift(newCustomer);
-                saveAll();
-                render();
-                showToast(`✅ ${name} registered! Account: ${accountNumber}`, 'success');
-                document.getElementById('regName').value = '';
-                document.getElementById('regUsername').value = '';
-                document.getElementById('regPassword').value = '';
-                document.getElementById('regPhone').value = '';
-                document.getElementById('regVehicle').value = '';
-                document.getElementById('regPIN').value = '';
-            } catch(e) {
-                console.error('Registration error:', e);
-                showToast('❌ Registration failed: ' + e.message, 'error');
-            }
-        }
-
-        // ============================================================
-        // DEPOSIT (Admin only)
-        // ============================================================
-        async function processDeposit() {
-            if (currentUser && currentUser.role !== 'admin') {
-                showToast('⛔ Only admin can deposit', 'error');
-                return;
-            }
-            const input = document.getElementById('depPhone').value.trim();
-            const amount = parseInt(document.getElementById('depAmount').value);
-
-            if (!input || !amount || amount < 1) {
-                showToast('❌ Enter valid phone/account and amount', 'error');
-                return;
-            }
-
-            let customer = findCustomerByPhone(input);
-            if (!customer) customer = findCustomerByAccount(input);
-
-            if (!customer) {
-                showToast('❌ Customer not found!', 'error');
-                return;
-            }
-
-            const debt = getCustomerDebt(customer);
-            let depositAmount = amount;
-
-            if (debt > 0) {
-                const debtPayment = Math.min(debt, depositAmount);
-                transactions.push({
-                    id: transactionCounter++,
-                    customer: customer.name,
-                    amount: debtPayment,
-                    type: 'Debt Payment',
-                    transaction_type: 'debt_payment',
-                    attendant: 'System',
-                    shift: 'N/A',
-                    vehicle: 'N/A',
-                    time: new Date().toLocaleTimeString(),
-                    litres: 0,
-                    status: 'approved'
-                });
-                depositAmount -= debtPayment;
-                showToast(`💳 Debt of ${formatCurrency(debtPayment)} cleared`, 'info');
-            }
-
-            if (depositAmount > 0) {
-                customer.balance = (customer.balance || 0) + depositAmount;
-            }
-
-            try {
-                if (useSupabase) {
-                    await supabaseQuery('customers', 'PATCH', { balance: customer.balance }, customer.id);
-                }
-                saveAll();
-                render();
-                document.getElementById('depPhone').value = '';
-                document.getElementById('depAmount').value = '';
-                showToast(`💰 ${formatCurrency(amount)} deposited for ${customer.name}`, 'success');
-            } catch(e) {
-                showToast('❌ Deposit failed: ' + e.message, 'error');
-            }
-        }
-
-        // ============================================================
-        // STAFF (Admin only)
-        // ============================================================
-        async function registerStaff() {
-            if (currentUser && currentUser.role !== 'admin') {
-                showToast('⛔ Only admin can manage staff', 'error');
-                return;
-            }
-            const name = document.getElementById('staffName').value.trim();
-            const phone = document.getElementById('staffPhone').value.trim();
-
-            if (!name) {
-                showToast('❌ Enter staff name', 'error');
-                return;
-            }
-
-            if (staff.some(s => s.name.toLowerCase() === name.toLowerCase())) {
-                showToast('❌ Staff already exists', 'error');
-                return;
-            }
-
-            const newStaff = { id: 'ST-' + String(staff.length + 1).padStart(3, '0'), name, phone };
-
-            try {
-                if (useSupabase) {
-                    await supabaseQuery('staff', 'POST', newStaff);
-                }
-                staff.push(newStaff);
-                saveAll();
-                render();
-                document.getElementById('staffName').value = '';
-                document.getElementById('staffPhone').value = '';
-                showToast(`✅ ${name} added to staff`, 'success');
-            } catch(e) {
-                showToast('❌ Failed: ' + e.message, 'error');
-            }
-        }
-
-        function renderStaffList() {
-            if (currentUser && currentUser.role !== 'admin') return;
-            const container = document.getElementById('staffList');
-            if (!container) return;
-            container.innerHTML = staff.length === 0 ?
-                '<div style="color:#a0aec0;padding:10px;">No staff</div>' :
-                staff.map(s => `
-                    <div style="padding:6px 12px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
-                        <span><strong>${s.name}</strong> ${s.phone ? '📱 '+s.phone : ''}</span>
-                        <button class="btn btn-sm btn-danger" onclick="deleteStaff('${s.id}')" style="padding:2px 10px;">🗑️</button>
-                    </div>
-                `).join('');
-        }
-
-        function deleteStaff(id) {
-            if (currentUser && currentUser.role !== 'admin') {
-                showToast('⛔ Only admin can delete staff', 'error');
-                return;
-            }
-            if (!confirm('Remove this staff member?')) return;
-            staff = staff.filter(s => s.id !== id);
-            saveAll();
-            render();
-            showToast('Staff removed', 'warning');
-        }
-
-        function populateAttendantDropdown() {
-            const select = document.getElementById('attendantSelect');
-            if (!select) return;
-            select.innerHTML = '<option value="">-- Select --</option>';
-            staff.forEach(s => {
-                const opt = document.createElement('option');
-                opt.value = s.id;
-                opt.textContent = s.name;
-                select.appendChild(opt);
-            });
-        }
-
-        // ============================================================
-        // FUEL PRICES (Admin only)
-        // ============================================================
-        function calculateFuelPrice() {
-            const fuel = document.getElementById('fuelType')?.value;
-            if (!fuel) return;
-            const price = fuelPrices[fuel] || 5800;
-            const discount = fuelPrices.discount || 30;
-            const effective = price - discount;
-            const priceDisplay = document.getElementById('currentPriceDisplay');
-            const effectiveDisplay = document.getElementById('effectivePriceDisplay');
-            if (priceDisplay) priceDisplay.textContent = formatCurrency(price) + '/Ltr';
-            if (effectiveDisplay) effectiveDisplay.textContent = formatCurrency(effective) + '/Ltr';
-
-            const litres = parseFloat(document.getElementById('fuelLitres')?.value) || 0;
-            const amount = parseInt(document.getElementById('fuelAmount')?.value) || 0;
-            if (litres > 0 && amount === 0 && document.getElementById('fuelAmount')) {
-                document.getElementById('fuelAmount').value = Math.round(litres * effective);
-            } else if (amount > 0 && litres === 0 && document.getElementById('fuelLitres')) {
-                document.getElementById('fuelLitres').value = Math.round((amount / effective) * 10) / 10;
-            }
-        }
-
-        async function updateFuelPrices() {
-            if (currentUser && currentUser.role !== 'admin') {
-                showToast('⛔ Only admin can update prices', 'error');
-                return;
-            }
-            const petrol = parseInt(document.getElementById('pricePetrol').value);
-            const diesel = parseInt(document.getElementById('priceDiesel').value);
-            const kerosene = parseInt(document.getElementById('priceKerosene').value);
-            const discount = parseInt(document.getElementById('priceDiscount').value);
-
-            if (!petrol || !diesel || !kerosene || !discount) {
-                showToast('❌ Enter valid prices', 'error');
-                return;
-            }
-
-            const oldPrices = { ...fuelPrices };
-            fuelPrices.petrol = petrol;
-            fuelPrices.diesel = diesel;
-            fuelPrices.kerosene = kerosene;
-            fuelPrices.discount = discount;
-
-            priceHistory.push({
-                date: new Date().toISOString(),
-                old: oldPrices,
-                new: { ...fuelPrices },
-                changedBy: 'Admin'
-            });
-            if (priceHistory.length > 50) priceHistory = priceHistory.slice(-50);
-
-            try {
-                if (useSupabase) {
-                    await supabaseQuery('fuel_prices', 'POST', fuelPrices);
-                }
-                saveAll();
-                render();
-                showToast('✅ Prices updated!', 'success');
-                loadFuelPrices();
-            } catch(e) {
-                showToast('❌ Failed: ' + e.message, 'error');
-            }
-        }
-
-        function loadFuelPrices() {
-            const petrol = document.getElementById('pricePetrol');
-            const diesel = document.getElementById('priceDiesel');
-            const kerosene = document.getElementById('priceKerosene');
-            const discount = document.getElementById('priceDiscount');
-            if (petrol) petrol.value = fuelPrices.petrol || 5800;
-            if (diesel) diesel.value = fuelPrices.diesel || 5200;
-            if (kerosene) kerosene.value = fuelPrices.kerosene || 4800;
-            if (discount) discount.value = fuelPrices.discount || 30;
-
-            const historyDiv = document.getElementById('priceHistory');
-            if (!historyDiv) return;
-            historyDiv.innerHTML = priceHistory.length === 0 ?
-                '<div style="color:#a0aec0;padding:10px;">No history</div>' :
-                priceHistory.slice(-10).reverse().map(entry => `
-                    <div style="padding:4px 8px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:13px;">
-                        <span>${new Date(entry.date).toLocaleDateString()}</span>
-                        <span>Petrol: ${formatCurrency(entry.new.petrol)} | Diesel: ${formatCurrency(entry.new.diesel)}</span>
-                        <span style="color:#38a169;">Discount: -${formatCurrency(entry.new.discount)}</span>
-                    </div>
-                `).join('');
-        }
-
-        // ============================================================
-        // FUEL SALE
-        // ============================================================
-        function autoSelectCustomer() {
-            const input = document.getElementById('fuelPhone')?.value?.trim() || '';
-            const infoDiv = document.getElementById('fuelCustomerInfo');
-            const balanceDiv = document.getElementById('balanceCheckDisplay');
-            const creditFlow = document.getElementById('creditFlowBox');
-            const debtWarn = document.getElementById('activeDebtWarning');
-            const qrDiv = document.getElementById('customerQR');
-
-            if (!input) {
-                if (infoDiv) infoDiv.innerHTML = '';
-                if (balanceDiv) balanceDiv.style.display = 'none';
-                if (creditFlow) creditFlow.style.display = 'none';
-                if (debtWarn) debtWarn.style.display = 'none';
-                if (qrDiv) qrDiv.innerHTML = '';
-                fuelTxState.customer = null;
-                return;
-            }
-
-            let customer = findCustomerByPhone(input);
-            if (!customer) customer = findCustomerByAccount(input);
-
-            if (customer) {
-                fuelTxState.customer = customer;
-                const debt = getCustomerDebt(customer);
-                if (infoDiv) {
-                    infoDiv.innerHTML = `
-                        <div class="customer-selected">
-                            <div class="name">✅ ${customer.name}</div>
-                            <div class="details">📱 ${customer.phone} | 🆔 ${customer.accountNumber} | 🚗 ${customer.vehicles?.join(', ') || 'None'} | 💰 ${formatCurrency(customer.balance || 0)} | 💳 Debt: ${debt > 0 ? formatCurrency(debt) : 'UGX 0'}</div>
-                        </div>
-                    `;
-                    const qrContainer = document.getElementById('customerQR');
-                    if (qrContainer && typeof QRCode !== 'undefined') {
-                        qrContainer.innerHTML = '';
-                        new QRCode(qrContainer, {
-                            text: `ACCT:${customer.accountNumber}|NAME:${customer.name}|PHONE:${customer.phone}`,
-                            width: 120,
-                            height: 120,
-                            colorDark: "#1a202c",
-                            colorLight: "#ffffff",
-                            correctLevel: QRCode.CorrectLevel.H
-                        });
-                    }
-                }
-                if (balanceDiv) {
-                    balanceDiv.style.display = 'block';
-                    document.getElementById('customerBalanceDisplay').textContent = formatCurrency(customer.balance || 0);
-                    document.getElementById('customerDebtDisplay').textContent = formatCurrency(debt);
-                }
-                if (debtWarn) {
-                    if (debt > 0) {
-                        debtWarn.style.display = 'block';
-                        document.getElementById('debtWarningAmount').textContent = formatCurrency(debt);
-                    } else {
-                        debtWarn.style.display = 'none';
-                    }
-                }
-                if (creditFlow) creditFlow.style.display = 'none';
-            } else {
-                if (infoDiv) infoDiv.innerHTML = '<div style="background:#fed7d7;padding:12px;border-radius:8px;color:#9b2c2c;">❌ Customer not found. Register them first.</div>';
-                if (balanceDiv) balanceDiv.style.display = 'none';
-                if (creditFlow) creditFlow.style.display = 'none';
-                if (debtWarn) debtWarn.style.display = 'none';
-                if (qrDiv) qrDiv.innerHTML = '';
-                fuelTxState.customer = null;
-            }
-        }
-
-        function checkBalanceAndProceed() {
-            const attendantId = document.getElementById('attendantSelect')?.value;
-            const shift = document.getElementById('shiftSelect')?.value;
-
-            if (!attendantId) { showToast('Select an attendant!', 'error'); return; }
-            const attendant = staff.find(s => s.id === attendantId);
-            if (!attendant) { showToast('Attendant not found!', 'error'); return; }
-            if (!fuelTxState.customer) { showToast('Enter a valid customer phone or account number!', 'error'); return; }
-
-            const customer = fuelTxState.customer;
-            const vehicle = document.getElementById('fuelVehicle')?.value?.toUpperCase().trim() || '';
-            const fuel = document.getElementById('fuelType')?.value || 'petrol';
-            const litres = parseFloat(document.getElementById('fuelLitres')?.value) || 0;
-            const amount = parseInt(document.getElementById('fuelAmount')?.value) || 0;
-            const pump = document.getElementById('fuelPump')?.value || '1';
-
-            if (!vehicle) { showToast('Enter vehicle plate!', 'error'); return; }
-
-            const price = fuelPrices[fuel] || 5800;
-            const discount = fuelPrices.discount || 30;
-            const effective = price - discount;
-
-            let finalAmount = amount, finalLitres = litres;
-            if (litres > 0 && amount === 0) { finalAmount = litres * effective; finalLitres = litres; }
-            else if (amount > 0 && litres === 0) { finalLitres = amount / effective; finalAmount = amount; }
-            else if (litres === 0 && amount === 0) { showToast('Enter litres OR amount!', 'error'); return; }
-
-            finalLitres = Math.round(finalLitres * 10) / 10;
-            finalAmount = Math.round(finalAmount);
-
-            fuelTxState.vehicle = vehicle;
-            fuelTxState.fuel = fuel;
-            fuelTxState.litres = finalLitres;
-            fuelTxState.amount = finalAmount;
-            fuelTxState.pump = pump;
-            fuelTxState.attendant = attendant.name;
-            fuelTxState.shift = shift;
-            fuelTxState.balance = customer.balance || 0;
-
-            const debt = getCustomerDebt(customer);
-            if (debt > 0) {
-                document.getElementById('debtWarningAmount').textContent = formatCurrency(debt);
-                document.getElementById('activeDebtWarning').style.display = 'block';
-                showToast('❌ Active debt of ' + formatCurrency(debt) + '. Clear first.', 'error');
-                return;
-            }
-
-            // Proceed to PIN verification (final step, no OTP)
-            openPINModal();
-        }
-
-        // ============================================================
-        // PIN MODAL (final verification)
-        // ============================================================
-        function openPINModal() {
-            document.getElementById('pinInput').value = '';
-            document.getElementById('pinMsg').className = 'msg';
-            document.getElementById('pinMsg').textContent = '';
-            openModal('pinModal');
-        }
-
-        function closePINModal() {
-            closeModal('pinModal');
-            pinVerified = false;
-        }
-
-        function verifyPIN() {
-            const entered = document.getElementById('pinInput').value.trim();
-            const customer = fuelTxState.customer;
-            if (!customer) { showToast('No customer selected', 'error'); return; }
-            if (entered === customer.pin) {
-                pinVerified = true;
-                closePINModal();
-                // Now finalize the transaction directly (no OTP)
-                finalizeTransaction();
-            } else {
-                document.getElementById('pinMsg').className = 'msg error';
-                document.getElementById('pinMsg').textContent = '❌ Invalid PIN! Try again.';
-                document.getElementById('pinInput').value = '';
-                document.getElementById('pinInput').focus();
-            }
-        }
-
-        // ============================================================
-        // FINALIZE TRANSACTION (without OTP)
-        // ============================================================
-        function finalizeTransaction() {
-            const customer = fuelTxState.customer;
-            if (!customer) { showToast('No customer selected', 'error'); return; }
-
-            // Check if balance is sufficient
-            if ((customer.balance || 0) >= fuelTxState.amount) {
-                // Sufficient balance -> deduct and create transaction
-                customer.balance -= fuelTxState.amount;
-                const tx = {
-                    id: transactionCounter++,
-                    attendant: fuelTxState.attendant,
-                    shift: fuelTxState.shift,
-                    customer: customer.name,
-                    vehicle: fuelTxState.vehicle,
-                    amount: fuelTxState.amount,
-                    type: getFuelName(fuelTxState.fuel),
-                    pump: 'Pump ' + fuelTxState.pump,
-                    time: new Date().toLocaleTimeString(),
-                    litres: fuelTxState.litres,
-                    transaction_type: 'cash',
-                    status: 'approved',
-                    created_at: new Date().toISOString()
-                };
-                transactions.push(tx);
-                saveAll();
-                // Clear state
-                fuelTxState = { customer: null, vehicle: null, fuel: null, litres: 0, amount: 0, pump: null, attendant: null, shift: null, shortfall: 0, balance: 0 };
-                render();
-                showReceipt(tx, customer);
-                showToast('✅ Fuel dispensed! ' + customer.name + ' - ' + formatCurrency(tx.amount), 'success');
-            } else {
-                // Insufficient balance -> show credit flow
-                const shortfall = fuelTxState.amount - (customer.balance || 0);
-                fuelTxState.shortfall = shortfall;
-                document.getElementById('shortfallAmount').textContent = formatCurrency(shortfall);
-                document.getElementById('balanceShortfall').textContent = formatCurrency(customer.balance || 0);
-                document.getElementById('neededShortfall').textContent = formatCurrency(fuelTxState.amount);
-                document.getElementById('creditFlowBox').style.display = 'block';
-                showToast('⚠️ Shortfall: ' + formatCurrency(shortfall), 'warning');
-            }
-        }
-
-        // ============================================================
-        // TOP UP & CREDIT
-        // ============================================================
-        function topUpForFuel() {
-            if (!fuelTxState.customer) { showToast('No customer selected!', 'error'); return; }
-            document.getElementById('topupNeeded').textContent = formatCurrency(fuelTxState.shortfall);
-            document.getElementById('topupAmount').value = fuelTxState.shortfall;
-            openModal('depositForFuelModal');
-        }
-
-        function completeTopup() {
-            const amount = parseInt(document.getElementById('topupAmount').value);
-            if (!amount || amount < 1) { showToast('Enter a valid amount!', 'error'); return; }
-            const customer = fuelTxState.customer;
-            customer.balance = (customer.balance || 0) + amount;
-            saveAll();
-
-            if ((customer.balance || 0) >= fuelTxState.amount) {
-                closeModal('depositForFuelModal');
-                document.getElementById('creditFlowBox').style.display = 'none';
-                showToast('💰 Balance updated! Proceeding with fuel.', 'success');
-                // Now finalize (PIN already verified)
-                finalizeTransaction();
-            } else {
-                const remaining = fuelTxState.amount - (customer.balance || 0);
-                showToast('⚠️ Still short: ' + formatCurrency(remaining), 'warning');
-                document.getElementById('topupNeeded').textContent = formatCurrency(remaining);
-                document.getElementById('topupAmount').value = remaining;
-                document.getElementById('balanceShortfall').textContent = formatCurrency(customer.balance || 0);
-            }
-            render();
-        }
-
-        function requestCreditForFuel() {
-            if (!fuelTxState.customer) { showToast('No customer selected!', 'error'); return; }
-            const customer = fuelTxState.customer;
-            const debt = getCustomerDebt(customer);
-            if (debt > 0) {
-                showToast('❌ Active debt. Clear first.', 'error');
-                return;
-            }
-
-            const request = {
-                id: 'CR-' + String(creditRequestCounter++).padStart(4, '0'),
-                customer: customer.name,
-                customerId: customer.id,
-                phone: customer.phone,
-                amount: fuelTxState.shortfall,
-                totalAmount: fuelTxState.amount,
-                fuel: getFuelName(fuelTxState.fuel),
-                litres: fuelTxState.litres,
-                vehicle: fuelTxState.vehicle,
-                pump: fuelTxState.pump,
-                attendant: fuelTxState.attendant,
-                shift: fuelTxState.shift,
-                status: 'pending',
-                requestedAt: new Date().toISOString()
-            };
-
-            creditRequests.push(request);
-            saveAll();
-            render();
-            showToast('📋 Credit request submitted!', 'info');
-            if (currentUser && currentUser.role === 'admin') {
-                if (confirm('📋 Credit request created. Approve now?')) {
-                    approveCreditRequest(request.id);
-                }
-            } else {
-                showToast('📋 Request sent to admin for approval.', 'info');
-                document.getElementById('creditFlowBox').style.display = 'none';
-                switchTab('fuel');
-            }
-        }
-
-        // ============================================================
-        // CREDIT REQUESTS (Admin only)
-        // ============================================================
-        function renderCreditRequests() {
-            if (currentUser && currentUser.role !== 'admin') return;
-            const container = document.getElementById('creditRequestsList');
-            if (!container) return;
-            const pendingReqs = getPendingCreditRequests();
-            if (pendingReqs.length === 0) {
-                container.innerHTML = '<div style="color:#a0aec0;text-align:center;padding:20px;">No credit requests pending</div>';
-                document.getElementById('creditReqCount').textContent = '0';
-                return;
-            }
-            document.getElementById('creditReqCount').textContent = pendingReqs.length;
-            container.innerHTML = `
-                <div class="table-container"><table>
-                    <thead><tr><th>ID</th><th>Customer</th><th>Amount</th><th>Fuel</th><th>Attendant</th><th>Actions</th></tr></thead>
-                    <tbody>
-                        ${pendingReqs.map(r => `
-                            <tr>
-                                <td><strong>${r.id}</strong></td>
-                                <td>${r.customer}</td>
-                                <td>${formatCurrency(r.amount)}</td>
-                                <td>${r.fuel}</td>
-                                <td>${r.attendant}</td>
-                                <td>
-                                    <button class="btn btn-sm btn-approve" onclick="approveCreditRequest('${r.id}')" style="padding:4px 12px;margin:2px;">✅ Approve</button>
-                                    <button class="btn btn-sm btn-reject" onclick="rejectCreditRequest('${r.id}')" style="padding:4px 12px;margin:2px;">❌ Reject</button>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table></div>
-            `;
-        }
-
-        async function approveCreditRequest(requestId) {
-            if (currentUser && currentUser.role !== 'admin') { showToast('⛔ Only admin can approve', 'error'); return; }
-            const request = creditRequests.find(r => r.id === requestId);
-            if (!request || request.status !== 'pending') { showToast('Request not found.', 'warning'); return; }
-            const customer = customers.find(c => c.id === request.customerId);
-            if (!customer) { showToast('Customer not found!', 'error'); return; }
-            const debt = getCustomerDebt(customer);
-            if (debt > 0) {
-                showToast('❌ Customer has active debt. Cannot approve.', 'error');
-                request.status = 'rejected';
-                request.rejectedAt = new Date().toISOString();
-                saveAll();
-                render();
-                return;
-            }
-
-            request.status = 'approved';
-            request.approvedAt = new Date().toISOString();
-
-            const tx = {
-                id: transactionCounter++,
-                attendant: request.attendant,
-                shift: request.shift,
-                customer: customer.name,
-                vehicle: request.vehicle,
-                amount: request.totalAmount || request.amount,
-                type: request.fuel,
-                pump: 'Pump ' + request.pump,
-                time: new Date().toLocaleTimeString(),
-                litres: request.litres,
-                transaction_type: 'credit',
-                status: 'approved'
-            };
-
-            transactions.push(tx);
-            saveAll();
-            render();
-            showToast('✅ Credit approved! Fuel dispensed.', 'success');
-            showReceipt(tx, customer);
-            renderCreditRequests();
-        }
-
-        function rejectCreditRequest(requestId) {
-            if (currentUser && currentUser.role !== 'admin') { showToast('⛔ Only admin can reject', 'error'); return; }
-            const request = creditRequests.find(r => r.id === requestId);
-            if (!request || request.status !== 'pending') { showToast('Request not found.', 'warning'); return; }
-            request.status = 'rejected';
-            request.rejectedAt = new Date().toISOString();
-            saveAll();
-            render();
-            showToast('❌ Credit rejected.', 'warning');
-            renderCreditRequests();
-        }
-
-        // ============================================================
-        // RECEIPT
-        // ============================================================
-        function showReceipt(tx, customer) {
-            const now = new Date();
-            const date = now.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-            const time = now.toLocaleTimeString();
-            const typeLabel = tx.transaction_type === 'credit' ? '📋 CREDIT' : '💰 CASH';
-            const debt = getCustomerDebt(customer);
-
-            const receiptContent = document.getElementById('receiptContent');
-            receiptContent.innerHTML = `
-                <div style="text-align:center;font-weight:700;font-size:18px;">⛽ YY PARTSHAN FUELS</div>
-                <div style="text-align:center;font-size:12px;color:#718096;">Nabyewanga, Masaka Road</div>
-                <div class="divider"></div>
-                <div class="line"><span>Receipt #</span><span>${'RCT-' + Date.now().toString(36).toUpperCase()}</span></div>
-                <div class="line"><span>Date</span><span>${date}</span></div>
-                <div class="line"><span>Time</span><span>${time}</span></div>
-                <div class="divider"></div>
-                <div class="line"><span>Type</span><span>${typeLabel}</span></div>
-                <div class="line"><span>Attendant</span><span>${tx.attendant || 'N/A'}</span></div>
-                <div class="line"><span>Shift</span><span>${tx.shift || 'N/A'}</span></div>
-                <div class="line"><span>Customer</span><span>${customer.name} (${customer.phone})</span></div>
-                <div class="line"><span>Account</span><span>${customer.accountNumber}</span></div>
-                <div class="line"><span>Vehicle</span><span>${tx.vehicle}</span></div>
-                <div class="line"><span>Fuel</span><span>${getFuelName(tx.fuel)}</span></div>
-                <div class="line"><span>Pump</span><span>${tx.pump}</span></div>
-                <div class="divider"></div>
-                <div class="line"><span>Litres</span><span>${tx.litres.toFixed(1)}</span></div>
-                <div class="line" style="font-weight:700;font-size:15px;"><span>Amount</span><span>${formatCurrency(tx.amount)}</span></div>
-                <div class="divider"></div>
-                ${tx.transaction_type === 'credit' ?
-                    `<div class="line"><span>📋 Credit Sale</span><span>Debt Added: ${formatCurrency(tx.amount)}</span></div>
-                     <div class="line"><span>Total Debt</span><span style="color:#ed8936;">${formatCurrency(debt)}</span></div>` :
-                    `<div class="line"><span>Balance Before</span><span>${formatCurrency((customer.balance || 0) + tx.amount)}</span></div>
-                     <div class="line" style="font-weight:700;color:#28a745;"><span>Balance After</span><span>${formatCurrency(customer.balance || 0)}</span></div>`
-                }
-                <div class="divider"></div>
-                <div style="text-align:center;font-size:12px;color:#718096;">✅ Approved · ${time}<br>Thank you for choosing YY PARTSHAN FUELS! 🚗</div>
-                <div id="receiptQRContainer" style="margin-top:10px; text-align:center;"></div>
-            `;
-
-            const qrContainer = document.getElementById('receiptQRContainer');
-            if (qrContainer && typeof QRCode !== 'undefined') {
-                new QRCode(qrContainer, {
-                    text: `TXN:${tx.id}|AMT:${tx.amount}|CUST:${customer.name}`,
-                    width: 100,
-                    height: 100,
-                    colorDark: "#1a202c",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H
-                });
-            }
-
-            openModal('receiptModal');
-        }
-
-        function closeReceiptModal() { document.getElementById('receiptModal').classList.remove('show'); }
-        function printReceipt() { showToast('🖨️ Receipt printed!', 'success'); }
-
-        // ============================================================
-        // ADMIN (Admin only) – includes PIN show/hide & Clear Cache
-        // ============================================================
-        function renderAdminList() {
-            if (currentUser && currentUser.role !== 'admin') return;
-            const listDiv = document.getElementById('adminCustomerList');
-            if (!listDiv) return;
-            listDiv.innerHTML = customers.length === 0 ?
-                '<div style="color:#a0aec0;padding:20px;">No customers</div>' :
-                customers.map(c => `
-                    <div style="padding:8px 12px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;">
-                        <span><strong>${c.name}</strong> (@${c.username}) | 🆔 ${c.accountNumber} | 📱 ${c.phone} | 💰 ${formatCurrency(c.balance || 0)} | 💳 Debt: ${formatCurrency(getCustomerDebt(c))}</span>
-                        <button class="edit-btn" onclick="adminEditCustomer('${c.id}')">✏️ Edit</button>
-                    </div>
-                `).join('');
-        }
-
-        function adminSearch() {
-            if (currentUser && currentUser.role !== 'admin') return;
-            const search = document.getElementById('adminSearch')?.value?.trim() || '';
-            const resultDiv = document.getElementById('adminResult');
-            if (!resultDiv) return;
-            if (!search) { resultDiv.innerHTML = ''; document.getElementById('adminEditor').style.display = 'none'; return; }
-
-            const customer = customers.find(c => 
-                c.name?.toLowerCase().includes(search.toLowerCase()) ||
-                c.username?.toLowerCase() === search.toLowerCase() ||
-                c.phone === search ||
-                c.accountNumber === search
-            );
-
-            if (customer) {
-                resultDiv.innerHTML = `
-                    <div style="background:#c6f6d5;padding:12px;border-radius:8px;border:1px solid #9ae6b4;">
-                        ✅ Found: <strong>${customer.name}</strong> (@${customer.username}) | 🆔 ${customer.accountNumber} | 📱 ${customer.phone} | 💰 ${formatCurrency(customer.balance || 0)} | 💳 Debt: ${formatCurrency(getCustomerDebt(customer))}
-                        <button class="edit-btn" onclick="adminEditCustomer('${customer.id}')">✏️ Edit</button>
-                    </div>
-                `;
-            } else {
-                resultDiv.innerHTML = '<div style="background:#fed7d7;padding:12px;border-radius:8px;">❌ Customer not found.</div>';
-            }
-        }
-
-        function adminEditCustomer(id) {
-            if (currentUser && currentUser.role !== 'admin') { showToast('⛔ Only admin can edit', 'error'); return; }
-            const customer = customers.find(c => c.id === id);
-            if (!customer) return;
-            document.getElementById('adminEditId').value = customer.id;
-            document.getElementById('adminEditName').value = customer.name;
-            document.getElementById('adminEditUsername').value = customer.username;
-            document.getElementById('adminEditPhone').value = customer.phone;
-            document.getElementById('adminEditPassword').value = '';
-            // PIN field with show/hide
-            document.getElementById('adminEditPIN').value = customer.pin || '';
-
-            const vehDiv = document.getElementById('adminEditVehicles');
-            vehDiv.innerHTML = (customer.vehicles || []).map(v => `
-                <span class="vehicle-tag">🚗 ${v} <span onclick="adminRemoveVehicle('${customer.id}', '${v}')" style="cursor:pointer;color:#dc3545;">✕</span></span>
-            `).join('');
-
-            document.getElementById('adminEditor').style.display = 'block';
-        }
-
-        function adminRemoveVehicle(id, plate) {
-            if (currentUser && currentUser.role !== 'admin') { showToast('⛔ Only admin can remove vehicle', 'error'); return; }
-            const customer = customers.find(c => c.id === id);
-            if (!customer) return;
-            customer.vehicles = (customer.vehicles || []).filter(v => v !== plate);
-            saveAll();
-            adminEditCustomer(id);
-            render();
-            showToast('🚗 Removed: ' + plate, 'warning');
-        }
-
-        function adminAddVehicle() {
-            if (currentUser && currentUser.role !== 'admin') { showToast('⛔ Only admin can add vehicle', 'error'); return; }
-            const plate = document.getElementById('adminAddVehicle')?.value?.toUpperCase().trim();
-            const customerId = document.getElementById('adminEditId').value;
-            if (!plate) { showToast('Enter a vehicle plate.', 'error'); return; }
-            const customer = customers.find(c => c.id === customerId);
-            if (!customer) return;
-            if ((customer.vehicles || []).includes(plate)) { showToast('Already registered.', 'error'); return; }
-            if (!customer.vehicles) customer.vehicles = [];
-            customer.vehicles.push(plate);
-            document.getElementById('adminAddVehicle').value = '';
-            saveAll();
-            adminEditCustomer(customerId);
-            render();
-            showToast('🚗 Added: ' + plate, 'success');
-        }
-
-        async function adminSaveCustomer() {
-            if (currentUser && currentUser.role !== 'admin') { showToast('⛔ Only admin can save changes', 'error'); return; }
-            const customerId = document.getElementById('adminEditId').value;
-            const name = document.getElementById('adminEditName').value.trim();
-            const username = document.getElementById('adminEditUsername').value.trim().toLowerCase();
-            const phone = document.getElementById('adminEditPhone').value.trim();
-            const password = document.getElementById('adminEditPassword').value;
-            const pin = document.getElementById('adminEditPIN').value.trim();
-
-            const customer = customers.find(c => c.id === customerId);
-            if (!customer) return;
-            if (!name || !username || !phone) { showToast('Name, username and phone required.', 'error'); return; }
-            if (pin && (pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin))) {
-                showToast('PIN must be 4-6 digits', 'error');
-                return;
-            }
-            if (customers.some(c => c.id !== customerId && (c.username === username || c.phone === phone))) {
-                showToast('Username or phone already used.', 'error');
-                return;
-            }
-
-            customer.name = name;
-            customer.username = username;
-            customer.phone = phone;
-            if (password) customer.password = password;
-            if (pin) customer.pin = pin;
-
-            try {
-                if (useSupabase) {
-                    await supabaseQuery('customers', 'PATCH', { name, username, phone, password: password || customer.password, pin: pin || customer.pin }, customer.id);
-                }
-                saveAll();
-                render();
-                showToast('✅ Customer updated!', 'success');
-                adminEditCustomer(customerId);
-            } catch(e) {
-                showToast('❌ Update failed: ' + e.message, 'error');
-            }
-        }
-
-        async function adminDeleteCustomer() {
-            if (currentUser && currentUser.role !== 'admin') { showToast('⛔ Only admin can delete', 'error'); return; }
-            const customerId = document.getElementById('adminEditId').value;
-            if (!confirm('Delete this customer?')) return;
-            const customer = customers.find(c => c.id === customerId);
-            if (!customer) return;
-
-            try {
-                if (useSupabase) {
-                    await supabaseQuery('customers', 'DELETE', null, customer.id);
-                }
-                customers = customers.filter(c => c.id !== customerId);
-                saveAll();
-                document.getElementById('adminEditor').style.display = 'none';
-                document.getElementById('adminResult').innerHTML = '';
-                render();
-                showToast('🗑️ Customer deleted.', 'warning');
-            } catch(e) {
-                showToast('❌ Delete failed: ' + e.message, 'error');
-            }
-        }
-
-        // ============================================================
-        // VEHICLE QR (Admin only)
-        // ============================================================
-        function renderVehicleQRs() {
-            if (currentUser && currentUser.role !== 'admin') return;
-            const container = document.getElementById('vehicleQRList');
-            if (!container) return;
-            if (customers.length === 0) {
-                container.innerHTML = '<div style="color:#a0aec0;padding:20px;text-align:center;">No customers registered yet.</div>';
-                return;
-            }
-            let html = '<div class="vehicle-qr-grid">';
-            customers.forEach(customer => {
-                const vehicles = customer.vehicles || [];
-                if (vehicles.length === 0) return;
-                vehicles.forEach(plate => {
-                    const baseUrl = window.location.href.split('?')[0];
-                    const url = baseUrl + `?vehicle=${encodeURIComponent(plate)}&customer=${encodeURIComponent(customer.accountNumber)}`;
-                    const qrId = `qr-${customer.id}-${plate.replace(/\s/g,'')}`;
-                    html += `
-                        <div class="vehicle-qr-card">
-                            <div class="plate">🚗 ${plate}</div>
-                            <div class="customer">${customer.name} (${customer.accountNumber})</div>
-                            <div class="qr" id="${qrId}"></div>
-                            <button class="btn btn-sm btn-download" onclick="downloadQR('${qrId}', '${plate}')">⬇️ Download QR</button>
-                        </div>
-                    `;
-                });
-            });
-            html += '</div>';
-            container.innerHTML = html;
-            customers.forEach(customer => {
-                const vehicles = customer.vehicles || [];
-                vehicles.forEach(plate => {
-                    const qrId = `qr-${customer.id}-${plate.replace(/\s/g,'')}`;
-                    const qrContainer = document.getElementById(qrId);
-                    if (qrContainer && typeof QRCode !== 'undefined') {
-                        const baseUrl = window.location.href.split('?')[0];
-                        const url = baseUrl + `?vehicle=${encodeURIComponent(plate)}&customer=${encodeURIComponent(customer.accountNumber)}`;
-                        try {
-                            new QRCode(qrContainer, {
-                                text: url,
-                                width: 120,
-                                height: 120,
-                                colorDark: "#1a202c",
-                                colorLight: "#ffffff",
-                                correctLevel: QRCode.CorrectLevel.H
-                            });
-                        } catch(e) { console.warn('QR generation failed for', plate, e); qrContainer.textContent = 'QR error'; }
-                    }
-                });
-            });
-        }
-
-        function downloadQR(qrId, plate) {
-            if (currentUser && currentUser.role !== 'admin') { showToast('⛔ Only admin can download QR', 'error'); return; }
-            const container = document.getElementById(qrId);
-            if (!container) { showToast('QR not found', 'error'); return; }
-            const canvas = container.querySelector('canvas');
-            if (!canvas) { showToast('QR not generated yet', 'error'); return; }
-            const link = document.createElement('a');
-            link.download = `YY_QR_${plate.replace(/\s/g,'_')}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-            showToast('⬇️ QR downloaded', 'success');
-        }
-
-        // ============================================================
-        // URL PARAMETER HANDLING
-        // ============================================================
-        function handleURLParams() {
-            const params = new URLSearchParams(window.location.search);
-            const vehicle = params.get('vehicle');
-            const customerAcc = params.get('customer');
-            if (vehicle && customerAcc) {
-                const customer = findCustomerByAccount(customerAcc);
-                if (customer) {
-                    switchTab('fuel');
-                    document.getElementById('fuelVehicle').value = vehicle;
-                    document.getElementById('fuelPhone').value = customer.phone;
-                    autoSelectCustomer();
-                    showToast(`🚗 Vehicle ${vehicle} loaded for ${customer.name}`, 'info');
-                    const newUrl = window.location.href.split('?')[0];
-                    window.history.replaceState({}, document.title, newUrl);
-                } else {
-                    showToast('❌ Customer not found for this QR code.', 'error');
-                }
-            }
-        }
-
-        // ============================================================
-        // RESET (Admin only)
-        // ============================================================
-        function resetSystem() {
-            if (currentUser && currentUser.role !== 'admin') { showToast('⛔ Only admin can reset', 'error'); return; }
-            if (!confirm('⚠️ Reset all data? This will delete everything!')) return;
-            customers = [];
-            staff = [];
-            transactions = [];
-            pending = [];
-            creditRequests = [];
-            transactionCounter = 1;
-            creditRequestCounter = 1;
-            fuelPrices = { petrol: 5800, diesel: 5200, kerosene: 4800, discount: 30 };
-            priceHistory = [];
-            saveAll();
-            render();
-            showToast('🔄 System reset.', 'info');
-        }
-
-        // ============================================================
-        // KEYBOARD SHORTCUTS
-        // ============================================================
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show'));
-            }
+    <div id="schoolBadge"></div>
+    <nav id="nav"></nav>
+    <a class="logout" href="#" onclick="doLogout();return false;">⎋ &nbsp;Sign Out</a>
+  </aside>
+  <main id="main"></main>
+</div>
+
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+/* ============================================================
+   CONFIGURATION (REPLACE WITH YOUR SUPABASE DETAILS)
+   ============================================================ */
+const SUPA_URL = 'YOUR_SUPABASE_PROJECT_URL'; // e.g., https://xyz.supabase.co
+const SUPA_KEY = 'YOUR_SUPABASE_ANON_KEY';    // e.g., eyJhbGci...
+
+/* ============================================================
+   SAFE STORAGE WRAPPER (Fixes Sandboxed Iframe Error)
+   ============================================================ */
+let _memoryStore = {};
+const safeStorage = {
+  getItem: function(key) {
+    try { return localStorage.getItem(key); } 
+    catch(e) { return _memoryStore[key] || null; }
+  },
+  setItem: function(key, value) {
+    try { localStorage.setItem(key, value); } 
+    catch(e) { _memoryStore[key] = String(value); }
+  },
+  removeItem: function(key) {
+    try { localStorage.removeItem(key); } 
+    catch(e) { delete _memoryStore[key]; }
+  }
+};
+
+/* ============================================================
+   LOW-LEVEL FETCH HELPERS
+   ============================================================ */
+function getToken(){
+  const s = safeStorage.getItem('eudes_session');
+  if(!s) return null;
+  try { return JSON.parse(s).access_token; } catch(e){ return null; }
+}
+function getUser(){
+  const s = safeStorage.getItem('eudes_session');
+  if(!s) return null;
+  try { return JSON.parse(s).user; } catch(e){ return null; }
+}
+function setSession(data){
+  if(data){
+    safeStorage.setItem('eudes_session', JSON.stringify(data));
+  } else {
+    safeStorage.removeItem('eudes_session');
+  }
+}
+
+async function rest(path, options){
+  options = options || {};
+  const headers = Object.assign({
+    'apikey': SUPA_KEY,
+    'Content-Type': 'application/json'
+  }, options.headers || {});
+  const token = getToken();
+  headers['Authorization'] = 'Bearer ' + (token || SUPA_KEY);
+
+  const res = await fetch(SUPA_URL + path, Object.assign({}, options, { headers: headers }));
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch(e){ data = text; }
+  if(!res.ok){
+    const msg = (data && (data.message || data.msg || data.error_description || data.error)) || text || ('HTTP ' + res.status);
+    throw new Error(msg);
+  }
+  return data;
+}
+
+async function auth(path, body){
+  const res = await fetch(SUPA_URL + path, {
+    method: 'POST',
+    headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch(e){ data = text; }
+  if(!res.ok){
+    const msg = (data && (data.message || data.msg || data.error_description || data.error)) || text || ('HTTP ' + res.status);
+    throw new Error(msg);
+  }
+  return data;
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let SESSION = null;
+let _profile = null;
+let _school = null;
+let _schoolId = null;
+let _role = null;
+let _classesCache = null;
+
+function toast(msg, type){
+  const el = document.createElement('div');
+  el.className = 'toast' + (type === 'bad' ? ' bad' : '');
+  el.textContent = msg;
+  document.getElementById('toastRoot').appendChild(el);
+  setTimeout(function(){ el.remove(); }, 3200);
+}
+function modal(html){
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = '<div class="modal-bg"><div class="modal">' + html + '</div></div>';
+  root.querySelector('.modal-bg').addEventListener('click', function(e){
+    if(e.target.classList.contains('modal-bg')) closeModal();
+  });
+}
+function closeModal(){ document.getElementById('modalRoot').innerHTML = ''; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function age(dob){ if(!dob) return '—'; return Math.floor((Date.now()-new Date(dob).getTime())/(365.25*24*3600*1000)) + ' yrs'; }
+window.toast = toast; window.modal = modal; window.closeModal = closeModal;
+
+/* ============================================================
+   AUTH SCREEN
+   ============================================================ */
+function switchTab(which){
+  document.getElementById('tabLogin').classList.toggle('active', which === 'login');
+  document.getElementById('tabRegister').classList.toggle('active', which === 'register');
+  document.getElementById('loginForm').style.display = which === 'login' ? 'block' : 'none';
+  document.getElementById('registerForm').style.display = which === 'register' ? 'block' : 'none';
+  document.getElementById('loginErr').style.display = 'none';
+  document.getElementById('regErr').style.display = 'none';
+}
+window.switchTab = switchTab;
+
+async function doLogin(){
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const pass = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginErr');
+  const btn = document.getElementById('loginBtn');
+  err.style.display = 'none';
+  if(!email || !pass){ err.textContent = 'Enter email and password'; err.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  try {
+    const data = await auth('/auth/v1/token?grant_type=password', { email: email, password: pass });
+    setSession(data);
+    await boot();
+  } catch(e){
+    err.textContent = e.message;
+    err.style.display = 'block';
+  }
+  btn.disabled = false; btn.textContent = 'Sign In';
+}
+window.doLogin = doLogin;
+
+async function doRegister(){
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim().toLowerCase();
+  const pass = document.getElementById('regPass').value;
+  const school = document.getElementById('regSchool').value.trim();
+  const slug = document.getElementById('regSlug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'-');
+  const addr = document.getElementById('regAddr').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const head = document.getElementById('regHead').value.trim();
+  const err = document.getElementById('regErr');
+  const ok = document.getElementById('regOk');
+  const btn = document.getElementById('regBtn');
+  err.style.display = 'none'; ok.style.display = 'none';
+
+  if(!name || !email || !pass || !school || !slug){
+    err.textContent = 'Fill all required fields'; err.style.display = 'block'; return;
+  }
+  if(pass.length < 8){
+    err.textContent = 'Password must be at least 8 characters'; err.style.display = 'block'; return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Creating…';
+  try {
+    const data = await auth('/auth/v1/signup', {
+      email: email, password: pass,
+      data: { full_name: name }
+    });
+    
+    // If email confirmation is ON, this block runs
+    if(!data.access_token){
+      ok.textContent = 'Check your email to confirm, then sign in.';
+      ok.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Create School';
+      return;
+    }
+    
+    // If email confirmation is OFF, this runs
+    setSession(data);
+
+    await rest('/rest/v1/rpc/create_school_and_become_owner', {
+      method: 'POST',
+      body: JSON.stringify({
+        p_school_name: school,
+        p_school_slug: slug,
+        p_motto: null,
+        p_address: addr || null,
+        p_telephone: phone || null,
+        p_email: email,
+        p_head_teacher: head || null
+      })
+    });
+
+    ok.textContent = 'School created. Loading dashboard…';
+    ok.style.display = 'block';
+    setTimeout(boot, 500);
+  } catch(e){
+    err.textContent = e.message;
+    err.style.display = 'block';
+  }
+  btn.disabled = false; btn.textContent = 'Create School';
+}
+window.doRegister = doRegister;
+
+async function doLogout(){
+  try {
+    const token = getToken();
+    if(token){
+      await fetch(SUPA_URL + '/auth/v1/logout', {
+        method: 'POST',
+        headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + token }
+      });
+    }
+  } catch(e){}
+  setSession(null);
+  SESSION = null; _profile = null; _school = null; _schoolId = null; _role = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('authScreen').style.display = 'flex';
+}
+window.doLogout = doLogout;
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+async function boot(){
+  const user = getUser();
+  const token = getToken();
+  if(!user || !token){
+    document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    return;
+  }
+  SESSION = user;
+
+  try {
+    const profiles = await rest('/rest/v1/profiles?id=eq.' + user.id + '&select=*');
+    _profile = profiles && profiles[0];
+  } catch(e){
+    document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('loginErr').textContent = 'Profile not found. Error: ' + e.message;
+    document.getElementById('loginErr').style.display = 'block';
+    return;
+  }
+
+  if(!_profile){
+    document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('loginErr').textContent = 'Profile not found. The trigger may not have run.';
+    document.getElementById('loginErr').style.display = 'block';
+    return;
+  }
+  _schoolId = _profile.school_id;
+  _role = _profile.role;
+
+  if(!_schoolId){
+    document.getElementById('authScreen').style.display = 'flex';
+    switchTab('register');
+    document.getElementById('regErr').textContent = 'Your account is not linked to a school. Create one below.';
+    document.getElementById('regErr').style.display = 'block';
+    document.getElementById('regName').parentElement.style.display = 'none';
+    document.getElementById('regEmail').parentElement.style.display = 'none';
+    document.getElementById('regPass').parentElement.style.display = 'none';
+    document.getElementById('regBtn').textContent = 'Create School';
+    document.getElementById('regBtn').onclick = createSchoolOnly;
+    return;
+  }
+
+  try {
+    const schools = await rest('/rest/v1/schools?id=eq.' + _schoolId + '&select=*');
+    _school = schools && schools[0];
+  } catch(e){}
+
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+
+  renderBadge();
+  renderNav();
+  await nav('dashboard');
+}
+window.boot = boot;
+
+async function createSchoolOnly(){
+  const school = document.getElementById('regSchool').value.trim();
+  const slug = document.getElementById('regSlug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'-');
+  const addr = document.getElementById('regAddr').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const head = document.getElementById('regHead').value.trim();
+  const err = document.getElementById('regErr');
+  const btn = document.getElementById('regBtn');
+  err.style.display = 'none';
+  if(!school || !slug){ err.textContent = 'Fill school name and short name'; err.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Creating…';
+  try {
+    await rest('/rest/v1/rpc/create_school_and_become_owner', {
+      method: 'POST',
+      body: JSON.stringify({
+        p_school_name: school, p_school_slug: slug, p_motto: null,
+        p_address: addr || null, p_telephone: phone || null,
+        p_email: _profile.email || null, p_head_teacher: head || null
+      })
+    });
+    toast('School created');
+    setTimeout(boot, 500);
+  } catch(e){
+    err.textContent = e.message; err.style.display = 'block';
+  }
+  btn.disabled = false; btn.textContent = 'Create School';
+}
+window.createSchoolOnly = createSchoolOnly;
+
+/* ============================================================
+   BADGE + NAV
+   ============================================================ */
+function renderBadge(){
+  const el = document.getElementById('schoolBadge');
+  if(!_school){ el.innerHTML = '<b>School</b>'; return; }
+  el.innerHTML =
+    '<b>' + esc(_school.name) + '</b>' +
+    '<div class="muted">' + esc(_school.address || '') + '</div>' +
+    '<div class="muted" style="margin-top:3px">' + esc(_profile.full_name || SESSION.email) + ' · ' + esc((_profile.role||'').replace(/_/g,' ')) + '</div>';
+}
+
+const ROUTES = {
+  dashboard: { label:'Dashboard', icon:'📊', render: pageDashboard },
+  students:  { label:'Pupils',    icon:'🎓', render: pageStudents },
+  classes:   { label:'Classes',   icon:'🏫', render: pageClasses },
+  subjects:  { label:'Subjects',  icon:'📚', render: pageSubjects },
+  exams:     { label:'Exams',     icon:'📝', render: pageExams },
+  marks:     { label:'Marks Entry', icon:'✍️', render: pageMarks },
+  reports:   { label:'Report Cards', icon:'📄', render: pageReports },
+};
+
+let activeRoute = 'dashboard';
+async function nav(route){
+  if(!ROUTES[route]) return;
+  activeRoute = route;
+  renderNav();
+  const main = document.getElementById('main');
+  main.innerHTML = '<div class="loading">Loading…</div>';
+  try { await ROUTES[route].render(main); }
+  catch(e){ main.innerHTML = '<div class="card"><h3>Error</h3><p class="muted">' + esc(e.message) + '</p></div>'; }
+}
+window.nav = nav;
+
+function renderNav(){
+  document.getElementById('nav').innerHTML = Object.entries(ROUTES).map(function(p){
+    const k = p[0], r = p[1];
+    return '<a href="#" class="' + (k === activeRoute ? 'active' : '') + '" onclick="nav(\'' + k + '\');return false;">' +
+      '<span style="width:18px;text-align:center">' + r.icon + '</span><span>' + esc(r.label) + '</span></a>';
+  }).join('');
+}
+
+/* ============================================================
+   PAGE: DASHBOARD
+   ============================================================ */
+async function pageDashboard(root){
+  const [students, classes, subjects, exams] = await Promise.all([
+    rest('/rest/v1/students?school_id=eq.' + _schoolId + '&select=id,gender,status'),
+    rest('/rest/v1/classes?school_id=eq.' + _schoolId + '&select=id'),
+    rest('/rest/v1/subjects?school_id=eq.' + _schoolId + '&select=id'),
+    rest('/rest/v1/exams?school_id=eq.' + _schoolId + '&select=id')
+  ]);
+  students = students || []; classes = classes || [];
+  subjects = subjects || []; exams = exams || [];
+  const active = students.filter(function(s){ return s.status === 'active'; });
+  const male = active.filter(function(s){ return s.gender === 'male'; }).length;
+  const female = active.filter(function(s){ return s.gender === 'female'; }).length;
+
+  root.innerHTML =
+    '<div class="page-head"><div><h1>' + esc(_school.name) + '</h1>' +
+      '<div class="sub">' + esc(_school.address || '') + '</div></div></div>' +
+    '<div class="grid grid-kpi">' +
+      '<div class="kpi"><div class="v">' + active.length + '</div><div class="l">Active Pupils</div></div>' +
+      '<div class="kpi"><div class="v">' + female + '</div><div class="l">Girls</div></div>' +
+      '<div class="kpi"><div class="v">' + male + '</div><div class="l">Boys</div></div>' +
+      '<div class="kpi"><div class="v">' + classes.length + '</div><div class="l">Classes</div></div>' +
+      '<div class="kpi"><div class="v">' + subjects.length + '</div><div class="l">Subjects</div></div>' +
+      '<div class="kpi"><div class="v">' + exams.length + '</div><div class="l">Exams</div></div>' +
+    '</div>' +
+    (active.length === 0 ? '<div class="card" style="margin-top:20px"><h3>Getting Started</h3>' +
+      '<ol style="color:var(--text2);line-height:2.2"><li>Your classes are already created</li>' +
+      '<li>Go to <b>Pupils</b> to register your first student</li>' +
+      '<li>Go to <b>Subjects</b> to verify subject list</li>' +
+      '<li>Create an <b>Exam</b>, then enter marks</li></ol></div>' : '');
+}
+
+/* ============================================================
+   PAGE: STUDENTS
+   ============================================================ */
+async function loadClasses(){
+  if(_classesCache) return _classesCache;
+  const data = await rest('/rest/v1/classes?school_id=eq.' + _schoolId + '&select=id,name&order=sort_order');
+  _classesCache = data || [];
+  return _classesCache;
+}
+
+async function pageStudents(root){
+  const classes = await loadClasses();
+  const students = await rest('/rest/v1/students?school_id=eq.' + _schoolId + '&select=*&order=created_at.desc');
+
+  const q = (window._stFilterSearch || '').toLowerCase();
+  const fClass = window._stFilterClass || '';
+  const filtered = (students || []).filter(function(s){
+    if(fClass && s.class_id !== fClass) return false;
+    if(q){
+      const hay = (s.first_name + ' ' + (s.last_name||'') + ' ' + s.admission_no + ' ' + (s.lin||'')).toLowerCase();
+      if(hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+
+  root.innerHTML =
+    '<div class="page-head"><div><h1>Pupils</h1>' +
+      '<div class="sub">' + (students||[]).length + ' total · ' + filtered.length + ' shown</div></div>' +
+      '<button class="btn" onclick="addStudent()">＋ Register Pupil</button></div>' +
+    '<div class="card">' +
+      '<div class="grid grid-2" style="margin-bottom:16px">' +
+        '<input placeholder="Search name, admission no, LIN…" value="' + esc(window._stFilterSearch||'') + '" oninput="window._stFilterSearch=this.value;nav(\'students\')">' +
+        '<select onchange="window._stFilterClass=this.value;nav(\'students\')">' +
+          '<option value="">All classes</option>' +
+          classes.map(function(c){ return '<option value="' + c.id + '"' + (c.id===fClass?' selected':'') + '>' + esc(c.name) + '</option>'; }).join('') +
+        '</select>' +
+      '</div>' +
+      (filtered.length ? '<div class="table-wrap"><table>' +
+        '<thead><tr><th>Adm No</th><th>LIN</th><th>Name</th><th>Class</th><th>Gender</th><th>Age</th><th style="text-align:right">Actions</th></tr></thead>' +
+        '<tbody>' + filtered.map(function(s){ return studentRow(s, classes); }).join('') + '</tbody>' +
+      '</table></div>' : '<div class="empty">No pupils yet. Click "Register Pupil" to add one.</div>') +
+    '</div>';
+}
+
+function studentRow(s, classes){
+  const cls = (classes||[]).find(function(c){ return c.id === s.class_id; });
+  return '<tr>' +
+    '<td><b>' + esc(s.admission_no) + '</b></td>' +
+    '<td style="font-family:monospace;font-size:12px">' + esc(s.lin||'—') + '</td>' +
+    '<td><b>' + esc(s.first_name + ' ' + (s.last_name||'')) + '</b></td>' +
+    '<td><span class="badge info">' + esc(cls?cls.name:'—') + '</span></td>' +
+    '<td>' + esc(s.gender||'—') + '</td>' +
+    '<td>' + age(s.date_of_birth) + '</td>' +
+    '<td style="text-align:right;white-space:nowrap">' +
+      '<button class="btn sm ghost" onclick="editStudent(\'' + s.id + '\')">Edit</button> ' +
+      '<button class="btn sm danger" onclick="deleteStudent(\'' + s.id + '\')">✕</button>' +
+    '</td>' +
+  '</tr>';
+}
+
+async function addStudent(){
+  const classes = await loadClasses();
+  if(!classes.length){ toast('No classes yet','bad'); return; }
+  const nextNo = 'PM-' + new Date().getFullYear() + '-' + String(Date.now()).slice(-3);
+  modal('<h3>Register New Pupil</h3>' +
+    '<div class="grid grid-2">' +
+      '<div><label>Admission No *</label><input id="s_adm" value="' + esc(nextNo) + '"></div>' +
+      '<div><label>First Name *</label><input id="s_fn"></div>' +
+      '<div><label>Last Name</label><input id="s_ln"></div>' +
+      '<div><label>Gender</label><select id="s_gender"><option value="male">Male</option><option value="female">Female</option></select></div>' +
+      '<div><label>Date of Birth</label><input id="s_dob" type="date"></div>' +
+      '<div><label>Class</label><select id="s_class">' +
+        classes.map(function(c){ return '<option value="' + c.id + '">' + esc(c.name) + '</option>'; }).join('') +
+      '</select></div>' +
+      '<div><label>District</label><input id="s_district" value="Wakiso"></div>' +
+      '<div><label>Address</label><input id="s_address"></div>' +
+    '</div>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
+      '<button class="btn" onclick="saveNewStudent()">Register Pupil</button></div>');
+}
+window.addStudent = addStudent;
+
+async function saveNewStudent(){
+  const adm = document.getElementById('s_adm').value.trim();
+  const fn = document.getElementById('s_fn').value.trim();
+  if(!adm || !fn){ toast('Admission No and First Name required','bad'); return; }
+  try {
+    const data = await rest('/rest/v1/students', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=representation' },
+      body: JSON.stringify({
+        school_id: _schoolId, admission_no: adm, first_name: fn,
+        last_name: document.getElementById('s_ln').value.trim() || null,
+        gender: document.getElementById('s_gender').value,
+        date_of_birth: document.getElementById('s_dob').value || null,
+        class_id: document.getElementById('s_class').value || null,
+        district: document.getElementById('s_district').value.trim() || null,
+        physical_address: document.getElementById('s_address').value.trim() || null,
+        status: 'active'
+      })
+    });
+    toast('Registered · LIN: ' + (data && data[0] ? data[0].lin : '—'));
+    closeModal();
+    nav('students');
+  } catch(e){ toast(e.message, 'bad'); }
+}
+window.saveNewStudent = saveNewStudent;
+
+async function editStudent(id){
+  const students = await rest('/rest/v1/students?id=eq.' + id + '&select=*');
+  const s = students[0];
+  if(!s) return;
+  const classes = await loadClasses();
+  modal('<h3>Edit Pupil</h3>' +
+    '<div class="grid grid-2">' +
+      '<div><label>Admission No</label><input id="e_adm" value="' + esc(s.admission_no) + '"></div>' +
+      '<div><label>LIN</label><input value="' + esc(s.lin||'') + '" disabled></div>' +
+      '<div><label>First Name</label><input id="e_fn" value="' + esc(s.first_name) + '"></div>' +
+      '<div><label>Last Name</label><input id="e_ln" value="' + esc(s.last_name||'') + '"></div>' +
+      '<div><label>Gender</label><select id="e_gender"><option value="male"' + (s.gender==='male'?' selected':'') + '>Male</option><option value="female"' + (s.gender==='female'?' selected':'') + '>Female</option></select></div>' +
+      '<div><label>Date of Birth</label><input id="e_dob" type="date" value="' + (s.date_of_birth||'') + '"></div>' +
+      '<div><label>Class</label><select id="e_class">' +
+        classes.map(function(c){ return '<option value="' + c.id + '"' + (c.id===s.class_id?' selected':'') + '>' + esc(c.name) + '</option>'; }).join('') +
+      '</select></div>' +
+      '<div><label>Status</label><select id="e_status">' +
+        ['active','transferred','graduated','withdrawn','archived'].map(function(x){ return '<option value="' + x + '"' + (x===s.status?' selected':'') + '>' + x + '</option>'; }).join('') +
+      '</select></div>' +
+    '</div>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
+      '<button class="btn" onclick="updateStudent(\'' + id + '\')">Save</button></div>');
+}
+window.editStudent = editStudent;
+
+async function updateStudent(id){
+  try {
+    await rest('/rest/v1/students?id=eq.' + id, {
+      method: 'PATCH',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify({
+        admission_no: document.getElementById('e_adm').value.trim(),
+        first_name: document.getElementById('e_fn').value.trim(),
+        last_name: document.getElementById('e_ln').value.trim() || null,
+        gender: document.getElementById('e_gender').value,
+        date_of_birth: document.getElementById('e_dob').value || null,
+        class_id: document.getElementById('e_class').value || null,
+        status: document.getElementById('e_status').value,
+        updated_at: new Date().toISOString()
+      })
+    });
+    toast('Updated'); closeModal(); nav('students');
+  } catch(e){ toast(e.message, 'bad'); }
+}
+window.updateStudent = updateStudent;
+
+async function deleteStudent(id){
+  if(!confirm('Delete this pupil?')) return;
+  try {
+    await rest('/rest/v1/students?id=eq.' + id, { method: 'DELETE' });
+    toast('Deleted'); nav('students');
+  } catch(e){ toast(e.message, 'bad'); }
+}
+window.deleteStudent = deleteStudent;
+
+/* ============================================================
+   PAGE: CLASSES
+   ============================================================ */
+async function pageClasses(root){
+  const classes = await rest('/rest/v1/classes?school_id=eq.' + _schoolId + '&select=*&order=sort_order');
+  _classesCache = classes || [];
+  const students = await rest('/rest/v1/students?school_id=eq.' + _schoolId + '&select=class_id,status');
+  const counts = {};
+  (students||[]).forEach(function(s){ if(s.status === 'active' && s.class_id) counts[s.class_id] = (counts[s.class_id]||0)+1; });
+
+  root.innerHTML =
+    '<div class="page-head"><div><h1>Classes</h1><div class="sub">' + (classes||[]).length + ' classes</div></div>' +
+      '<button class="btn" onclick="addClass()">＋ Add Class</button></div>' +
+    '<div class="card"><div class="table-wrap"><table>' +
+      '<thead><tr><th>Class</th><th>Pupils</th><th style="text-align:right">Actions</th></tr></thead>' +
+      '<tbody>' + (classes||[]).map(function(c){
+        return '<tr><td><b>' + esc(c.name) + '</b></td>' +
+          '<td><span class="badge info">' + (counts[c.id]||0) + ' pupils</span></td>' +
+          '<td style="text-align:right"><button class="btn sm danger" onclick="deleteClass(\'' + c.id + '\',' + (counts[c.id]||0) + ')">✕</button></td></tr>';
+      }).join('') + '</tbody>' +
+    '</table></div></div>';
+}
+
+function addClass(){
+  modal('<h3>Add Class</h3>' +
+    '<div><label>Class Name</label><input id="c_name"></div>' +
+    '<div style="margin-top:12px"><label>Sort Order</label><input id="c_sort" type="number" value="0"></div>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
+      '<button class="btn" onclick="saveNewClass()">Save</button></div>');
+}
+window.addClass = addClass;
+
+async function saveNewClass(){
+  const name = document.getElementById('c_name').value.trim();
+  if(!name){ toast('Name required','bad'); return; }
+  try {
+    await rest('/rest/v1/classes', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ school_id: _schoolId, name: name, sort_order: parseInt(document.getElementById('c_sort').value)||0 })
+    });
+    _classesCache = null;
+    toast('Added'); closeModal(); nav('classes');
+  } catch(e){ toast(e.message, 'bad'); }
+}
+window.saveNewClass = saveNewClass;
+
+async function deleteClass(id, count){
+  if(count > 0){ toast('Cannot delete — has pupils','bad'); return; }
+  if(!confirm('Delete this class?')) return;
+  try {
+    await rest('/rest/v1/classes?id=eq.' + id, { method: 'DELETE' });
+    _classesCache = null;
+    toast('Deleted'); nav('classes');
+  } catch(e){ toast(e.message, 'bad'); }
+}
+window.deleteClass = deleteClass;
+
+/* ============================================================
+   PAGE: SUBJECTS
+   ============================================================ */
+async function pageSubjects(root){
+  const subjects = await rest('/rest/v1/subjects?school_id=eq.' + _schoolId + '&select=*&order=code');
+  root.innerHTML =
+    '<div class="page-head"><div><h1>Subjects</h1><div class="sub">' + (subjects||[]).length + ' subjects</div></div>' +
+      '<button class="btn" onclick="addSubject()">＋ Add Subject</button></div>' +
+    '<div class="card"><div class="table-wrap"><table>' +
+      '<thead><tr><th>Code</th><th>Name</th><th>Compulsory</th><th style="text-align:right">Actions</th></tr></thead>' +
+      '<tbody>' + (subjects||[]).map(function(s){
+        return '<tr><td><span class="badge info">' + esc(s.code) + '</span></td>' +
+          '<td><b>' + esc(s.name) + '</b></td>' +
+          '<td>' + (s.is_compulsory ? '<span class="badge ok">Yes</span>' : '<span class="badge">No</span>') + '</td>' +
+          '<td style="text-align:right"><button class="btn sm danger" onclick="deleteSubject(\'' + s.id + '\')">✕</button></td></tr>';
+      }).join('') + '</tbody>' +
+    '</table></div></div>';
+}
+
+function addSubject(){
+  modal('<h3>Add Subject</h3>' +
+    '<div class="grid grid-2">' +
+      '<div><label>Code</label><input id="sb_code" placeholder="ENG"></div>' +
+      '<div><label>Name</label><input id="sb_name" placeholder="English"></div>' +
+    '</div>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
+      '<button class="btn" onclick="saveNewSubject()">Save</button></div>');
+}
+window.addSubject = addSubject;
+
+async function saveNewSubject(){
+  const code = document.getElementById('sb_code').value.trim().toUpperCase();
+  const name = document.getElementById('sb_name').value.trim();
+  if(!code || !name){ toast('Fill both','bad'); return; }
+  try {
+    await rest('/rest/v1/subjects', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ school_id: _schoolId, code: code, name: name, is_compulsory: true })
+    });
+    toast('Added'); closeModal(); nav('subjects');
+  } catch(e){ toast(e.message, 'bad'); }
+}
+window.saveNewSubject = saveNewSubject;
+
+async function deleteSubject(id){
+  if(!confirm('Delete subject?')) return;
+  try {
+    await rest('/rest/v1/subjects?id=eq.' + id, { method: 'DELETE' });
+    toast('Deleted'); nav('subjects');
+  } catch(e){ toast(e.message, 'bad'); }
+}
+window.deleteSubject = deleteSubject;
+
+/* ============================================================
+   PAGE: EXAMS
+   ============================================================ */
+async function pageExams(root){
+  const exams = await rest('/rest/v1/exams?school_id=eq.' + _schoolId + '&select=*&order=created_at.desc');
+  root.innerHTML =
+    '<div class="page-head"><div><h1>Exams</h1><div class="sub">' + (exams||[]).length + ' exams</div></div>' +
+      '<button class="btn" onclick="addExam()">＋ Create Exam</button></div>' +
+    '<div class="card">' +
+      ((exams||[]).length ? '<div class="table-wrap"><table>' +
+        '<thead><tr><th>Name</th><th>Type</th><th>Year · Term</th><th style="text-align:right">Actions</th></tr></thead>' +
+        '<tbody>' + exams.map(function(e){
+          return '<tr><td><b>' + esc(e.name) + '</b></td>' +
+            '<td><span class="badge info">' + esc(e.type) + '</span></td>' +
+            '<td>' + e.year + ' · T' + e.term + '</td>' +
+            '<td style="text-align:right;white-space:nowrap">' +
+              '<button class="btn sm" onclick="window._marksExamId=\'' + e.id + '\';nav(\'marks\')">Marks</button> ' +
+              '<button class="btn sm danger" onclick="deleteExam(\'' + e.id + '\')">✕</button>' +
+            '</td></tr>';
+        }).join('') + '</tbody></table></div>' : '<div class="empty">No exams yet.</div>') +
+    '</div>';
+}
+
+function addExam(){
+  const year = new Date().getFullYear();
+  modal('<h3>Create Exam</h3>' +
+    '<div><label>Exam Name</label><input id="ex_name" placeholder="End of Term Exam"></div>' +
+    '<div class="grid grid-2" style="margin-top:12px">' +
+      '<div><label>Type</label><select id="ex_type">' +
+        ['Test','Mid-Term','End of Term','Mock','Final'].map(function(t){ return '<option>' + t + '</option>'; }).join('') +
+      '</select></div>' +
+      '<div><label>Term</label><select id="ex_term"><option>1</option><option selected>2</option><option>3</option></select></div>' +
+    '</div>' +
+    '<div style="margin-top:12px"><label>Year</label><input id="ex_year" type="number" value="' + year + '"></div>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
+      '<button class="btn" onclick="saveNewExam()">Create</button></div>');
+}
+window.addExam = addExam;
+
+async function saveNewExam(){
+  const name = document.getElementById('ex_name').value.trim();
+  if(!name){ toast('Name required','bad'); return; }
+  try {
+    await rest('/rest/v1/exams', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify({
+        school_id: _schoolId, name: name,
+        type: document.getElementById('ex_type').value,
+        year: parseInt(document.getElementById('ex_year').value),
+        term: parseInt(document.getElementById('ex_term').value)
+      })
+    });
+    toast('Created'); closeModal(); nav('exams');
+  } catch(e){ toast(e.message, 'bad'); }
+}
+window.saveNewExam = saveNewExam;
+
+async function deleteExam(id){
+  if(!confirm('Delete this exam and its marks?')) return;
+  try {
+    await rest('/rest/v1/exams?id=eq.' + id, { method: 'DELETE' });
+    toast('Deleted'); nav('exams');
+  } catch(e){ toast(e.message, 'bad'); }
+}
+window.deleteExam = deleteExam;
+
+/* ============================================================
+   PAGE: MARKS ENTRY
+   ============================================================ */
+async function pageMarks(root){
+  const [exams, classes, subjects] = await Promise.all([
+    rest('/rest/v1/exams?school_id=eq.' + _schoolId + '&select=*&order=created_at.desc'),
+    rest('/rest/v1/classes?school_id=eq.' + _schoolId + '&select=*&order=sort_order'),
+    rest('/rest/v1/subjects?school_id=eq.' + _schoolId + '&select=*&order=code')
+  ]);
+  if(!(exams||[]).length || !(classes||[]).length || !(subjects||[]).length){
+    root.innerHTML = '<div class="page-head"><div><h1>Marks Entry</h1></div></div>' +
+      '<div class="card"><div class="empty">Create an exam, class, and subject first.</div></div>';
+    return;
+  }
+  const examId = window._marksExamId || exams[0].id;
+  const classId = window._marksClassId || classes[0].id;
+  const subjectId = window._marksSubjectId || subjects[0].id;
+  const exam = exams.find(function(e){ return e.id === examId; }) || exams[0];
+  const cls = classes.find(function(c){ return c.id === classId; }) || classes[0];
+  const subj = subjects.find(function(s){ return s.id === subjectId; }) || subjects[0];
+
+  const [students, marks] = await Promise.all([
+    rest('/rest/v1/students?school_id=eq.' + _schoolId + '&class_id=eq.' + cls.id + '&status=eq.active&select=*&order=first_name'),
+    rest('/rest/v1/marks?school_id=eq.' + _schoolId + '&exam_id=eq.' + exam.id + '&subject_id=eq.' + subj.id + '&select=*')
+  ]);
+
+  root.innerHTML =
+    '<div class="page-head"><div><h1>Marks Entry</h1>' +
+      '<div class="sub">' + esc(exam.name) + ' · ' + esc(cls.name) + ' · ' + esc(subj.name) + '</div></div>' +
+      (exam.is_locked ? '<span class="badge bad">Locked</span>' :
+      '<button class="btn" onclick="saveMarksGrid()">💾 Save All</button>') + '</div>' +
+    '<div class="card" style="margin-bottom:16px"><div class="grid grid-3">' +
+      '<div><label>Exam</label><select onchange="window._marksExamId=this.value;nav(\'marks\')">' +
+        exams.map(function(e){ return '<option value="' + e.id + '"' + (e.id===exam.id?' selected':'') + '>' + esc(e.name) + '</option>'; }).join('') +
+      '</select></div>' +
+      '<div><label>Class</label><select onchange="window._marksClassId=this.value;nav(\'marks\')">' +
+        classes.map(function(c){ return '<option value="' + c.id + '"' + (c.id===cls.id?' selected':'') + '>' + esc(c.name) + '</option>'; }).join('') +
+      '</select></div>' +
+      '<div><label>Subject</label><select onchange="window._marksSubjectId=this.value;nav(\'marks\')">' +
+        subjects.map(function(s){ return '<option value="' + s.id + '"' + (s.id===subj.id?' selected':'') + '>' + esc(s.code) + ' — ' + esc(s.name) + '</option>'; }).join('') +
+      '</select></div>' +
+    '</div></div>' +
+    '<div class="card">' +
+      ((students||[]).length ? '<div class="table-wrap"><table>' +
+        '<thead><tr><th>#</th><th>Adm No</th><th>Name</th><th>Score / 100</th></tr></thead>' +
+        '<tbody>' + students.map(function(s, i){
+          const m = (marks||[]).find(function(x){ return x.student_id === s.id; });
+          return '<tr><td>' + (i+1) + '</td>' +
+            '<td><b>' + esc(s.admission_no) + '</b></td>' +
+            '<td>' + esc(s.first_name + ' ' + (s.last_name||'')) + '</td>' +
+            '<td><input type="number" min="0" max="100" class="mk-input" data-student="' + s.id + '" value="' + (m ? m.score : '') + '" style="max-width:130px"></td>' +
+          '</tr>';
+        }).join('') + '</tbody></table></div>' : '<div class="empty">No pupils in this class.</div>') +
+    '</div>';
+}
+
+async function saveMarksGrid(){
+  const examId = window._marksExamId;
+  const subjectId = window._marksSubjectId;
+  const rows = [];
+  document.querySelectorAll('.mk-input').forEach(function(inp){
+    const v = inp.value.trim();
+    if(v === '') return;
+    const score = parseFloat(v);
+    if(isNaN(score) || score < 0 || score > 100) return;
+    rows.push({
+      school_id: _schoolId,
+      exam_id: examId,
+      subject_id: subjectId,
+      student_id: inp.dataset.student,
+      score: score
+    });
+  });
+  if(!rows.length){ toast('Nothing to save','bad'); return; }
+
+  try {
+    await rest('/rest/v1/marks?school_id=eq.' + _schoolId + '&exam_id=eq.' + examId + '&subject_id=eq.' + subjectId, { method: 'DELETE' });
+    await rest('/rest/v1/marks', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify(rows)
+    });
+    toast(rows.length + ' marks saved');
+  } catch(e){ toast(e.message, 'bad'); }
+}
+window.saveMarksGrid = saveMarksGrid;
+
+/* ============================================================
+   PAGE: REPORT CARDS
+   ============================================================ */
+async function pageReports(root){
+  const [exams, classes] = await Promise.all([
+    rest('/rest/v1/exams?school_id=eq.' + _schoolId + '&select=*&order=created_at.desc'),
+    rest('/rest/v1/classes?school_id=eq.' + _schoolId + '&select=*&order=sort_order')
+  ]);
+  if(!(exams||[]).length || !(classes||[]).length){
+    root.innerHTML = '<div class="page-head"><div><h1>Report Cards</h1></div></div>' +
+      '<div class="card"><div class="empty">Create an exam and class first.</div></div>';
+    return;
+  }
+  const examId = window._rcExamId || exams[0].id;
+  const classId = window._rcClassId || classes[0].id;
+  const exam = exams.find(function(e){ return e.id === examId; }) || exams[0];
+  const cls = classes.find(function(c){ return c.id === classId; }) || classes[0];
+  const students = await rest('/rest/v1/students?school_id=eq.' + _schoolId + '&class_id=eq.' + cls.id + '&status=eq.active&select=*&order=first_name');
+
+  root.innerHTML =
+    '<div class="page-head"><div><h1>Report Cards</h1><div class="sub">Pick exam + class</div></div></div>' +
+    '<div class="card" style="margin-bottom:16px"><div class="grid grid-2">' +
+      '<div><label>Exam</label><select onchange="window._rcExamId=this.value;nav(\'reports\')">' +
+        exams.map(function(e){ return '<option value="' + e.id + '"' + (e.id===exam.id?' selected':'') + '>' + esc(e.name) + '</option>'; }).join('') +
+      '</select></div>' +
+      '<div><label>Class</label><select onchange="window._rcClassId=this.value;nav(\'reports\')">' +
+        classes.map(function(c){ return '<option value="' + c.id + '"' + (c.id===cls.id?' selected':'') + '>' + esc(c.name) + '</option>'; }).join('') +
+      '</select></div>' +
+    '</div></div>' +
+    '<div class="card">' +
+      ((students||[]).length ? '<div class="table-wrap"><table>' +
+        '<thead><tr><th>Adm No</th><th>Name</th><th style="text-align:right">Actions</th></tr></thead>' +
+        '<tbody>' + students.map(function(s){
+          return '<tr><td><b>' + esc(s.admission_no) + '</b></td>' +
+            '<td>' + esc(s.first_name + ' ' + (s.last_name||'')) + '</td>' +
+            '<td style="text-align:right"><button class="btn sm" onclick="viewReport(\'' + s.id + '\',\'' + exam.id + '\')">View</button></td></tr>';
+        }).join('') + '</tbody></table></div>' : '<div class="empty">No pupils in this class.</div>') +
+    '</div>';
+}
+
+async function viewReport(studentId, examId){
+  const [student, exam, subjects, marks, rules] = await Promise.all([
+    rest('/rest/v1/students?id=eq.' + studentId + '&select=*').then(function(r){ return r[0]; }),
+    rest('/rest/v1/exams?id=eq.' + examId + '&select=*').then(function(r){ return r[0]; }),
+    rest('/rest/v1/subjects?school_id=eq.' + _schoolId + '&select=*&order=code'),
+    rest('/rest/v1/marks?school_id=eq.' + _schoolId + '&exam_id=eq.' + examId + '&student_id=eq.' + studentId + '&select=*'),
+    rest('/rest/v1/grading_rules?school_id=eq.' + _schoolId + '&select=*&order=min_score.desc')
+  ]);
+  function gradeFor(score){
+    return (rules||[]).find(function(r){ return score >= Number(r.min_score) && score <= Number(r.max_score); });
+  }
+  let total = 0, count = 0;
+  const rows = (subjects||[]).map(function(sub){
+    const m = (marks||[]).find(function(x){ return x.subject_id === sub.id; });
+    const score = m ? Number(m.score) : null;
+    if(score != null){ total += score; count++; }
+    const g = score != null ? gradeFor(score) : null;
+    return '<tr><td>' + esc(sub.name) + '</td>' +
+      '<td style="text-align:center">' + (score != null ? score : '—') + '</td>' +
+      '<td style="text-align:center"><b>' + (g ? g.grade : '—') + '</b></td>' +
+      '<td>' + (g ? esc(g.remark||'') : '') + '</td></tr>';
+  }).join('');
+  const avg = count ? total/count : 0;
+  const overall = gradeFor(avg);
+
+  modal('<div id="rcPrint" style="background:#fff;color:#111;padding:24px;font-family:Inter,sans-serif">' +
+    '<div style="text-align:center;padding-bottom:12px;border-bottom:2px solid #111;margin-bottom:14px">' +
+      '<h2 style="margin:0;font-size:20px">' + esc(_school.name) + '</h2>' +
+      '<div style="font-size:12px">' + esc(_school.address||'') + ' · ' + esc(_school.telephone||'') + '</div>' +
+      '<div style="margin-top:8px;font-weight:700">REPORT CARD</div>' +
+    '</div>' +
+    '<div style="font-size:13px;line-height:1.9;margin-bottom:12px">' +
+      '<div><b>Name:</b> ' + esc(student.first_name + ' ' + (student.last_name||'')) + '</div>' +
+      '<div><b>Adm No:</b> ' + esc(student.admission_no) + ' · <b>LIN:</b> ' + esc(student.lin||'—') + '</div>' +
+      '<div><b>Exam:</b> ' + esc(exam.name) + ' · <b>Year:</b> ' + exam.year + ' T' + exam.term + '</div>' +
+    '</div>' +
+    '<table style="width:100%;border-collapse:collapse;font-size:13px">' +
+      '<thead><tr style="background:#f1f5f9">' +
+        '<th style="border:1px solid #cbd5e1;padding:7px;text-align:left">Subject</th>' +
+        '<th style="border:1px solid #cbd5e1;padding:7px">Score</th>' +
+        '<th style="border:1px solid #cbd5e1;padding:7px">Grade</th>' +
+        '<th style="border:1px solid #cbd5e1;padding:7px;text-align:left">Remark</th>' +
+      '</tr></thead>' +
+      '<tbody>' + rows + '</tbody>' +
+    '</table>' +
+    '<div style="margin-top:12px;padding:10px;background:#f1f5f9;border-radius:8px;font-size:13px;display:flex;justify-content:space-between">' +
+      '<div><b>Total:</b> ' + total.toFixed(1) + '</div>' +
+      '<div><b>Average:</b> ' + avg.toFixed(1) + '</div>' +
+      '<div><b>Overall:</b> ' + (overall ? overall.grade : '—') + '</div>' +
+    '</div>' +
+    '<div style="text-align:center;font-size:10px;margin-top:16px;color:#64748b">Powered by EUDES MEDIA</div>' +
+  '</div>' +
+  '<div class="actions"><button class="btn ghost" onclick="closeModal()">Close</button>' +
+    '<button class="btn" onclick="printEl(\'rcPrint\')">🖨️ Print</button></div>');
+}
+window.viewReport = viewReport;
+
+function printEl(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.add('printing');
+  try { window.print(); } catch(e){}
+  setTimeout(function(){ el.classList.remove('printing'); }, 300);
+}
+window.printEl = printEl;
+
+/* ============================================================
+   STARTUP & AUTH REDIRECT HANDLING
+   ============================================================ */
+async function handleAuthRedirect() {
+  const hash = window.location.hash;
+  
+  if (hash && hash.includes('access_token')) {
+    const params = new URLSearchParams(hash.substring(1));
+    const access_token = params.get('access_token');
+    const refresh_token = params.get('refresh_token');
+    
+    if (access_token) {
+      try {
+        const res = await fetch(SUPA_URL + '/auth/v1/user', {
+          headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + access_token }
         });
-
-        // ============================================================
-        // BUILD TABS
-        // ============================================================
-        function buildTabs() {
-            document.getElementById('tabContent').innerHTML = `
-                <div id="tab-dashboard" class="tab-content active">
-                    <div class="panel">
-                        <h3>📋 Recent Transactions <span class="badge" id="transCount">0</span></h3>
-                        <div class="table-container">
-                            <table>
-                                <thead><tr><th>Time</th><th>Attendant</th><th>Shift</th><th>Customer</th><th>Vehicle</th><th>Fuel</th><th>Litres</th><th>Amount</th><th>Type</th><th>Status</th></tr></thead>
-                                <tbody id="transactionList"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="panel">
-                        <h3>👥 Customers <span class="badge" id="custCount">0</span></h3>
-                        <div class="table-container">
-                            <table>
-                                <thead><tr><th>Name</th><th>Account #</th><th>Phone</th><th>Vehicles</th><th>Balance</th><th>Debt</th></tr></thead>
-                                <tbody id="customerList"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="panel">
-                        <h3>⏳ Pending (OTP removed) <span class="badge" id="pendingCount">0</span></h3>
-                        <ul id="pendingList" style="list-style:none;padding:0;"></ul>
-                    </div>
-                </div>
-
-                <div id="tab-register" class="tab-content">
-                    <div class="panel">
-                        <h3>📝 Register New Customer</h3>
-                        <div class="form-row">
-                            <div class="form-group"><label>Full Name *</label><input id="regName" placeholder="e.g. John Doe"></div>
-                            <div class="form-group"><label>Username *</label><input id="regUsername" placeholder="e.g. johndoe"></div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group"><label>Phone *</label><input id="regPhone" placeholder="e.g. 0700123456"></div>
-                            <div class="form-group"><label>Password *</label><input id="regPassword" type="password" placeholder="********"></div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group"><label>Vehicle Plate *</label><input id="regVehicle" placeholder="e.g. UAX 123X"></div>
-                            <div class="form-group"><label>PIN (4-6 digits) *</label><input id="regPIN" type="password" placeholder="e.g. 1234" maxlength="6"></div>
-                        </div>
-                        <button class="btn btn-success" onclick="registerCustomer()">✅ Register</button>
-                        <div style="margin-top:8px;font-size:13px;color:#718096;">Account number will be auto-generated (6 digits).</div>
-                    </div>
-                </div>
-
-                <div id="tab-deposit" class="tab-content">
-                    <div class="panel">
-                        <h3>💰 Deposit / Top Up</h3>
-                        <div class="form-group"><label>Customer Phone or Account Number</label><input id="depPhone" placeholder="e.g. 0700123456 or 100001"></div>
-                        <div class="form-group"><label>Amount (UGX)</label><input id="depAmount" type="number" placeholder="Enter amount"></div>
-                        <button class="btn btn-success" onclick="processDeposit()">💰 Process Deposit</button>
-                    </div>
-                </div>
-
-                <div id="tab-staff" class="tab-content">
-                    <div class="panel">
-                        <h3>👥 Staff Management</h3>
-                        <div class="form-row">
-                            <div class="form-group"><label>Staff Name</label><input id="staffName" placeholder="e.g. Mary"></div>
-                            <div class="form-group"><label>Phone (optional)</label><input id="staffPhone" placeholder="e.g. 0700123456"></div>
-                        </div>
-                        <button class="btn btn-primary" onclick="registerStaff()">➕ Add Staff</button>
-                        <div style="margin-top:16px;" id="staffList"></div>
-                    </div>
-                </div>
-
-                <div id="tab-fuel" class="tab-content">
-                    <div class="panel">
-                        <h3>⛽ Sell Fuel</h3>
-                        <div class="form-group"><label>Customer Phone or Account Number</label><input id="fuelPhone" placeholder="Enter phone or account #" oninput="autoSelectCustomer()"></div>
-                        <div id="fuelCustomerInfo"></div>
-                        <div id="balanceCheckDisplay" style="display:none;margin-top:8px;background:#f7fafc;padding:10px;border-radius:8px;">
-                            <span>💰 Balance: <strong id="customerBalanceDisplay">UGX 0</strong> &nbsp;|&nbsp; 💳 Debt: <strong id="customerDebtDisplay">UGX 0</strong></span>
-                        </div>
-                        <div id="activeDebtWarning" style="display:none;background:#fed7d7;padding:10px;border-radius:8px;color:#9b2c2c;margin-top:8px;">
-                            ⚠️ Active Debt: <span id="debtWarningAmount">UGX 0</span>. Please clear debt before selling fuel.
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group"><label>Vehicle Plate</label><input id="fuelVehicle" placeholder="e.g. UAX 123X"></div>
-                            <div class="form-group"><label>Fuel Type</label>
-                                <select id="fuelType" onchange="calculateFuelPrice()">
-                                    <option value="petrol">⛽ Petrol</option>
-                                    <option value="diesel">⛽ Diesel</option>
-                                    <option value="kerosene">🔥 Kerosene</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group"><label>Pump</label>
-                                <select id="fuelPump">
-                                    <option value="1">Pump 1</option>
-                                    <option value="2">Pump 2</option>
-                                    <option value="3">Pump 3</option>
-                                    <option value="4">Pump 4</option>
-                                </select>
-                            </div>
-                            <div class="form-group"><label>Shift</label>
-                                <select id="shiftSelect">
-                                    <option value="Morning">Morning</option>
-                                    <option value="Afternoon">Afternoon</option>
-                                    <option value="Night">Night</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group"><label>Litres</label><input id="fuelLitres" type="number" step="0.1" placeholder="0.0" oninput="calculateFuelPrice()"></div>
-                            <div class="form-group"><label>Amount (UGX)</label><input id="fuelAmount" type="number" placeholder="0" oninput="calculateFuelPrice()"></div>
-                        </div>
-                        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;">
-                            <span class="price-display">💰 Price: <span id="currentPriceDisplay">UGX 5800/Ltr</span></span>
-                            <span class="price-display">🎯 Effective: <span id="effectivePriceDisplay">UGX 5770/Ltr</span></span>
-                        </div>
-                        <div class="form-group"><label>Attendant</label>
-                            <select id="attendantSelect"><option value="">-- Select --</option></select>
-                        </div>
-                        <button class="btn btn-primary" onclick="checkBalanceAndProceed()">⛽ Check & Proceed</button>
-                        <div id="creditFlowBox" class="credit-flow-box" style="display:none;margin-top:12px;">
-                            <div>⚠️ Insufficient Balance!</div>
-                            <div>Balance: <strong id="balanceShortfall">UGX 0</strong></div>
-                            <div>Needed: <strong id="neededShortfall">UGX 0</strong></div>
-                            <div class="shortfall">Shortfall: <span id="shortfallAmount">UGX 0</span></div>
-                            <div class="actions">
-                                <button class="btn btn-success" onclick="topUpForFuel()">💰 Top Up</button>
-                                <button class="btn btn-warning" onclick="requestCreditForFuel()">📋 Request Credit</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="tab-admin" class="tab-content">
-                    <div class="panel">
-                        <h3>⚙️ Admin – Customer Management</h3>
-                        <div class="form-group"><label>Search by Name, Username, Phone or Account #</label>
-                            <input id="adminSearch" placeholder="Type to search..." oninput="adminSearch()">
-                        </div>
-                        <div id="adminResult"></div>
-                        <div id="adminEditor" style="display:none;margin-top:16px;background:#f7fafc;padding:16px;border-radius:8px;border:1px solid #e2e8f0;">
-                            <h4>✏️ Edit Customer</h4>
-                            <input type="hidden" id="adminEditId">
-                            <div class="form-row">
-                                <div class="form-group"><label>Name</label><input id="adminEditName"></div>
-                                <div class="form-group"><label>Username</label><input id="adminEditUsername"></div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group"><label>Phone</label><input id="adminEditPhone"></div>
-                                <div class="form-group"><label>New Password (leave blank to keep)</label><input id="adminEditPassword" type="password" placeholder="********"></div>
-                            </div>
-                            <div class="form-group">
-                                <label>PIN (4-6 digits) – Admin can view</label>
-                                <div class="password-wrapper">
-                                    <input type="password" id="adminEditPIN" maxlength="6" placeholder="Enter new PIN" />
-                                    <button type="button" class="password-toggle" onclick="togglePassword('adminEditPIN', this)">👁️</button>
-                                </div>
-                            </div>
-                            <div class="form-group"><label>Vehicles</label>
-                                <div id="adminEditVehicles" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;"></div>
-                                <div style="display:flex;gap:6px;">
-                                    <input id="adminAddVehicle" placeholder="Add plate" style="flex:1;">
-                                    <button class="btn btn-sm btn-primary" onclick="adminAddVehicle()" style="width:auto;padding:6px 16px;">+</button>
-                                </div>
-                            </div>
-                            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
-                                <button class="btn btn-success" onclick="adminSaveCustomer()" style="flex:1;">💾 Save</button>
-                                <button class="btn btn-danger" onclick="adminDeleteCustomer()" style="flex:1;">🗑️ Delete</button>
-                            </div>
-                            <div id="adminEditMsg" class="msg"></div>
-                        </div>
-                        <div style="margin-top:20px;"><h4>All Customers</h4><div id="adminCustomerList"></div></div>
-                        <!-- Clear Cache Button -->
-                        <div style="margin-top:24px;border-top:2px solid #e2e8f0;padding-top:16px;">
-                            <button class="btn btn-danger" onclick="clearLocalCache()" style="width:auto;padding:8px 24px;">🧹 Clear Cache & Reload</button>
-                            <span style="font-size:12px;color:#718096;margin-left:12px;">Resets all local data and refreshes</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="tab-creditrequests" class="tab-content">
-                    <div class="panel">
-                        <h3>📋 Credit Requests <span class="badge" id="creditReqCount">0</span></h3>
-                        <div id="creditRequestsList"></div>
-                    </div>
-                </div>
-
-                <div id="tab-prices" class="tab-content">
-                    <div class="panel">
-                        <h3>💲 Fuel Prices</h3>
-                        <div class="form-row">
-                            <div class="form-group"><label>Petrol (UGX/Ltr)</label><input id="pricePetrol" type="number"></div>
-                            <div class="form-group"><label>Diesel (UGX/Ltr)</label><input id="priceDiesel" type="number"></div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group"><label>Kerosene (UGX/Ltr)</label><input id="priceKerosene" type="number"></div>
-                            <div class="form-group"><label>Discount (UGX/Ltr)</label><input id="priceDiscount" type="number"></div>
-                        </div>
-                        <button class="btn btn-primary" onclick="updateFuelPrices()">💾 Update Prices</button>
-                        <div style="margin-top:16px;"><h4>Price History</h4><div id="priceHistory"></div></div>
-                    </div>
-                </div>
-
-                <div id="tab-vehicleqr" class="tab-content">
-                    <div class="panel">
-                        <h3>📱 Vehicle QR Codes</h3>
-                        <p>Scan these QR codes to quickly access the fuel sale page with the vehicle and customer pre‑filled.</p>
-                        <div id="vehicleQRList"></div>
-                    </div>
-                </div>
-            `;
+        const user = await res.json();
+        
+        if (user && user.id) {
+          const sessionData = {
+            access_token: access_token,
+            refresh_token: refresh_token,
+            user: user
+          };
+          
+          setSession(sessionData);
+          window.history.replaceState(null, '', window.location.pathname);
+          await boot();
+          return;
         }
+      } catch (e) {
+        console.error('Error handling auth redirect', e);
+      }
+    }
+  }
+  
+  const s = safeStorage.getItem('eudes_session');
+  if(s){ 
+    try { await boot(); } catch(e){ console.error(e); } 
+  }
+}
 
-        // ============================================================
-        // CLEAR LOCAL CACHE (Admin only)
-        // ============================================================
-        function clearLocalCache() {
-            if (!confirm('⚠️ This will clear ALL locally stored data and reload. Continue?')) return;
-            const keys = Object.keys(localStorage);
-            keys.forEach(key => {
-                if (key.startsWith('yy_')) {
-                    localStorage.removeItem(key);
-                }
-            });
-            customers = [];
-            staff = [];
-            transactions = [];
-            pending = [];
-            creditRequests = [];
-            transactionCounter = 1;
-            creditRequestCounter = 1;
-            showToast('✅ Cache cleared. Reloading...', 'info');
-            setTimeout(() => { location.reload(); }, 500);
-        }
-
-        // ============================================================
-        // INIT
-        // ============================================================
-        function init() {
-            console.log('🚀 YY PARTSHAN FUELS – Complete System (PIN-only, Nabyewanga)');
-            console.log('🔗 Supabase URL:', SUPABASE_URL);
-            buildTabs();
-            document.getElementById('loginScreen').style.display = 'block';
-            document.getElementById('mainApp').style.display = 'none';
-            loadLocalData();
-            setTimeout(function() {
-                document.getElementById('loadingOverlay').classList.add('hidden');
-            }, 2000);
-        }
-
-        // Expose globals
-        window.login = login;
-        window.logout = logout;
-        window.switchTab = switchTab;
-        window.registerCustomer = registerCustomer;
-        window.processDeposit = processDeposit;
-        window.registerStaff = registerStaff;
-        window.deleteStaff = deleteStaff;
-        window.autoSelectCustomer = autoSelectCustomer;
-        window.checkBalanceAndProceed = checkBalanceAndProceed;
-        window.topUpForFuel = topUpForFuel;
-        window.completeTopup = completeTopup;
-        window.requestCreditForFuel = requestCreditForFuel;
-        window.approveCreditRequest = approveCreditRequest;
-        window.rejectCreditRequest = rejectCreditRequest;
-        window.verifyPIN = verifyPIN;
-        window.closePINModal = closePINModal;
-        window.closeReceiptModal = closeReceiptModal;
-        window.printReceipt = printReceipt;
-        window.adminSearch = adminSearch;
-        window.adminEditCustomer = adminEditCustomer;
-        window.adminRemoveVehicle = adminRemoveVehicle;
-        window.adminAddVehicle = adminAddVehicle;
-        window.adminSaveCustomer = adminSaveCustomer;
-        window.adminDeleteCustomer = adminDeleteCustomer;
-        window.downloadQR = downloadQR;
-        window.downloadSystemQR = downloadSystemQR;
-        window.syncAllData = syncAllData;
-        window.calculateFuelPrice = calculateFuelPrice;
-        window.updateFuelPrices = updateFuelPrices;
-        window.closeModal = closeModal;
-        window.resetSystem = resetSystem;
-        window.togglePassword = togglePassword;
-        window.clearLocalCache = clearLocalCache;
-
-        document.addEventListener('DOMContentLoaded', function() {
-            init();
-        });
-    </script>
+handleAuthRedirect();
+</script>
 </body>
 </html>
