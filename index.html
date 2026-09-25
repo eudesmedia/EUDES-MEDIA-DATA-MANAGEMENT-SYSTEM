@@ -147,10 +147,14 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px}
 
 <script>
 /* ============================================================
-   CONFIGURATION (REPLACE WITH YOUR SUPABASE DETAILS)
+   ⚠️⚠️⚠️ PASTE YOUR SUPABASE DETAILS HERE ⚠️⚠️⚠️
    ============================================================ */
-const SUPA_URL = 'YOUR_SUPABASE_PROJECT_URL'; // e.g., https://xyz.supabase.co
-const SUPA_KEY = 'YOUR_SUPABASE_ANON_KEY';    // e.g., eyJhbGci...
+// Replace the text inside the quotes with your actual Supabase URL
+const SUPA_URL = 'YOUR_SUPABASE_PROJECT_URL'; 
+// Replace the text inside the quotes with your actual Supabase anon key
+const SUPA_KEY = 'YOUR_SUPABASE_ANON_KEY';    
+/* ============================================================ */
+
 
 /* ============================================================
    SAFE STORAGE WRAPPER (Fixes Sandboxed Iframe Error)
@@ -318,7 +322,6 @@ async function doRegister(){
       data: { full_name: name }
     });
     
-    // If email confirmation is ON, this block runs
     if(!data.access_token){
       ok.textContent = 'Check your email to confirm, then sign in.';
       ok.style.display = 'block';
@@ -326,7 +329,6 @@ async function doRegister(){
       return;
     }
     
-    // If email confirmation is OFF, this runs
     setSession(data);
 
     await rest('/rest/v1/rpc/create_school_and_become_owner', {
