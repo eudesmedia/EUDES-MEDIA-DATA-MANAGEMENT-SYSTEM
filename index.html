@@ -183,7 +183,15 @@ async function rest(path, options){
   const text = await res.text();
   let data = null;
   try { data = text ? JSON.parse(text) : null; } catch(e){ data = text; }
+  
   if(!res.ok){
+    // ✅ AUTOMATIC JWT EXPIRATION HANDLING
+    if (res.status === 401 || (data && data.message && (data.message.includes('JWT') || data.message.includes('token')))) {
+      setSession(null);
+      alert('Your session has expired. Please log in again.');
+      window.location.reload();
+      throw new Error('Session expired');
+    }
     const msg = (data && (data.message || data.msg || data.error_description || data.error)) || text || ('HTTP ' + res.status);
     throw new Error(msg);
   }
@@ -1382,4 +1390,4 @@ async function handleAuthRedirect(){
 handleAuthRedirect();
 </script>
 </body>
-  </html>
+</html>
