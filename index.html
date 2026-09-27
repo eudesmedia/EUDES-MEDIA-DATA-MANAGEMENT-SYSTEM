@@ -161,6 +161,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px}
 const SUPA_URL = 'https://wabeempxckdtjvrkzhpv.supabase.co';
 const SUPA_KEY = 'sb_publishable_n0uAm0Gcq7qR2dJM4jMZGQ_wiV__Cfp';
 const FUNC_FEE_DEFAULT = 70000;
+const UNIFORM_CATEGORIES = ['Boys Uniform','Girls Uniform','Sports Wear','Sweaters','Other'];
 
 function getCurrentYear(){ return parseInt(safeStorage.getItem('eudes_year')) || new Date().getFullYear(); }
 function getCurrentTerm(){ return parseInt(safeStorage.getItem('eudes_term')) || 1; }
@@ -374,6 +375,7 @@ const ROUTES = {
   debtors:{label:'Debtors',icon:'📋',render:pageDebtors},
   discipline:{label:'Discipline',icon:'⚠️',render:pageDiscipline},
   fees:{label:'Fees',icon:'💰',render:pageFees},
+  uniforms:{label:'Uniforms',icon:'👕',render:pageUniforms},
   food:{label:'Food & Stock',icon:'🥘',render:pageFood},
   advances:{label:'Advances & Allowances',icon:'💳',render:pageAdvances},
   classes:{label:'Classes',icon:'🏫',render:pageClasses},
@@ -445,9 +447,10 @@ async function pageDashboard(root){
     rest('/rest/v1/food_items?school_id=eq.' + _schoolId + '&select=current_stock,last_unit_cost').catch(()=>[]),
     rest('/rest/v1/attendance?school_id=eq.' + _schoolId + '&date=eq.' + new Date().toISOString().slice(0,10) + '&select=status').catch(()=>[]),
     rest('/rest/v1/pass_outs?school_id=eq.' + _schoolId + '&status=eq.out&select=id,expected_return_at').catch(()=>[]),
-    rest('/rest/v1/announcements?school_id=eq.' + _schoolId + '&select=id,title,body,created_at&order=pinned.desc,created_at.desc&limit=3').catch(()=>[])
+    rest('/rest/v1/announcements?school_id=eq.' + _schoolId + '&select=id,title,body,created_at&order=pinned.desc,created_at.desc&limit=3').catch(()=>[]),
+    rest('/rest/v1/uniform_sales?school_id=eq.' + _schoolId + '&select=total_amount,sold_at').catch(()=>[])
   ]);
-  const students=data[0]||[],classes=data[1]||[],subjects=data[2]||[],exams=data[3]||[],staff=data[4]||[],payments=data[5]||[],expenses=data[6]||[],foodItems=data[7]||[],todayAtt=data[8]||[],passOuts=data[9]||[],anns=data[10]||[];
+  const students=data[0]||[],classes=data[1]||[],subjects=data[2]||[],exams=data[3]||[],staff=data[4]||[],payments=data[5]||[],expenses=data[6]||[],foodItems=data[7]||[],todayAtt=data[8]||[],passOuts=data[9]||[],anns=data[10]||[],uniformSales=data[11]||[];
   const active = students.filter(s => s.status === 'active');
   const male = active.filter(s => s.gender === 'male').length;
   const female = active.filter(s => s.gender === 'female').length;
@@ -467,6 +470,9 @@ async function pageDashboard(root){
   const presentToday = todayAtt.filter(a => a.status === 'present').length;
   const absentToday = todayAtt.filter(a => a.status === 'absent').length;
   const overdue = passOuts.filter(p => p.expected_return_at && new Date(p.expected_return_at) < new Date());
+  const todayStr = new Date().toISOString().slice(0,10);
+  const uniformToday = uniformSales.filter(s => (s.sold_at||'').slice(0,10) === todayStr).reduce((s,x) => s + Number(x.total_amount), 0);
+  const uniformAll = uniformSales.reduce((s,x) => s + Number(x.total_amount), 0);
 
   root.innerHTML =
     '<div class="page-head"><div><h1>' + esc(_school.name) + '</h1>' +
@@ -494,10 +500,15 @@ async function pageDashboard(root){
       '<div class="kpi" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#a7f3d0"><div class="l" style="color:#047857">Total Expected</div><div class="v" style="color:#065f46;font-size:20px;margin-top:4px">' + fmtUGX(totExp) + '</div></div>' +
       '<div class="kpi" style="background:linear-gradient(135deg,#eef2ff,#c7d2fe);border-color:#a5b4fc"><div class="l" style="color:#4338ca">Collected</div><div class="v" style="color:#3730a3;font-size:20px;margin-top:4px">' + fmtUGX(totColl) + '</div></div>' +
       '<div class="kpi" style="background:linear-gradient(135deg,#fef2f2,#fecaca);border-color:#fca5a5"><div class="l" style="color:#b91c1c">Outstanding</div><div class="v" style="color:#7f1d1d;font-size:20px;margin-top:4px">' + fmtUGX(totOut) + '</div></div></div>' +
+    '<h3 style="margin-top:24px;margin-bottom:12px">👕 Uniforms (Separate from Fees)</h3>' +
+    '<div class="grid grid-kpi">' +
+      '<div class="kpi" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fcd34d"><div class="l" style="color:#92400e">Today\'s Sales</div><div class="v" style="color:#78350f;font-size:20px;margin-top:4px">' + fmtUGX(uniformToday) + '</div></div>' +
+      '<div class="kpi" style="background:linear-gradient(135deg,#f3e8ff,#e9d5ff);border-color:#d8b4fe"><div class="l" style="color:#6b21a8">All-time Sales</div><div class="v" style="color:#581c87;font-size:20px;margin-top:4px">' + fmtUGX(uniformAll) + '</div></div>' +
+      '<button class="kpi" style="cursor:pointer;text-align:left" onclick="nav(\'uniforms\')"><div class="l">Manage Uniforms →</div><div class="v" style="font-size:16px;color:var(--brand);margin-top:8px">Boys · Girls · Sports · Sweaters</div></button></div>' +
     '<div class="grid grid-kpi" style="margin-top:16px">' +
       '<div class="kpi" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fcd34d"><div class="l" style="color:#92400e">Term Expenses</div><div class="v" style="color:#78350f;font-size:20px;margin-top:4px">' + fmtUGX(totExpenses) + '</div></div>' +
       '<div class="kpi" style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);border-color:#86efac"><div class="l" style="color:#166534">Food Stock</div><div class="v" style="color:#14532d;font-size:20px;margin-top:4px">' + fmtUGX(foodVal) + '</div></div>' +
-      '<div class="kpi" style="background:linear-gradient(135deg,#f3e8ff,#e9d5ff);border-color:#d8b4fe"><div class="l" style="color:#6b21a8">Net Position (All-time)</div><div class="v" style="color:#581c87;font-size:20px;margin-top:4px">' + fmtUGX(totColl - totExpenses) + '</div></div></div>' +
+      '<div class="kpi" style="background:linear-gradient(135deg,#f3e8ff,#e9d5ff);border-color:#d8b4fe"><div class="l" style="color:#6b21a8">Net Position (All-time)</div><div class="v" style="color:#581c87;font-size:20px;margin-top:4px">' + fmtUGX(totColl + uniformAll - totExpenses) + '</div></div></div>' +
     '<h3 style="margin-top:20px;margin-bottom:12px">🧾 Functional Fee (UGX 70,000)</h3>' +
     '<div class="grid grid-kpi">' +
       '<div class="kpi"><div class="l">Total Value</div><div class="v" style="font-size:18px;margin-top:4px">' + fmtUGX(totFuncExp) + '</div></div>' +
@@ -530,37 +541,250 @@ window.pageReportsAll = pageReportsAll;
 
 async function renderDailyReport(dateStr){
   const body = window._reportBody;
-  const [att, pays, exps, pos, disc] = await Promise.all([
+  body.innerHTML = '<div class="grid grid-2" style="margin-bottom:16px"><div><label>Date</label><input type="date" value="' + dateStr + '" onchange="renderDailyReport(this.value)"></div></div><div class="loading">Loading full daily report…</div>';
+
+  const [att, pays, exps, pos, disc, newStudents, advs, advReps, alls, sals, foodLog, classes, allStudents, staff, foodItems, uniformSales, uniformItems] = await Promise.all([
     rest('/rest/v1/attendance?school_id=eq.' + _schoolId + '&date=eq.' + dateStr + '&select=*').catch(()=>[]),
     rest('/rest/v1/payments?school_id=eq.' + _schoolId + '&paid_at=gte.' + dateStr + 'T00:00:00&paid_at=lt.' + dateStr + 'T23:59:59&select=*').catch(()=>[]),
     rest('/rest/v1/expenses?school_id=eq.' + _schoolId + '&date=eq.' + dateStr + '&select=*').catch(()=>[]),
     rest('/rest/v1/pass_outs?school_id=eq.' + _schoolId + '&signed_out_at=gte.' + dateStr + 'T00:00:00&signed_out_at=lt.' + dateStr + 'T23:59:59&select=*').catch(()=>[]),
-    rest('/rest/v1/discipline?school_id=eq.' + _schoolId + '&incident_date=eq.' + dateStr + '&select=*').catch(()=>[])
+    rest('/rest/v1/discipline?school_id=eq.' + _schoolId + '&incident_date=eq.' + dateStr + '&select=*').catch(()=>[]),
+    rest('/rest/v1/students?school_id=eq.' + _schoolId + '&created_at=gte.' + dateStr + 'T00:00:00&created_at=lt.' + dateStr + 'T23:59:59&select=*').catch(()=>[]),
+    rest('/rest/v1/advances?school_id=eq.' + _schoolId + '&date_issued=eq.' + dateStr + '&select=*').catch(()=>[]),
+    rest('/rest/v1/advance_repayments?school_id=eq.' + _schoolId + '&date_paid=eq.' + dateStr + '&select=*').catch(()=>[]),
+    rest('/rest/v1/allowances?school_id=eq.' + _schoolId + '&date_paid=eq.' + dateStr + '&select=*').catch(()=>[]),
+    rest('/rest/v1/salaries?school_id=eq.' + _schoolId + '&date_paid=eq.' + dateStr + '&select=*').catch(()=>[]),
+    rest('/rest/v1/food_log?school_id=eq.' + _schoolId + '&date=eq.' + dateStr + '&select=*').catch(()=>[]),
+    rest('/rest/v1/classes?school_id=eq.' + _schoolId + '&select=id,name&order=sort_order').catch(()=>[]),
+    rest('/rest/v1/students?school_id=eq.' + _schoolId + '&select=id,first_name,last_name,admission_no,class_id').catch(()=>[]),
+    loadStaff(),
+    rest('/rest/v1/food_items?school_id=eq.' + _schoolId + '&select=id,name,unit').catch(()=>[]),
+    rest('/rest/v1/uniform_sales?school_id=eq.' + _schoolId + '&sold_at=gte.' + dateStr + 'T00:00:00&sold_at=lt.' + dateStr + 'T23:59:59&select=*').catch(()=>[]),
+    rest('/rest/v1/uniform_items?school_id=eq.' + _schoolId + '&select=id,name,size,category').catch(()=>[])
   ]);
+
   const present = att.filter(a => a.status === 'present').length;
   const absent = att.filter(a => a.status === 'absent').length;
   const late = att.filter(a => a.status === 'late').length;
   const excused = att.filter(a => a.status === 'excused').length;
   const collTotal = pays.reduce((s,p) => s + Number(p.amount), 0);
   const expTotal = exps.reduce((s,e) => s + Number(e.amount), 0);
-  window._currentReportData = { title: 'Daily Report — ' + fmtDate(dateStr), att, pays, exps, pos, disc, present, absent, late, excused, collTotal, expTotal };
-  body.innerHTML =
-    '<div class="grid grid-2" style="margin-bottom:16px"><div><label>Date</label><input type="date" value="' + dateStr + '" onchange="renderDailyReport(this.value)"></div></div>' +
-    '<div class="grid grid-kpi" style="margin-bottom:20px">' +
-      '<div class="kpi" style="background:var(--oksoft);border-color:#a7f3d0"><div class="l" style="color:#047857">✅ Present</div><div class="v" style="color:#065f46;font-size:22px">' + present + '</div></div>' +
-      '<div class="kpi" style="background:var(--badsoft);border-color:#fecaca"><div class="l" style="color:#b91c1c">❌ Absent</div><div class="v" style="color:#7f1d1d;font-size:22px">' + absent + '</div></div>' +
-      '<div class="kpi" style="background:var(--warnsoft);border-color:#fde68a"><div class="l" style="color:#92400e">⏰ Late</div><div class="v" style="color:#78350f;font-size:22px">' + late + '</div></div>' +
-      '<div class="kpi"><div class="l">📝 Excused</div><div class="v" style="font-size:22px">' + excused + '</div></div>' +
-      '<div class="kpi" style="background:var(--brandsoft);border-color:#c7d2fe"><div class="l" style="color:#4338ca">💰 Collected</div><div class="v" style="color:#3730a3;font-size:18px">' + fmtUGX(collTotal) + '</div></div>' +
-      '<div class="kpi" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fcd34d"><div class="l" style="color:#92400e">💸 Expenses</div><div class="v" style="color:#78350f;font-size:18px">' + fmtUGX(expTotal) + '</div></div>' +
-      '<div class="kpi" style="background:linear-gradient(135deg,#f3e8ff,#e9d5ff);border-color:#d8b4fe"><div class="l" style="color:#6b21a8">Net</div><div class="v" style="color:#581c87;font-size:18px">' + fmtUGX(collTotal - expTotal) + '</div></div>' +
-      '<div class="kpi" style="background:var(--warnsoft);border-color:#fde68a"><div class="l" style="color:#92400e">🚪 Pass Outs</div><div class="v" style="color:#78350f;font-size:22px">' + pos.length + '</div></div></div>' +
-    (pays.length ? '<div class="card" style="margin-bottom:12px"><h3>💰 Payments Today (' + pays.length + ')</h3><div class="table-wrap"><table><thead><tr><th>Time</th><th>Amount</th><th>For</th><th>Method</th><th>Notes</th></tr></thead><tbody>' +
-      pays.map(p => '<tr><td>' + fmtTime(p.paid_at) + '</td><td><b>' + Number(p.amount).toLocaleString() + '</b></td><td>' + esc(p.payment_for||'') + '</td><td>' + esc(p.payment_method||'') + '</td><td style="font-size:12px">' + esc(p.notes||'') + '</td></tr>').join('') + '</tbody></table></div></div>' : '') +
-    (exps.length ? '<div class="card" style="margin-bottom:12px"><h3>💸 Expenses Today</h3><div class="table-wrap"><table><thead><tr><th>Description</th><th>Category</th><th style="text-align:right">Amount</th></tr></thead><tbody>' +
-      exps.map(e => '<tr><td>' + esc(e.description) + '</td><td>' + esc(e.category||'') + '</td><td style="text-align:right">' + Number(e.amount).toLocaleString() + '</td></tr>').join('') + '</tbody></table></div></div>' : '') +
-    (disc.length ? '<div class="card"><h3>⚠️ Discipline Today</h3><div class="table-wrap"><table><thead><tr><th>Category</th><th>Description</th></tr></thead><tbody>' +
-      disc.map(d => '<tr><td>' + esc(d.category||'') + '</td><td>' + esc(d.description) + '</td></tr>').join('') + '</tbody></table></div></div>' : '');
+  const advTotal = advs.reduce((s,a) => s + Number(a.amount), 0);
+  const advRepTotal = advReps.reduce((s,a) => s + Number(a.amount), 0);
+  const allTotal = alls.reduce((s,a) => s + Number(a.amount), 0);
+  const salTotal = sals.reduce((s,a) => s + Number(a.amount), 0);
+  const purchases = foodLog.filter(f => f.type === 'purchase');
+  const usages = foodLog.filter(f => f.type === 'usage');
+  const wastes = foodLog.filter(f => f.type === 'waste');
+  const purchaseTotal = purchases.reduce((s,f) => s + (Number(f.total_cost)||0), 0);
+  const schoolFeePayments = pays.filter(p => (p.payment_for||'') === 'School Fees');
+  const funcFeePayments = pays.filter(p => (p.payment_for||'') === 'Functional Fees');
+  const schoolFeeTotal = schoolFeePayments.reduce((s,p) => s + Number(p.amount), 0);
+  const funcFeeTotal = funcFeePayments.reduce((s,p) => s + Number(p.amount), 0);
+  const uniformSalesTotal = uniformSales.reduce((s,x) => s + Number(x.total_amount), 0);
+  const uniformUnitsSold = uniformSales.reduce((s,x) => s + (Number(x.quantity)||0), 0);
+  const cashIn = collTotal + uniformSalesTotal + advRepTotal;
+  const cashOut = expTotal + advTotal + allTotal + salTotal + purchaseTotal;
+  const netCash = cashIn - cashOut;
+
+  const attByClass = {};
+  att.forEach(a => { const cid = a.class_id || 'unassigned'; if (!attByClass[cid]) attByClass[cid] = { present:0, absent:0, late:0, excused:0 }; if (attByClass[cid][a.status] !== undefined) attByClass[cid][a.status]++; });
+
+  const findStudent = id => (allStudents||[]).find(s => s.id === id);
+  const findStaff = id => (staff||[]).find(s => s.id === id);
+  const findClass = id => (classes||[]).find(c => c.id === id);
+  const findFood = id => (foodItems||[]).find(f => f.id === id);
+  const findUniform = id => (uniformItems||[]).find(u => u.id === id);
+
+  // Category breakdown for uniforms
+  const uniformCatTotals = {};
+  const uniformCatUnits = {};
+  UNIFORM_CATEGORIES.forEach(c => { uniformCatTotals[c] = 0; uniformCatUnits[c] = 0; });
+  uniformSales.forEach(s => {
+    const it = findUniform(s.uniform_item_id);
+    const c = it ? (it.category||'Other') : 'Other';
+    if(uniformCatTotals[c] === undefined){ uniformCatTotals[c]=0; uniformCatUnits[c]=0; }
+    uniformCatTotals[c] += Number(s.total_amount)||0;
+    uniformCatUnits[c] += Number(s.quantity)||0;
+  });
+
+  window._currentReportData = {
+    title: 'Daily Report — ' + fmtDate(dateStr), date: dateStr,
+    att, pays, exps, pos, disc, newStudents, advs, advReps, alls, sals, foodLog, classes, allStudents, staff, foodItems, uniformSales, uniformItems,
+    present, absent, late, excused, collTotal, expTotal, advTotal, advRepTotal, allTotal, salTotal, purchaseTotal,
+    cashIn, cashOut, netCash, attByClass, uniformSalesTotal, uniformUnitsSold, uniformCatTotals, uniformCatUnits,
+    schoolFeePayments, funcFeePayments, schoolFeeTotal, funcFeeTotal, purchases, usages, wastes
+  };
+
+  let html = '';
+  html += '<div class="grid grid-2" style="margin-bottom:16px"><div><label>Date</label><input type="date" value="' + dateStr + '" onchange="renderDailyReport(this.value)"></div></div>';
+
+  // ── OVERVIEW ──
+  html += '<h3 style="margin-bottom:10px">📊 Day Overview</h3>';
+  html += '<div class="grid grid-kpi" style="margin-bottom:20px">' +
+    '<div class="kpi" style="background:var(--oksoft);border-color:#a7f3d0"><div class="l" style="color:#047857">✅ Present</div><div class="v" style="color:#065f46;font-size:22px">' + present + '</div></div>' +
+    '<div class="kpi" style="background:var(--badsoft);border-color:#fecaca"><div class="l" style="color:#b91c1c">❌ Absent</div><div class="v" style="color:#7f1d1d;font-size:22px">' + absent + '</div></div>' +
+    '<div class="kpi" style="background:var(--warnsoft);border-color:#fde68a"><div class="l" style="color:#92400e">⏰ Late</div><div class="v" style="color:#78350f;font-size:22px">' + late + '</div></div>' +
+    '<div class="kpi"><div class="l">📝 Excused</div><div class="v" style="font-size:22px">' + excused + '</div></div>' +
+    '<div class="kpi" style="background:var(--brandsoft);border-color:#c7d2fe"><div class="l" style="color:#4338ca">🆕 Admitted</div><div class="v" style="color:#3730a3;font-size:22px">' + newStudents.length + '</div></div>' +
+    '<div class="kpi" style="background:var(--warnsoft);border-color:#fde68a"><div class="l" style="color:#92400e">🚪 Pass Outs</div><div class="v" style="color:#78350f;font-size:22px">' + pos.length + '</div></div>' +
+    '<div class="kpi" style="background:var(--badsoft);border-color:#fecaca"><div class="l" style="color:#b91c1c">⚠️ Discipline</div><div class="v" style="color:#7f1d1d;font-size:22px">' + disc.length + '</div></div>' +
+    '<div class="kpi" style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);border-color:#86efac"><div class="l" style="color:#166534">🥘 Food Activity</div><div class="v" style="color:#14532d;font-size:22px">' + foodLog.length + '</div></div></div>';
+
+  // ── FINANCE ──
+  html += '<h3 style="margin-bottom:10px">💰 Financial Summary</h3>';
+  html += '<div class="grid grid-kpi" style="margin-bottom:20px">' +
+    '<div class="kpi" style="background:var(--oksoft);border-color:#a7f3d0"><div class="l" style="color:#047857">💵 Fees Collected</div><div class="v" style="color:#065f46;font-size:18px">' + fmtUGX(collTotal) + '</div><div class="muted">' + pays.length + ' payment(s)</div></div>' +
+    '<div class="kpi" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fcd34d"><div class="l" style="color:#92400e">👕 Uniform Sales</div><div class="v" style="color:#78350f;font-size:18px">' + fmtUGX(uniformSalesTotal) + '</div><div class="muted">' + uniformUnitsSold + ' unit(s)</div></div>' +
+    '<div class="kpi" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fcd34d"><div class="l" style="color:#92400e">💸 Expenses</div><div class="v" style="color:#78350f;font-size:18px">' + fmtUGX(expTotal) + '</div></div>' +
+    '<div class="kpi" style="background:var(--brandsoft);border-color:#c7d2fe"><div class="l" style="color:#4338ca">💳 Advances Issued</div><div class="v" style="color:#3730a3;font-size:18px">' + fmtUGX(advTotal) + '</div></div>' +
+    '<div class="kpi" style="background:var(--oksoft);border-color:#a7f3d0"><div class="l" style="color:#047857">💵 Advance Repaid</div><div class="v" style="color:#065f46;font-size:18px">' + fmtUGX(advRepTotal) + '</div></div>' +
+    '<div class="kpi" style="background:var(--warnsoft);border-color:#fde68a"><div class="l" style="color:#92400e">🎁 Allowances</div><div class="v" style="color:#78350f;font-size:18px">' + fmtUGX(allTotal) + '</div></div>' +
+    '<div class="kpi" style="background:var(--warnsoft);border-color:#fde68a"><div class="l" style="color:#92400e">🏦 Salaries</div><div class="v" style="color:#78350f;font-size:18px">' + fmtUGX(salTotal) + '</div></div>' +
+    '<div class="kpi" style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);border-color:#86efac"><div class="l" style="color:#166534">🛒 Food Purchases</div><div class="v" style="color:#14532d;font-size:18px">' + fmtUGX(purchaseTotal) + '</div></div>' +
+    '<div class="kpi" style="background:linear-gradient(135deg,#f3e8ff,#e9d5ff);border-color:#d8b4fe"><div class="l" style="color:#6b21a8">💼 Net Cash Flow</div><div class="v" style="color:' + (netCash>=0?'#166534':'#7f1d1d') + ';font-size:18px">' + fmtUGX(netCash) + '</div><div class="muted">In ' + fmtUGX(cashIn) + ' · Out ' + fmtUGX(cashOut) + '</div></div></div>';
+
+  // ── UNIFORM SALES (separate, grouped by category) ──
+  if (uniformSales.length){
+    html += '<div class="card" style="margin-bottom:12px;background:#fef3c7;border-color:#fcd34d"><h3 style="color:#92400e">👕 Uniform Sales (' + uniformSales.length + ') — ' + fmtUGX(uniformSalesTotal) + '</h3>';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-size:12px">' +
+      UNIFORM_CATEGORIES.filter(c => uniformCatTotals[c] > 0).map(c => {
+        const emoji = c === 'Boys Uniform' ? '👦' : c === 'Girls Uniform' ? '👧' : c === 'Sports Wear' ? '⚽' : c === 'Sweaters' ? '🧥' : '📦';
+        return '<span class="badge warn">' + emoji + ' ' + esc(c) + ': ' + fmtUGX(uniformCatTotals[c]) + ' (' + uniformCatUnits[c] + ')</span>';
+      }).join('') + '</div>';
+    html += '<div class="table-wrap"><table><thead><tr><th>Time</th><th>Pupil</th><th>Category</th><th>Item</th><th>Qty</th><th style="text-align:right">Amount</th><th>Method</th></tr></thead><tbody>' +
+      uniformSales.map(s => { const st = findStudent(s.student_id); const it = findUniform(s.uniform_item_id);
+        return '<tr><td>' + fmtTime(s.sold_at) + '</td>' +
+          '<td><b>' + esc(st?st.first_name+' '+(st.last_name||''):'—') + '</b><div class="muted" style="font-size:11px">' + esc(st?st.admission_no:'') + '</div></td>' +
+          '<td><span class="badge info">' + esc(it?it.category||'Other':'Other') + '</span></td>' +
+          '<td>' + esc(it?it.name:'—') + (it&&it.size?' <span class="badge info">'+esc(it.size)+'</span>':'') + '</td>' +
+          '<td>' + (Number(s.quantity)||1) + '</td>' +
+          '<td style="text-align:right"><b>' + Number(s.total_amount).toLocaleString() + '</b></td>' +
+          '<td>' + esc(s.payment_method||'Cash') + '</td></tr>';
+      }).join('') + '</tbody></table></div></div>';
+  }
+
+  // ── PAYMENTS (fees only) ──
+  if (pays.length){
+    html += '<div class="card" style="margin-bottom:12px"><h3>💰 Fees Payments (' + pays.length + ') — ' + fmtUGX(collTotal) + '</h3>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-size:12px">' +
+        '<span class="badge info">📚 School Fees: ' + fmtUGX(schoolFeeTotal) + ' (' + schoolFeePayments.length + ')</span>' +
+        '<span class="badge warn">🧾 Functional: ' + fmtUGX(funcFeeTotal) + ' (' + funcFeePayments.length + ')</span>' +
+      '</div>' +
+      '<div class="table-wrap"><table><thead><tr><th>Time</th><th>Pupil</th><th>For</th><th style="text-align:right">Amount</th><th>Method</th><th>Notes</th></tr></thead><tbody>' +
+      pays.map(p => { const st = findStudent(p.student_id);
+        return '<tr><td>' + fmtTime(p.paid_at) + '</td><td><b>' + esc(st?st.first_name+' '+(st.last_name||''):'—') + '</b></td><td>' + esc(p.payment_for||'') + '</td><td style="text-align:right"><b>' + Number(p.amount).toLocaleString() + '</b></td><td>' + esc(p.payment_method||'') + '</td><td style="font-size:12px">' + esc(p.notes||'') + '</td></tr>';
+      }).join('') + '</tbody></table></div></div>';
+  }
+
+  // ── NEW ADMISSIONS ──
+  if (newStudents.length){
+    html += '<div class="card" style="margin-bottom:12px;background:var(--brandsoft);border-color:#c7d2fe"><h3 style="color:#3730a3">🆕 New Admissions (' + newStudents.length + ')</h3>' +
+      '<div class="table-wrap"><table><thead><tr><th>#</th><th>Adm No</th><th>Name</th><th>Class</th><th>Parent</th><th>Contact</th></tr></thead><tbody>' +
+      newStudents.map((s,i) => { const cls = findClass(s.class_id);
+        return '<tr><td>' + (i+1) + '</td><td><b>' + esc(s.admission_no) + '</b></td><td><b>' + esc(s.first_name+' '+(s.last_name||'')) + '</b></td><td>' + esc(cls?cls.name:'—') + '</td><td>' + esc(s.parent_name||'—') + '</td><td>' + esc(s.parent_contact||'—') + '</td></tr>';
+      }).join('') + '</tbody></table></div></div>';
+  }
+
+  // ── EXPENSES ──
+  if (exps.length){
+    html += '<div class="card" style="margin-bottom:12px"><h3>💸 Expenses (' + exps.length + ') — ' + fmtUGX(expTotal) + '</h3>' +
+      '<div class="table-wrap"><table><thead><tr><th>Description</th><th>Category</th><th style="text-align:right">Amount</th></tr></thead><tbody>' +
+      exps.map(e => '<tr><td><b>' + esc(e.description) + '</b></td><td>' + esc(e.category||'') + '</td><td style="text-align:right">' + Number(e.amount).toLocaleString() + '</td></tr>').join('') + '</tbody></table></div></div>';
+  }
+
+  // ── ADVANCES ISSUED ──
+  if (advs.length){
+    html += '<div class="card" style="margin-bottom:12px"><h3>💳 Advances Issued (' + advs.length + ') — ' + fmtUGX(advTotal) + '</h3>' +
+      '<div class="table-wrap"><table><thead><tr><th>Staff</th><th>Reason</th><th style="text-align:right">Amount</th><th>Notes</th></tr></thead><tbody>' +
+      advs.map(a => { const st = findStaff(a.staff_id);
+        return '<tr><td><b>' + esc(st?st.full_name:'—') + '</b></td><td>' + esc(a.reason||'') + '</td><td style="text-align:right">' + Number(a.amount).toLocaleString() + '</td><td style="font-size:12px">' + esc(a.notes||'') + '</td></tr>';
+      }).join('') + '</tbody></table></div></div>';
+  }
+
+  // ── ADVANCE REPAYMENTS ──
+  if (advReps.length){
+    html += '<div class="card" style="margin-bottom:12px"><h3>💵 Advance Repayments (' + advReps.length + ') — ' + fmtUGX(advRepTotal) + '</h3>' +
+      '<div class="table-wrap"><table><thead><tr><th style="text-align:right">Amount</th><th>Notes</th></tr></thead><tbody>' +
+      advReps.map(a => '<tr><td style="text-align:right"><b>' + Number(a.amount).toLocaleString() + '</b></td><td>' + esc(a.notes||'') + '</td></tr>').join('') + '</tbody></table></div></div>';
+  }
+
+  // ── ALLOWANCES ──
+  if (alls.length){
+    html += '<div class="card" style="margin-bottom:12px"><h3>🎁 Allowances Paid (' + alls.length + ') — ' + fmtUGX(allTotal) + '</h3>' +
+      '<div class="table-wrap"><table><thead><tr><th>Staff</th><th>Type</th><th>Month</th><th style="text-align:right">Amount</th></tr></thead><tbody>' +
+      alls.map(a => { const st = findStaff(a.staff_id);
+        return '<tr><td><b>' + esc(st?st.full_name:'—') + '</b></td><td>' + esc(a.allowance_type||'') + '</td><td>' + esc(a.month||'') + '</td><td style="text-align:right">' + Number(a.amount).toLocaleString() + '</td></tr>';
+      }).join('') + '</tbody></table></div></div>';
+  }
+
+  // ── SALARIES ──
+  if (sals.length){
+    html += '<div class="card" style="margin-bottom:12px"><h3>🏦 Salaries Paid (' + sals.length + ') — ' + fmtUGX(salTotal) + '</h3>' +
+      '<div class="table-wrap"><table><thead><tr><th>Staff</th><th>Month</th><th style="text-align:right">Amount</th><th>Notes</th></tr></thead><tbody>' +
+      sals.map(s => { const st = findStaff(s.staff_id);
+        return '<tr><td><b>' + esc(st?st.full_name:'—') + '</b></td><td>' + esc(s.month||'') + '</td><td style="text-align:right">' + Number(s.amount).toLocaleString() + '</td><td style="font-size:12px">' + esc(s.notes||'') + '</td></tr>';
+      }).join('') + '</tbody></table></div></div>';
+  }
+
+  // ── FOOD ACTIVITY ──
+  if (foodLog.length){
+    html += '<div class="card" style="margin-bottom:12px"><h3>🥘 Food & Stock Activity (' + foodLog.length + ')</h3>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-size:12px">' +
+        (purchases.length ? '<span class="badge ok">🛒 Purchases: ' + purchases.length + ' — ' + fmtUGX(purchaseTotal) + '</span>' : '') +
+        (usages.length ? '<span class="badge info">🍲 Used: ' + usages.length + '</span>' : '') +
+        (wastes.length ? '<span class="badge bad">🗑 Waste: ' + wastes.length + '</span>' : '') +
+      '</div>' +
+      '<div class="table-wrap"><table><thead><tr><th>Item</th><th>Type</th><th>Qty</th><th style="text-align:right">Cost</th><th>Details</th></tr></thead><tbody>' +
+      foodLog.map(f => { const it = findFood(f.food_item_id);
+        const tb = f.type==='purchase' ? '<span class="badge ok">🛒 Purchase</span>' : f.type==='usage' ? '<span class="badge info">🍲 Usage</span>' : '<span class="badge bad">🗑 Waste</span>';
+        return '<tr><td><b>' + esc(it?it.name:'—') + '</b></td><td>' + tb + '</td><td>' + (Number(f.quantity)||0) + ' ' + esc(it?it.unit:'') + '</td><td style="text-align:right">' + (Number(f.total_cost)||0).toLocaleString() + '</td><td style="font-size:12px">' + esc(f.supplier||f.meal_type||'') + '</td></tr>';
+      }).join('') + '</tbody></table></div></div>';
+  }
+
+  // ── PASS OUTS ──
+  if (pos.length){
+    html += '<div class="card" style="margin-bottom:12px"><h3>🚪 Pass Outs (' + pos.length + ')</h3>' +
+      '<div class="table-wrap"><table><thead><tr><th>Pupil</th><th>Reason</th><th>Out</th><th>Expected</th><th>Returned</th></tr></thead><tbody>' +
+      pos.map(p => { const st = findStudent(p.student_id);
+        const isOut = !p.signed_in_at;
+        const isOver = isOut && p.expected_return_at && new Date(p.expected_return_at) < new Date();
+        return '<tr><td><b>' + esc(st?st.first_name+' '+(st.last_name||''):'—') + '</b></td><td>' + esc(p.reason||'') + '</td><td>' + fmtTime(p.signed_out_at) + '</td><td>' + (p.expected_return_at?fmtTime(p.expected_return_at):'—') + '</td><td>' + (p.signed_in_at ? fmtTime(p.signed_in_at) : '<span class="badge ' + (isOver?'bad':'warn') + '">' + (isOver?'⏰ Overdue':'Still out') + '</span>') + '</td></tr>';
+      }).join('') + '</tbody></table></div></div>';
+  }
+
+  // ── DISCIPLINE ──
+  if (disc.length){
+    html += '<div class="card" style="margin-bottom:12px;background:var(--badsoft);border-color:#fecaca"><h3 style="color:#b91c1c">⚠️ Discipline (' + disc.length + ')</h3>' +
+      '<div class="table-wrap"><table><thead><tr><th>Pupil</th><th>Category</th><th>Description</th><th>Action</th><th>Reported By</th></tr></thead><tbody>' +
+      disc.map(d => { const st = findStudent(d.student_id);
+        return '<tr><td><b>' + esc(st?st.first_name+' '+(st.last_name||''):'—') + '</b></td><td><span class="badge warn">' + esc(d.category||'') + '</span></td><td>' + esc(d.description||'') + '</td><td>' + esc(d.action_taken||'—') + '</td><td style="font-size:12px">' + esc(d.reported_by||'—') + '</td></tr>';
+      }).join('') + '</tbody></table></div></div>';
+  }
+
+  // ── ATTENDANCE BY CLASS ──
+  if (Object.keys(attByClass).length){
+    html += '<div class="card" style="margin-bottom:12px"><h3>📊 Attendance by Class</h3>' +
+      '<div class="table-wrap"><table><thead><tr><th>Class</th><th style="text-align:right">Present</th><th style="text-align:right">Absent</th><th style="text-align:right">Late</th><th style="text-align:right">Excused</th><th style="text-align:right">Total</th></tr></thead><tbody>' +
+      Object.keys(attByClass).map(cid => { const cls = findClass(cid); const v = attByClass[cid];
+        return '<tr><td><b>' + esc(cls?cls.name:(cid==='unassigned'?'Unassigned':'—')) + '</b></td><td style="text-align:right;color:#047857">' + v.present + '</td><td style="text-align:right;color:#b91c1c">' + v.absent + '</td><td style="text-align:right;color:#92400e">' + v.late + '</td><td style="text-align:right">' + v.excused + '</td><td style="text-align:right"><b>' + (v.present+v.absent+v.late+v.excused) + '</b></td></tr>';
+      }).join('') + '</tbody></table></div></div>';
+  }
+
+  // ── ABSENT LIST ──
+  const absentStudents = att.filter(a => a.status === 'absent').map(a => findStudent(a.student_id)).filter(Boolean);
+  if (absentStudents.length){
+    html += '<div class="card" style="margin-bottom:12px;background:var(--badsoft);border-color:#fecaca"><h3 style="color:#b91c1c">❌ Absent Pupils (' + absentStudents.length + ')</h3>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:6px">' +
+      absentStudents.map(s => '<span class="badge bad" style="padding:6px 12px">' + esc(s.first_name+' '+(s.last_name||'')) + ' <span style="opacity:.7">· ' + esc(s.admission_no) + '</span></span>').join('') +
+      '</div></div>';
+  }
+
+  if (!pays.length && !uniformSales.length && !exps.length && !newStudents.length && !pos.length && !disc.length && !att.length && !advs.length && !alls.length && !sals.length && !foodLog.length){
+    html += '<div class="card"><div class="empty">No activity recorded for this day.</div></div>';
+  }
+
+  body.innerHTML = html;
 }
 window.renderDailyReport = renderDailyReport;
 
@@ -582,53 +806,62 @@ window.renderMonthlyReport = renderMonthlyReport;
 
 async function renderRangeReport(title, start, end){
   const body = window._reportBody;
-  const [att, pays, exps] = await Promise.all([
+  const [att, pays, exps, uniformSales, uniformItems] = await Promise.all([
     rest('/rest/v1/attendance?school_id=eq.' + _schoolId + '&date=gte.' + start + '&date=lte.' + end + '&select=*').catch(()=>[]),
     rest('/rest/v1/payments?school_id=eq.' + _schoolId + '&paid_at=gte.' + start + 'T00:00:00&paid_at=lte.' + end + 'T23:59:59&select=*').catch(()=>[]),
-    rest('/rest/v1/expenses?school_id=eq.' + _schoolId + '&date=gte.' + start + '&date=lte.' + end + '&select=*').catch(()=>[])
+    rest('/rest/v1/expenses?school_id=eq.' + _schoolId + '&date=gte.' + start + '&date=lte.' + end + '&select=*').catch(()=>[]),
+    rest('/rest/v1/uniform_sales?school_id=eq.' + _schoolId + '&sold_at=gte.' + start + 'T00:00:00&sold_at=lte.' + end + 'T23:59:59&select=*').catch(()=>[]),
+    rest('/rest/v1/uniform_items?school_id=eq.' + _schoolId + '&select=id,category,name').catch(()=>[])
   ]);
   const present = att.filter(a => a.status === 'present').length;
   const absent = att.filter(a => a.status === 'absent').length;
   const collTotal = pays.reduce((s,p) => s + Number(p.amount), 0);
   const expTotal = exps.reduce((s,e) => s + Number(e.amount), 0);
+  const uniformTotal = uniformSales.reduce((s,x) => s + Number(x.total_amount), 0);
   window._currentReportData = { title: title + ' (' + fmtDate(start) + ' → ' + fmtDate(end) + ')', att, pays, exps, present, absent, collTotal, expTotal };
   const dayData = {};
   const cur = new Date(start); const endD = new Date(end);
-  while (cur <= endD){ dayData[cur.toISOString().slice(0,10)] = { coll:0, exp:0, pres:0, abs:0 }; cur.setDate(cur.getDate()+1); }
+  while (cur <= endD){ dayData[cur.toISOString().slice(0,10)] = { coll:0, exp:0, uni:0, pres:0, abs:0 }; cur.setDate(cur.getDate()+1); }
   pays.forEach(p => { const d = new Date(p.paid_at).toISOString().slice(0,10); if(dayData[d]) dayData[d].coll += Number(p.amount); });
   exps.forEach(e => { if(dayData[e.date]) dayData[e.date].exp += Number(e.amount); });
+  uniformSales.forEach(s => { const d = new Date(s.sold_at).toISOString().slice(0,10); if(dayData[d]) dayData[d].uni += Number(s.total_amount); });
   att.forEach(a => { if(dayData[a.date]){ if(a.status==='present') dayData[a.date].pres++; if(a.status==='absent') dayData[a.date].abs++; } });
   const rows = Object.entries(dayData).map(([d, v]) =>
     '<tr><td>' + fmtDate(d) + '</td><td style="text-align:right">' + v.pres + '</td><td style="text-align:right">' + v.abs + '</td>' +
     '<td style="text-align:right;color:#047857">' + v.coll.toLocaleString() + '</td>' +
+    '<td style="text-align:right;color:#92400e">' + v.uni.toLocaleString() + '</td>' +
     '<td style="text-align:right;color:#b91c1c">' + v.exp.toLocaleString() + '</td>' +
-    '<td style="text-align:right;font-weight:600">' + (v.coll - v.exp).toLocaleString() + '</td></tr>').join('');
+    '<td style="text-align:right;font-weight:600">' + (v.coll + v.uni - v.exp).toLocaleString() + '</td></tr>').join('');
   body.innerHTML =
     '<div class="grid grid-kpi" style="margin-bottom:20px">' +
       '<div class="kpi" style="background:var(--oksoft);border-color:#a7f3d0"><div class="l" style="color:#047857">✅ Present</div><div class="v" style="color:#065f46;font-size:22px">' + present + '</div></div>' +
       '<div class="kpi" style="background:var(--badsoft);border-color:#fecaca"><div class="l" style="color:#b91c1c">❌ Absent</div><div class="v" style="color:#7f1d1d;font-size:22px">' + absent + '</div></div>' +
-      '<div class="kpi" style="background:var(--brandsoft);border-color:#c7d2fe"><div class="l" style="color:#4338ca">💰 Collected</div><div class="v" style="color:#3730a3;font-size:18px">' + fmtUGX(collTotal) + '</div></div>' +
+      '<div class="kpi" style="background:var(--brandsoft);border-color:#c7d2fe"><div class="l" style="color:#4338ca">💰 Fees Collected</div><div class="v" style="color:#3730a3;font-size:18px">' + fmtUGX(collTotal) + '</div></div>' +
+      '<div class="kpi" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fcd34d"><div class="l" style="color:#92400e">👕 Uniform Sales</div><div class="v" style="color:#78350f;font-size:18px">' + fmtUGX(uniformTotal) + '</div></div>' +
       '<div class="kpi" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fcd34d"><div class="l" style="color:#92400e">💸 Expenses</div><div class="v" style="color:#78350f;font-size:18px">' + fmtUGX(expTotal) + '</div></div>' +
-      '<div class="kpi" style="background:linear-gradient(135deg,#f3e8ff,#e9d5ff);border-color:#d8b4fe"><div class="l" style="color:#6b21a8">Net</div><div class="v" style="color:#581c87;font-size:18px">' + fmtUGX(collTotal - expTotal) + '</div></div>' +
-      '<div class="kpi"><div class="l">Total Payments</div><div class="v" style="font-size:22px">' + pays.length + '</div></div></div>' +
-    '<div class="card"><h3>📊 Daily Breakdown</h3><div class="table-wrap"><table><thead><tr><th>Date</th><th style="text-align:right">Present</th><th style="text-align:right">Absent</th><th style="text-align:right">Collected</th><th style="text-align:right">Expenses</th><th style="text-align:right">Net</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
+      '<div class="kpi" style="background:linear-gradient(135deg,#f3e8ff,#e9d5ff);border-color:#d8b4fe"><div class="l" style="color:#6b21a8">Net</div><div class="v" style="color:#581c87;font-size:18px">' + fmtUGX(collTotal + uniformTotal - expTotal) + '</div></div>' +
+      '<div class="kpi"><div class="l">Total Payments</div><div class="v" style="font-size:22px">' + pays.length + '</div></div>' +
+      '<div class="kpi"><div class="l">Uniform Sales</div><div class="v" style="font-size:22px">' + uniformSales.length + '</div></div></div>' +
+    '<div class="card"><h3>📊 Daily Breakdown</h3><div class="table-wrap"><table><thead><tr><th>Date</th><th style="text-align:right">Present</th><th style="text-align:right">Absent</th><th style="text-align:right">Fees</th><th style="text-align:right">Uniforms</th><th style="text-align:right">Expenses</th><th style="text-align:right">Net</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
 }
 window.renderRangeReport = renderRangeReport;
 
 async function renderTermlyReport(year, term){
   const body = window._reportBody;
-  const [students, pays, exps, att, exams, marks] = await Promise.all([
+  const [students, pays, exps, att, exams, marks, uniformSales] = await Promise.all([
     rest('/rest/v1/students?school_id=eq.' + _schoolId + '&select=*&status=eq.active'),
     rest('/rest/v1/payments?school_id=eq.' + _schoolId + '&academic_year=eq.' + year + '&term=eq.' + term + '&select=*').catch(()=>[]),
     rest('/rest/v1/expenses?school_id=eq.' + _schoolId + '&academic_year=eq.' + year + '&term=eq.' + term + '&select=*').catch(()=>[]),
     rest('/rest/v1/attendance?school_id=eq.' + _schoolId + '&academic_year=eq.' + year + '&term=eq.' + term + '&select=*').catch(()=>[]),
     rest('/rest/v1/exams?school_id=eq.' + _schoolId + '&year=eq.' + year + '&term=eq.' + term + '&select=id').catch(()=>[]),
-    rest('/rest/v1/marks?school_id=eq.' + _schoolId + '&academic_year=eq.' + year + '&term=eq.' + term + '&select=score').catch(()=>[])
+    rest('/rest/v1/marks?school_id=eq.' + _schoolId + '&academic_year=eq.' + year + '&term=eq.' + term + '&select=score').catch(()=>[]),
+    rest('/rest/v1/uniform_sales?school_id=eq.' + _schoolId + '&academic_year=eq.' + year + '&term=eq.' + term + '&select=*').catch(()=>[])
   ]);
   const collTotal = pays.reduce((s,p) => s + Number(p.amount), 0);
   const expTotal = exps.reduce((s,e) => s + Number(e.amount), 0);
   const schoolFees = pays.filter(p => p.payment_for !== 'Functional Fees').reduce((s,p) => s + Number(p.amount), 0);
   const funcFees = pays.filter(p => p.payment_for === 'Functional Fees').reduce((s,p) => s + Number(p.amount), 0);
+  const uniformTotal = uniformSales.reduce((s,x) => s + Number(x.total_amount), 0);
   const present = att.filter(a => a.status === 'present').length;
   const absent = att.filter(a => a.status === 'absent').length;
   const avgScore = marks.length ? (marks.reduce((s,m) => s + Number(m.score), 0) / marks.length) : 0;
@@ -641,9 +874,10 @@ async function renderTermlyReport(year, term){
       '<div class="kpi"><div class="l">Active Pupils</div><div class="v" style="font-size:22px">' + students.length + '</div></div>' +
       '<div class="kpi" style="background:var(--oksoft);border-color:#a7f3d0"><div class="l" style="color:#047857">✅ Days Present</div><div class="v" style="color:#065f46;font-size:22px">' + present + '</div></div>' +
       '<div class="kpi" style="background:var(--badsoft);border-color:#fecaca"><div class="l" style="color:#b91c1c">❌ Absences</div><div class="v" style="color:#7f1d1d;font-size:22px">' + absent + '</div></div>' +
-      '<div class="kpi" style="background:var(--brandsoft);border-color:#c7d2fe"><div class="l" style="color:#4338ca">💰 Total Collected</div><div class="v" style="color:#3730a3;font-size:18px">' + fmtUGX(collTotal) + '</div></div>' +
+      '<div class="kpi" style="background:var(--brandsoft);border-color:#c7d2fe"><div class="l" style="color:#4338ca">💰 Fees Collected</div><div class="v" style="color:#3730a3;font-size:18px">' + fmtUGX(collTotal) + '</div></div>' +
+      '<div class="kpi" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fcd34d"><div class="l" style="color:#92400e">👕 Uniform Sales</div><div class="v" style="color:#78350f;font-size:18px">' + fmtUGX(uniformTotal) + '</div></div>' +
       '<div class="kpi" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fcd34d"><div class="l" style="color:#92400e">💸 Total Expenses</div><div class="v" style="color:#78350f;font-size:18px">' + fmtUGX(expTotal) + '</div></div>' +
-      '<div class="kpi" style="background:linear-gradient(135deg,#f3e8ff,#e9d5ff);border-color:#d8b4fe"><div class="l" style="color:#6b21a8">Net Position</div><div class="v" style="color:#581c87;font-size:18px">' + fmtUGX(collTotal - expTotal) + '</div></div></div>' +
+      '<div class="kpi" style="background:linear-gradient(135deg,#f3e8ff,#e9d5ff);border-color:#d8b4fe"><div class="l" style="color:#6b21a8">Net Position</div><div class="v" style="color:#581c87;font-size:18px">' + fmtUGX(collTotal + uniformTotal - expTotal) + '</div></div></div>' +
     '<div class="grid grid-2" style="margin-bottom:16px">' +
       '<div class="card"><h3>💵 Fee Collection Breakdown</h3><div style="font-size:13px;line-height:2">' +
         '<div><b>School Fees Collected:</b> ' + fmtUGX(schoolFees) + '</div>' +
@@ -656,9 +890,10 @@ async function renderTermlyReport(year, term){
         '<div><b>Average Score:</b> ' + avgScore.toFixed(1) + ' / 100</div>' +
         '<div><b>Attendance Rate:</b> ' + (present + absent > 0 ? ((present / (present + absent)) * 100).toFixed(1) : '—') + '%</div></div></div></div>' +
     '<div class="card"><h3>📋 Term Activity Log</h3><div class="table-wrap"><table><thead><tr><th>Date</th><th>Type</th><th>Description</th><th style="text-align:right">Amount</th></tr></thead><tbody>' +
-      [...pays.map(p => ({ date: new Date(p.paid_at), type: '💰 Payment', desc: (p.payment_for||'') + ' (' + (p.payment_method||'') + ')', amount: p.amount })),
+      [...pays.map(p => ({ date: new Date(p.paid_at), type: '💰 Fee Payment', desc: (p.payment_for||'') + ' (' + (p.payment_method||'') + ')', amount: p.amount })),
+       ...uniformSales.map(s => ({ date: new Date(s.sold_at), type: '👕 Uniform Sale', desc: 'Qty ' + (s.quantity||1) + ' (' + (s.payment_method||'') + ')', amount: s.total_amount })),
        ...exps.map(e => ({ date: new Date(e.date), type: '💸 Expense', desc: e.description + ' · ' + (e.category||''), amount: -e.amount }))]
-      .sort((a,b) => b.date - a.date).slice(0,100).map(x => '<tr><td>' + fmtDate(x.date) + '</td><td>' + x.type + '</td><td>' + esc(x.desc) + '</td>' +
+      .sort((a,b) => b.date - a.date).slice(0,150).map(x => '<tr><td>' + fmtDate(x.date) + '</td><td>' + x.type + '</td><td>' + esc(x.desc) + '</td>' +
         '<td style="text-align:right;color:' + (x.amount >= 0 ? '#047857' : '#b91c1c') + '"><b>' + (x.amount >= 0 ? '' : '-') + Math.abs(x.amount).toLocaleString() + '</b></td></tr>').join('') +
       '</tbody></table></div></div>';
 }
@@ -667,20 +902,170 @@ window.renderTermlyReport = renderTermlyReport;
 function printCurrentReport(){
   const r = window._currentReportData;
   if(!r){ toast('No report to print', 'bad'); return; }
-  let html = '<div class="summary" style="margin-bottom:16px">' +
-    '<div><b>Present</b>' + (r.present||0) + '</div>' +
-    '<div><b>Absent</b>' + (r.absent||0) + '</div>' +
-    '<div><b>Collected</b>UGX ' + (r.collTotal||0).toLocaleString() + '</div>' +
-    '<div><b>Expenses</b>UGX ' + (r.expTotal||0).toLocaleString() + '</div>' +
-    '<div><b>Net</b>UGX ' + ((r.collTotal||0) - (r.expTotal||0)).toLocaleString() + '</div></div>';
-  if (r.pays && r.pays.length){
-    html += '<h3 style="margin-top:16px">Payments</h3><table><thead><tr><th>Date</th><th>Amount</th><th>For</th><th>Method</th></tr></thead><tbody>' +
-      r.pays.map(p => '<tr><td>' + fmtDate(p.paid_at) + '</td><td style="text-align:right">' + Number(p.amount).toLocaleString() + '</td><td>' + esc(p.payment_for||'') + '</td><td>' + esc(p.payment_method||'') + '</td></tr>').join('') + '</tbody></table>';
+
+  const findStudent = id => (r.allStudents||[]).find(s => s.id === id);
+  const findStaff = id => (r.staff||[]).find(s => s.id === id);
+  const findClass = id => (r.classes||[]).find(c => c.id === id);
+  const findFood = id => (r.foodItems||[]).find(f => f.id === id);
+  const findUI = id => (r.uniformItems||[]).find(x => x.id === id);
+
+  let html = '<p style="font-size:13px;margin-bottom:12px"><b>Report Date:</b> ' + fmtDate(r.date) + ' &nbsp;·&nbsp; <b>Generated:</b> ' + new Date().toLocaleString() + '</p>';
+
+  // OVERVIEW
+  html += '<h3 style="margin-top:8px;border-bottom:2px solid #111;padding-bottom:4px">📊 Day Overview</h3>';
+  html += '<div class="summary">' +
+    '<div><b>✅ Present</b>' + r.present + '</div>' +
+    '<div><b>❌ Absent</b>' + r.absent + '</div>' +
+    '<div><b>⏰ Late</b>' + r.late + '</div>' +
+    '<div><b>📝 Excused</b>' + r.excused + '</div>' +
+    '<div><b>🆕 New Admissions</b>' + r.newStudents.length + '</div>' +
+    '<div><b>🚪 Pass Outs</b>' + r.pos.length + '</div>' +
+    '<div><b>⚠️ Discipline</b>' + r.disc.length + '</div></div>';
+
+  // FINANCE
+  html += '<h3 style="margin-top:16px;border-bottom:2px solid #111;padding-bottom:4px">💰 Financial Summary</h3>';
+  html += '<div class="summary">' +
+    '<div><b>💵 Fees Collected</b>UGX ' + r.collTotal.toLocaleString() + '</div>' +
+    '<div><b>📚 School Fees</b>UGX ' + (r.schoolFeeTotal||0).toLocaleString() + '</div>' +
+    '<div><b>🧾 Functional Fees</b>UGX ' + (r.funcFeeTotal||0).toLocaleString() + '</div>' +
+    '<div><b>👕 Uniform Sales</b>UGX ' + (r.uniformSalesTotal||0).toLocaleString() + '</div>' +
+    '<div><b>💸 Expenses</b>UGX ' + r.expTotal.toLocaleString() + '</div>' +
+    '<div><b>💳 Advances Out</b>UGX ' + r.advTotal.toLocaleString() + '</div>' +
+    '<div><b>💵 Advance Repaid</b>UGX ' + r.advRepTotal.toLocaleString() + '</div>' +
+    '<div><b>🎁 Allowances</b>UGX ' + r.allTotal.toLocaleString() + '</div>' +
+    '<div><b>🏦 Salaries</b>UGX ' + r.salTotal.toLocaleString() + '</div>' +
+    '<div><b>🛒 Food Purchases</b>UGX ' + r.purchaseTotal.toLocaleString() + '</div></div>';
+  html += '<div class="summary" style="background:#111;color:#fff"><div><b style="color:#fff">CASH IN</b>UGX ' + r.cashIn.toLocaleString() + '</div><div><b style="color:#fff">CASH OUT</b>UGX ' + r.cashOut.toLocaleString() + '</div><div><b style="color:#fff">NET CASH FLOW</b>UGX ' + r.netCash.toLocaleString() + '</div></div>';
+
+  // UNIFORM SALES (separate from fees)
+  if (r.uniformSales && r.uniformSales.length){
+    html += '<h3 style="margin-top:16px;border-bottom:2px solid #111;padding-bottom:4px">👕 Uniform Sales (' + r.uniformSales.length + ') — Total: UGX ' + r.uniformSalesTotal.toLocaleString() + '</h3>';
+
+    // Category summary
+    html += '<table style="margin-top:6px"><thead><tr><th>Category</th><th style="text-align:right">Units Sold</th><th style="text-align:right">Total Sales</th></tr></thead><tbody>' +
+      UNIFORM_CATEGORIES.filter(c => (r.uniformCatTotals[c]||0) > 0).map(c =>
+        '<tr><td><b>' + esc(c) + '</b></td>' +
+        '<td style="text-align:right">' + (r.uniformCatUnits[c]||0) + '</td>' +
+        '<td style="text-align:right"><b>UGX ' + (r.uniformCatTotals[c]||0).toLocaleString() + '</b></td></tr>').join('') +
+      '</tbody></table>';
+
+    // Detailed rows
+    html += '<table style="margin-top:10px"><thead><tr><th>Time</th><th>Pupil</th><th>Adm No</th><th>Category</th><th>Item</th><th>Size</th><th>Qty</th><th style="text-align:right">Amount</th><th>Method</th></tr></thead><tbody>' +
+      r.uniformSales.map(s => {
+        const st = findStudent(s.student_id);
+        const it = findUI(s.uniform_item_id);
+        return '<tr><td>' + fmtTime(s.sold_at) + '</td>' +
+          '<td><b>' + esc(st?st.first_name+' '+(st.last_name||''):'—') + '</b></td>' +
+          '<td>' + esc(st?st.admission_no:'—') + '</td>' +
+          '<td>' + esc(it?it.category||'Other':'Other') + '</td>' +
+          '<td>' + esc(it?it.name:'—') + '</td>' +
+          '<td>' + esc(it?it.size||'—':'—') + '</td>' +
+          '<td>' + (Number(s.quantity)||1) + '</td>' +
+          '<td style="text-align:right">' + Number(s.total_amount).toLocaleString() + '</td>' +
+          '<td>' + esc(s.payment_method||'Cash') + '</td></tr>';
+      }).join('') + '</tbody></table>';
   }
-  if (r.exps && r.exps.length){
-    html += '<h3 style="margin-top:16px">Expenses</h3><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th style="text-align:right">Amount</th></tr></thead><tbody>' +
-      r.exps.map(e => '<tr><td>' + fmtDate(e.date) + '</td><td>' + esc(e.description) + '</td><td>' + esc(e.category||'') + '</td><td style="text-align:right">' + Number(e.amount).toLocaleString() + '</td></tr>').join('') + '</tbody></table>';
+
+  // NEW ADMISSIONS
+  if (r.newStudents.length){
+    html += '<h3 style="margin-top:16px;border-bottom:2px solid #111;padding-bottom:4px">🆕 New Admissions (' + r.newStudents.length + ')</h3>';
+    html += '<table><thead><tr><th>#</th><th>Adm No</th><th>Name</th><th>Class</th><th>Parent</th><th>Contact</th></tr></thead><tbody>' +
+      r.newStudents.map((s,i) => '<tr><td>' + (i+1) + '</td><td>' + esc(s.admission_no) + '</td><td><b>' + esc(s.first_name+' '+(s.last_name||'')) + '</b></td><td>' + esc((findClass(s.class_id)||{}).name || '—') + '</td><td>' + esc(s.parent_name||'—') + '</td><td>' + esc(s.parent_contact||'—') + '</td></tr>').join('') + '</tbody></table>';
   }
+
+  // PAYMENTS (fees only)
+  if (r.pays.length){
+    html += '<h3 style="margin-top:16px;border-bottom:2px solid #111;padding-bottom:4px">💰 Fees Payments (' + r.pays.length + ') — Total: UGX ' + r.collTotal.toLocaleString() + '</h3>';
+    html += '<table><thead><tr><th>Time</th><th>Pupil</th><th>For</th><th style="text-align:right">Amount</th><th>Method</th><th>Notes</th></tr></thead><tbody>' +
+      r.pays.map(p => { const st = findStudent(p.student_id);
+        return '<tr><td>' + fmtTime(p.paid_at) + '</td><td>' + esc(st?st.first_name+' '+(st.last_name||''):'—') + '</td><td>' + esc(p.payment_for||'') + '</td><td style="text-align:right"><b>' + Number(p.amount).toLocaleString() + '</b></td><td>' + esc(p.payment_method||'') + '</td><td>' + esc(p.notes||'') + '</td></tr>';
+      }).join('') + '</tbody></table>';
+  }
+
+  // EXPENSES
+  if (r.exps.length){
+    html += '<h3 style="margin-top:16px;border-bottom:2px solid #111;padding-bottom:4px">💸 Expenses (' + r.exps.length + ') — UGX ' + r.expTotal.toLocaleString() + '</h3>';
+    html += '<table><thead><tr><th>Description</th><th>Category</th><th style="text-align:right">Amount</th></tr></thead><tbody>' +
+      r.exps.map(e => '<tr><td>' + esc(e.description) + '</td><td>' + esc(e.category||'') + '</td><td style="text-align:right">' + Number(e.amount).toLocaleString() + '</td></tr>').join('') + '</tbody></table>';
+  }
+
+  // ADVANCES ISSUED
+  if (r.advs.length){
+    html += '<h3 style="margin-top:16px;border-bottom:2px solid #111;padding-bottom:4px">💳 Advances Issued (' + r.advs.length + ') — UGX ' + r.advTotal.toLocaleString() + '</h3>';
+    html += '<table><thead><tr><th>Staff</th><th>Reason</th><th style="text-align:right">Amount</th><th>Notes</th></tr></thead><tbody>' +
+      r.advs.map(a => '<tr><td>' + esc((findStaff(a.staff_id)||{}).full_name || '—') + '</td><td>' + esc(a.reason||'') + '</td><td style="text-align:right">' + Number(a.amount).toLocaleString() + '</td><td>' + esc(a.notes||'') + '</td></tr>').join('') + '</tbody></table>';
+  }
+
+  // ADVANCE REPAYMENTS
+  if (r.advReps.length){
+    html += '<h3 style="margin-top:16px;border-bottom:2px solid #111;padding-bottom:4px">💵 Advance Repayments (' + r.advReps.length + ') — UGX ' + r.advRepTotal.toLocaleString() + '</h3>';
+    html += '<table><thead><tr><th style="text-align:right">Amount</th><th>Notes</th></tr></thead><tbody>' +
+      r.advReps.map(a => '<tr><td style="text-align:right">' + Number(a.amount).toLocaleString() + '</td><td>' + esc(a.notes||'') + '</td></tr>').join('') + '</tbody></table>';
+  }
+
+  // ALLOWANCES
+  if (r.alls.length){
+    html += '<h3 style="margin-top:16px;border-bottom:2px solid #111;padding-bottom:4px">🎁 Allowances Paid (' + r.alls.length + ') — UGX ' + r.allTotal.toLocaleString() + '</h3>';
+    html += '<table><thead><tr><th>Staff</th><th>Type</th><th>Month</th><th style="text-align:right">Amount</th></tr></thead><tbody>' +
+      r.alls.map(a => '<tr><td>' + esc((findStaff(a.staff_id)||{}).full_name || '—') + '</td><td>' + esc(a.allowance_type||'') + '</td><td>' + esc(a.month||'') + '</td><td style="text-align:right">' + Number(a.amount).toLocaleString() + '</td></tr>').join('') + '</tbody></table>';
+  }
+
+  // SALARIES
+  if (r.sals.length){
+    html += '<h3 style="margin-top:16px;border-bottom:2px solid #111;padding-bottom:4px">🏦 Salaries Paid (' + r.sals.length + ') — UGX ' + r.salTotal.toLocaleString() + '</h3>';
+    html += '<table><thead><tr><th>Staff</th><th>Month</th><th style="text-align:right">Amount</th><th>Notes</th></tr></thead><tbody>' +
+      r.sals.map(s => '<tr><td>' + esc((findStaff(s.staff_id)||{}).full_name || '—') + '</td><td>' + esc(s.month||'') + '</td><td style="text-align:right">' + Number(s.amount).toLocaleString() + '</td><td>' + esc(s.notes||'') + '</td></tr>').join('') + '</tbody></table>';
+  }
+
+  // FOOD ACTIVITY
+  if (r.foodLog.length){
+    html += '<h3 style="margin-top:16px;border-bottom:2px solid #111;padding-bottom:4px">🥘 Food & Stock Activity (' + r.foodLog.length + ') — Purchases UGX ' + r.purchaseTotal.toLocaleString() + '</h3>';
+    html += '<table><thead><tr><th>Item</th><th>Type</th><th>Qty</th><th style="text-align:right">Cost</th><th>Details</th></tr></thead><tbody>' +
+      r.foodLog.map(f => { const it = findFood(f.food_item_id);
+        return '<tr><td>' + esc(it?it.name:'—') + '</td><td>' + esc(f.type) + '</td><td>' + (Number(f.quantity)||0) + ' ' + esc(it?it.unit:'') + '</td><td style="text-align:right">' + (Number(f.total_cost)||0).toLocaleString() + '</td><td>' + esc(f.supplier||f.meal_type||'') + '</td></tr>';
+      }).join('') + '</tbody></table>';
+  }
+
+  // PASS OUTS
+  if (r.pos.length){
+    html += '<h3 style="margin-top:16px;border-bottom:2px solid #111;padding-bottom:4px">🚪 Pass Outs (' + r.pos.length + ')</h3>';
+    html += '<table><thead><tr><th>Pupil</th><th>Reason</th><th>Out</th><th>Expected</th><th>Returned</th></tr></thead><tbody>' +
+      r.pos.map(p => { const st = findStudent(p.student_id);
+        return '<tr><td>' + esc(st?st.first_name+' '+(st.last_name||''):'—') + '</td><td>' + esc(p.reason||'') + '</td><td>' + fmtTime(p.signed_out_at) + '</td><td>' + (p.expected_return_at?fmtTime(p.expected_return_at):'—') + '</td><td>' + (p.signed_in_at ? fmtTime(p.signed_in_at) : 'STILL OUT') + '</td></tr>';
+      }).join('') + '</tbody></table>';
+  }
+
+  // DISCIPLINE
+  if (r.disc.length){
+    html += '<h3 style="margin-top:16px;border-bottom:2px solid #111;padding-bottom:4px">⚠️ Discipline (' + r.disc.length + ')</h3>';
+    html += '<table><thead><tr><th>Pupil</th><th>Category</th><th>Description</th><th>Action</th></tr></thead><tbody>' +
+      r.disc.map(d => { const st = findStudent(d.student_id);
+        return '<tr><td>' + esc(st?st.first_name+' '+(st.last_name||''):'—') + '</td><td>' + esc(d.category||'') + '</td><td>' + esc(d.description||'') + '</td><td>' + esc(d.action_taken||'—') + '</td></tr>';
+      }).join('') + '</tbody></table>';
+  }
+
+  // ATTENDANCE BY CLASS
+  if (r.attByClass && Object.keys(r.attByClass).length){
+    html += '<h3 style="margin-top:16px;border-bottom:2px solid #111;padding-bottom:4px">📊 Attendance by Class</h3>';
+    html += '<table><thead><tr><th>Class</th><th style="text-align:right">Present</th><th style="text-align:right">Absent</th><th style="text-align:right">Late</th><th style="text-align:right">Excused</th><th style="text-align:right">Total</th></tr></thead><tbody>' +
+      Object.keys(r.attByClass).map(cid => { const cls = findClass(cid); const v = r.attByClass[cid];
+        return '<tr><td><b>' + esc(cls?cls.name:(cid==='unassigned'?'Unassigned':'—')) + '</b></td><td style="text-align:right">' + v.present + '</td><td style="text-align:right">' + v.absent + '</td><td style="text-align:right">' + v.late + '</td><td style="text-align:right">' + v.excused + '</td><td style="text-align:right"><b>' + (v.present+v.absent+v.late+v.excused) + '</b></td></tr>';
+      }).join('') + '</tbody></table>';
+  }
+
+  // ABSENT LIST
+  const absentList = r.att.filter(a => a.status === 'absent').map(a => findStudent(a.student_id)).filter(Boolean);
+  if (absentList.length){
+    html += '<h3 style="margin-top:16px;border-bottom:2px solid #111;padding-bottom:4px">❌ Absent Pupils (' + absentList.length + ')</h3>';
+    html += '<table><thead><tr><th>#</th><th>Adm No</th><th>Name</th><th>Class</th></tr></thead><tbody>' +
+      absentList.map((s,i) => '<tr><td>' + (i+1) + '</td><td>' + esc(s.admission_no) + '</td><td><b>' + esc(s.first_name+' '+(s.last_name||'')) + '</b></td><td>' + esc((findClass(s.class_id)||{}).name || '—') + '</td></tr>').join('') + '</tbody></table>';
+  }
+
+  // SIGNATURES
+  html += '<div style="margin-top:40px;display:flex;justify-content:space-between;gap:20px">' +
+    '<div style="flex:1"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;text-align:center">Prepared by (Bursar)</div></div>' +
+    '<div style="flex:1"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;text-align:center">Approved by (Head Teacher)</div></div></div>';
+
   printHTML(r.title, html);
 }
 window.printCurrentReport = printCurrentReport;
@@ -1333,6 +1718,7 @@ async function pageFees(root){
   root.innerHTML =
     '<div class="page-head"><div><h1>Fees Management</h1><div class="sub">📅 Active period: ' + cy + ' · Term ' + ct + '</div></div>' +
       '<div style="display:flex;gap:8px"><button class="btn ghost" onclick="printFeesList()">🖨️ Print</button><button class="btn ghost" onclick="exportFeesToExcel()">📥 Excel</button></div></div>' +
+    '<div style="background:var(--brandsoft);padding:10px 14px;border-radius:10px;margin-bottom:16px;font-size:12.5px;color:var(--brand2)">⚠️ <b>Note:</b> Uniform sales are tracked separately under the <b>👕 Uniforms</b> menu and do not affect fee balances.</div>' +
     '<h3 style="margin-bottom:10px">📚 School Fees (Running Balance — All Periods)</h3>' +
     '<div class="grid grid-kpi" style="margin-bottom:20px">' +
       '<div class="kpi" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#a7f3d0"><div class="l" style="color:#047857">Total Expected</div><div class="v" style="font-size:20px;color:#065f46;margin-top:4px">' + fmtUGX(te) + '</div></div>' +
@@ -1501,6 +1887,415 @@ async function cfmDelPay(pid, sid){
   } catch(e){ toast(e.message,'bad'); }
 }
 window.cfmDelPay = cfmDelPay;
+
+// ============ UNIFORMS ============
+async function pageUniforms(root){
+  const [items, sales, students, log] = await Promise.all([
+    rest('/rest/v1/uniform_items?school_id=eq.' + _schoolId + '&select=*&order=category,name').catch(()=>[]),
+    rest('/rest/v1/uniform_sales?school_id=eq.' + _schoolId + '&select=*&order=sold_at.desc&limit=500').catch(()=>[]),
+    rest('/rest/v1/students?school_id=eq.' + _schoolId + '&select=id,first_name,last_name,admission_no&status=eq.active&order=first_name').catch(()=>[]),
+    rest('/rest/v1/uniform_log?school_id=eq.' + _schoolId + '&select=*&order=date.desc&limit=200').catch(()=>[])
+  ]);
+  window._uniformItems = items || [];
+  window._uniformSales = sales || [];
+  window._uniformStudents = students || [];
+
+  const stockValue = (items||[]).reduce((s,i) => s + (Number(i.current_stock)||0)*(Number(i.unit_cost)||0), 0);
+  const retailValue = (items||[]).reduce((s,i) => s + (Number(i.current_stock)||0)*(Number(i.selling_price)||0), 0);
+  const salesTotal = (sales||[]).reduce((s,x) => s + (Number(x.total_amount)||0), 0);
+  const totalUnitsSold = (sales||[]).reduce((s,x) => s + (Number(x.quantity)||0), 0);
+  const lowStock = (items||[]).filter(i => Number(i.reorder_level) > 0 && Number(i.current_stock) <= Number(i.reorder_level));
+  const today = new Date().toISOString().slice(0,10);
+  const todaySales = (sales||[]).filter(s => (s.sold_at||'').slice(0,10) === today);
+  const todayTotal = todaySales.reduce((s,x) => s + Number(x.total_amount), 0);
+
+  // Group items by category
+  const grouped = {};
+  UNIFORM_CATEGORIES.forEach(c => grouped[c] = []);
+  (items||[]).forEach(i => { const c = i.category || 'Other'; if(!grouped[c]) grouped[c] = []; grouped[c].push(i); });
+
+  // Category sales totals
+  const findItem = id => (items||[]).find(x => x.id === id);
+  const catSalesTotal = {};
+  const catSalesCount = {};
+  UNIFORM_CATEGORIES.forEach(c => { catSalesTotal[c] = 0; catSalesCount[c] = 0; });
+  (sales||[]).forEach(s => { const it = findItem(s.uniform_item_id); const c = it ? (it.category||'Other') : 'Other'; if(catSalesTotal[c] === undefined){ catSalesTotal[c]=0; catSalesCount[c]=0; } catSalesTotal[c] += Number(s.total_amount)||0; catSalesCount[c] += Number(s.quantity)||0; });
+
+  root.innerHTML =
+    '<div class="page-head"><div><h1>👕 Uniforms</h1><div class="sub">Boys · Girls · Sports Wear · Sweaters · Separate from fees</div></div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+        '<button class="btn ghost" onclick="printUniformReport()">🖨️ Print</button>' +
+        '<button class="btn ghost" onclick="addUniformItem()">＋ Item</button>' +
+        '<button class="btn ghost" onclick="uniformStockIn()">📦 Stock In</button>' +
+        '<button class="btn ok" onclick="sellUniform()">🛒 Sell</button>' +
+      '</div></div>' +
+
+    '<div class="grid grid-kpi" style="margin-bottom:20px">' +
+      '<div class="kpi"><div class="l">Items</div><div class="v" style="font-size:22px;margin-top:4px">' + (items||[]).length + '</div></div>' +
+      '<div class="kpi" style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);border-color:#86efac"><div class="l" style="color:#166534">Stock Value (cost)</div><div class="v" style="color:#14532d;font-size:18px;margin-top:4px">' + fmtUGX(stockValue) + '</div></div>' +
+      '<div class="kpi" style="background:linear-gradient(135deg,#eef2ff,#c7d2fe);border-color:#a5b4fc"><div class="l" style="color:#4338ca">Retail Value</div><div class="v" style="color:#3730a3;font-size:18px;margin-top:4px">' + fmtUGX(retailValue) + '</div></div>' +
+      '<div class="kpi" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fcd34d"><div class="l" style="color:#92400e">Today\'s Sales</div><div class="v" style="color:#78350f;font-size:18px;margin-top:4px">' + fmtUGX(todayTotal) + '</div><div class="muted">' + todaySales.length + ' sale(s)</div></div>' +
+      '<div class="kpi" style="background:linear-gradient(135deg,#f3e8ff,#e9d5ff);border-color:#d8b4fe"><div class="l" style="color:#6b21a8">All-time Sales</div><div class="v" style="color:#581c87;font-size:18px;margin-top:4px">' + fmtUGX(salesTotal) + '</div><div class="muted">' + totalUnitsSold + ' units</div></div>' +
+    '</div>' +
+
+    // Category breakdown cards
+    '<h3 style="margin-bottom:10px">📊 By Category</h3>' +
+    '<div class="grid grid-kpi" style="margin-bottom:20px">' +
+      UNIFORM_CATEGORIES.map(c => {
+        const emoji = c === 'Boys Uniform' ? '👦' : c === 'Girls Uniform' ? '👧' : c === 'Sports Wear' ? '⚽' : c === 'Sweaters' ? '🧥' : '📦';
+        const count = grouped[c].length;
+        const catStockValue = grouped[c].reduce((s,i) => s + (Number(i.current_stock)||0)*(Number(i.unit_cost)||0), 0);
+        return '<div class="kpi"><div class="l">' + emoji + ' ' + c + '</div>' +
+          '<div class="v" style="font-size:18px;margin-top:4px">' + fmtUGX(catSalesTotal[c]||0) + '</div>' +
+          '<div class="muted">' + (catSalesCount[c]||0) + ' sold · ' + count + ' item(s) · stock ' + fmtUGX(catStockValue) + '</div></div>';
+      }).join('') +
+    '</div>' +
+
+    (lowStock.length ? '<div class="card" style="margin-bottom:16px;background:var(--warnsoft);border-color:#fde68a"><h3 style="color:#92400e">⚠️ Low Stock</h3><div style="display:flex;flex-wrap:wrap;gap:6px">' +
+      lowStock.map(it => '<span class="badge warn" style="padding:6px 12px">' + esc(it.name) + (it.size?' · '+esc(it.size):'') + ': ' + (Number(it.current_stock)||0) + '</span>').join('') + '</div></div>' : '') +
+
+    // Stock grouped by category
+    UNIFORM_CATEGORIES.map(cat => {
+      const list = grouped[cat];
+      if(!list.length) return '';
+      const emoji = cat === 'Boys Uniform' ? '👦' : cat === 'Girls Uniform' ? '👧' : cat === 'Sports Wear' ? '⚽' : cat === 'Sweaters' ? '🧥' : '📦';
+      return '<div class="card" style="margin-bottom:16px"><h3>' + emoji + ' ' + cat + ' <span class="muted" style="font-weight:400">· ' + list.length + ' item(s)</span></h3>' +
+        '<div class="table-wrap"><table><thead><tr><th>Item</th><th>Size</th><th style="text-align:right">Stock</th><th style="text-align:right">Reorder</th><th style="text-align:right">Cost</th><th style="text-align:right">Price</th><th style="text-align:right">Actions</th></tr></thead><tbody>' +
+        list.map(it => { const isLow = Number(it.reorder_level) > 0 && Number(it.current_stock) <= Number(it.reorder_level);
+          return '<tr><td><b>' + esc(it.name) + '</b></td><td>' + esc(it.size||'—') + '</td>' +
+            '<td style="text-align:right"><span class="badge ' + (isLow?'bad':'ok') + '">' + (Number(it.current_stock)||0) + '</span></td>' +
+            '<td style="text-align:right">' + (Number(it.reorder_level)||0) + '</td>' +
+            '<td style="text-align:right">' + (Number(it.unit_cost)||0).toLocaleString() + '</td>' +
+            '<td style="text-align:right"><b>' + (Number(it.selling_price)||0).toLocaleString() + '</b></td>' +
+            '<td style="text-align:right;white-space:nowrap">' +
+              '<button class="btn sm ok" onclick="sellUniform(\'' + it.id + '\')">🛒</button> ' +
+              '<button class="btn sm ghost" onclick="uniformStockIn(\'' + it.id + '\')">＋</button> ' +
+              '<button class="btn sm danger" onclick="delUniformItem(\'' + it.id + '\')">✕</button></td></tr>';
+        }).join('') + '</tbody></table></div></div>';
+    }).join('') +
+
+    ((items||[]).length === 0 ? '<div class="card"><div class="empty">No uniform items yet. Add Boys Uniform, Girls Uniform, Sports Wear, Sweaters…</div></div>' : '') +
+
+    // Recent Sales
+    '<div class="card"><h3>🧾 Recent Sales (' + (sales||[]).length + ') — ' + fmtUGX(salesTotal) + '</h3>' +
+      ((sales||[]).length ? '<div class="table-wrap"><table><thead><tr><th>Date</th><th>Pupil</th><th>Category</th><th>Item</th><th>Qty</th><th style="text-align:right">Amount</th><th>Method</th><th style="text-align:right"></th></tr></thead><tbody>' +
+        sales.slice(0,200).map(s => {
+          const st = (students||[]).find(x => x.id === s.student_id);
+          const it = (items||[]).find(x => x.id === s.uniform_item_id);
+          const cat = it ? (it.category||'Other') : 'Other';
+          const emoji = cat === 'Boys Uniform' ? '👦' : cat === 'Girls Uniform' ? '👧' : cat === 'Sports Wear' ? '⚽' : cat === 'Sweaters' ? '🧥' : '📦';
+          return '<tr><td style="font-size:12px">' + fmtDate(s.sold_at) + '<br><span class="muted">' + fmtTime(s.sold_at) + '</span></td>' +
+            '<td><b>' + esc(st?st.first_name+' '+(st.last_name||''):'—') + '</b><div class="muted" style="font-size:11px">' + esc(st?st.admission_no:'') + '</div></td>' +
+            '<td><span class="badge info">' + emoji + ' ' + esc(cat) + '</span></td>' +
+            '<td>' + esc(it?it.name:'—') + (it&&it.size?' <span class="badge info">' + esc(it.size) + '</span>':'') + '</td>' +
+            '<td>' + (Number(s.quantity)||1) + '</td>' +
+            '<td style="text-align:right"><b>' + Number(s.total_amount).toLocaleString() + '</b></td>' +
+            '<td><span class="badge info">' + esc(s.payment_method||'Cash') + '</span></td>' +
+            '<td style="text-align:right"><button class="btn sm danger" onclick="delUniformSale(\'' + s.id + '\')">✕</button></td></tr>';
+        }).join('') + '</tbody></table></div>' : '<div class="empty">No sales yet.</div>') +
+    '</div>';
+}
+window.pageUniforms = pageUniforms;
+
+function addUniformItem(preselectCat){
+  modal('<h3>👕 Add Uniform Item</h3>' +
+    '<div class="grid grid-2">' +
+      '<div style="grid-column:1/-1"><label>Category *</label><select id="ui_cat">' +
+        UNIFORM_CATEGORIES.map(c => '<option value="' + c + '"' + (c===preselectCat?' selected':'') + '>' + c + '</option>').join('') +
+      '</select></div>' +
+      '<div><label>Item Name *</label><input id="ui_name" placeholder="e.g. Shirt, Skirt, Tracksuit, Sweater"></div>' +
+      '<div><label>Size</label><input id="ui_size" placeholder="e.g. S, M, L, 28, 30"></div>' +
+      '<div><label>Unit Cost (UGX)</label><input id="ui_cost" type="number" value="0"></div>' +
+      '<div><label>Selling Price (UGX)</label><input id="ui_price" type="number" value="0"></div>' +
+      '<div><label>Opening Stock</label><input id="ui_stock" type="number" value="0"></div>' +
+      '<div><label>Reorder Level</label><input id="ui_reorder" type="number" value="0"></div>' +
+    '</div>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveUniformItem()">Save</button></div>');
+}
+window.addUniformItem = addUniformItem;
+
+async function saveUniformItem(){
+  const n = document.getElementById('ui_name').value.trim();
+  const cat = document.getElementById('ui_cat').value;
+  if(!n){ toast('Name required', 'bad'); return; }
+  try {
+    await rest('/rest/v1/uniform_items', { method:'POST', headers:{ 'Prefer':'return=minimal' }, body: JSON.stringify({
+      school_id:_schoolId, category:cat, name:n,
+      size:document.getElementById('ui_size').value.trim()||null,
+      unit_cost: parseFloat(document.getElementById('ui_cost').value)||0,
+      selling_price: parseFloat(document.getElementById('ui_price').value)||0,
+      current_stock: parseInt(document.getElementById('ui_stock').value)||0,
+      reorder_level: parseInt(document.getElementById('ui_reorder').value)||0
+    })});
+    toast(cat + ' item added', 'ok'); closeModal(); nav('uniforms');
+  } catch(e){ toast(e.message,'bad'); }
+}
+window.saveUniformItem = saveUniformItem;
+
+function uniformStockIn(preselectId){
+  const items = window._uniformItems || [];
+  if(!items.length){ toast('Add a uniform item first', 'bad'); return; }
+  modal('<h3>📦 Stock In</h3>' +
+    '<div class="grid grid-2">' +
+      '<div style="grid-column:1/-1"><label>Item *</label><select id="usi_item">' +
+        items.map(i => '<option value="' + i.id + '"' + (i.id===preselectId?' selected':'') + '>' + esc(i.name) + (i.size?' ('+esc(i.size)+')':'') + ' — stock: ' + (Number(i.current_stock)||0) + '</option>').join('') +
+      '</select></div>' +
+      '<div><label>Quantity *</label><input id="usi_qty" type="number" min="1"></div>' +
+      '<div><label>Unit Cost (UGX)</label><input id="usi_cost" type="number" value="0"></div>' +
+      '<div><label>Supplier</label><input id="usi_supplier"></div>' +
+      '<div><label>Date</label><input id="usi_date" type="date" value="' + new Date().toISOString().slice(0,10) + '"></div>' +
+      '<div style="grid-column:1/-1"><label>Notes</label><input id="usi_notes"></div>' +
+    '</div>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn ok" onclick="saveUniformStockIn()">Add to Stock</button></div>');
+}
+window.uniformStockIn = uniformStockIn;
+
+async function saveUniformStockIn(){
+  const iid = document.getElementById('usi_item').value;
+  const qty = parseInt(document.getElementById('usi_qty').value);
+  const cost = parseFloat(document.getElementById('usi_cost').value)||0;
+  if(!iid || !qty || qty <= 0){ toast('Fill required', 'bad'); return; }
+  try {
+    await rest('/rest/v1/uniform_log', { method:'POST', headers:{ 'Prefer':'return=minimal' }, body: JSON.stringify({
+      school_id:_schoolId, uniform_item_id:iid, type:'purchase', quantity:qty, unit_cost:cost, total_cost:qty*cost,
+      supplier:document.getElementById('usi_supplier').value.trim()||null,
+      notes:document.getElementById('usi_notes').value.trim()||null,
+      date:document.getElementById('usi_date').value
+    })});
+    const it = await rest('/rest/v1/uniform_items?id=eq.' + iid + '&select=current_stock');
+    await rest('/rest/v1/uniform_items?id=eq.' + iid, { method:'PATCH', headers:{ 'Prefer':'return=minimal' }, body: JSON.stringify({
+      current_stock: (Number(it[0].current_stock)||0) + qty,
+      unit_cost: cost > 0 ? cost : undefined
+    })});
+    toast('Stock updated', 'ok'); closeModal(); nav('uniforms');
+  } catch(e){ toast(e.message,'bad'); }
+}
+window.saveUniformStockIn = saveUniformStockIn;
+
+function sellUniform(preselectItemId){
+  const items = window._uniformItems || [];
+  const students = window._uniformStudents || [];
+  if(!items.length){ toast('Add a uniform item first', 'bad'); return; }
+  if(!students.length){ toast('No active pupils', 'bad'); return; }
+  const now = new Date(); const tz = now.getTimezoneOffset() * 60000;
+  const l = new Date(now - tz).toISOString().slice(0,16);
+
+  let preCat = UNIFORM_CATEGORIES[0];
+  if(preselectItemId){
+    const pre = items.find(x => x.id === preselectItemId);
+    if(pre) preCat = pre.category || 'Other';
+  }
+
+  modal('<h3>🛒 Sell Uniform</h3>' +
+    '<div class="grid grid-2">' +
+      '<div style="grid-column:1/-1"><label>Search Pupil</label><input id="us_search" oninput="filterUniformStudents(this.value)"></div>' +
+      '<div style="grid-column:1/-1"><label>Pupil *</label><select id="us_student">' +
+        students.map(s => '<option value="' + s.id + '">' + esc(s.first_name+' '+(s.last_name||'')+' — '+s.admission_no) + '</option>').join('') +
+      '</select></div>' +
+      '<div><label>Category *</label><select id="us_cat" onchange="onUniformCategoryChange()">' +
+        UNIFORM_CATEGORIES.map(c => '<option value="' + c + '"' + (c===preCat?' selected':'') + '>' + c + '</option>').join('') +
+      '</select></div>' +
+      '<div><label>Item *</label><select id="us_item" onchange="updateUniformSaleTotal()"></select></div>' +
+      '<div><label>Quantity *</label><input id="us_qty" type="number" min="1" value="1" oninput="updateUniformSaleTotal()"></div>' +
+      '<div><label>Unit Price (UGX) *</label><input id="us_price" type="number" oninput="updateUniformSaleTotal()"></div>' +
+      '<div><label>Total</label><input id="us_total" disabled style="background:#f1f5f9;font-weight:700"></div>' +
+      '<div><label>Payment Method *</label><select id="us_method" onchange="toggleUniformTxn()"><option value="Cash">💵 Cash</option><option value="Mobile Money">📱 MoMo</option><option value="Bank Transfer">🏦 Bank</option><option value="Cheque">📝 Cheque</option></select></div>' +
+      '<div><label>Date & Time *</label><input id="us_date" type="datetime-local" value="' + l + '"></div>' +
+      '<div id="us_txn_field" style="display:none;grid-column:1/-1"><label>Transaction ID *</label><input id="us_txn"></div>' +
+      '<div style="grid-column:1/-1"><label>Notes</label><input id="us_notes"></div>' +
+    '</div>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn ok" onclick="saveUniformSale()">💾 Record Sale</button></div>');
+
+  setTimeout(() => {
+    window._usPreselectItemId = preselectItemId || null;
+    onUniformCategoryChange();
+  }, 0);
+}
+window.sellUniform = sellUniform;
+
+function onUniformCategoryChange(){
+  const cat = document.getElementById('us_cat').value;
+  const items = (window._uniformItems||[]).filter(i => (i.category||'Other') === cat);
+  const sel = document.getElementById('us_item');
+  if(!items.length){
+    sel.innerHTML = '<option value="">— No items in ' + esc(cat) + ' —</option>';
+    document.getElementById('us_price').value = 0;
+    document.getElementById('us_total').value = 0;
+    return;
+  }
+  sel.innerHTML = items.map(i => '<option value="' + i.id + '" data-price="' + (Number(i.selling_price)||0) + '" data-stock="' + (Number(i.current_stock)||0) + '">' +
+    esc(i.name) + (i.size?' ('+esc(i.size)+')':'') + ' — ' + (Number(i.current_stock)||0) + ' in stock</option>').join('');
+  if(window._usPreselectItemId && items.some(i => i.id === window._usPreselectItemId)){
+    sel.value = window._usPreselectItemId;
+    window._usPreselectItemId = null;
+  }
+  const opt = sel.options[sel.selectedIndex];
+  document.getElementById('us_price').value = opt ? (parseFloat(opt.getAttribute('data-price'))||0) : 0;
+  updateUniformSaleTotal();
+}
+window.onUniformCategoryChange = onUniformCategoryChange;
+
+function filterUniformStudents(q){
+  q = (q||'').toLowerCase();
+  const list = window._uniformStudents || [];
+  const f = list.filter(x => (x.first_name+' '+(x.last_name||'')+' '+x.admission_no).toLowerCase().indexOf(q) !== -1);
+  const sel = document.getElementById('us_student'); if(!sel) return;
+  sel.innerHTML = f.length ? f.map(s => '<option value="' + s.id + '">' + esc(s.first_name+' '+(s.last_name||'')+' — '+s.admission_no) + '</option>').join('') : '<option value="">— No match —</option>';
+}
+window.filterUniformStudents = filterUniformStudents;
+
+function updateUniformSaleTotal(){
+  const qty = parseInt(document.getElementById('us_qty').value)||1;
+  const unit = parseFloat(document.getElementById('us_price').value)||0;
+  document.getElementById('us_total').value = (qty*unit).toLocaleString();
+}
+window.updateUniformSaleTotal = updateUniformSaleTotal;
+
+function toggleUniformTxn(){
+  const m = document.getElementById('us_method').value;
+  document.getElementById('us_txn_field').style.display = (m === 'Cash') ? 'none' : 'block';
+  if(m === 'Cash'){ const t = document.getElementById('us_txn'); if(t) t.value = ''; }
+}
+window.toggleUniformTxn = toggleUniformTxn;
+
+async function saveUniformSale(){
+  const sid = document.getElementById('us_student').value;
+  const iid = document.getElementById('us_item').value;
+  const qty = parseInt(document.getElementById('us_qty').value)||1;
+  const unit = parseFloat(document.getElementById('us_price').value)||0;
+  const method = document.getElementById('us_method').value;
+  const txn = (document.getElementById('us_txn')?.value||'').trim();
+  const soldAt = document.getElementById('us_date').value;
+  if(!sid || !iid || qty < 1){ toast('Fill required fields', 'bad'); return; }
+  if(method !== 'Cash' && !txn){ toast('Transaction ID required', 'bad'); return; }
+  if(!soldAt){ toast('Select date', 'bad'); return; }
+  try {
+    const it = await rest('/rest/v1/uniform_items?id=eq.' + iid + '&select=current_stock,name,size');
+    if((Number(it[0].current_stock)||0) < qty){ toast('Not enough stock (' + it[0].current_stock + ' left)', 'bad'); return; }
+    await rest('/rest/v1/uniform_sales', { method:'POST', headers:{ 'Prefer':'return=minimal' }, body: JSON.stringify({
+      school_id:_schoolId, student_id:sid, uniform_item_id:iid, quantity:qty, unit_price:unit,
+      total_amount: qty*unit, payment_method:method, transaction_id: txn||null,
+      notes:document.getElementById('us_notes').value.trim()||null,
+      sold_at: new Date(soldAt).toISOString(),
+      academic_year: getCurrentYear(), term: getCurrentTerm()
+    })});
+    await rest('/rest/v1/uniform_items?id=eq.' + iid, { method:'PATCH', headers:{ 'Prefer':'return=minimal' }, body: JSON.stringify({
+      current_stock: (Number(it[0].current_stock)||0) - qty
+    })});
+    toast('Sale: ' + qty + ' × ' + it[0].name + ' — ' + fmtUGX(qty*unit), 'ok');
+    closeModal(); nav('uniforms');
+  } catch(e){ toast(e.message,'bad'); }
+}
+window.saveUniformSale = saveUniformSale;
+
+async function delUniformItem(id){
+  modal('<h3>Delete Uniform Item</h3><p class="muted" style="margin-bottom:16px">Delete this item and its history?</p>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
+    '<button class="btn danger" onclick="cfmDelUniformItem(\'' + id + '\')">Delete</button></div>');
+}
+window.delUniformItem = delUniformItem;
+async function cfmDelUniformItem(id){
+  closeModal();
+  try {
+    await rest('/rest/v1/uniform_sales?uniform_item_id=eq.' + id, { method:'DELETE' });
+    await rest('/rest/v1/uniform_log?uniform_item_id=eq.' + id, { method:'DELETE' });
+    await rest('/rest/v1/uniform_items?id=eq.' + id, { method:'DELETE' });
+    toast('Deleted', 'ok'); nav('uniforms');
+  } catch(e){ toast(e.message,'bad'); }
+}
+window.cfmDelUniformItem = cfmDelUniformItem;
+
+async function delUniformSale(id){
+  modal('<h3>Delete Sale</h3><p class="muted" style="margin-bottom:16px">Delete this sale and restore stock?</p>' +
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>' +
+    '<button class="btn danger" onclick="cfmDelUniformSale(\'' + id + '\')">Delete</button></div>');
+}
+window.delUniformSale = delUniformSale;
+async function cfmDelUniformSale(id){
+  closeModal();
+  try {
+    const s = await rest('/rest/v1/uniform_sales?id=eq.' + id + '&select=*');
+    if(s && s[0]){
+      const it = await rest('/rest/v1/uniform_items?id=eq.' + s[0].uniform_item_id + '&select=current_stock');
+      if(it && it[0]){
+        await rest('/rest/v1/uniform_items?id=eq.' + s[0].uniform_item_id, { method:'PATCH', headers:{ 'Prefer':'return=minimal' }, body: JSON.stringify({
+          current_stock: (Number(it[0].current_stock)||0) + (Number(s[0].quantity)||0)
+        })});
+      }
+    }
+    await rest('/rest/v1/uniform_sales?id=eq.' + id, { method:'DELETE' });
+    toast('Sale deleted, stock restored', 'ok'); nav('uniforms');
+  } catch(e){ toast(e.message,'bad'); }
+}
+window.cfmDelUniformSale = cfmDelUniformSale;
+
+async function printUniformReport(){
+  const [items, sales, students] = await Promise.all([
+    rest('/rest/v1/uniform_items?school_id=eq.' + _schoolId + '&select=*&order=category,name').catch(()=>[]),
+    rest('/rest/v1/uniform_sales?school_id=eq.' + _schoolId + '&select=*&order=sold_at.desc').catch(()=>[]),
+    rest('/rest/v1/students?school_id=eq.' + _schoolId + '&select=id,first_name,last_name,admission_no').catch(()=>[])
+  ]);
+  const findS = id => (students||[]).find(x => x.id === id);
+  const findI = id => (items||[]).find(x => x.id === id);
+
+  const stockValue = (items||[]).reduce((s,i) => s + (Number(i.current_stock)||0)*(Number(i.unit_cost)||0), 0);
+  const retailValue = (items||[]).reduce((s,i) => s + (Number(i.current_stock)||0)*(Number(i.selling_price)||0), 0);
+  const salesTotal = (sales||[]).reduce((s,x) => s + Number(x.total_amount), 0);
+
+  const groups = {};
+  UNIFORM_CATEGORIES.forEach(c => groups[c] = []);
+  (items||[]).forEach(i => { const c = i.category||'Other'; if(!groups[c]) groups[c]=[]; groups[c].push(i); });
+
+  const salesByCat = {};
+  UNIFORM_CATEGORIES.forEach(c => salesByCat[c] = { count:0, units:0, total:0 });
+  (sales||[]).forEach(s => { const it = findI(s.uniform_item_id); const c = it ? (it.category||'Other') : 'Other'; if(!salesByCat[c]) salesByCat[c]={count:0,units:0,total:0}; salesByCat[c].count++; salesByCat[c].units += Number(s.quantity)||0; salesByCat[c].total += Number(s.total_amount)||0; });
+
+  let html = '<div class="summary">' +
+    '<div><b>Total Items</b>' + (items||[]).length + '</div>' +
+    '<div><b>Stock Value (cost)</b>UGX ' + stockValue.toLocaleString() + '</div>' +
+    '<div><b>Retail Value</b>UGX ' + retailValue.toLocaleString() + '</div>' +
+    '<div><b>Total Sales</b>UGX ' + salesTotal.toLocaleString() + '</div></div>';
+
+  html += '<h3 style="margin-top:16px">Sales by Category</h3>';
+  html += '<table><thead><tr><th>Category</th><th style="text-align:right">Units Sold</th><th style="text-align:right">Transactions</th><th style="text-align:right">Total Sales</th></tr></thead><tbody>' +
+    UNIFORM_CATEGORIES.map(c => '<tr><td><b>' + esc(c) + '</b></td>' +
+      '<td style="text-align:right">' + salesByCat[c].units + '</td>' +
+      '<td style="text-align:right">' + salesByCat[c].count + '</td>' +
+      '<td style="text-align:right"><b>UGX ' + salesByCat[c].total.toLocaleString() + '</b></td></tr>').join('') +
+    '</tbody></table>';
+
+  html += '<h3 style="margin-top:16px">Stock by Category</h3>';
+  UNIFORM_CATEGORIES.forEach(cat => {
+    const list = groups[cat];
+    if(!list.length) return;
+    const catStockVal = list.reduce((s,i) => s + (Number(i.current_stock)||0)*(Number(i.unit_cost)||0), 0);
+    html += '<h4 style="margin-top:12px;background:#f1f5f9;padding:6px 10px;border-radius:4px">' + esc(cat) + ' — Stock Value: UGX ' + catStockVal.toLocaleString() + '</h4>';
+    html += '<table><thead><tr><th>Item</th><th>Size</th><th style="text-align:right">Stock</th><th style="text-align:right">Cost</th><th style="text-align:right">Price</th><th style="text-align:right">Value</th></tr></thead><tbody>' +
+      list.map(i => '<tr><td><b>' + esc(i.name) + '</b></td><td>' + esc(i.size||'—') + '</td>' +
+        '<td style="text-align:right">' + (Number(i.current_stock)||0) + '</td>' +
+        '<td style="text-align:right">' + (Number(i.unit_cost)||0).toLocaleString() + '</td>' +
+        '<td style="text-align:right">' + (Number(i.selling_price)||0).toLocaleString() + '</td>' +
+        '<td style="text-align:right">' + ((Number(i.current_stock)||0)*(Number(i.unit_cost)||0)).toLocaleString() + '</td></tr>').join('') +
+      '</tbody></table>';
+  });
+
+  if ((sales||[]).length){
+    html += '<h3 style="margin-top:16px">Sales History (' + sales.length + ')</h3>';
+    html += '<table><thead><tr><th>Date</th><th>Pupil</th><th>Category</th><th>Item</th><th>Size</th><th>Qty</th><th style="text-align:right">Amount</th><th>Method</th></tr></thead><tbody>' +
+      sales.map(s => { const st = findS(s.student_id); const it = findI(s.uniform_item_id);
+        return '<tr><td>' + fmtDate(s.sold_at) + '</td>' +
+          '<td>' + esc(st?st.first_name+' '+(st.last_name||''):'—') + '</td>' +
+          '<td>' + esc(it?it.category||'Other':'Other') + '</td>' +
+          '<td>' + esc(it?it.name:'—') + '</td>' +
+          '<td>' + esc(it?it.size||'—':'—') + '</td>' +
+          '<td>' + (Number(s.quantity)||1) + '</td>' +
+          '<td style="text-align:right">' + Number(s.total_amount).toLocaleString() + '</td>' +
+          '<td>' + esc(s.payment_method||'Cash') + '</td></tr>';
+      }).join('') + '</tbody></table>';
+  }
+  printHTML('Uniform Report', html);
+}
+window.printUniformReport = printUniformReport;
 
 // ============ FOOD & STOCK ============
 async function pageFood(root){
@@ -1913,7 +2708,7 @@ async function saveSchoolInfo(){ const n = document.getElementById('set_name').v
 window.saveSchoolInfo = saveSchoolInfo;
 async function wipeStudents(){ modal('<h3>⚠️ Delete All Pupils</h3><p class="muted" style="margin-bottom:16px">Delete ALL pupils permanently?</p><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="cfmWipeStudents()">Yes</button></div>'); }
 window.wipeStudents = wipeStudents;
-async function cfmWipeStudents(){ closeModal(); try { for (const t of ['payments','attendance','pass_outs','discipline','marks','report_comments','students']) await rest('/rest/v1/' + t + '?school_id=eq.' + _schoolId, { method: 'DELETE' }); toast('All pupils deleted', 'ok'); nav('settings'); } catch(e){ toast(e.message,'bad'); } }
+async function cfmWipeStudents(){ closeModal(); try { for (const t of ['payments','attendance','pass_outs','discipline','marks','report_comments','uniform_sales','students']) await rest('/rest/v1/' + t + '?school_id=eq.' + _schoolId, { method: 'DELETE' }); toast('All pupils deleted', 'ok'); nav('settings'); } catch(e){ toast(e.message,'bad'); } }
 window.cfmWipeStudents = cfmWipeStudents;
 async function wipePayments(){ modal('<h3>⚠️ Delete All Payments</h3><p class="muted" style="margin-bottom:16px">Delete all?</p><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="cfmWipePay()">Yes</button></div>'); }
 window.wipePayments = wipePayments;
@@ -1936,5 +2731,4 @@ async function handleAuthRedirect(){
 handleAuthRedirect();
 </script>
 </body>
-  </html>
-  
+</html>
