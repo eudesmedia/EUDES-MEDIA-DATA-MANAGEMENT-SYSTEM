@@ -25,7 +25,6 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .topbar{position:fixed;top:0;left:0;right:0;height:48px;background:var(--navy);color:#fff;display:flex;align-items:center;padding:0 12px;z-index:100;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
 .topbar .title{flex:1;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;letter-spacing:.03em;color:#fff}
 .topbar .icon-btn{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:#fff;font-size:16px}
-.topbar .icon-btn:hover{background:rgba(255,255,255,.1)}
 #app{min-height:100vh;padding-top:48px;padding-bottom:90px;background:var(--bg)}
 .container{max-width:1200px;margin:0 auto;padding:0 12px}
 .header-wrap{padding:12px}
@@ -33,7 +32,6 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .header-top{display:flex;justify-content:flex-end;gap:6px;margin-bottom:8px}
 .admin-chip{background:rgba(255,255,255,.15);color:#fff;font-size:10.5px;font-weight:700;padding:4px 12px;border-radius:999px;letter-spacing:.06em;text-transform:uppercase;border:1px solid rgba(255,255,255,.2)}
 .exit-chip{background:#dc2626;color:#fff;font-size:10.5px;font-weight:700;padding:4px 12px;border-radius:999px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
-.exit-chip:hover{background:#b91c1c}
 .header-school{display:flex;align-items:flex-start;gap:10px;font-size:16px;font-weight:800;margin-bottom:8px;line-height:1.2;text-transform:uppercase}
 .header-school .logo{width:36px;height:36px;border-radius:10px;background:var(--gold);display:grid;place-items:center;font-size:18px;flex-shrink:0;color:var(--navy)}
 .header-school .name{flex:1;padding-top:2px}
@@ -46,9 +44,8 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .header-period select option{color:var(--navy)}
 .header-search{position:relative}
 .header-search input{background:#fff;border:none;border-radius:999px;padding:13px 20px 13px 46px;font-size:13.5px;color:var(--navy);font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,.15)}
-.header-search input::placeholder{color:#94a3b8;font-weight:400}
 .header-search .si{position:absolute;left:18px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:15px;pointer-events:none}
-.nav-pills{display:flex;gap:8px;padding:12px 0 4px;overflow-x:auto;scrollbar-width:none;scroll-behavior:smooth}
+.nav-pills{display:flex;gap:8px;padding:12px 0 4px;overflow-x:auto;scrollbar-width:none}
 .nav-pills::-webkit-scrollbar{display:none}
 .pill{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:9px 15px;border-radius:999px;background:#fff;color:var(--navy);font-size:12.5px;font-weight:600;border:1.5px solid var(--line);white-space:nowrap;cursor:pointer}
 .pill:hover{background:#f8fafc;border-color:var(--navy)}
@@ -109,8 +106,8 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .bottom-bar .pill{background:var(--navy);color:#fff;border-color:var(--navy);padding:9px 14px;font-size:12px}
 .bottom-bar .pill.active{background:var(--gold);border-color:var(--gold);color:#fff}
 .wa-float{position:fixed;bottom:96px;right:16px;background:#25D366;color:#fff;width:52px;height:52px;border-radius:50%;z-index:99;text-decoration:none;box-shadow:0 10px 20px rgba(0,0,0,.25);display:grid;place-items:center;font-size:22px}
-.wa-float:hover{background:#20BA5A;color:#fff}
 @media(max-width:640px){.page-head{flex-direction:column;align-items:stretch}.page-head .btn{width:100%}}
+@media print{.topbar,.header-wrap,.nav-pills,.bottom-bar,.wa-float,.toast,.btn,.page-head .btn{display:none!important}#app{padding:0!important}.container{max-width:100%!important}.card{box-shadow:none!important;border:1px solid #ccc!important;page-break-inside:avoid}table{font-size:11px!important}th,td{padding:5px 6px!important}th{background:#0a2540!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style>
 </head>
 <body>
@@ -188,6 +185,7 @@ const SUPA_URL='https://wabeempxckdtjvrkzhpv.supabase.co';
 const SUPA_KEY='sb_publishable_n0uAm0Gcq7qR2dJM4jMZGQ_wiV__Cfp';
 const FUNC_FEE_DEFAULT=70000;
 const UNIFORM_CATEGORIES=['Boys Uniform','Girls Uniform','Sports Wear','Sweaters','Other'];
+const STAFF_ROLES=['Teacher','Head Teacher','Deputy Head Teacher','Director','Bursar','Secretary','Public Relations Officer','Matron Boys','Matron Girls','Nurse','Librarian','Driver','Cook','Security Guard','Cleaner','Groundsman','Store Keeper','Support Staff','Other'];
 
 let _memoryStore={};
 const safeStorage={getItem:k=>{try{return localStorage.getItem(k);}catch(e){return _memoryStore[k]||null;}},setItem:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){_memoryStore[k]=String(v);}},removeItem:k=>{try{localStorage.removeItem(k);}catch(e){delete _memoryStore[k];}}};
@@ -232,7 +230,6 @@ function fmtLongDate(d){return d.toLocaleDateString('en-GB',{weekday:'short',day
 function printHTML(title,bodyHTML){const w=window.open('','_blank');w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>'+title+'</title><style>*{box-sizing:border-box}body{font-family:Inter,system-ui,sans-serif;color:#111;padding:20px;margin:0}h1{font-size:20px;margin:0 0 4px}h2{font-size:16px;margin:0 0 8px}.muted{color:#666;font-size:12px}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{padding:8px 10px;text-align:left;border-bottom:1px solid #ddd;font-size:12.5px}th{background:#0a2540;color:#fff;text-transform:uppercase;font-size:11px}.header{text-align:center;padding-bottom:14px;border-bottom:2px solid #111;margin-bottom:14px}.footer{text-align:center;font-size:10px;color:#888;margin-top:20px;padding-top:10px;border-top:1px solid #eee}.summary{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;background:#f8fafc;padding:12px;border-radius:8px;margin-top:12px;font-size:13px}.summary div b{display:block;font-size:11px;color:#666;text-transform:uppercase}@media print{@page{margin:10mm}}</style></head><body><div class="header"><h1>'+esc(_school?_school.name:'School')+'</h1><div class="muted">'+esc(_school?.address||'')+(_school?.telephone?' · '+esc(_school.telephone):'')+'</div><h2 style="margin-top:10px">'+title+'</h2><div class="muted">Printed: '+new Date().toLocaleString()+'</div></div>'+bodyHTML+'<div class="footer">Powered by EUDES MEDIA</div><script>setTimeout(()=>window.print(),300);<\/script></body></html>');w.document.close();}
 window.toast=toast;window.modal=modal;window.closeModal=closeModal;window.printHTML=printHTML;window.esc=esc;window.fmtUGX=fmtUGX;window.fmtDate=fmtDate;window.fmtTime=fmtTime;
 
-/* Sex display: Male / Female */
 window.sexIcon=g=>g==='male'?'Male':g==='female'?'Female':'—';
 window.ageOf=s=>{if(!s.date_of_birth)return '—';const diff=Date.now()-new Date(s.date_of_birth).getTime();return Math.floor(diff/(365.25*24*60*60*1000))+'y';};
 
@@ -407,40 +404,103 @@ window.doGlobalSearch=doGlobalSearch;
 function generateLIN(fn){const i=fn?fn.charAt(0).toUpperCase():'X';return 'PM'+i+Math.floor(1000+Math.random()*9000);}
 window.generateLIN=generateLIN;
 
+/* ============ FINANCE CORE — SINGLE SOURCE OF TRUTH ============ */
+/* Every page uses these functions. Change once → updates everywhere. */
+async function loadFinanceData(){
+  const cy=getCurrentYear(),ct=getCurrentTerm();
+  const [students,classes,payments]=await Promise.all([
+    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=*&order=first_name'),
+    loadClasses(),
+    rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=*&order=paid_at.desc').catch(()=>[])
+  ]);
+
+  // Group payments by student for current term
+  const paidByStudent={};
+  const paidAllTime={};
+  const paymentCountByStudent={};
+  (payments||[]).forEach(p=>{
+    const sid=p.student_id;
+    if(!paidByStudent[sid])paidByStudent[sid]={school:0,func:0};
+    if(!paidAllTime[sid])paidAllTime[sid]={school:0,func:0};
+    if(!paymentCountByStudent[sid])paymentCountByStudent[sid]=0;
+
+    // Term-specific (year + term)
+    if(p.year===cy && p.term===ct){
+      if(p.payment_for==='Functional Fees')paidByStudent[sid].func+=Number(p.amount);
+      else paidByStudent[sid].school+=Number(p.amount);
+      paymentCountByStudent[sid]++;
+    }
+    // All-time
+    if(p.payment_for==='Functional Fees')paidAllTime[sid].func+=Number(p.amount);
+    else paidAllTime[sid].school+=Number(p.amount);
+  });
+
+  // Compute per-pupil finance
+  const computed=(students||[]).map(s=>{
+    const expectedTerm=(Number(s.actual_fee)||0)+(Number(s.transport_fee)||0)+(Number(s.functional_fee)||FUNC_FEE_DEFAULT);
+    const bf=Number(s.balance_bf)||0;
+    const expectedRunning=expectedTerm+bf;
+    const termPaid=(paidByStudent[s.id]||{school:0,func:0});
+    const allPaid=(paidAllTime[s.id]||{school:0,func:0});
+    const termPaidTotal=termPaid.school+termPaid.func;
+    const allPaidTotal=allPaid.school+allPaid.func;
+    return {
+      ...s,
+      _expected_term:expectedTerm,
+      _expected_running:expectedRunning,
+      _paid_term:termPaidTotal,
+      _paid_all:allPaidTotal,
+      _balance_term:expectedTerm-termPaidTotal,
+      _balance_running:expectedRunning-allPaidTotal,
+      _payments_count:paymentCountByStudent[s.id]||0
+    };
+  });
+
+  return {students:computed,classes:classes||[],payments:payments||[],year:cy,term:ct};
+}
+window.loadFinanceData=loadFinanceData;
+
+function financeSummary(students){
+  let expected_term=0, collected_term=0, expected_running=0, collected_running=0, zero_paid=0;
+  students.forEach(s=>{
+    expected_term+=s._expected_term;
+    collected_term+=s._paid_term;
+    expected_running+=s._expected_running;
+    collected_running+=s._paid_all;
+    if(s._paid_term===0 && s._expected_term>0)zero_paid++;
+  });
+  return {
+    expected_term, collected_term, outstanding_term:expected_term-collected_term,
+    expected_running, collected_running, outstanding_running:expected_running-collected_running,
+    zero_paid
+  };
+}
+window.financeSummary=financeSummary;
+
 /* ============ DASHBOARD ============ */
 async function pageDashboard(root){
   const cy=getCurrentYear(),ct=getCurrentTerm();
-  const [students,classes,staff,todayAtt,uniformSales,feeStudents,feePayments]=await Promise.all([
-    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,gender,status,class_id,boarding_status'),
-    rest('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=id,name'),
-    rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=id').catch(()=>[]),
+  const [fin,allStudents,todayAtt,uniformSales]=await Promise.all([
+    loadFinanceData(),
+    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,gender,status,boarding_status'),
     rest('/rest/v1/attendance?school_id=eq.'+_schoolId+'&date=eq.'+new Date().toISOString().slice(0,10)+'&select=status').catch(()=>[]),
-    rest('/rest/v1/uniform_sales?school_id=eq.'+_schoolId+'&select=total_amount,sold_at').catch(()=>[]),
-    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=id,balance_bf,actual_fee,transport_fee,functional_fee'),
-    rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&year=eq.'+cy+'&term=eq.'+ct+'&select=student_id,amount').catch(()=>[])
+    rest('/rest/v1/uniform_sales?school_id=eq.'+_schoolId+'&select=total_amount,sold_at').catch(()=>[])
   ]);
-  const active=(students||[]).filter(s=>s.status==='active');
-  const paidMap={};(feePayments||[]).forEach(p=>{if(!paidMap[p.student_id])paidMap[p.student_id]=0;paidMap[p.student_id]+=Number(p.amount);});
-  let expected=0,collected=0,zeroPaid=0;
-  (feeStudents||[]).forEach(s=>{
-    const exp=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.transport_fee)||0)+(Number(s.functional_fee)||FUNC_FEE_DEFAULT);
-    const p=paidMap[s.id]||0;
-    expected+=exp;collected+=p;
-    if(p===0)zeroPaid++;
-  });
-  const balance=expected-collected;
+  const active=fin.students.filter(s=>s.status==='active');
+  const sum=financeSummary(active);
   const presentToday=(todayAtt||[]).filter(a=>a.status==='present').length;
   const absentToday=(todayAtt||[]).filter(a=>a.status==='absent').length;
   const uniformAll=(uniformSales||[]).reduce((s,x)=>s+Number(x.total_amount),0);
   const todayStr=new Date().toISOString().slice(0,10);
   const uniformToday=(uniformSales||[]).filter(s=>(s.sold_at||'').slice(0,10)===todayStr).reduce((s,x)=>s+Number(x.total_amount),0);
-  const revenue=collected+uniformAll;
+  const totalRevenue=sum.collected_term+uniformAll;
+
   root.innerHTML=
     '<div class="grid grid-kpi" style="margin-bottom:14px">'+
       '<div class="kpi kpi-navy"><div class="v">'+active.length+'</div><div class="l">Students</div></div>'+
-      '<div class="kpi kpi-ok"><div class="v">'+fmtUGX(revenue)+'</div><div class="l">Revenue</div></div>'+
-      '<div class="kpi kpi-bad"><div class="v">'+fmtUGX(balance)+'</div><div class="l">Outstanding</div></div>'+
-      '<div class="kpi kpi-warn"><div class="v">'+zeroPaid+'</div><div class="l">Zero-Paid</div></div>'+
+      '<div class="kpi kpi-ok"><div class="v">'+fmtUGX(totalRevenue)+'</div><div class="l">Revenue (T'+ct+')</div></div>'+
+      '<div class="kpi kpi-bad"><div class="v">'+fmtUGX(sum.outstanding_term)+'</div><div class="l">Outstanding (T'+ct+')</div></div>'+
+      '<div class="kpi kpi-warn"><div class="v">'+sum.zero_paid+'</div><div class="l">Zero-Paid</div></div>'+
       '<div class="kpi kpi-plain"><div class="v">'+presentToday+'</div><div class="l">Present Today</div></div>'+
       '<div class="kpi kpi-plain"><div class="v">'+absentToday+'</div><div class="l">Absent Today</div></div>'+
     '</div>'+
@@ -448,53 +508,58 @@ async function pageDashboard(root){
       '<div><div class="muted">Boys</div><div style="font-size:20px;font-weight:800;color:var(--navy)">'+active.filter(s=>s.gender==='male').length+'</div></div>'+
       '<div><div class="muted">Girls</div><div style="font-size:20px;font-weight:800;color:var(--navy)">'+active.filter(s=>s.gender==='female').length+'</div></div>'+
       '<div><div class="muted">Boarding</div><div style="font-size:20px;font-weight:800;color:var(--navy)">'+active.filter(s=>(s.boarding_status||'').toLowerCase().includes('board')).length+'</div></div>'+
-      '<div><div class="muted">Staff</div><div style="font-size:20px;font-weight:800;color:var(--navy)">'+(staff||[]).length+'</div></div>'+
-      '<div><div class="muted">Classes</div><div style="font-size:20px;font-weight:800;color:var(--navy)">'+(classes||[]).length+'</div></div>'+
+      '<div><div class="muted">Classes</div><div style="font-size:20px;font-weight:800;color:var(--navy)">'+(fin.classes||[]).length+'</div></div>'+
       '<div><div class="muted">Uniform Sales</div><div style="font-size:15px;font-weight:800;color:var(--navy)">'+fmtUGX(uniformAll)+'</div></div>'+
+      '<div><div class="muted">Uniform Today</div><div style="font-size:15px;font-weight:800;color:var(--navy)">'+fmtUGX(uniformToday)+'</div></div>'+
     '</div></div>'+
-    '<div class="card"><h3>💰 Term Finance ('+cy+' T'+ct+')</h3><div class="grid grid-3">'+
-      '<div class="kpi kpi-navy" style="padding:14px"><div class="v" style="font-size:15px">'+fmtUGX(expected)+'</div><div class="l">Expected</div></div>'+
-      '<div class="kpi kpi-ok" style="padding:14px"><div class="v" style="font-size:15px">'+fmtUGX(collected)+'</div><div class="l">Collected</div></div>'+
-      '<div class="kpi kpi-bad" style="padding:14px"><div class="v" style="font-size:15px">'+fmtUGX(balance)+'</div><div class="l">Outstanding</div></div>'+
+    '<div class="card"><h3>💰 Term Finance ('+cy+' · Term '+ct+')</h3><div class="grid grid-3">'+
+      '<div class="kpi kpi-navy" style="padding:14px"><div class="v" style="font-size:15px">'+fmtUGX(sum.expected_term)+'</div><div class="l">Expected (Term '+ct+')</div></div>'+
+      '<div class="kpi kpi-ok" style="padding:14px"><div class="v" style="font-size:15px">'+fmtUGX(sum.collected_term)+'</div><div class="l">Collected</div></div>'+
+      '<div class="kpi kpi-bad" style="padding:14px"><div class="v" style="font-size:15px">'+fmtUGX(sum.outstanding_term)+'</div><div class="l">Outstanding</div></div>'+
+    '</div></div>'+
+    '<div class="card"><h3>📈 All-Time Running Balance</h3><div class="grid grid-3">'+
+      '<div class="kpi kpi-plain" style="padding:14px"><div class="v" style="font-size:15px">'+fmtUGX(sum.expected_running)+'</div><div class="l">Total Expected (incl. B/F)</div></div>'+
+      '<div class="kpi kpi-plain" style="padding:14px"><div class="v" style="font-size:15px">'+fmtUGX(sum.collected_running)+'</div><div class="l">All Payments Ever</div></div>'+
+      '<div class="kpi kpi-plain" style="padding:14px"><div class="v" style="font-size:15px">'+fmtUGX(sum.outstanding_running)+'</div><div class="l">Outstanding (All-time)</div></div>'+
     '</div></div>';
 }
 window.pageDashboard=pageDashboard;
 
 /* ============ FEES ============ */
+let _feesMode='term';
 async function pageFees(root){
   const cy=getCurrentYear(),ct=getCurrentTerm();
-  const [students,classes,payments]=await Promise.all([
-    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=*&order=first_name'),
-    loadClasses(),
-    rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&year=eq.'+cy+'&term=eq.'+ct+'&select=student_id,amount,payment_for').catch(()=>[])
-  ]);
-  window._feeStudents=students||[];window._feeClasses=classes;
-  const paid={};
-  (payments||[]).forEach(p=>{
-    if(!paid[p.student_id])paid[p.student_id]={school:0,func:0};
-    if(p.payment_for==='Functional Fees')paid[p.student_id].func+=Number(p.amount);
-    else paid[p.student_id].school+=Number(p.amount);
-  });
-  window._termPaid=paid;
+  const fin=await loadFinanceData();
+  window._finCache=fin;
+  const active=fin.students.filter(s=>s.status==='active');
+  const classes=fin.classes;
+
+  // Per-mode calculation
+  const calcMode = _feesMode==='term' ? 'term' : 'running';
   let expected=0,collected=0,zeroPaid=0;
-  (students||[]).forEach(s=>{
-    const sf=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.transport_fee)||0)+(Number(s.functional_fee)||FUNC_FEE_DEFAULT);
-    const p=paid[s.id]||{school:0,func:0};
-    expected+=sf;collected+=p.school+p.func;
-    if((p.school+p.func)===0)zeroPaid++;
+  active.forEach(s=>{
+    if(calcMode==='term'){ expected+=s._expected_term; collected+=s._paid_term; if(s._paid_term===0 && s._expected_term>0)zeroPaid++; }
+    else { expected+=s._expected_running; collected+=s._paid_all; if(s._paid_all===0 && s._expected_running>0)zeroPaid++; }
   });
   const balance=expected-collected;
+
   root.innerHTML=
     '<div class="page-head"><div><h1>💰 Fees Management</h1><div class="sub">📅 '+cy+' · Term '+ct+'</div></div>'+
-      '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="printFeesList()">🖨️</button><button class="btn ghost" onclick="exportFeesToExcel()">📥</button></div></div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="printFeesList()">🖨️ Print</button><button class="btn ghost" onclick="exportFeesToExcel()">📥 Excel</button></div></div>'+
+
+    '<div class="card" style="padding:12px"><div style="display:flex;gap:6px;flex-wrap:wrap">'+
+      '<button class="pill'+(_feesMode==='term'?' active':'')+'" onclick="_feesMode=\'term\';nav(\'fees\')">📅 This Term Only</button>'+
+      '<button class="pill'+(_feesMode==='running'?' active':'')+'" onclick="_feesMode=\'running\';nav(\'fees\')">📊 Running Balance (All Time)</button>'+
+    '</div></div>'+
+
     '<div class="grid grid-kpi" style="margin-bottom:14px">'+
-      '<div class="kpi kpi-navy"><div class="v">'+fmtUGX(expected)+'</div><div class="l">Expected</div></div>'+
+      '<div class="kpi kpi-navy"><div class="v">'+fmtUGX(expected)+'</div><div class="l">Expected '+(calcMode==='term'?'(Term '+ct+')':'(All-time)')+'</div></div>'+
       '<div class="kpi kpi-ok"><div class="v">'+fmtUGX(collected)+'</div><div class="l">Collected</div></div>'+
       '<div class="kpi kpi-bad"><div class="v">'+fmtUGX(balance)+'</div><div class="l">Outstanding</div></div>'+
       '<div class="kpi kpi-warn"><div class="v">'+zeroPaid+'</div><div class="l">Zero-Paid</div></div>'+
     '</div>'+
     '<div class="card"><div class="grid grid-3" style="margin-bottom:14px">'+
-      '<div><label>Class</label><select id="feesClassFilter" onchange="filterFeesTable()"><option value="">All</option>'+(classes||[]).map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('')+'</select></div>'+
+      '<div><label>Class</label><select id="feesClassFilter" onchange="filterFeesTable()"><option value="">All</option>'+classes.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('')+'</select></div>'+
       '<div><label>Show</label><select id="feesOwingFilter" onchange="filterFeesTable()"><option value="all">All</option><option value="zero_paid">Zero Paid</option><option value="owing">Owing</option><option value="paid_full">Paid in full</option><option value="boarding">Boarding</option><option value="van">🚐 Van</option></select></div>'+
       '<div style="display:flex;align-items:flex-end"><button class="btn ghost block" onclick="document.getElementById(\'feesClassFilter\').value=\'\';document.getElementById(\'feesOwingFilter\').value=\'all\';filterFeesTable()">Reset</button></div>'+
     '</div><div id="feesTableContainer"></div></div>';
@@ -503,33 +568,39 @@ async function pageFees(root){
 window.pageFees=pageFees;
 
 function filterFeesTable(){
+  const fin=window._finCache||{students:[],classes:[]};
   const fc=document.getElementById('feesClassFilter')?.value||'';
   const m=document.getElementById('feesOwingFilter')?.value||'all';
-  const classes=window._feeClasses||[];
-  const paid=window._termPaid||{};
-  let list=window._feeStudents||[];
+  const mode=_feesMode==='term'?'term':'running';
+
+  let list=fin.students.filter(s=>s.status==='active');
   if(fc)list=list.filter(s=>s.class_id===fc);
-  const withCalc=list.map(s=>{
-    const exp=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.transport_fee)||0)+(Number(s.functional_fee)||FUNC_FEE_DEFAULT);
-    const p=paid[s.id]||{school:0,func:0};
-    const totPaid=p.school+p.func;
-    return {...s,_expected:exp,_paid:totPaid,_balance:exp-totPaid};
-  });
-  let filtered=withCalc;
-  if(m==='zero_paid')filtered=withCalc.filter(r=>r._paid===0);
-  if(m==='owing')filtered=withCalc.filter(r=>r._balance>0);
-  if(m==='paid_full')filtered=withCalc.filter(r=>r._balance<=0);
-  if(m==='boarding')filtered=withCalc.filter(r=>(r.boarding_status||'').toLowerCase().includes('board'));
-  if(m==='van')filtered=withCalc.filter(r=>Number(r.transport_fee)>0);
+
+  // Attach working fields based on mode
+  list=list.map(s=>({
+    ...s,
+    _expected: mode==='term'?s._expected_term:s._expected_running,
+    _paid: mode==='term'?s._paid_term:s._paid_all,
+    _balance: mode==='term'?s._balance_term:s._balance_running
+  }));
+
+  let filtered=list;
+  if(m==='zero_paid')filtered=list.filter(r=>r._paid===0&&r._expected>0);
+  if(m==='owing')filtered=list.filter(r=>r._balance>0);
+  if(m==='paid_full')filtered=list.filter(r=>r._balance<=0);
+  if(m==='boarding')filtered=list.filter(r=>(r.boarding_status||'').toLowerCase().includes('board'));
+  if(m==='van')filtered=list.filter(r=>Number(r.transport_fee)>0);
+
   window._filteredFees=filtered;
   const c=document.getElementById('feesTableContainer');
   if(!filtered.length){c.innerHTML='<div class="empty">No pupils match.</div>';return;}
+
   c.innerHTML='<div class="table-wrap"><table><thead><tr>'+
     '<th>Adm No</th><th>LIN</th><th>Name</th><th>Sex</th><th>Age</th><th>Class</th><th>Parent</th><th>Contact</th><th>Location</th>'+
     '<th style="text-align:right">Expected</th><th style="text-align:right">Paid</th><th style="text-align:right">Balance</th>'+
     '<th style="text-align:right">Actions</th></tr></thead><tbody>'+
     filtered.map(s=>{
-      const cls=(classes||[]).find(c=>c.id===s.class_id);
+      const cls=(fin.classes||[]).find(c=>c.id===s.class_id);
       const board=(s.boarding_status||'').toLowerCase().includes('board');
       const van=Number(s.transport_fee)>0;
       const st=s._balance<=0?'<span class="badge ok">'+Number(s._balance).toLocaleString()+'</span>':
@@ -565,14 +636,14 @@ async function recordPayment(studentId){
   const s=st[0];if(!s)return;
   const cy=getCurrentYear(),ct=getCurrentTerm();
   const termPaid=(pays||[]).filter(p=>p.year===cy&&p.term===ct).reduce((sum,p)=>sum+Number(p.amount),0);
-  const exp=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.transport_fee)||0)+(Number(s.functional_fee)||FUNC_FEE_DEFAULT);
+  const exp=(Number(s.actual_fee)||0)+(Number(s.transport_fee)||0)+(Number(s.functional_fee)||FUNC_FEE_DEFAULT);
   const now=new Date();const tz=now.getTimezoneOffset()*60000;const l=new Date(now-tz).toISOString().slice(0,16);
   modal('<h3>💵 Record Payment — '+esc(s.first_name+' '+(s.last_name||''))+'</h3>'+
     '<div style="background:var(--brandsoft);padding:12px;border-radius:10px;margin-bottom:16px;font-size:13px;line-height:1.9">'+
       '<div>📅 <b>'+cy+' · Term '+ct+'</b></div>'+
-      '<div>Expected: <b>'+fmtUGX(exp)+'</b></div>'+
+      '<div>Term Expected: <b>'+fmtUGX(exp)+'</b></div>'+
       '<div>Paid this term: <b>'+fmtUGX(termPaid)+'</b></div>'+
-      '<div>Balance: <b style="color:#b91c1c">'+fmtUGX(exp-termPaid)+'</b></div>'+
+      '<div>Balance (Term): <b style="color:#b91c1c">'+fmtUGX(exp-termPaid)+'</b></div>'+
     '</div>'+
     '<div class="grid grid-2">'+
       '<div><label>Payment For *</label><select id="p_for"><option value="School Fees">📚 School Fees</option><option value="Functional Fees">🧾 Functional Fees</option></select></div>'+
@@ -612,18 +683,20 @@ async function viewPaymentHistory(studentId){
     rest('/rest/v1/payments?student_id=eq.'+studentId+'&select=*&order=paid_at.desc')
   ]);
   if(!st)return;
-  const sp=(pays||[]).filter(p=>p.payment_for!=='Functional Fees').reduce((s,p)=>s+Number(p.amount),0);
-  const sf=(Number(st.balance_bf)||0)+(Number(st.actual_fee)||0)+(Number(st.transport_fee)||0);
+  const cy=getCurrentYear(),ct=getCurrentTerm();
+  const termPaid=(pays||[]).filter(p=>p.year===cy&&p.term===ct).reduce((s,p)=>s+Number(p.amount),0);
+  const allPaid=(pays||[]).reduce((s,p)=>s+Number(p.amount),0);
+  const expTerm=(Number(st.actual_fee)||0)+(Number(st.transport_fee)||0)+(Number(st.functional_fee)||FUNC_FEE_DEFAULT);
+  const expRun=expTerm+(Number(st.balance_bf)||0);
   const rows=(pays||[]).map(p=>'<tr><td style="font-size:12.5px">'+fmtDate(p.paid_at)+' '+(p.year?('· '+p.year+' T'+p.term):'')+'</td>'+
     '<td>'+(p.payment_for==='Functional Fees'?'<span class="badge warn">🧾</span>':'<span class="badge info">📚</span>')+'</td>'+
     '<td style="text-align:right"><b>'+Number(p.amount).toLocaleString()+'</b></td>'+
     '<td>'+esc(p.method||'')+'</td>'+
     '<td style="text-align:right"><button class="btn sm danger" onclick="delPay(\''+p.id+'\',\''+studentId+'\')">✕</button></td></tr>').join('');
   modal('<h3>📋 History — '+esc(st.first_name+' '+(st.last_name||''))+'</h3>'+
-    '<div style="background:var(--brandsoft);padding:12px;border-radius:10px;margin-bottom:16px;font-size:13px">'+
-      '<div>📚 <b>Running Paid:</b> '+sp.toLocaleString()+' of '+sf.toLocaleString()+'</div>'+
-      '<div style="margin-top:4px">Registration: '+(st.registration_fee_paid?'<span class="badge ok">✅ Paid</span>':'<span class="badge warn">Due</span>')+'</div>'+
-      (Number(st.transport_fee)>0?'<div style="margin-top:4px">🚐 Van: <b>'+Number(st.transport_fee).toLocaleString()+'</b></div>':'')+
+    '<div style="background:var(--brandsoft);padding:12px;border-radius:10px;margin-bottom:16px;font-size:13px;line-height:1.9">'+
+      '<div><b>Term '+ct+':</b> Expected '+expTerm.toLocaleString()+' · Paid '+termPaid.toLocaleString()+' · <b style="color:'+(expTerm-termPaid>0?'#b91c1c':'#047857')+'">Bal '+(expTerm-termPaid).toLocaleString()+'</b></div>'+
+      '<div><b>All-time:</b> Expected '+expRun.toLocaleString()+' · Paid '+allPaid.toLocaleString()+' · <b style="color:'+(expRun-allPaid>0?'#b91c1c':'#047857')+'">Bal '+(expRun-allPaid).toLocaleString()+'</b></div>'+
     '</div>'+
     '<div style="display:flex;gap:6px;margin-bottom:10px"><button class="btn sm" onclick="closeModal();recordPayment(\''+studentId+'\')">＋ Pay</button></div>'+
     ((pays||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>For</th><th style="text-align:right">Amount</th><th>Method</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<div class="empty">No payments.</div>')+
@@ -631,13 +704,18 @@ async function viewPaymentHistory(studentId){
 }
 window.viewPaymentHistory=viewPaymentHistory;
 
-async function delPay(pid,sid){if(!confirm('Delete?'))return;try{await rest('/rest/v1/payments?id=eq.'+pid,{method:'DELETE'});toast('Deleted','ok');viewPaymentHistory(sid);}catch(e){toast(e.message,'bad');}}
+async function delPay(pid,sid){
+  if(!confirm('Delete this payment? The totals will update immediately.'))return;
+  try{await rest('/rest/v1/payments?id=eq.'+pid,{method:'DELETE'});toast('Deleted — totals updated','ok');viewPaymentHistory(sid);}
+  catch(e){toast(e.message,'bad');}
+}
 window.delPay=delPay;
 
 function printFeesList(){
   const list=window._filteredFees||[];
   if(!list.length){toast('No data','bad');return;}
-  const rows=list.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(r.admission_no)+'</td><td>'+esc(r.lin||'')+'</td><td>'+esc(r.first_name+' '+(r.last_name||''))+'</td><td>'+sexIcon(r.gender)+'</td><td>'+(r.date_of_birth?ageOf(r):'—')+'</td><td>'+esc((window._feeClasses||[]).find(c=>c.id===r.class_id)?.name||'')+'</td><td>'+esc(r.parent_name||'')+'</td><td>'+esc(r.parent_contact||'')+'</td><td>'+esc(r.location||'')+'</td><td style="text-align:right">'+r._expected.toLocaleString()+'</td><td style="text-align:right">'+r._paid.toLocaleString()+'</td><td style="text-align:right">'+r._balance.toLocaleString()+'</td></tr>').join('');
+  const fin=window._finCache||{classes:[]};
+  const rows=list.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(r.admission_no)+'</td><td>'+esc(r.lin||'')+'</td><td>'+esc(r.first_name+' '+(r.last_name||''))+'</td><td>'+sexIcon(r.gender)+'</td><td>'+(r.date_of_birth?ageOf(r):'—')+'</td><td>'+esc((fin.classes||[]).find(c=>c.id===r.class_id)?.name||'')+'</td><td>'+esc(r.parent_name||'')+'</td><td>'+esc(r.parent_contact||'')+'</td><td>'+esc(r.location||'')+'</td><td style="text-align:right">'+r._expected.toLocaleString()+'</td><td style="text-align:right">'+r._paid.toLocaleString()+'</td><td style="text-align:right">'+r._balance.toLocaleString()+'</td></tr>').join('');
   const totExp=list.reduce((s,r)=>s+r._expected,0);
   const totPaid=list.reduce((s,r)=>s+r._paid,0);
   printHTML('Fees Report — '+getCurrentYear()+' T'+getCurrentTerm(),
@@ -649,7 +727,8 @@ window.printFeesList=printFeesList;
 function exportFeesToExcel(){
   const list=window._filteredFees||[];
   if(!list.length){toast('No data','bad');return;}
-  const data=list.map(r=>({'Adm No':r.admission_no,'LIN':r.lin||'','Name':r.first_name+' '+(r.last_name||''),'Sex':sexIcon(r.gender),'Age':r.date_of_birth?ageOf(r):'','Class':(window._feeClasses||[]).find(c=>c.id===r.class_id)?.name||'','Parent':r.parent_name||'','Contact':r.parent_contact||'','Location':r.location||'','Expected':r._expected,'Paid':r._paid,'Balance':r._balance}));
+  const fin=window._finCache||{classes:[]};
+  const data=list.map(r=>({'Adm No':r.admission_no,'LIN':r.lin||'','Name':r.first_name+' '+(r.last_name||''),'Sex':sexIcon(r.gender),'Age':r.date_of_birth?ageOf(r):'','Class':(fin.classes||[]).find(c=>c.id===r.class_id)?.name||'','Parent':r.parent_name||'','Contact':r.parent_contact||'','Location':r.location||'','Expected':r._expected,'Paid':r._paid,'Balance':r._balance}));
   const ws=XLSX.utils.json_to_sheet(data);
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Fees');
   XLSX.writeFile(wb,'Fees_'+getCurrentYear()+'_T'+getCurrentTerm()+'.xlsx');
@@ -660,32 +739,25 @@ window.exportFeesToExcel=exportFeesToExcel;
 /* ============ PAID IN FULL ============ */
 async function pagePaidFull(root){
   const cy=getCurrentYear(),ct=getCurrentTerm();
-  const [students,classes,payments]=await Promise.all([
-    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=*&order=first_name'),
-    loadClasses(),
-    rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&year=eq.'+cy+'&term=eq.'+ct+'&select=student_id,amount').catch(()=>[])
-  ]);
-  const paid={};(payments||[]).forEach(p=>{if(!paid[p.student_id])paid[p.student_id]=0;paid[p.student_id]+=Number(p.amount);});
-  const full=(students||[]).map(s=>{
-    const exp=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.transport_fee)||0)+(Number(s.functional_fee)||FUNC_FEE_DEFAULT);
-    return {...s,_expected:exp,_paid:paid[s.id]||0,_balance:exp-(paid[s.id]||0)};
-  }).filter(s=>s._balance<=0).sort((a,b)=>a.first_name.localeCompare(b.first_name));
-  const totalPaid=full.reduce((s,x)=>s+x._paid,0);
-  const totalExtra=full.reduce((s,x)=>s+(x._paid>x._expected?x._paid-x._expected:0),0);
+  const fin=await loadFinanceData();
+  const active=fin.students.filter(s=>s.status==='active');
+  const full=active.filter(s=>_feesMode==='term'?s._balance_term<=0:s._balance_running<=0)
+    .sort((a,b)=>a.first_name.localeCompare(b.first_name));
+  const totalPaid=full.reduce((s,x)=>s+(_feesMode==='term'?x._paid_term:x._paid_all),0);
   root.innerHTML='<div class="page-head"><div><h1>✅ Paid in Full</h1><div class="sub">'+full.length+' pupils cleared · '+fmtUGX(totalPaid)+' collected</div></div>'+
-    '<button class="btn ghost" onclick="printPaidFull()">🖨️ Print</button></div>'+
+    '<button class="btn ghost" onclick="window.print()">🖨️ Print</button></div>'+
   '<div class="grid grid-kpi" style="margin-bottom:14px">'+
     '<div class="kpi kpi-ok"><div class="v">'+full.length+'</div><div class="l">Fully Paid</div></div>'+
     '<div class="kpi kpi-navy"><div class="v">'+fmtUGX(totalPaid)+'</div><div class="l">Total Collected</div></div>'+
-    '<div class="kpi kpi-warn"><div class="v">'+fmtUGX(totalExtra)+'</div><div class="l">Over-payments</div></div>'+
   '</div>'+
   '<div class="card">'+(full.length?'<div class="table-wrap"><table><thead><tr>'+
     '<th>Adm No</th><th>LIN</th><th>Name</th><th>Sex</th><th>Age</th><th>Class</th><th>Parent</th><th>Contact</th><th>Location</th>'+
     '<th style="text-align:right">Expected</th><th style="text-align:right">Paid</th><th style="text-align:right">Balance</th>'+
     '<th style="text-align:right">Actions</th></tr></thead><tbody>'+
   full.map(s=>{
-    const cls=(classes||[]).find(c=>c.id===s.class_id);
-    const extra=s._paid-s._expected;
+    const cls=(fin.classes||[]).find(c=>c.id===s.class_id);
+    const exp=_feesMode==='term'?s._expected_term:s._expected_running;
+    const paid=_feesMode==='term'?s._paid_term:s._paid_all;
     return '<tr>'+
       '<td><b>'+esc(s.admission_no)+'</b></td>'+
       '<td style="font-family:monospace;font-size:12px">'+esc(s.lin||'—')+'</td>'+
@@ -696,9 +768,9 @@ async function pagePaidFull(root){
       '<td>'+esc(s.parent_name||'—')+'</td>'+
       '<td>'+esc(s.parent_contact||'—')+'</td>'+
       '<td>'+esc(s.location||'—')+'</td>'+
-      '<td style="text-align:right">'+s._expected.toLocaleString()+'</td>'+
-      '<td style="text-align:right;color:#047857">'+s._paid.toLocaleString()+'</td>'+
-      '<td style="text-align:right">'+(extra>0?'<span class="badge ok">+'+extra.toLocaleString()+'</span>':'<span class="badge ok">0</span>')+'</td>'+
+      '<td style="text-align:right">'+exp.toLocaleString()+'</td>'+
+      '<td style="text-align:right;color:#047857">'+paid.toLocaleString()+'</td>'+
+      '<td style="text-align:right"><span class="badge ok">'+(paid-exp).toLocaleString()+'</span></td>'+
       '<td style="text-align:right;white-space:nowrap">'+
         '<button class="btn sm" onclick="recordPayment(\''+s.id+'\')">💵</button> '+
         '<button class="btn sm ghost" onclick="viewPaymentHistory(\''+s.id+'\')">📋</button>'+
@@ -707,20 +779,6 @@ async function pagePaidFull(root){
   '</tbody></table></div>':'<div class="empty">No pupils have paid in full yet.</div>')+'</div>';
 }
 window.pagePaidFull=pagePaidFull;
-
-function printPaidFull(){
-  const cy=getCurrentYear(),ct=getCurrentTerm();
-  const rows=[];
-  document.querySelectorAll('#main table tbody tr').forEach(tr=>{
-    const c=tr.children;if(c.length<12)return;
-    const cells=[];
-    for(let i=0;i<12;i++)cells.push(c[i].textContent);
-    rows.push('<tr>'+cells.map((v,i)=>'<td'+(i>=9?' style="text-align:right"':'')+'>'+esc(v)+'</td>').join('')+'</tr>');
-  });
-  printHTML('Paid in Full — '+cy+' Term '+ct,
-    '<table><thead><tr><th>Adm No</th><th>LIN</th><th>Name</th><th>Sex</th><th>Age</th><th>Class</th><th>Parent</th><th>Contact</th><th>Location</th><th style="text-align:right">Expected</th><th style="text-align:right">Paid</th><th style="text-align:right">Balance</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>');
-}
-window.printPaidFull=printPaidFull;
 
 /* ============ STUDENTS ============ */
 async function pageStudents(root){
@@ -955,7 +1013,7 @@ async function handleExcelUpload(input){
         toInsert.push({school_id:_schoolId,admission_no:row[0]?'ADM-'+String(row[0]).trim():'ADM-'+Math.floor(Math.random()*10000),first_name:fn,last_name:ln,lin:generateLIN(fn),class_id:cls?cls.id:null,boarding_status:String(row[3]||'Day').trim(),parent_contact:row[4]?String(row[4]).trim():null,location:row[18]?String(row[18]).trim():null,balance_bf:gn(row[5]),actual_fee:gn(row[7]),functional_fee:gn(row[10])||70000,transport_fee:transport,transport_fee_override:transport>0?transport:null,registration_fee_paid:false,status:'active'});
       }
       if(!toInsert.length){toast('No rows','bad');return;}
-      for(let i=0;i<toInsert.length;i+=50)await rest('/rest/v1/students',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(toInsert.slice(i,i+50))});
+      for(let i=0;i<toInsert.length;i+=50)await rest('/rest/v1/students',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify(toInsert.slice(i,i+50))});
       toast('Imported '+toInsert.length,'ok');input.value='';nav('students');
     }catch(err){toast('Error: '+err.message,'bad');input.value='';}
   };
@@ -977,7 +1035,7 @@ async function pageAttendance(root){
   const present=(records||[]).filter(r=>r.status==='present').length;
   const absent=(records||[]).filter(r=>r.status==='absent').length;
   root.innerHTML='<div class="page-head"><div><h1>📅 Rollcall</h1><div class="sub">'+fmtDate(fDate)+'</div></div>'+
-  '<div style="display:flex;gap:8px"><button class="btn ok" onclick="markAllPresent()">✅ All</button><button class="btn" onclick="saveAttendance()">💾 Save</button></div></div>'+
+  '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="window.print()">🖨️ Print</button><button class="btn ok" onclick="markAllPresent()">✅ All</button><button class="btn" onclick="saveAttendance()">💾 Save</button></div></div>'+
   '<div class="card"><div class="grid grid-2"><div><label>Class</label><select onchange="window._attClass=this.value;nav(\'attendance\')">'+classes.map(c=>'<option value="'+c.id+'"'+(c.id===fClass?' selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></div><div><label>Date</label><input type="date" value="'+fDate+'" onchange="window._attDate=this.value;nav(\'attendance\')"></div></div></div>'+
   '<div class="grid grid-kpi" style="margin-bottom:14px"><div class="kpi kpi-ok"><div class="v">'+present+'</div><div class="l">Present</div></div><div class="kpi kpi-bad"><div class="v">'+absent+'</div><div class="l">Absent</div></div><div class="kpi kpi-plain"><div class="v">'+(students||[]).length+'</div><div class="l">Total</div></div></div>'+
   '<div class="card">'+((students||[]).length?'<div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Status</th></tr></thead><tbody>'+
@@ -1016,8 +1074,8 @@ async function pageUniforms(root){
   const grouped={};UNIFORM_CATEGORIES.forEach(c=>grouped[c]=[]);
   (items||[]).forEach(i=>{const c=i.category||'Other';if(!grouped[c])grouped[c]=[];grouped[c].push(i);});
   root.innerHTML='<div class="page-head"><div><h1>👕 Uniforms</h1></div>'+
-  '<div style="display:flex;gap:8px"><button class="btn ghost" onclick="addUniformItem()">＋ Item</button><button class="btn gold" onclick="sellUniform()">🛒 Sell</button></div></div>'+
-  '<div class="grid grid-kpi" style="margin-bottom:14px"><div class="kpi"><div class="v">'+fmtUGX(stockValue)+'</div><div class="l">Stock</div></div><div class="kpi kpi-ok"><div class="v">'+fmtUGX(todayTotal)+'</div><div class="l">Today</div></div><div class="kpi kpi-navy"><div class="v">'+fmtUGX(salesTotal)+'</div><div class="l">All-time</div></div></div>'+
+  '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="window.print()">🖨️</button><button class="btn ghost" onclick="addUniformItem()">＋ Item</button><button class="btn gold" onclick="sellUniform()">🛒 Sell</button></div></div>'+
+  '<div class="grid grid-kpi" style="margin-bottom:14px"><div class="kpi"><div class="v">'+fmtUGX(stockValue)+'</div><div class="l">Stock Value</div></div><div class="kpi kpi-ok"><div class="v">'+fmtUGX(todayTotal)+'</div><div class="l">Today</div></div><div class="kpi kpi-navy"><div class="v">'+fmtUGX(salesTotal)+'</div><div class="l">All-time</div></div></div>'+
   UNIFORM_CATEGORIES.map(cat=>{const list=grouped[cat];if(!list.length)return'';const emoji=cat==='Boys Uniform'?'👦':cat==='Girls Uniform'?'👧':cat==='Sports Wear'?'⚽':cat==='Sweaters'?'🧥':'📦';
     return '<div class="card"><h3>'+emoji+' '+cat+'</h3><div class="table-wrap"><table><thead><tr><th>Item</th><th>Size</th><th style="text-align:right">Stock</th><th style="text-align:right">Price</th><th></th></tr></thead><tbody>'+
       list.map(it=>'<tr><td><b>'+esc(it.name)+'</b></td><td>'+esc(it.size||'—')+'</td><td style="text-align:right"><span class="badge '+(Number(it.current_stock)>0?'ok':'bad')+'">'+Number(it.current_stock)+'</span></td><td style="text-align:right">'+Number(it.selling_price).toLocaleString()+'</td><td style="text-align:right;white-space:nowrap"><button class="btn sm ok" onclick="sellUniform(\''+it.id+'\')">🛒</button> <button class="btn sm ghost" onclick="uniformStockIn(\''+it.id+'\')">＋</button> <button class="btn sm danger" onclick="delUniformItem(\''+it.id+'\')">✕</button></td></tr>').join('')+
@@ -1057,115 +1115,40 @@ window.saveUniformSale=saveUniformSale;
 async function delUniformItem(id){if(!confirm('Delete?'))return;try{await rest('/rest/v1/uniform_items?id=eq.'+id,{method:'DELETE'});nav('uniforms');}catch(e){toast(e.message,'bad');}}
 window.delUniformItem=delUniformItem;
 
-/* ============ ANNOUNCEMENTS ============ */
-async function pageAnnouncements(root){
-  const items=await rest('/rest/v1/announcements?school_id=eq.'+_schoolId+'&select=*&order=created_at.desc').catch(()=>[]);
-  root.innerHTML='<div class="page-head"><div><h1>📢 Announcements</h1></div><button class="btn" onclick="addAnnouncement()">＋ New</button></div>'+
-  '<div>'+((items||[]).length?items.map(a=>'<div class="card"><h3>'+esc(a.title)+'</h3><div class="muted" style="margin-bottom:6px">'+fmtDate(a.created_at)+' · '+esc(a.audience||'all')+'</div><div style="white-space:pre-wrap">'+esc(a.body)+'</div><button class="btn sm danger" style="margin-top:8px" onclick="delAnnouncement(\''+a.id+'\')">Delete</button></div>').join(''):'<div class="card"><div class="empty">No announcements.</div></div>')+'</div>';
-}
-window.pageAnnouncements=pageAnnouncements;
-function addAnnouncement(){modal('<h3>New Announcement</h3><div><label>Title *</label><input id="an_title"></div><div style="margin-top:12px"><label>Message *</label><textarea id="an_body" rows="5"></textarea></div><div style="margin-top:12px"><label>Audience</label><select id="an_audience"><option value="all">Everyone</option><option value="staff">Staff</option><option value="parents">Parents</option></select></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveAnnouncement()">Post</button></div>');}
-window.addAnnouncement=addAnnouncement;
-async function saveAnnouncement(){const title=document.getElementById('an_title').value.trim();const body=document.getElementById('an_body').value.trim();if(!title||!body){toast('Fill','bad');return;}try{await rest('/rest/v1/announcements',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,title,body,audience:document.getElementById('an_audience').value})});closeModal();nav('announcements');}catch(e){toast(e.message,'bad');}}
-window.saveAnnouncement=saveAnnouncement;
-async function delAnnouncement(id){if(!confirm('Delete?'))return;try{await rest('/rest/v1/announcements?id=eq.'+id,{method:'DELETE'});nav('announcements');}catch(e){toast(e.message,'bad');}}
-window.delAnnouncement=delAnnouncement;
-
-/* ============ PASS OUTS ============ */
-async function pagePassOuts(root){
-  const [passOuts,students]=await Promise.all([
-    rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&select=*&order=signed_out_at.desc').catch(()=>[]),
-    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,first_name,last_name,admission_no&status=eq.active&order=first_name')
-  ]);
-  window._passOutsStudents=students||[];
-  const out=(passOuts||[]).filter(p=>p.status==='out');
-  root.innerHTML='<div class="page-head"><div><h1>🚪 Pass Outs</h1><div class="sub">'+out.length+' out</div></div><button class="btn" onclick="newPassOut()">＋ Sign Out</button></div>'+
-  '<div class="card">'+((passOuts||[]).length?'<div class="table-wrap"><table><thead><tr><th>Pupil</th><th>Reason</th><th>Out</th><th>Status</th><th></th></tr></thead><tbody>'+
-  passOuts.slice(0,100).map(p=>{const st=students.find(s=>s.id===p.student_id);const isOut=p.status==='out';
-    return '<tr><td><b>'+esc(st?st.first_name+' '+(st.last_name||''):'—')+'</b></td><td>'+esc(p.reason||'')+'</td><td>'+fmtDate(p.signed_out_at)+'</td><td>'+(isOut?'<span class="badge warn">🚶</span>':'<span class="badge ok">✅</span>')+'</td><td style="text-align:right">'+(isOut?'<button class="btn sm ok" onclick="signInStudent(\''+p.id+'\')">In</button> ':'')+'</td></tr>';}).join('')+
-  '</tbody></table></div>':'<div class="empty">None.</div>')+'</div>';
-}
-window.pagePassOuts=pagePassOuts;
-function newPassOut(){const students=window._passOutsStudents||[];if(!students.length){toast('No pupils','bad');return;}const now=new Date();const tz=now.getTimezoneOffset()*60000;const l=new Date(now-tz).toISOString().slice(0,16);const t=new Date(now.getTime()+24*60*60*1000-tz).toISOString().slice(0,16);
-modal('<h3>Sign Out</h3><div><label>Pupil *</label><select id="po_student">'+students.map(s=>'<option value="'+s.id+'">'+esc(s.first_name+' '+(s.last_name||''))+'</option>').join('')+'</select></div><div style="margin-top:12px"><label>Reason</label><select id="po_reason"><option>Sick</option><option>Family</option><option>Going Home</option><option>Other</option></select></div><div style="margin-top:12px"><label>Out</label><input id="po_out" type="datetime-local" value="'+l+'"></div><div style="margin-top:12px"><label>Expected</label><input id="po_expected" type="datetime-local" value="'+t+'"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="savePassOut()">Sign Out</button></div>');}
-window.newPassOut=newPassOut;
-async function savePassOut(){const sid=document.getElementById('po_student').value;const outAt=document.getElementById('po_out').value;const exp=document.getElementById('po_expected').value;if(!sid||!outAt){toast('Required','bad');return;}try{await rest('/rest/v1/pass_outs',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,student_id:sid,reason:document.getElementById('po_reason').value,signed_out_at:new Date(outAt).toISOString(),expected_return_at:exp?new Date(exp).toISOString():null,status:'out'})});toast('Signed out','ok');closeModal();nav('passouts');}catch(e){toast(e.message,'bad');}}
-window.savePassOut=savePassOut;
-async function signInStudent(id){try{await rest('/rest/v1/pass_outs?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({signed_in_at:new Date().toISOString(),status:'returned'})});toast('In','ok');nav('passouts');}catch(e){toast(e.message,'bad');}}
-window.signInStudent=signInStudent;
-
-/* ============ DISCIPLINE ============ */
-async function pageDiscipline(root){
-  const [records,students]=await Promise.all([
-    rest('/rest/v1/discipline?school_id=eq.'+_schoolId+'&select=*&order=incident_date.desc').catch(()=>[]),
-    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,first_name,last_name&order=first_name')
-  ]);
-  window._disciplineStudents=students||[];
-  root.innerHTML='<div class="page-head"><div><h1>⚠️ Discipline</h1></div><button class="btn" onclick="addDiscipline()">＋ Record</button></div>'+
-  '<div class="card">'+((records||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Student</th><th>Category</th><th>Desc</th></tr></thead><tbody>'+
-  records.map(r=>{const st=(students||[]).find(s=>s.id===r.student_id);return '<tr><td>'+fmtDate(r.incident_date)+'</td><td>'+esc(st?st.first_name+' '+(st.last_name||''):'—')+'</td><td>'+esc(r.category||'')+'</td><td>'+esc(r.description||'')+'</td></tr>';}).join('')+
-  '</tbody></table></div>':'<div class="empty">None.</div>')+'</div>';
-}
-window.pageDiscipline=pageDiscipline;
-function addDiscipline(){const s=window._disciplineStudents||[];if(!s.length){toast('Add pupils','bad');return;}modal('<h3>Record</h3><div><label>Student</label><select id="di_student">'+s.map(x=>'<option value="'+x.id+'">'+esc(x.first_name+' '+(x.last_name||''))+'</option>').join('')+'</select></div><div style="margin-top:12px"><label>Date</label><input id="di_date" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div><div style="margin-top:12px"><label>Category</label><input id="di_cat"></div><div style="margin-top:12px"><label>Description</label><textarea id="di_desc" rows="3"></textarea></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveDiscipline()">Save</button></div>');}
-window.addDiscipline=addDiscipline;
-async function saveDiscipline(){const sid=document.getElementById('di_student').value;const desc=document.getElementById('di_desc').value.trim();if(!sid||!desc){toast('Fill','bad');return;}try{await rest('/rest/v1/discipline',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,student_id:sid,incident_date:document.getElementById('di_date').value,category:document.getElementById('di_cat').value,description:desc})});closeModal();nav('discipline');}catch(e){toast(e.message,'bad');}}
-window.saveDiscipline=saveDiscipline;
-
-/* ============ FOOD ============ */
-async function pageFood(root){
-  const items=await rest('/rest/v1/food_items?school_id=eq.'+_schoolId+'&select=*&order=name').catch(()=>[]);
-  root.innerHTML='<div class="page-head"><div><h1>🥘 Food</h1></div><button class="btn" onclick="addFoodItem()">＋ Item</button></div>'+
-  '<div class="card">'+((items||[]).length?'<div class="table-wrap"><table><thead><tr><th>Item</th><th>Unit</th><th style="text-align:right">Stock</th><th></th></tr></thead><tbody>'+
-  items.map(it=>'<tr><td>'+esc(it.name)+'</td><td>'+esc(it.unit||'kg')+'</td><td style="text-align:right">'+Number(it.current_stock)+'</td><td><button class="btn sm danger" onclick="delFoodItem(\''+it.id+'\')">✕</button></td></tr>').join('')+
-  '</tbody></table></div>':'<div class="empty">No items.</div>')+'</div>';
-}
-window.pageFood=pageFood;
-function addFoodItem(){modal('<h3>Add Food</h3><div><label>Name</label><input id="fi_name"></div><div style="margin-top:12px"><label>Unit</label><select id="fi_unit"><option>kg</option><option>litres</option><option>pieces</option></select></div><div style="margin-top:12px"><label>Stock</label><input id="fi_stock" type="number" value="0"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveFoodItem()">Save</button></div>');}
-window.addFoodItem=addFoodItem;
-async function saveFoodItem(){const n=document.getElementById('fi_name').value.trim();if(!n){toast('Name','bad');return;}try{await rest('/rest/v1/food_items',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,name:n,unit:document.getElementById('fi_unit').value,current_stock:parseFloat(document.getElementById('fi_stock').value)||0})});closeModal();nav('food');}catch(e){toast(e.message,'bad');}}
-window.saveFoodItem=saveFoodItem;
-async function delFoodItem(id){if(!confirm('Delete?'))return;try{await rest('/rest/v1/food_items?id=eq.'+id,{method:'DELETE'});nav('food');}catch(e){toast(e.message,'bad');}}
-window.delFoodItem=delFoodItem;
-
-/* ============ EXPENSES ============ */
-async function pageExpenses(root){
-  const e=await rest('/rest/v1/expenses?school_id=eq.'+_schoolId+'&select=*&order=date.desc').catch(()=>[]);
-  const tot=(e||[]).reduce((s,x)=>s+Number(x.amount),0);
-  root.innerHTML='<div class="page-head"><div><h1>💸 Expenses</h1><div class="sub">'+fmtUGX(tot)+'</div></div><button class="btn" onclick="addExp()">＋ Add</button></div>'+
-  '<div class="card">'+((e||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Desc</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
-  e.map(x=>'<tr><td>'+fmtDate(x.date)+'</td><td>'+esc(x.description)+'</td><td style="text-align:right">'+Number(x.amount).toLocaleString()+'</td></tr>').join('')+
-  '</tbody></table></div>':'<div class="empty">None.</div>')+'</div>';
-}
-window.pageExpenses=pageExpenses;
-function addExp(){modal('<h3>Add Expense</h3><div><label>Description</label><input id="ex_desc"></div><div style="margin-top:12px"><label>Amount</label><input id="ex_amount" type="number"></div><div style="margin-top:12px"><label>Date</label><input id="ex_date" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveExp()">Save</button></div>');}
-window.addExp=addExp;
-async function saveExp(){const d=document.getElementById('ex_desc').value.trim();const a=parseFloat(document.getElementById('ex_amount').value);if(!d||!a){toast('Fill','bad');return;}try{await rest('/rest/v1/expenses',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,description:d,amount:a,date:document.getElementById('ex_date').value,academic_year:getCurrentYear(),term:getCurrentTerm()})});closeModal();nav('expenses');}catch(e){toast(e.message,'bad');}}
-window.saveExp=saveExp;
-
-/* ============ SALARIES ============ */
-async function pageSalaries(root){
-  const sal=await rest('/rest/v1/salaries?school_id=eq.'+_schoolId+'&select=*&order=date_paid.desc').catch(()=>[]);
-  root.innerHTML='<div class="page-head"><div><h1>🏦 Salaries</h1><div class="sub">'+(sal||[]).length+' records</div></div></div>'+
-  '<div class="card">'+((sal||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
-  sal.map(s=>'<tr><td>'+fmtDate(s.date_paid)+'</td><td style="text-align:right">'+Number(s.amount).toLocaleString()+'</td></tr>').join('')+
-  '</tbody></table></div>':'<div class="empty">None.</div>')+'</div>';
-}
-window.pageSalaries=pageSalaries;
-
 /* ============ STAFF ============ */
 async function pageStaff(root){
   let staff=[];
   try{staff=await rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=*&order=full_name');_staffCache=staff;}catch(e){}
-  root.innerHTML='<div class="page-head"><div><h1>👨‍🏫 Staff</h1></div><button class="btn" onclick="addStaffM()">＋ Add</button></div>'+
-  '<div class="card">'+((staff||[]).length?'<div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Phone</th><th></th></tr></thead><tbody>'+
-  staff.map(s=>'<tr><td><b>'+esc(s.full_name)+'</b></td><td>'+esc(s.role||'')+'</td><td>'+esc(s.telephone||'')+'</td><td><button class="btn sm danger" onclick="cfmDelStaff(\''+s.id+'\')">✕</button></td></tr>').join('')+
-  '</tbody></table></div>':'<div class="empty">None.</div>')+'</div>';
+  root.innerHTML='<div class="page-head"><div><h1>👨‍🏫 Staff</h1></div>'+
+  '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="window.print()">🖨️</button><button class="btn" onclick="addStaffM()">＋ Add</button></div></div>'+
+  '<div class="card">'+((staff||[]).length?'<div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Phone</th><th>Email</th><th></th></tr></thead><tbody>'+
+  staff.map(s=>'<tr><td><b>'+esc(s.full_name)+'</b></td><td><span class="badge info">'+esc(s.role||'')+'</span></td><td>'+esc(s.telephone||'')+'</td><td>'+esc(s.email||'')+'</td><td style="text-align:right"><button class="btn sm danger" onclick="cfmDelStaff(\''+s.id+'\')">✕</button></td></tr>').join('')+
+  '</tbody></table></div>':'<div class="empty">No staff.</div>')+'</div>';
 }
 window.pageStaff=pageStaff;
-function addStaffM(){modal('<h3>Add Staff</h3><div><label>Full Name *</label><input id="st_name"></div><div style="margin-top:12px"><label>Role</label><select id="st_role"><option>Teacher</option><option>Head Teacher</option><option>Bursar</option><option>Support Staff</option></select></div><div style="margin-top:12px"><label>Phone</label><input id="st_phone"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveStaff()">Save</button></div>');}
+function addStaffM(){modal('<h3>Add Staff</h3><div class="grid grid-2">'+
+  '<div style="grid-column:1/-1"><label>Full Name *</label><input id="st_name"></div>'+
+  '<div><label>Role</label><select id="st_role">'+STAFF_ROLES.map(r=>'<option>'+r+'</option>').join('')+'</select></div>'+
+  '<div><label>Phone</label><input id="st_phone"></div>'+
+  '<div style="grid-column:1/-1"><label>Email</label><input id="st_email" type="email"></div>'+
+  '<div style="grid-column:1/-1"><label>Notes</label><input id="st_notes"></div>'+
+  '</div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveStaff()">Save</button></div>');}
 window.addStaffM=addStaffM;
-async function saveStaff(){const n=document.getElementById('st_name').value.trim();if(!n){toast('Name','bad');return;}try{await rest('/rest/v1/staff',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,full_name:n,role:document.getElementById('st_role').value,telephone:document.getElementById('st_phone').value.trim()||null})});_staffCache=null;closeModal();nav('staff');}catch(e){toast(e.message,'bad');}}
+async function saveStaff(){
+  const n=document.getElementById('st_name').value.trim();
+  if(!n){toast('Name required','bad');return;}
+  try{
+    await rest('/rest/v1/staff',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
+      school_id:_schoolId,
+      full_name:n,
+      role:document.getElementById('st_role').value,
+      telephone:document.getElementById('st_phone').value.trim()||null,
+      email:document.getElementById('st_email').value.trim()||null,
+      notes:document.getElementById('st_notes').value.trim()||null
+    })});
+    _staffCache=null;closeModal();nav('staff');
+  }catch(e){toast(e.message,'bad');}
+}
 window.saveStaff=saveStaff;
 async function cfmDelStaff(id){if(!confirm('Delete?'))return;try{await rest('/rest/v1/staff?id=eq.'+id,{method:'DELETE'});_staffCache=null;nav('staff');}catch(e){toast(e.message,'bad');}}
 window.cfmDelStaff=cfmDelStaff;
@@ -1174,7 +1157,8 @@ window.cfmDelStaff=cfmDelStaff;
 async function pageClasses(root){
   const classes=await rest('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=*&order=name');
   _classesCache=classes||[];
-  root.innerHTML='<div class="page-head"><div><h1>🏫 Classes</h1></div><button class="btn" onclick="addClass()">＋ Add</button></div>'+
+  root.innerHTML='<div class="page-head"><div><h1>🏫 Classes</h1></div>'+
+  '<div style="display:flex;gap:8px"><button class="btn ghost" onclick="window.print()">🖨️</button><button class="btn" onclick="addClass()">＋ Add</button></div></div>'+
   '<div class="card"><div class="table-wrap"><table><thead><tr><th>Class</th><th></th></tr></thead><tbody>'+
   (classes||[]).map(c=>'<tr><td><b>'+esc(c.name)+'</b></td><td style="text-align:right"><button class="btn sm danger" onclick="cfmDelCls(\''+c.id+'\')">✕</button></td></tr>').join('')+
   '</tbody></table></div></div>';
@@ -1190,7 +1174,8 @@ window.cfmDelCls=cfmDelCls;
 /* ============ SUBJECTS ============ */
 async function pageSubjects(root){
   const s=await rest('/rest/v1/subjects?school_id=eq.'+_schoolId+'&select=*&order=code');
-  root.innerHTML='<div class="page-head"><div><h1>📚 Subjects</h1></div><button class="btn" onclick="addSub()">＋ Add</button></div>'+
+  root.innerHTML='<div class="page-head"><div><h1>📚 Subjects</h1></div>'+
+  '<div style="display:flex;gap:8px"><button class="btn ghost" onclick="window.print()">🖨️</button><button class="btn" onclick="addSub()">＋ Add</button></div></div>'+
   '<div class="card"><div class="table-wrap"><table><thead><tr><th>Code</th><th>Name</th></tr></thead><tbody>'+(s||[]).map(x=>'<tr><td>'+esc(x.code)+'</td><td>'+esc(x.name)+'</td></tr>').join('')+'</tbody></table></div></div>';
 }
 window.pageSubjects=pageSubjects;
@@ -1202,7 +1187,8 @@ window.saveSub=saveSub;
 /* ============ EXAMS ============ */
 async function pageExams(root){
   const e=await rest('/rest/v1/exams?school_id=eq.'+_schoolId+'&select=*&order=created_at.desc');
-  root.innerHTML='<div class="page-head"><div><h1>📝 Exams</h1></div><button class="btn" onclick="addExam()">＋ Create</button></div>'+
+  root.innerHTML='<div class="page-head"><div><h1>📝 Exams</h1></div>'+
+  '<div style="display:flex;gap:8px"><button class="btn ghost" onclick="window.print()">🖨️</button><button class="btn" onclick="addExam()">＋ Create</button></div></div>'+
   '<div class="card">'+((e||[]).length?'<div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th>Year·T</th></tr></thead><tbody>'+e.map(x=>'<tr><td><b>'+esc(x.name)+'</b></td><td>'+esc(x.type)+'</td><td>'+x.year+' · T'+x.term+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">None.</div>')+'</div>';
 }
 window.pageExams=pageExams;
@@ -1225,7 +1211,8 @@ async function pageMarks(root){
     rest('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+cls.id+'&status=eq.active&select=*&order=first_name'),
     rest('/rest/v1/marks?school_id=eq.'+_schoolId+'&exam_id=eq.'+exam.id+'&subject_id=eq.'+subj.id+'&select=*')
   ]);
-  root.innerHTML='<div class="page-head"><div><h1>✍️ Marks</h1></div><button class="btn" onclick="saveMarksGrid()">💾 Save</button></div>'+
+  root.innerHTML='<div class="page-head"><div><h1>✍️ Marks</h1></div>'+
+  '<div style="display:flex;gap:8px"><button class="btn ghost" onclick="window.print()">🖨️</button><button class="btn" onclick="saveMarksGrid()">💾 Save</button></div></div>'+
   '<div class="card"><div class="grid grid-3">'+
   '<div><label>Exam</label><select onchange="window._marksExamId=this.value;nav(\'marks\')">'+exams.map(e=>'<option value="'+e.id+'"'+(e.id===exam.id?' selected':'')+'>'+esc(e.name)+'</option>').join('')+'</select></div>'+
   '<div><label>Class</label><select onchange="window._marksClassId=this.value;nav(\'marks\')">'+classes.map(c=>'<option value="'+c.id+'"'+(c.id===cls.id?' selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></div>'+
@@ -1247,79 +1234,194 @@ window.saveMarksGrid=saveMarksGrid;
 /* ============ DEBTORS ============ */
 async function pageDebtors(root){
   const cy=getCurrentYear(),ct=getCurrentTerm();
-  const [students,classes,payments]=await Promise.all([
-    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=*&order=first_name'),
-    loadClasses(),
-    rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&year=eq.'+cy+'&term=eq.'+ct+'&select=student_id,amount').catch(()=>[])
-  ]);
-  const paid={};(payments||[]).forEach(p=>{if(!paid[p.student_id])paid[p.student_id]=0;paid[p.student_id]+=Number(p.amount);});
-  const debtors=(students||[]).map(s=>{
-    const exp=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.transport_fee)||0)+(Number(s.functional_fee)||FUNC_FEE_DEFAULT);
-    return {...s,_expected:exp,_paid:paid[s.id]||0,_balance:exp-(paid[s.id]||0)};
-  }).filter(s=>s._balance>0).sort((a,b)=>b._balance-a._balance);
+  const fin=await loadFinanceData();
+  const mode=_feesMode==='term'?'term':'running';
+  const debtors=fin.students.filter(s=>s.status==='active')
+    .map(s=>({...s,_expected:mode==='term'?s._expected_term:s._expected_running,_paid:mode==='term'?s._paid_term:s._paid_all,_balance:mode==='term'?s._balance_term:s._balance_running}))
+    .filter(s=>s._balance>0)
+    .sort((a,b)=>b._balance-a._balance);
   const total=debtors.reduce((s,x)=>s+x._balance,0);
-  root.innerHTML='<div class="page-head"><div><h1>👥 Debtors</h1><div class="sub">'+debtors.length+' pupils · '+fmtUGX(total)+'</div></div></div>'+
-  '<div class="card">'+(debtors.length?'<div class="table-wrap"><table><thead><tr><th>#</th><th>Adm</th><th>Name</th><th>Sex</th><th>Class</th><th>Parent</th><th>Contact</th><th>Location</th><th style="text-align:right">Balance</th><th></th></tr></thead><tbody>'+
-  debtors.map((s,i)=>{const cls=classes.find(c=>c.id===s.class_id);const van=Number(s.transport_fee)>0;
-    return '<tr><td>'+(i+1)+'</td><td><b>'+esc(s.admission_no)+'</b></td><td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b>'+(van?' <span class="badge info">🚐</span>':'')+'</td><td>'+sexIcon(s.gender)+'</td><td><span class="badge info">'+esc(cls?cls.name:'—')+'</span></td><td>'+esc(s.parent_name||'')+'</td><td>'+esc(s.parent_contact||'')+'</td><td>'+esc(s.location||'')+'</td><td style="text-align:right"><span class="badge bad">'+s._balance.toLocaleString()+'</span></td><td><button class="btn sm" onclick="recordPayment(\''+s.id+'\')">💵</button></td></tr>';}).join('')+
+  window._debtorsList=debtors;window._debtorsClasses=fin.classes;
+  root.innerHTML='<div class="page-head"><div><h1>👥 Debtors</h1><div class="sub">'+debtors.length+' pupils · '+fmtUGX(total)+'</div></div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="printDebtors()">🖨️ Print</button><button class="btn ghost" onclick="exportDebtors()">📥 Excel</button></div></div>'+
+  '<div class="card">'+(debtors.length?'<div class="table-wrap"><table><thead><tr><th>#</th><th>Adm</th><th>Name</th><th>Sex</th><th>Class</th><th>Parent</th><th>Contact</th><th>Location</th><th style="text-align:right">Expected</th><th style="text-align:right">Paid</th><th style="text-align:right">Owed</th><th></th></tr></thead><tbody>'+
+  debtors.map((s,i)=>{const cls=fin.classes.find(c=>c.id===s.class_id);const van=Number(s.transport_fee)>0;
+    return '<tr><td>'+(i+1)+'</td><td><b>'+esc(s.admission_no)+'</b></td><td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b>'+(van?' <span class="badge info">🚐</span>':'')+'</td><td>'+sexIcon(s.gender)+'</td><td><span class="badge info">'+esc(cls?cls.name:'—')+'</span></td><td>'+esc(s.parent_name||'')+'</td><td>'+esc(s.parent_contact||'')+'</td><td>'+esc(s.location||'')+'</td><td style="text-align:right">'+s._expected.toLocaleString()+'</td><td style="text-align:right;color:#047857">'+s._paid.toLocaleString()+'</td><td style="text-align:right"><span class="badge bad">'+s._balance.toLocaleString()+'</span></td><td><button class="btn sm" onclick="recordPayment(\''+s.id+'\')">💵</button></td></tr>';}).join('')+
   '</tbody></table></div>':'<div class="empty">🎉 No debtors!</div>')+'</div>';
 }
 window.pageDebtors=pageDebtors;
 
+function printDebtors(){
+  const list=window._debtorsList||[];
+  const classes=window._debtorsClasses||[];
+  if(!list.length){toast('No debtors','bad');return;}
+  const rows=list.map((s,i)=>{const cls=classes.find(c=>c.id===s.class_id);const van=Number(s.transport_fee)>0;
+    return '<tr><td>'+(i+1)+'</td><td>'+esc(s.admission_no)+'</td><td>'+esc(s.lin||'')+'</td><td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b>'+(van?' 🚐':'')+'</td><td>'+sexIcon(s.gender)+'</td><td>'+(s.date_of_birth?ageOf(s):'—')+'</td><td>'+esc(cls?cls.name:'—')+'</td><td>'+esc(s.parent_name||'')+'</td><td>'+esc(s.parent_contact||'')+'</td><td>'+esc(s.location||'')+'</td><td style="text-align:right">'+s._expected.toLocaleString()+'</td><td style="text-align:right">'+s._paid.toLocaleString()+'</td><td style="text-align:right;font-weight:bold;color:#b91c1c">'+s._balance.toLocaleString()+'</td></tr>';
+  }).join('');
+  const total=list.reduce((s,x)=>s+x._balance,0);
+  printHTML('Debtors — Outstanding Fees',
+    '<p style="font-size:13px">Period: <b>'+getCurrentYear()+' · Term '+getCurrentTerm()+'</b> · Total pupils: <b>'+list.length+'</b></p>'+
+    '<table><thead><tr><th>#</th><th>Adm</th><th>LIN</th><th>Name</th><th>Sex</th><th>Age</th><th>Class</th><th>Parent</th><th>Contact</th><th>Location</th><th style="text-align:right">Expected</th><th style="text-align:right">Paid</th><th style="text-align:right">Owed</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<div class="summary"><div><b>Total Debtors</b>'+list.length+'</div><div><b>Total Owed</b><span style="color:#b91c1c;font-weight:bold">UGX '+total.toLocaleString()+'</span></div></div>'+
+    '<div style="margin-top:40px;display:flex;justify-content:space-between;gap:20px"><div style="flex:1"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;text-align:center">Bursar</div></div><div style="flex:1"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;text-align:center">Head Teacher</div></div></div>');
+}
+window.printDebtors=printDebtors;
+
+function exportDebtors(){
+  const list=window._debtorsList||[];
+  const classes=window._debtorsClasses||[];
+  if(!list.length){toast('No debtors','bad');return;}
+  const data=list.map(s=>({'Adm No':s.admission_no,'LIN':s.lin||'','Name':s.first_name+' '+(s.last_name||''),'Sex':sexIcon(s.gender),'Age':s.date_of_birth?ageOf(s):'','Class':(classes.find(c=>c.id===s.class_id)||{}).name||'','Parent':s.parent_name||'','Contact':s.parent_contact||'','Location':s.location||'','Expected':s._expected,'Paid':s._paid,'Owed':s._balance}));
+  const ws=XLSX.utils.json_to_sheet(data);
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Debtors');
+  XLSX.writeFile(wb,'Debtors_'+getCurrentYear()+'_T'+getCurrentTerm()+'.xlsx');
+  toast('Exported','ok');
+}
+window.exportDebtors=exportDebtors;
+
 /* ============ REPORTS ALL ============ */
 async function pageReportsAll(root){
   const cy=getCurrentYear(),ct=getCurrentTerm();
-  const [students,classes,payments,uniformSales,exps]=await Promise.all([
-    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=*'),
-    loadClasses(),
-    rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&year=eq.'+cy+'&term=eq.'+ct+'&select=*').catch(()=>[]),
-    rest('/rest/v1/uniform_sales?school_id=eq.'+_schoolId+'&select=*&order=sold_at.desc&limit=200').catch(()=>[]),
-    rest('/rest/v1/expenses?school_id=eq.'+_schoolId+'&academic_year=eq.'+cy+'&term=eq.'+ct+'&select=*').catch(()=>[])
-  ]);
-  const paid={};(payments||[]).forEach(p=>{if(!paid[p.student_id])paid[p.student_id]=0;paid[p.student_id]+=Number(p.amount);});
-  let expected=0,collected=0,zeroPaid=[];
-  (students||[]).forEach(s=>{
-    const exp=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.transport_fee)||0)+(Number(s.functional_fee)||FUNC_FEE_DEFAULT);
-    const p=paid[s.id]||0;
-    expected+=exp;collected+=p;
-    if(p===0)zeroPaid.push({...s,_expected:exp});
-  });
-  const balance=expected-collected;
-  const uniformTotal=(uniformSales||[]).reduce((s,x)=>s+Number(x.total_amount||0),0);
-  const expsTotal=(exps||[]).reduce((s,x)=>s+Number(x.amount||0),0);
-  window._reportData={cy,ct,students,classes,paid,expected,collected,balance,zeroPaid,uniformSales,uniformTotal,exps,expsTotal};
-  root.innerHTML='<div class="page-head"><div><h1>📈 Reports</h1><div class="sub">'+cy+' · Term '+ct+'</div></div><button class="btn ghost" onclick="printReportAll()">🖨️ Print</button></div>'+
+  const fin=await loadFinanceData();
+  const active=fin.students.filter(s=>s.status==='active');
+  const sum=financeSummary(active);
+  const zeroPaid=active.filter(s=>s._paid_term===0 && s._expected_term>0);
+
+  root.innerHTML='<div class="page-head"><div><h1>📈 Reports</h1><div class="sub">'+cy+' · Term '+ct+'</div></div>'+
+    '<div style="display:flex;gap:8px"><button class="btn ghost" onclick="printReportAll()">🖨️ Print</button><button class="btn ghost" onclick="window.print()">🖨️ Browser</button></div></div>'+
   '<div class="grid grid-kpi" style="margin-bottom:14px">'+
-    '<div class="kpi kpi-navy"><div class="v">'+fmtUGX(expected)+'</div><div class="l">Expected</div></div>'+
-    '<div class="kpi kpi-ok"><div class="v">'+fmtUGX(collected)+'</div><div class="l">Collected</div></div>'+
-    '<div class="kpi kpi-bad"><div class="v">'+fmtUGX(balance)+'</div><div class="l">Outstanding</div></div>'+
+    '<div class="kpi kpi-navy"><div class="v">'+fmtUGX(sum.expected_term)+'</div><div class="l">Expected (Term)</div></div>'+
+    '<div class="kpi kpi-ok"><div class="v">'+fmtUGX(sum.collected_term)+'</div><div class="l">Collected</div></div>'+
+    '<div class="kpi kpi-bad"><div class="v">'+fmtUGX(sum.outstanding_term)+'</div><div class="l">Outstanding</div></div>'+
     '<div class="kpi kpi-warn"><div class="v">'+zeroPaid.length+'</div><div class="l">Zero-Paid</div></div>'+
   '</div>'+
+  '<div class="card"><h3>💰 Running Balance (All-time)</h3><div class="grid grid-3">'+
+    '<div class="kpi kpi-plain" style="padding:14px"><div class="v" style="font-size:15px">'+fmtUGX(sum.expected_running)+'</div><div class="l">Total Expected</div></div>'+
+    '<div class="kpi kpi-plain" style="padding:14px"><div class="v" style="font-size:15px">'+fmtUGX(sum.collected_running)+'</div><div class="l">Total Collected</div></div>'+
+    '<div class="kpi kpi-plain" style="padding:14px"><div class="v" style="font-size:15px">'+fmtUGX(sum.outstanding_running)+'</div><div class="l">Total Outstanding</div></div>'+
+  '</div></div>'+
   '<div class="card"><h3>💰 By Class</h3><div class="table-wrap"><table><thead><tr><th>Class</th><th style="text-align:right">Pupils</th><th style="text-align:right">Expected</th><th style="text-align:right">Paid</th><th style="text-align:right">Balance</th></tr></thead><tbody>'+
-  (classes||[]).map(c=>{
-    const cS=(students||[]).filter(s=>s.class_id===c.id);
-    let cE=0,cP=0;
-    cS.forEach(s=>{cE+=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.transport_fee)||0)+(Number(s.functional_fee)||FUNC_FEE_DEFAULT);cP+=paid[s.id]||0;});
+  (fin.classes||[]).map(c=>{
+    const cS=active.filter(s=>s.class_id===c.id);
+    const cE=cS.reduce((s,x)=>s+x._expected_term,0);
+    const cP=cS.reduce((s,x)=>s+x._paid_term,0);
     return '<tr><td><b>'+esc(c.name)+'</b></td><td style="text-align:right">'+cS.length+'</td><td style="text-align:right">'+cE.toLocaleString()+'</td><td style="text-align:right;color:#047857">'+cP.toLocaleString()+'</td><td style="text-align:right;color:#b91c1c">'+(cE-cP).toLocaleString()+'</td></tr>';
   }).join('')+
   '</tbody></table></div></div>'+
   (zeroPaid.length?'<div class="card" style="background:var(--badsoft);border-color:#fecaca"><h3 style="color:#b91c1c">⚠️ Zero-Paid Pupils ('+zeroPaid.length+')</h3><div class="table-wrap"><table><thead><tr><th>Adm</th><th>Name</th><th>Class</th><th>Parent</th><th>Contact</th><th style="text-align:right">Expected</th></tr></thead><tbody>'+
-  zeroPaid.map(r=>{const cls=(classes||[]).find(c=>c.id===r.class_id);return '<tr><td>'+esc(r.admission_no)+'</td><td>'+esc(r.first_name+' '+(r.last_name||''))+'</td><td>'+esc(cls?cls.name:'')+'</td><td>'+esc(r.parent_name||'')+'</td><td>'+esc(r.parent_contact||'')+'</td><td style="text-align:right">'+r._expected.toLocaleString()+'</td></tr>';}).join('')+
+  zeroPaid.map(r=>{const cls=(fin.classes||[]).find(c=>c.id===r.class_id);return '<tr><td>'+esc(r.admission_no)+'</td><td>'+esc(r.first_name+' '+(r.last_name||''))+'</td><td>'+esc(cls?cls.name:'')+'</td><td>'+esc(r.parent_name||'')+'</td><td>'+esc(r.parent_contact||'')+'</td><td style="text-align:right">'+r._expected_term.toLocaleString()+'</td></tr>';}).join('')+
   '</tbody></table></div></div>':'');
+  window._reportData={cy,ct,students:active,classes:fin.classes,sum,zeroPaid};
 }
 window.pageReportsAll=pageReportsAll;
 
 function printReportAll(){
   const r=window._reportData;if(!r){toast('No data','bad');return;}
   let html='<p><b>Period:</b> '+r.cy+' · Term '+r.ct+'</p>';
-  html+='<div class="summary"><div><b>Expected</b>UGX '+r.expected.toLocaleString()+'</div><div><b>Collected</b>UGX '+r.collected.toLocaleString()+'</div><div><b>Outstanding</b>UGX '+r.balance.toLocaleString()+'</div></div>';
-  if(r.zeroPaid.length){html+='<h3 style="margin-top:16px">Zero-Paid Pupils ('+r.zeroPaid.length+')</h3><table><thead><tr><th>Adm</th><th>Name</th><th>Parent</th><th>Contact</th><th>Expected</th></tr></thead><tbody>'+r.zeroPaid.map(x=>'<tr><td>'+esc(x.admission_no)+'</td><td>'+esc(x.first_name+' '+(x.last_name||''))+'</td><td>'+esc(x.parent_name||'')+'</td><td>'+esc(x.parent_contact||'')+'</td><td style="text-align:right">'+Number(x._expected).toLocaleString()+'</td></tr>').join('')+'</tbody></table>';}
+  html+='<div class="summary"><div><b>Expected (Term)</b>UGX '+r.sum.expected_term.toLocaleString()+'</div><div><b>Collected</b>UGX '+r.sum.collected_term.toLocaleString()+'</div><div><b>Outstanding</b>UGX '+r.sum.outstanding_term.toLocaleString()+'</div></div>';
+  if(r.zeroPaid.length){html+='<h3 style="margin-top:16px">Zero-Paid Pupils ('+r.zeroPaid.length+')</h3><table><thead><tr><th>Adm</th><th>Name</th><th>Parent</th><th>Contact</th><th>Expected</th></tr></thead><tbody>'+r.zeroPaid.map(x=>'<tr><td>'+esc(x.admission_no)+'</td><td>'+esc(x.first_name+' '+(x.last_name||''))+'</td><td>'+esc(x.parent_name||'')+'</td><td>'+esc(x.parent_contact||'')+'</td><td style="text-align:right">'+Number(x._expected_term).toLocaleString()+'</td></tr>').join('')+'</tbody></table>';}
   html+='<div style="margin-top:40px;display:flex;justify-content:space-between;gap:20px"><div style="flex:1"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;text-align:center">Prepared by (Bursar)</div></div><div style="flex:1"><div style="border-top:1px solid #111;padding-top:6px;font-size:12px;text-align:center">Approved by (Head Teacher)</div></div></div>';
   printHTML('Term Report — '+r.cy+' Term '+r.ct,html);
 }
 window.printReportAll=printReportAll;
 
-/* ============ SETTINGS ============ */
+/* ============ SIMPLER PAGES ============ */
+async function pageAnnouncements(root){
+  const items=await rest('/rest/v1/announcements?school_id=eq.'+_schoolId+'&select=*&order=created_at.desc').catch(()=>[]);
+  root.innerHTML='<div class="page-head"><div><h1>📢 Announcements</h1></div>'+
+  '<div style="display:flex;gap:8px"><button class="btn ghost" onclick="window.print()">🖨️</button><button class="btn" onclick="addAnnouncement()">＋ New</button></div></div>'+
+  '<div>'+((items||[]).length?items.map(a=>'<div class="card"><h3>'+esc(a.title)+'</h3><div class="muted" style="margin-bottom:6px">'+fmtDate(a.created_at)+' · '+esc(a.audience||'all')+'</div><div style="white-space:pre-wrap">'+esc(a.body)+'</div><button class="btn sm danger" style="margin-top:8px" onclick="delAnnouncement(\''+a.id+'\')">Delete</button></div>').join(''):'<div class="card"><div class="empty">No announcements.</div></div>')+'</div>';
+}
+window.pageAnnouncements=pageAnnouncements;
+function addAnnouncement(){modal('<h3>New Announcement</h3><div><label>Title *</label><input id="an_title"></div><div style="margin-top:12px"><label>Message *</label><textarea id="an_body" rows="5"></textarea></div><div style="margin-top:12px"><label>Audience</label><select id="an_audience"><option value="all">Everyone</option><option value="staff">Staff</option><option value="parents">Parents</option></select></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveAnnouncement()">Post</button></div>');}
+window.addAnnouncement=addAnnouncement;
+async function saveAnnouncement(){const title=document.getElementById('an_title').value.trim();const body=document.getElementById('an_body').value.trim();if(!title||!body){toast('Fill','bad');return;}try{await rest('/rest/v1/announcements',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,title,body,audience:document.getElementById('an_audience').value})});closeModal();nav('announcements');}catch(e){toast(e.message,'bad');}}
+window.saveAnnouncement=saveAnnouncement;
+async function delAnnouncement(id){if(!confirm('Delete?'))return;try{await rest('/rest/v1/announcements?id=eq.'+id,{method:'DELETE'});nav('announcements');}catch(e){toast(e.message,'bad');}}
+window.delAnnouncement=delAnnouncement;
+
+async function pagePassOuts(root){
+  const [passOuts,students]=await Promise.all([
+    rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&select=*&order=signed_out_at.desc').catch(()=>[]),
+    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,first_name,last_name,admission_no&status=eq.active&order=first_name')
+  ]);
+  window._passOutsStudents=students||[];
+  const out=(passOuts||[]).filter(p=>p.status==='out');
+  root.innerHTML='<div class="page-head"><div><h1>🚪 Pass Outs</h1><div class="sub">'+out.length+' out</div></div>'+
+  '<div style="display:flex;gap:8px"><button class="btn ghost" onclick="window.print()">🖨️</button><button class="btn" onclick="newPassOut()">＋ Sign Out</button></div></div>'+
+  '<div class="card">'+((passOuts||[]).length?'<div class="table-wrap"><table><thead><tr><th>Pupil</th><th>Reason</th><th>Out</th><th>Status</th><th></th></tr></thead><tbody>'+
+  passOuts.slice(0,100).map(p=>{const st=students.find(s=>s.id===p.student_id);const isOut=p.status==='out';
+    return '<tr><td><b>'+esc(st?st.first_name+' '+(st.last_name||''):'—')+'</b></td><td>'+esc(p.reason||'')+'</td><td>'+fmtDate(p.signed_out_at)+'</td><td>'+(isOut?'<span class="badge warn">🚶</span>':'<span class="badge ok">✅</span>')+'</td><td style="text-align:right">'+(isOut?'<button class="btn sm ok" onclick="signInStudent(\''+p.id+'\')">In</button> ':'')+'</td></tr>';}).join('')+
+  '</tbody></table></div>':'<div class="empty">None.</div>')+'</div>';
+}
+window.pagePassOuts=pagePassOuts;
+function newPassOut(){const students=window._passOutsStudents||[];if(!students.length){toast('No pupils','bad');return;}const now=new Date();const tz=now.getTimezoneOffset()*60000;const l=new Date(now-tz).toISOString().slice(0,16);const t=new Date(now.getTime()+24*60*60*1000-tz).toISOString().slice(0,16);
+modal('<h3>Sign Out</h3><div><label>Pupil *</label><select id="po_student">'+students.map(s=>'<option value="'+s.id+'">'+esc(s.first_name+' '+(s.last_name||''))+'</option>').join('')+'</select></div><div style="margin-top:12px"><label>Reason</label><select id="po_reason"><option>Sick</option><option>Family</option><option>Going Home</option><option>Other</option></select></div><div style="margin-top:12px"><label>Out</label><input id="po_out" type="datetime-local" value="'+l+'"></div><div style="margin-top:12px"><label>Expected</label><input id="po_expected" type="datetime-local" value="'+t+'"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="savePassOut()">Sign Out</button></div>');}
+window.newPassOut=newPassOut;
+async function savePassOut(){const sid=document.getElementById('po_student').value;const outAt=document.getElementById('po_out').value;const exp=document.getElementById('po_expected').value;if(!sid||!outAt){toast('Required','bad');return;}try{await rest('/rest/v1/pass_outs',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,student_id:sid,reason:document.getElementById('po_reason').value,signed_out_at:new Date(outAt).toISOString(),expected_return_at:exp?new Date(exp).toISOString():null,status:'out'})});toast('Signed out','ok');closeModal();nav('passouts');}catch(e){toast(e.message,'bad');}}
+window.savePassOut=savePassOut;
+async function signInStudent(id){try{await rest('/rest/v1/pass_outs?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({signed_in_at:new Date().toISOString(),status:'returned'})});toast('In','ok');nav('passouts');}catch(e){toast(e.message,'bad');}}
+window.signInStudent=signInStudent;
+
+async function pageDiscipline(root){
+  const [records,students]=await Promise.all([
+    rest('/rest/v1/discipline?school_id=eq.'+_schoolId+'&select=*&order=incident_date.desc').catch(()=>[]),
+    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,first_name,last_name&order=first_name')
+  ]);
+  window._disciplineStudents=students||[];
+  root.innerHTML='<div class="page-head"><div><h1>⚠️ Discipline</h1></div>'+
+  '<div style="display:flex;gap:8px"><button class="btn ghost" onclick="window.print()">🖨️</button><button class="btn" onclick="addDiscipline()">＋ Record</button></div></div>'+
+  '<div class="card">'+((records||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Student</th><th>Category</th><th>Desc</th></tr></thead><tbody>'+
+  records.map(r=>{const st=(students||[]).find(s=>s.id===r.student_id);return '<tr><td>'+fmtDate(r.incident_date)+'</td><td>'+esc(st?st.first_name+' '+(st.last_name||''):'—')+'</td><td>'+esc(r.category||'')+'</td><td>'+esc(r.description||'')+'</td></tr>';}).join('')+
+  '</tbody></table></div>':'<div class="empty">None.</div>')+'</div>';
+}
+window.pageDiscipline=pageDiscipline;
+function addDiscipline(){const s=window._disciplineStudents||[];if(!s.length){toast('Add pupils','bad');return;}modal('<h3>Record</h3><div><label>Student</label><select id="di_student">'+s.map(x=>'<option value="'+x.id+'">'+esc(x.first_name+' '+(x.last_name||''))+'</option>').join('')+'</select></div><div style="margin-top:12px"><label>Date</label><input id="di_date" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div><div style="margin-top:12px"><label>Category</label><input id="di_cat"></div><div style="margin-top:12px"><label>Description</label><textarea id="di_desc" rows="3"></textarea></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveDiscipline()">Save</button></div>');}
+window.addDiscipline=addDiscipline;
+async function saveDiscipline(){const sid=document.getElementById('di_student').value;const desc=document.getElementById('di_desc').value.trim();if(!sid||!desc){toast('Fill','bad');return;}try{await rest('/rest/v1/discipline',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,student_id:sid,incident_date:document.getElementById('di_date').value,category:document.getElementById('di_cat').value,description:desc})});closeModal();nav('discipline');}catch(e){toast(e.message,'bad');}}
+window.saveDiscipline=saveDiscipline;
+
+async function pageFood(root){
+  const items=await rest('/rest/v1/food_items?school_id=eq.'+_schoolId+'&select=*&order=name').catch(()=>[]);
+  root.innerHTML='<div class="page-head"><div><h1>🥘 Food</h1></div>'+
+  '<div style="display:flex;gap:8px"><button class="btn ghost" onclick="window.print()">🖨️</button><button class="btn" onclick="addFoodItem()">＋ Item</button></div></div>'+
+  '<div class="card">'+((items||[]).length?'<div class="table-wrap"><table><thead><tr><th>Item</th><th>Unit</th><th style="text-align:right">Stock</th><th></th></tr></thead><tbody>'+
+  items.map(it=>'<tr><td>'+esc(it.name)+'</td><td>'+esc(it.unit||'kg')+'</td><td style="text-align:right">'+Number(it.current_stock)+'</td><td><button class="btn sm danger" onclick="delFoodItem(\''+it.id+'\')">✕</button></td></tr>').join('')+
+  '</tbody></table></div>':'<div class="empty">No items.</div>')+'</div>';
+}
+window.pageFood=pageFood;
+function addFoodItem(){modal('<h3>Add Food</h3><div><label>Name</label><input id="fi_name"></div><div style="margin-top:12px"><label>Unit</label><select id="fi_unit"><option>kg</option><option>litres</option><option>pieces</option></select></div><div style="margin-top:12px"><label>Stock</label><input id="fi_stock" type="number" value="0"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveFoodItem()">Save</button></div>');}
+window.addFoodItem=addFoodItem;
+async function saveFoodItem(){const n=document.getElementById('fi_name').value.trim();if(!n){toast('Name','bad');return;}try{await rest('/rest/v1/food_items',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,name:n,unit:document.getElementById('fi_unit').value,current_stock:parseFloat(document.getElementById('fi_stock').value)||0})});closeModal();nav('food');}catch(e){toast(e.message,'bad');}}
+window.saveFoodItem=saveFoodItem;
+async function delFoodItem(id){if(!confirm('Delete?'))return;try{await rest('/rest/v1/food_items?id=eq.'+id,{method:'DELETE'});nav('food');}catch(e){toast(e.message,'bad');}}
+window.delFoodItem=delFoodItem;
+
+async function pageExpenses(root){
+  const e=await rest('/rest/v1/expenses?school_id=eq.'+_schoolId+'&select=*&order=date.desc').catch(()=>[]);
+  const tot=(e||[]).reduce((s,x)=>s+Number(x.amount),0);
+  root.innerHTML='<div class="page-head"><div><h1>💸 Expenses</h1><div class="sub">'+fmtUGX(tot)+'</div></div>'+
+  '<div style="display:flex;gap:8px"><button class="btn ghost" onclick="window.print()">🖨️</button><button class="btn" onclick="addExp()">＋ Add</button></div></div>'+
+  '<div class="card">'+((e||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Desc</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
+  e.map(x=>'<tr><td>'+fmtDate(x.date)+'</td><td>'+esc(x.description)+'</td><td style="text-align:right">'+Number(x.amount).toLocaleString()+'</td></tr>').join('')+
+  '</tbody></table></div>':'<div class="empty">None.</div>')+'</div>';
+}
+window.pageExpenses=pageExpenses;
+function addExp(){modal('<h3>Add Expense</h3><div><label>Description</label><input id="ex_desc"></div><div style="margin-top:12px"><label>Amount</label><input id="ex_amount" type="number"></div><div style="margin-top:12px"><label>Date</label><input id="ex_date" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveExp()">Save</button></div>');}
+window.addExp=addExp;
+async function saveExp(){const d=document.getElementById('ex_desc').value.trim();const a=parseFloat(document.getElementById('ex_amount').value);if(!d||!a){toast('Fill','bad');return;}try{await rest('/rest/v1/expenses',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,description:d,amount:a,date:document.getElementById('ex_date').value,academic_year:getCurrentYear(),term:getCurrentTerm()})});closeModal();nav('expenses');}catch(e){toast(e.message,'bad');}}
+window.saveExp=saveExp;
+
+async function pageSalaries(root){
+  const sal=await rest('/rest/v1/salaries?school_id=eq.'+_schoolId+'&select=*&order=date_paid.desc').catch(()=>[]);
+  root.innerHTML='<div class="page-head"><div><h1>🏦 Salaries</h1><div class="sub">'+(sal||[]).length+' records</div></div>'+
+  '<button class="btn ghost" onclick="window.print()">🖨️</button></div>'+
+  '<div class="card">'+((sal||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
+  sal.map(s=>'<tr><td>'+fmtDate(s.date_paid)+'</td><td style="text-align:right">'+Number(s.amount).toLocaleString()+'</td></tr>').join('')+
+  '</tbody></table></div>':'<div class="empty">None.</div>')+'</div>';
+}
+window.pageSalaries=pageSalaries;
+
 async function pageSettings(root){
   root.innerHTML='<div class="page-head"><div><h1>⚙️ Settings</h1></div></div>'+
   '<div class="card"><h3>School Profile</h3><div class="grid grid-2">'+
@@ -1346,4 +1448,4 @@ async function handleAuthRedirect(){
 handleAuthRedirect();
 </script>
 </body>
-  </html>
+</html>
