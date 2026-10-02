@@ -47,6 +47,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .header-period{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:600;color:#fff}
 .header-period select{background:transparent;color:#fff;border:none;padding:0 4px;font-size:12px;font-weight:700;width:auto;cursor:pointer}
 .header-period select option{color:var(--navy)}
+.term-pill{display:inline-flex;align-items:center;gap:6px;background:var(--gold);color:#fff;font-size:11px;font-weight:800;padding:5px 14px;border-radius:999px;letter-spacing:.05em;text-transform:uppercase;box-shadow:0 4px 12px -2px rgba(212,160,23,.5)}
 .header-search{position:relative}
 .header-search input{background:#fff;border:none;border-radius:999px;padding:13px 20px 13px 46px;font-size:13.5px;color:var(--navy);font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,.15)}
 .header-search input::placeholder{color:#94a3b8;font-weight:400}
@@ -117,7 +118,6 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .wa-float{position:fixed;bottom:96px;right:16px;background:#25D366;color:#fff;width:52px;height:52px;border-radius:50%;z-index:99;text-decoration:none;box-shadow:0 10px 20px rgba(0,0,0,.25);display:grid;place-items:center;font-size:22px}
 .wa-float:hover{background:#20BA5A;color:#fff;transform:scale(1.05)}
 @media(max-width:640px){.page-head{flex-direction:column;align-items:stretch}.page-head .btn{width:100%}.kpi .v{font-size:19px}}
-/* Report Card */
 .rc-title{text-align:center;font-size:15px;font-weight:800;color:var(--navy);letter-spacing:.05em;text-transform:uppercase;margin:10px 0 6px}
 .rc-info{width:100%;border-collapse:collapse;margin:10px 0}
 .rc-info td{padding:8px 10px;font-size:12.5px;border:1px solid var(--line)}
@@ -132,7 +132,6 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .rc-multi th .sub{font-size:9px;font-weight:400;opacity:.75;text-transform:none;letter-spacing:0;display:block;margin-top:2px}
 .rc-multi td{padding:8px 10px;font-size:12.5px;border:1px solid #e2e8f0}
 .rc-multi tfoot td{background:#f1f5f9;font-weight:700;border-top:2px solid #0a2540}
-/* Ultimate pack */
 .profile-hero{background:linear-gradient(135deg,var(--navy),var(--navy3));color:#fff;border-radius:16px;padding:20px;margin-bottom:14px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
 .profile-hero .avatar{width:64px;height:64px;border-radius:50%;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-size:26px;font-weight:800;flex-shrink:0}
 .profile-hero .info{flex:1;min-width:200px}
@@ -179,6 +178,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .alert-item .txt b{display:block;color:var(--navy)}
 .alert-item .txt span{color:var(--muted);font-size:12px}
 .chk{width:16px;height:16px;accent-color:var(--navy);cursor:pointer}
+.term-warn{background:var(--goldsoft);border-left:4px solid var(--gold);padding:10px 14px;border-radius:8px;font-size:12.5px;color:#78350f;margin-bottom:12px}
 </style>
 </head>
 <body>
@@ -242,6 +242,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
         <span id="headerTime">🕐 —</span>
       </div>
       <div class="header-periods">
+        <span class="term-pill">📚 <span id="currentTermDisplay">—</span></span>
         <span class="header-period">📅 <select id="termYearSelect" onchange="changePeriod()"></select></span>
         <span class="header-period">📆 <select id="termTermSelect" onchange="changePeriod()"><option value="1">Term 1</option><option value="2">Term 2</option><option value="3">Term 3</option></select></span>
       </div>
@@ -268,8 +269,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 
 <script>
 /* ============================================================
-   EUDES ULTIMATE — SINGLE FILE BUILD v2
-   Functional Fee fully integrated · Excel Import · Report Cards
+   EUDES ULTIMATE — TERM-AWARE BUILD
    ============================================================ */
 const SUPA_URL='https://wabeempxckdtjvrkzhpv.supabase.co';
 const SUPA_KEY='sb_publishable_n0uAm0Gcq7qR2dJM4jMZGQ_wiV__Cfp';
@@ -281,6 +281,18 @@ function getCurrentYear(){return parseInt(safeStorage.getItem('eudes_year'))||ne
 function getCurrentTerm(){return parseInt(safeStorage.getItem('eudes_term'))||1;}
 function setCurrentPeriod(y,t){safeStorage.setItem('eudes_year',String(y));safeStorage.setItem('eudes_term',String(t));}
 window.getCurrentYear=getCurrentYear;window.getCurrentTerm=getCurrentTerm;window.setCurrentPeriod=setCurrentPeriod;
+
+/* ---------- TERM HELPERS ---------- */
+function termFilter(){
+  return '&academic_year=eq.'+getCurrentYear()+'&term=eq.'+getCurrentTerm();
+}
+function termLabel(){
+  return getCurrentYear()+' Term '+getCurrentTerm();
+}
+function termIsCurrent(row){
+  return Number(row.academic_year)===getCurrentYear() && Number(row.term)===getCurrentTerm();
+}
+window.termFilter=termFilter;window.termLabel=termLabel;window.termIsCurrent=termIsCurrent;
 
 /* ---------- SAFE STORAGE ---------- */
 let _memoryStore={};
@@ -491,6 +503,7 @@ function renderHeader(){
   const metaEl=document.getElementById('headerMeta');
   const roleEl=document.getElementById('roleChip');
   const titleEl=document.getElementById('topbarTitle');
+  const termEl=document.getElementById('currentTermDisplay');
   if(!_school){nameEl.textContent='SCHOOL';metaEl.textContent='—';return;}
   nameEl.textContent=_school.name||'SCHOOL';
   const parts=[];
@@ -499,10 +512,10 @@ function renderHeader(){
   metaEl.innerHTML=parts.length?parts.join('<span class="sep">·</span>'):'—';
   if(_role)roleEl.textContent=String(_role).replace(/_/g,' ').toUpperCase();
   titleEl.textContent=(_school.name||'SCHOOL')+' | Ultimate';
+  if(termEl)termEl.textContent=termLabel();
 }
 window.renderHeader=renderHeader;
 
-/* ---------- PERIOD SELECTOR ---------- */
 function populateTermSelector(){
   const ySel=document.getElementById('termYearSelect');
   const tSel=document.getElementById('termTermSelect');
@@ -522,6 +535,7 @@ function changePeriod(){
   const y=parseInt(document.getElementById('termYearSelect').value);
   const t=parseInt(document.getElementById('termTermSelect').value);
   setCurrentPeriod(y,t);
+  renderHeader();
   toast('Switched to '+y+' · Term '+t,'ok');
   nav(activeRoute);
 }
@@ -632,7 +646,7 @@ async function checkDuplicateStudent(admissionNo,firstName,lastName,parentContac
 }
 window.checkDuplicateStudent=checkDuplicateStudent;
 
-/* ---------- UNEB / PLE GRADING ---------- */
+/* ---------- GRADING ---------- */
 function gradeOf(score){
   if(score==null||isNaN(score)||score==='')return{g:'—',r:'—',cls:''};
   const s=Number(score);
@@ -660,10 +674,7 @@ function autoComment(avg,firstName){
   return 'Unsatisfactory. '+f+' failed (F9). Immediate intervention, extra lessons and parental support are required.';
 }
 function gradeKeyHTML(){
-  return '<div class="gc-key"><b>Grading Key (UNEB / PLE):</b> '+
-    'D1 (90–100) Distinction 1 · D2 (80–89) Distinction 2 · '+
-    'C3 (70–79) Credit 3 · C4 (60–69) Credit 4 · C5 (55–59) Credit 5 · C6 (50–54) Credit 6 · '+
-    'P7 (45–49) Pass 7 · P8 (40–44) Pass 8 · F9 (0–39) Fail 9</div>';
+  return '<div class="gc-key"><b>Grading Key (UNEB / PLE):</b> D1 (90–100) Distinction 1 · D2 (80–89) Distinction 2 · C3 (70–79) Credit 3 · C4 (60–69) Credit 4 · C5 (55–59) Credit 5 · C6 (50–54) Credit 6 · P7 (45–49) Pass 7 · P8 (40–44) Pass 8 · F9 (0–39) Fail 9</div>';
 }
 window.gradeOf=gradeOf;window.ordinal=ordinal;
 
@@ -685,7 +696,6 @@ function examStageLabel(type){
 function examStageFullLabel(rank){return {1:'Beginning of Term',2:'Mid Term',3:'End of Term',0:'Other'}[rank]||'Other';}
 window.examStageRank=examStageRank;window.examStageLabel=examStageLabel;window.examStageFullLabel=examStageFullLabel;
 
-/* ---------- AUDIT ---------- */
 async function audit(action,entity,entityId,details){
   try{await rest('/rest/v1/audit_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,user_id:SESSION?.id||null,action,entity,entity_id:entityId?String(entityId):null,details:details||null})});}catch(e){}
 }
@@ -700,26 +710,41 @@ async function pageDashboardPro(root){
   const data=await Promise.all([
     rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,gender,status,functional_fee,functional_fee_status,functional_fee_paid,balance_bf,actual_fee,transport_fee').catch(()=>[]),
     rest('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=id,name').catch(()=>[]),
-    rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=student_id,amount,payment_for,paid_at').catch(()=>[]),
+    rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=student_id,amount,payment_for,paid_at,academic_year,term').catch(()=>[]),
     rest('/rest/v1/attendance?school_id=eq.'+_schoolId+'&date=eq.'+today+'&select=status').catch(()=>[]),
-    rest('/rest/v1/expenses?school_id=eq.'+_schoolId+'&academic_year=eq.'+cy+'&term=eq.'+ct+'&select=amount').catch(()=>[]),
-    rest('/rest/v1/uniform_sales?school_id=eq.'+_schoolId+'&select=total_amount,sold_at').catch(()=>[]),
-    rest('/rest/v1/messages?school_id=eq.'+_schoolId+'&select=id').catch(()=>[]),
+    rest('/rest/v1/expenses?school_id=eq.'+_schoolId+termFilter()+'&select=amount').catch(()=>[]),
+    rest('/rest/v1/uniform_sales?school_id=eq.'+_schoolId+termFilter()+'&select=total_amount,sold_at').catch(()=>[]),
+    rest('/rest/v1/messages?school_id=eq.'+_schoolId+termFilter()+'&select=id').catch(()=>[]),
     rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&status=eq.out&select=id').catch(()=>[]),
     rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=id').catch(()=>[])
   ]);
   const students=data[0],classes=data[1],payments=data[2],att=data[3],expenses=data[4],uniformSales=data[5],msgs=data[6],passOuts=data[7],staff=data[8];
   const active=students.filter(s=>s.status==='active');
   const pbs={};
-  payments.forEach(p=>{if(!pbs[p.student_id])pbs[p.student_id]={school:0,func:0};if(p.payment_for==='Functional Fees')pbs[p.student_id].func+=Number(p.amount);else pbs[p.student_id].school+=Number(p.amount);});
+  let thisTermSchool=0,thisTermFunc=0,allTimeSchool=0,allTimeFunc=0;
+  payments.forEach(p=>{
+    if(!pbs[p.student_id])pbs[p.student_id]={school:0,func:0};
+    const isThisTerm=Number(p.academic_year)===cy && Number(p.term)===ct;
+    if(p.payment_for==='Functional Fees'){
+      pbs[p.student_id].func+=Number(p.amount);
+      allTimeFunc+=Number(p.amount);
+      if(isThisTerm)thisTermFunc+=Number(p.amount);
+    } else {
+      pbs[p.student_id].school+=Number(p.amount);
+      allTimeSchool+=Number(p.amount);
+      if(isThisTerm)thisTermSchool+=Number(p.amount);
+    }
+  });
   let te=0,tc=0,debtors=0,funcPend=0;
-  let funcCollected=0,funcCashCount=0,funcReqCount=0,funcPendingCount=0,funcPartialCount=0;
+  let funcExpected=0,funcCollected=0,funcCashCount=0,funcReqCount=0,funcPendingCount=0,funcPartialCount=0;
   active.forEach(s=>{
     const sf=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.transport_fee)||0);
     te+=sf;
     const p=pbs[s.id]||{school:0};
     tc+=p.school;
     if(sf-p.school>0)debtors++;
+    const ff=Number(s.functional_fee)||FUNC_FEE_DEFAULT;
+    funcExpected+=ff;
     const st=s.functional_fee_status||'pending';
     const fp=Number(s.functional_fee_paid)||p.func||0;
     funcCollected+=fp;
@@ -733,16 +758,18 @@ async function pageDashboardPro(root){
   const absentToday=att.filter(a=>a.status==='absent').length;
   const expTotal=expenses.reduce((s,e)=>s+Number(e.amount),0);
   const uniformTotal=uniformSales.reduce((s,x)=>s+Number(x.total_amount),0);
-  const todayColl=payments.filter(p=>(p.paid_at||'').slice(0,10)===today).reduce((s,p)=>s+Number(p.amount),0);
-  const todayUniform=uniformSales.filter(s=>(s.sold_at||'').slice(0,10)===today).reduce((s,x)=>s+Number(x.total_amount),0);
-  const funcExpected=active.length*FUNC_FEE_DEFAULT;
+  const todayStr=new Date().toISOString().slice(0,10);
+  const todayColl=payments.filter(p=>termIsCurrent(p)&&(p.paid_at||'').slice(0,10)===todayStr).reduce((s,p)=>s+Number(p.amount),0);
+  const todayUniform=uniformSales.filter(s=>(s.sold_at||'').slice(0,10)===todayStr).reduce((s,x)=>s+Number(x.total_amount),0);
 
   root.innerHTML=
-  '<div class="page-head"><div><h1>Dashboard</h1><div class="sub">'+cy+' · Term '+ct+' · '+fmtLongDate(new Date())+'</div></div>'+
+  '<div class="page-head"><div><h1>Dashboard</h1><div class="sub">'+termLabel()+' · '+fmtLongDate(new Date())+'</div></div>'+
   '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="openPalette()">🔍 Search (Ctrl+K)</button><button class="btn" onclick="addStudent()">＋ Register</button></div></div>'+
+  '<div class="term-warn">📌 Viewing <b>'+termLabel()+'</b>. Payments, expenses, attendance and other records are filtered to this term. Students and their expected fees stay constant.</div>'+
   '<div class="grid grid-kpi" style="margin-bottom:14px">'+
   '<div class="kpi kpi-navy"><div class="v">'+active.length+'</div><div class="l">Active Pupils</div></div>'+
-  '<div class="kpi kpi-ok"><div class="v">'+fmtUGX(tc)+'</div><div class="l">Fees Collected</div></div>'+
+  '<div class="kpi kpi-ok"><div class="v">'+fmtUGX(thisTermSchool)+'</div><div class="l">Fees · This Term</div></div>'+
+  '<div class="kpi"><div class="v">'+fmtUGX(allTimeSchool)+'</div><div class="l">Fees · All-Time</div></div>'+
   '<div class="kpi kpi-bad"><div class="v">'+fmtUGX(totOut)+'</div><div class="l">Outstanding</div></div>'+
   '<div class="kpi"><div class="v">'+fmtUGX(todayColl+todayUniform)+'</div><div class="l">Today Revenue</div></div>'+
   '<div class="kpi kpi-ok"><div class="v">'+presentToday+'</div><div class="l">Present Today</div></div>'+
@@ -750,36 +777,34 @@ async function pageDashboardPro(root){
   '</div>'+
 
   // Functional Fee card
-  '<div class="card"><h3>🧾 Functional Fee (UGX '+FUNC_FEE_DEFAULT.toLocaleString()+' per pupil)</h3>'+
-    '<div class="grid grid-kpi" style="margin-bottom:12px">'+
-    '<div class="kpi kpi-navy"><div class="v">'+fmtUGX(funcExpected)+'</div><div class="l">Expected</div></div>'+
-    '<div class="kpi kpi-ok"><div class="v">'+fmtUGX(funcCollected)+'</div><div class="l">Collected</div></div>'+
-    '<div class="kpi kpi-bad"><div class="v">'+fmtUGX(Math.max(0,funcExpected-funcCollected))+'</div><div class="l">Shortfall</div></div>'+
-    '<div class="kpi kpi-ok"><div class="v">'+funcCashCount+'</div><div class="l">💵 Paid in Full</div></div>'+
-    '<div class="kpi kpi-warn"><div class="v">'+(funcPartialCount+funcReqCount)+'</div><div class="l">📦 Req / Partial</div></div>'+
-    '<div class="kpi kpi-bad"><div class="v">'+funcPendingCount+'</div><div class="l">⏳ Not Paid</div></div>'+
-    '</div>'+
-    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
-    '<button class="btn" onclick="nav(\'fees\');setTimeout(()=>{_feesTab=\'func\';nav(\'fees\');},50)">🧾 Open Functional Fee</button>'+
-    '<button class="btn gold" onclick="nav(\'fees\');setTimeout(()=>{_feesTab=\'func\';nav(\'fees\');setTimeout(bulkMarkFuncPaid,200);},50)">💵 Bulk: Mark Paid</button>'+
-    '</div>'+
+  '<div class="card"><h3>🧾 Functional Fee (UGX '+FUNC_FEE_DEFAULT.toLocaleString()+' per pupil) <span class="muted" style="font-weight:400">— all-time</span></h3>'+
+  '<div class="grid grid-kpi" style="margin-bottom:12px">'+
+  '<div class="kpi kpi-navy"><div class="v">'+fmtUGX(funcExpected)+'</div><div class="l">Expected</div></div>'+
+  '<div class="kpi kpi-ok"><div class="v">'+fmtUGX(funcCollected)+'</div><div class="l">Collected</div></div>'+
+  '<div class="kpi kpi-bad"><div class="v">'+fmtUGX(Math.max(0,funcExpected-funcCollected))+'</div><div class="l">Shortfall</div></div>'+
+  '<div class="kpi kpi-ok"><div class="v">'+funcCashCount+'</div><div class="l">💵 Paid in Full</div></div>'+
+  '<div class="kpi kpi-warn"><div class="v">'+(funcPartialCount+funcReqCount)+'</div><div class="l">📦 Req / Partial</div></div>'+
+  '<div class="kpi kpi-bad"><div class="v">'+funcPendingCount+'</div><div class="l">⏳ Not Paid</div></div>'+
   '</div>'+
+  '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+  '<button class="btn" onclick="_feesTab=\'func\';nav(\'fees\')">🧾 Open Functional Fee</button>'+
+  '</div></div>'+
 
   '<div class="grid grid-2" style="margin-bottom:14px">'+
-  '<div class="card"><h3>🔔 Alerts & Actions</h3>'+
+  '<div class="card"><h3>🔔 Alerts</h3>'+
   (debtors>0?'<div class="alert-item danger" onclick="nav(\'debtors\')"><span class="ico">⚠️</span><div class="txt"><b>'+debtors+' debtors</b><span>Click to view list</span></div></div>':'')+
-  (funcPend>0?'<div class="alert-item" onclick="nav(\'fees\')"><span class="ico">🧾</span><div class="txt"><b>'+funcPend+' pupils pending functional fee</b><span>Click to review</span></div></div>':'')+
-  (passOuts.length>0?'<div class="alert-item" onclick="nav(\'passouts\')"><span class="ico">🚪</span><div class="txt"><b>'+passOuts.length+' pupils currently out</b><span>Click to check pass-outs</span></div></div>':'')+
+  (funcPend>0?'<div class="alert-item" onclick="_feesTab=\'func\';nav(\'fees\')"><span class="ico">🧾</span><div class="txt"><b>'+funcPend+' pupils pending functional fee</b><span>Click to review</span></div></div>':'')+
+  (passOuts.length>0?'<div class="alert-item" onclick="nav(\'passouts\')"><span class="ico">🚪</span><div class="txt"><b>'+passOuts.length+' pupils currently out</b><span>Click to check</span></div></div>':'')+
   (presentToday===0?'<div class="alert-item info" onclick="nav(\'attendance\')"><span class="ico">📅</span><div class="txt"><b>Attendance not taken today</b><span>Click to take rollcall</span></div></div>':'')+
   (debtors===0&&funcPend===0&&passOuts.length===0&&presentToday>0?'<div class="alert-item ok"><span class="ico">✅</span><div class="txt"><b>All systems normal</b><span>No alerts today</span></div></div>':'')+
   '</div>'+
-  '<div class="card"><h3>🏫 School Snapshot</h3><div class="grid grid-3">'+
+  '<div class="card"><h3>🏫 Snapshot · '+termLabel()+'</h3><div class="grid grid-3">'+
   '<div><div class="muted">Classes</div><div style="font-size:20px;font-weight:800;color:var(--navy)">'+classes.length+'</div></div>'+
   '<div><div class="muted">Staff</div><div style="font-size:20px;font-weight:800;color:var(--navy)">'+staff.length+'</div></div>'+
   '<div><div class="muted">Messages</div><div style="font-size:20px;font-weight:800;color:var(--navy)">'+msgs.length+'</div></div>'+
   '<div><div class="muted">Term Expenses</div><div style="font-size:16px;font-weight:800;color:#b91c1c">'+fmtUGX(expTotal)+'</div></div>'+
-  '<div><div class="muted">Uniform Revenue</div><div style="font-size:16px;font-weight:800;color:#047857">'+fmtUGX(uniformTotal)+'</div></div>'+
-  '<div><div class="muted">Net Position</div><div style="font-size:16px;font-weight:800;color:'+(tc+uniformTotal-expTotal>=0?'#047857':'#b91c1c')+'">'+fmtUGX(tc+uniformTotal-expTotal)+'</div></div>'+
+  '<div><div class="muted">Term Uniform</div><div style="font-size:16px;font-weight:800;color:#047857">'+fmtUGX(uniformTotal)+'</div></div>'+
+  '<div><div class="muted">Term Net</div><div style="font-size:16px;font-weight:800;color:'+(thisTermSchool+uniformTotal-expTotal>=0?'#047857':'#b91c1c')+'">'+fmtUGX(thisTermSchool+uniformTotal-expTotal)+'</div></div>'+
   '</div></div></div>'+
   '<div class="card"><h3>⚡ Quick Actions</h3><div style="display:flex;gap:8px;flex-wrap:wrap">'+
   '<button class="btn ghost" onclick="nav(\'attendance\')">📅 Attendance</button>'+
@@ -795,20 +820,26 @@ async function pageDashboardPro(root){
 window.pageDashboardPro=pageDashboardPro;
 
 /* ============================================================
-   STUDENTS
+   STUDENTS (permanent — no term filter)
    ============================================================ */
 async function pageStudents(root){
   const classes=await loadClasses();
   const [students,payments]=await Promise.all([
     rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=*&order=created_at.desc'),
-    rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=student_id,amount,payment_for')
+    rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=student_id,amount,payment_for,academic_year,term')
   ]);
   window._allStudents=students||[];
   const pbs={};
   payments.forEach(p=>{
-    if(!pbs[p.student_id])pbs[p.student_id]={school:0,func:0};
-    if(p.payment_for==='Functional Fees')pbs[p.student_id].func+=Number(p.amount);
-    else pbs[p.student_id].school+=Number(p.amount);
+    if(!pbs[p.student_id])pbs[p.student_id]={school:0,func:0,termSchool:0,termFunc:0};
+    const isThis=Number(p.academic_year)===getCurrentYear()&&Number(p.term)===getCurrentTerm();
+    if(p.payment_for==='Functional Fees'){
+      pbs[p.student_id].func+=Number(p.amount);
+      if(isThis)pbs[p.student_id].termFunc+=Number(p.amount);
+    } else {
+      pbs[p.student_id].school+=Number(p.amount);
+      if(isThis)pbs[p.student_id].termSchool+=Number(p.amount);
+    }
   });
   window._paidByStudent=pbs;
   root.innerHTML=
@@ -854,11 +885,11 @@ function filterStudentsTable(q,fClass){
   document.getElementById('studentCount').textContent=(window._allStudents||[]).length+' total · '+filtered.length+' shown';
   const c=document.getElementById('studentsTableContainer');
   if(!filtered.length){c.innerHTML='<div class="empty">No pupils match your search.</div>';return;}
-  c.innerHTML='<div class="table-wrap"><table><thead><tr><th><input type="checkbox" class="chk" onclick="bulkToggleAll(this.checked)"></th><th>Adm No</th><th>Name</th><th>Class</th><th>Parent</th><th>Contact</th><th>🧾 Func.</th><th style="text-align:right">Balance</th><th style="text-align:right">Actions</th></tr></thead><tbody>'+
+  c.innerHTML='<div class="table-wrap"><table><thead><tr><th><input type="checkbox" class="chk" onclick="bulkToggleAll(this.checked)"></th><th>Adm No</th><th>Name</th><th>Class</th><th>Parent</th><th>🧾 Func.</th><th style="text-align:right">This Term</th><th style="text-align:right">All-Time</th><th style="text-align:right">Balance</th><th style="text-align:right">Actions</th></tr></thead><tbody>'+
   filtered.map(s=>{
     const cls=(classes||[]).find(x=>x.id===s.class_id);
     const sf=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.transport_fee)||0);
-    const p=paid[s.id]||{school:0};
+    const p=paid[s.id]||{school:0,termSchool:0};
     const bal=sf-p.school;
     const funcPaid=Number(s.functional_fee_paid)||p.func||0;
     const funcBadge=functionalStatusBadge(s.functional_fee_status)+(funcPaid>0?' <span class="muted" style="font-size:10px">'+funcPaid.toLocaleString()+'</span>':'');
@@ -866,8 +897,10 @@ function filterStudentsTable(q,fClass){
     '<td><b>'+esc(s.admission_no)+'</b></td>'+
     '<td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b><div class="muted" style="font-family:monospace;font-size:11px">'+esc(s.lin||'')+'</div></td>'+
     '<td><span class="badge info">'+esc(cls?cls.name:'—')+'</span></td>'+
-    '<td>'+esc(s.parent_name||'—')+'</td><td>'+esc(s.parent_contact||'—')+'</td>'+
+    '<td>'+esc(s.parent_name||'—')+'<div class="muted" style="font-size:11px">'+esc(s.parent_contact||'')+'</div></td>'+
     '<td>'+funcBadge+'</td>'+
+    '<td style="text-align:right;color:#0a2540;font-weight:600">'+p.termSchool.toLocaleString()+'</td>'+
+    '<td style="text-align:right;color:#047857;font-weight:600">'+p.school.toLocaleString()+'</td>'+
     '<td style="text-align:right"><span class="badge '+(bal>0?'bad':'ok')+'">'+bal.toLocaleString()+'</span></td>'+
     '<td style="text-align:right;white-space:nowrap" onclick="event.stopPropagation()">'+
     '<button class="btn sm" onclick="recordPayment(\''+s.id+'\')">💵</button> '+
@@ -890,9 +923,9 @@ function printStudentsList(){
     const sf=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.transport_fee)||0);
     const p=paid[s.id]||{school:0};const bal=sf-p.school;
     const funcPaid=Number(s.functional_fee_paid)||p.func||0;
-    return '<tr><td>'+(i+1)+'</td><td>'+esc(s.admission_no)+'</td><td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b></td><td>'+esc(cls?cls.name:'—')+'</td><td>'+esc(s.parent_name||'—')+'</td><td>'+esc(s.parent_contact||'—')+'</td><td style="text-align:right">'+funcPaid.toLocaleString()+'</td><td style="text-align:right">'+bal.toLocaleString()+'</td></tr>';
+    return '<tr><td>'+(i+1)+'</td><td>'+esc(s.admission_no)+'</td><td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b></td><td>'+esc(cls?cls.name:'—')+'</td><td>'+esc(s.parent_name||'—')+'</td><td>'+esc(s.parent_contact||'—')+'</td><td style="text-align:right">'+funcPaid.toLocaleString()+'</td><td style="text-align:right">'+p.school.toLocaleString()+'</td><td style="text-align:right">'+bal.toLocaleString()+'</td></tr>';
   }).join('');
-  printHTML('Pupils List','<table><thead><tr><th>#</th><th>Adm No</th><th>Name</th><th>Class</th><th>Parent</th><th>Contact</th><th style="text-align:right">Func. Paid</th><th style="text-align:right">Balance</th></tr></thead><tbody>'+rows+'</tbody></table><div class="summary"><div><b>Total</b>'+list.length+'</div></div>');
+  printHTML('Pupils List','<table><thead><tr><th>#</th><th>Adm No</th><th>Name</th><th>Class</th><th>Parent</th><th>Contact</th><th style="text-align:right">Func. Paid</th><th style="text-align:right">All-Time Paid</th><th style="text-align:right">Balance</th></tr></thead><tbody>'+rows+'</tbody></table><div class="summary"><div><b>Total</b>'+list.length+'</div></div>');
 }
 window.printStudentsList=printStudentsList;
 
@@ -909,11 +942,19 @@ window.markFunc=markFunc;
 async function setFunc(id,s){
   try{
     const upd={functional_fee_status:s};
+    const st=(await rest('/rest/v1/students?id=eq.'+id+'&select=functional_fee'))[0];
+    const ff=Number(st.functional_fee)||FUNC_FEE_DEFAULT;
     if(s==='cash'){
-      const st=(await rest('/rest/v1/students?id=eq.'+id+'&select=functional_fee'))[0];
-      upd.functional_fee_paid=Number(st.functional_fee)||FUNC_FEE_DEFAULT;
+      upd.functional_fee=ff;
+      upd.functional_fee_paid=ff;
     }
-    if(s==='pending')upd.functional_fee_paid=0;
+    if(s==='pending'){
+      upd.functional_fee=ff;
+      upd.functional_fee_paid=0;
+    }
+    if(s==='requirements'){
+      upd.functional_fee=ff;
+    }
     await rest('/rest/v1/students?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(upd)});
     toast('Updated','ok');closeModal();nav(activeRoute);
   }catch(e){toast(e.message,'bad');}
@@ -945,7 +986,7 @@ window.cfmBulkPromote=cfmBulkPromote;
 async function bulkFuncCash(){
   const ids=getSelectedIds();
   if(!ids.length){toast('Select pupils first','bad');return;}
-  if(!confirm('Mark '+ids.length+' selected pupil(s) as 💵 Paid in Cash and record payment?'))return;
+  if(!confirm('Mark '+ids.length+' selected pupil(s) as 💵 Paid in Cash?'))return;
   const cy=getCurrentYear(),ct=getCurrentTerm();
   const iso=new Date().toISOString();
   let n=0;
@@ -961,7 +1002,7 @@ async function bulkFuncCash(){
           school_id:_schoolId,student_id:sid,amount:short,payment_for:'Functional Fees',payment_method:'Cash',notes:'Bulk mark paid',paid_at:iso,academic_year:cy,term:ct
         })});
       }
-      await rest('/rest/v1/students?id=eq.'+sid,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({functional_fee_status:'cash',functional_fee_paid:ff})});
+      await rest('/rest/v1/students?id=eq.'+sid,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({functional_fee_status:'cash',functional_fee_paid:ff,functional_fee:ff})});
       n++;
     }catch(e){}
   }
@@ -993,7 +1034,7 @@ async function cfmBulkSMSSelected(){
   const all=window._allStudents||[];
   const sel=all.filter(s=>ids.indexOf(s.id)!==-1&&s.parent_contact);
   const rows=sel.map(s=>({school_id:_schoolId,student_id:s.id,recipient_name:s.parent_name||'',recipient_phone:s.parent_contact,recipient_type:'parent',body,channel:'sms',academic_year:getCurrentYear(),term:getCurrentTerm()}));
-  try{for(let i=0;i<rows.length;i+=50)await rest('/rest/v1/messages',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(rows.slice(i,i+50))});
+  try{for(let i=0;i<rows.length;i+=50)await rest('/rest/v1/messages',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify(rows.slice(i,i+50))});
   toast('Queued '+rows.length,'ok');closeModal();}catch(e){toast(e.message,'bad');}
 }
 window.cfmBulkSMSSelected=cfmBulkSMSSelected;
@@ -1018,7 +1059,7 @@ async function addStudent(){
   '<div><label>Actual Fee</label><input id="s_actual_fee" type="number" value="0"></div>'+
   '<div><label>Transport Fee</label><input id="s_transport_fee" type="number" value="0"></div>'+
   '<div><label>Functional Fee</label><input id="s_functional_fee" type="number" value="70000"></div>'+
-  '<div><label>Functional Fee Paid</label><input id="s_functional_fee_paid" type="number" value="0"></div>'+
+  '<div><label>Func. Fee Paid</label><input id="s_functional_fee_paid" type="number" value="0"></div>'+
   '<div><label>Func. Status</label><select id="s_func_status"><option value="pending">⏳ Pending</option><option value="cash">💵 Paid in Cash</option><option value="requirements">📦 Requirements</option></select></div>'+
   '</div>'+
   '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveNewStudent(event)">Register</button></div>');
@@ -1163,6 +1204,7 @@ async function pageStudentProfile(root){
   const sf=(Number(st.balance_bf)||0)+(Number(st.actual_fee)||0)+(Number(st.transport_fee)||0);
   const paid=(payments||[]).filter(p=>p.payment_for!=='Functional Fees').reduce((s,p)=>s+Number(p.amount),0);
   const bal=sf-paid;
+  const thisTermPaid=(payments||[]).filter(p=>p.payment_for!=='Functional Fees'&&termIsCurrent(p)).reduce((s,p)=>s+Number(p.amount),0);
   const funcPay=(payments||[]).filter(p=>p.payment_for==='Functional Fees').reduce((s,p)=>s+Number(p.amount),0);
   const funcPaid=Math.max(funcPay,Number(st.functional_fee_paid)||0);
   const funcExpected=Number(st.functional_fee)||FUNC_FEE_DEFAULT;
@@ -1205,7 +1247,8 @@ async function pageStudentProfile(root){
     '</div>'+
     '<div class="card"><h3>💰 Finance</h3>'+
     '<div class="muted">School Expected</div><div><b>'+fmtUGX(sf)+'</b></div>'+
-    '<div class="muted" style="margin-top:8px">School Paid</div><div style="color:#047857"><b>'+fmtUGX(paid)+'</b></div>'+
+    '<div class="muted" style="margin-top:8px">This Term Paid</div><div style="color:var(--navy)"><b>'+fmtUGX(thisTermPaid)+'</b></div>'+
+    '<div class="muted" style="margin-top:8px">All-Time Paid</div><div style="color:#047857"><b>'+fmtUGX(paid)+'</b></div>'+
     '<div class="muted" style="margin-top:8px">School Balance</div><div style="color:'+(bal>0?'#b91c1c':'#047857')+'"><b>'+fmtUGX(bal)+'</b></div>'+
     '<div style="border-top:1px solid var(--line2);margin:10px 0"></div>'+
     '<div class="muted">Func. Fee Paid</div><div><b>'+fmtUGX(funcPaid)+' / '+fmtUGX(funcExpected)+'</b></div>'+
@@ -1213,24 +1256,24 @@ async function pageStudentProfile(root){
     '</div></div>';
   } else if(tab==='fees'){
     tc.innerHTML='<div class="card"><div style="display:flex;gap:6px;margin-bottom:12px"><button class="btn sm" onclick="recordPayment(\''+id+'\')">💵 School Fees</button><button class="btn sm gold" onclick="recordPayment(\''+id+'\',\'Functional Fees\')">🧾 Functional Fee</button></div>'+
-    '<h3>💰 Payment History</h3>'+((payments||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>For</th><th style="text-align:right">Amount</th><th>Method</th><th></th></tr></thead><tbody>'+
-    payments.map(p=>'<tr><td>'+fmtDate(p.paid_at)+' '+fmtTime(p.paid_at)+'</td><td>'+esc(p.payment_for||'')+'</td><td style="text-align:right"><b>'+Number(p.amount).toLocaleString()+'</b></td><td>'+esc(p.payment_method||'')+'</td><td><button class="btn sm ghost" onclick="printReceipt(\''+p.id+'\')">🧾</button></td></tr>').join('')+'</tbody></table></div>':'<div class="empty">No payments yet.</div>')+'</div>';
+    '<h3>💰 Payment History (all terms)</h3>'+((payments||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Term</th><th>For</th><th style="text-align:right">Amount</th><th>Method</th><th></th></tr></thead><tbody>'+
+    payments.map(p=>'<tr><td>'+fmtDate(p.paid_at)+' '+fmtTime(p.paid_at)+'</td><td>'+esc((p.academic_year||'—')+' T'+(p.term||'—'))+'</td><td>'+esc(p.payment_for||'')+'</td><td style="text-align:right"><b>'+Number(p.amount).toLocaleString()+'</b></td><td>'+esc(p.payment_method||'')+'</td><td><button class="btn sm ghost" onclick="printReceipt(\''+p.id+'\')">🧾</button></td></tr>').join('')+'</tbody></table></div>':'<div class="empty">No payments yet.</div>')+'</div>';
   } else if(tab==='attendance'){
     tc.innerHTML='<div class="card"><div style="margin-bottom:12px"><span class="mini-stat">✅ Present: '+present+'</span><span class="mini-stat">❌ Absent: '+absent+'</span><span class="mini-stat">% '+attPct+'</span></div>'+
-    ((attendance||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Status</th></tr></thead><tbody>'+
-    attendance.map(a=>'<tr><td>'+fmtDate(a.date)+'</td><td>'+(a.status==='present'?'<span class="badge ok">Present</span>':a.status==='absent'?'<span class="badge bad">Absent</span>':a.status==='late'?'<span class="badge warn">Late</span>':'<span class="badge info">'+esc(a.status)+'</span>')+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">No records.</div>')+'</div>';
+    ((attendance||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Term</th><th>Status</th></tr></thead><tbody>'+
+    attendance.map(a=>'<tr><td>'+fmtDate(a.date)+'</td><td>'+esc((a.academic_year||'—')+' T'+(a.term||'—'))+'</td><td>'+(a.status==='present'?'<span class="badge ok">Present</span>':a.status==='absent'?'<span class="badge bad">Absent</span>':a.status==='late'?'<span class="badge warn">Late</span>':'<span class="badge info">'+esc(a.status)+'</span>')+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">No records.</div>')+'</div>';
   } else if(tab==='marks'){
-    tc.innerHTML='<div class="card"><h3>✍️ Marks</h3>'+((marks||[]).length?'<div class="table-wrap"><table><thead><tr><th>Subject</th><th style="text-align:right">Score</th><th>Grade</th><th>Remark</th></tr></thead><tbody>'+
-    marks.map(m=>{const g=gradeOf(m.score);const s=subjMap[m.subject_id];return '<tr><td>'+esc(s?s.name:'—')+'</td><td style="text-align:right"><b>'+Number(m.score).toFixed(0)+'</b></td><td><span class="badge '+(g.cls||'info')+'">'+g.g+'</span></td><td>'+esc(g.r)+'</td></tr>';}).join('')+'</tbody></table></div>':'<div class="empty">No marks recorded.</div>')+'</div>';
+    tc.innerHTML='<div class="card"><h3>✍️ Marks</h3>'+((marks||[]).length?'<div class="table-wrap"><table><thead><tr><th>Subject</th><th>Term</th><th style="text-align:right">Score</th><th>Grade</th></tr></thead><tbody>'+
+    marks.map(m=>{const g=gradeOf(m.score);const s=subjMap[m.subject_id];return '<tr><td>'+esc(s?s.name:'—')+'</td><td>'+esc((m.academic_year||'—')+' T'+(m.term||'—'))+'</td><td style="text-align:right"><b>'+Number(m.score).toFixed(0)+'</b></td><td><span class="badge '+(g.cls||'info')+'">'+g.g+'</span></td></tr>';}).join('')+'</tbody></table></div>':'<div class="empty">No marks recorded.</div>')+'</div>';
   } else if(tab==='discipline'){
-    tc.innerHTML='<div class="card"><h3>⚠️ Discipline</h3>'+((discipline||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Category</th><th>Description</th></tr></thead><tbody>'+
-    discipline.map(d=>'<tr><td>'+fmtDate(d.incident_date)+'</td><td><span class="badge warn">'+esc(d.category||'')+'</span></td><td>'+esc(d.description||'')+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">Clean record 🎉</div>')+'</div>';
+    tc.innerHTML='<div class="card"><h3>⚠️ Discipline</h3>'+((discipline||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Term</th><th>Category</th><th>Description</th></tr></thead><tbody>'+
+    discipline.map(d=>'<tr><td>'+fmtDate(d.incident_date)+'</td><td>'+esc((d.academic_year||'—')+' T'+(d.term||'—'))+'</td><td><span class="badge warn">'+esc(d.category||'')+'</span></td><td>'+esc(d.description||'')+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">Clean record 🎉</div>')+'</div>';
   } else if(tab==='passouts'){
-    tc.innerHTML='<div class="card"><h3>🚪 Pass Outs</h3>'+((passouts||[]).length?'<div class="table-wrap"><table><thead><tr><th>Out</th><th>In</th><th>Reason</th><th>Status</th></tr></thead><tbody>'+
-    passouts.map(p=>'<tr><td>'+fmtDate(p.signed_out_at)+'</td><td>'+(p.signed_in_at?fmtDate(p.signed_in_at):'—')+'</td><td>'+esc(p.reason||'')+'</td><td>'+(p.status==='out'?'<span class="badge warn">Out</span>':'<span class="badge ok">Returned</span>')+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">No pass outs.</div>')+'</div>';
+    tc.innerHTML='<div class="card"><h3>🚪 Pass Outs</h3>'+((passouts||[]).length?'<div class="table-wrap"><table><thead><tr><th>Out</th><th>Term</th><th>Reason</th><th>Status</th></tr></thead><tbody>'+
+    passouts.map(p=>'<tr><td>'+fmtDate(p.signed_out_at)+'</td><td>'+esc((p.academic_year||'—')+' T'+(p.term||'—'))+'</td><td>'+esc(p.reason||'')+'</td><td>'+(p.status==='out'?'<span class="badge warn">Out</span>':'<span class="badge ok">Returned</span>')+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">No pass outs.</div>')+'</div>';
   } else if(tab==='uniform'){
-    tc.innerHTML='<div class="card"><h3>👕 Uniform Purchases</h3>'+((uniform||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Qty</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
-    uniform.map(u=>'<tr><td>'+fmtDate(u.sold_at)+'</td><td>'+Number(u.quantity)+'</td><td style="text-align:right">'+Number(u.total_amount).toLocaleString()+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">No uniform purchases.</div>')+'</div>';
+    tc.innerHTML='<div class="card"><h3>👕 Uniform Purchases</h3>'+((uniform||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Term</th><th>Qty</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
+    uniform.map(u=>'<tr><td>'+fmtDate(u.sold_at)+'</td><td>'+esc((u.academic_year||'—')+' T'+(u.term||'—'))+'</td><td>'+Number(u.quantity)+'</td><td style="text-align:right">'+Number(u.total_amount).toLocaleString()+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">No uniform purchases.</div>')+'</div>';
   } else if(tab==='health'){
     tc.innerHTML='<div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><h3>🏥 Health Records</h3><button class="btn sm" onclick="addHealth(\''+id+'\')">＋ Visit</button></div>'+
     ((health||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Complaint</th><th>Treatment</th><th>Attended By</th></tr></thead><tbody>'+
@@ -1250,6 +1293,7 @@ async function printReceipt(paymentId){
   '<div style="margin-top:8px;font-weight:700">OFFICIAL RECEIPT</div>'+
   '<div>No: '+receiptNo+'</div></div>'+
   '<div class="rrow"><span>Date:</span><span>'+new Date(p.paid_at).toLocaleString()+'</span></div>'+
+  '<div class="rrow"><span>Term:</span><span>'+esc((p.academic_year||'—')+' Term '+(p.term||'—'))+'</span></div>'+
   '<div class="rrow"><span>Pupil:</span><span>'+esc(st?st.first_name+' '+(st.last_name||''):'—')+'</span></div>'+
   '<div class="rrow"><span>Adm No:</span><span>'+esc(st?st.admission_no:'—')+'</span></div>'+
   '<div class="rrow"><span>Payment For:</span><span>'+esc(p.payment_for||'School Fees')+'</span></div>'+
@@ -1283,7 +1327,7 @@ async function printIDCard(id){
 window.printIDCard=printIDCard;
 
 /* ============================================================
-   FEES (with Functional Fee tab)
+   FEES (school + functional tabs, term-aware payments)
    ============================================================ */
 let _feesTab='school';
 
@@ -1297,20 +1341,27 @@ async function pageFees(root){
   window._allClassesForFees=classes||[];
   const pbs={};
   (payments||[]).forEach(p=>{
-    if(!pbs[p.student_id])pbs[p.student_id]={school:0,func:0};
-    if(p.payment_for==='Functional Fees')pbs[p.student_id].func+=Number(p.amount);
-    else pbs[p.student_id].school+=Number(p.amount);
+    if(!pbs[p.student_id])pbs[p.student_id]={school:0,func:0,termSchool:0,termFunc:0};
+    const isThis=termIsCurrent(p);
+    if(p.payment_for==='Functional Fees'){
+      pbs[p.student_id].func+=Number(p.amount);
+      if(isThis)pbs[p.student_id].termFunc+=Number(p.amount);
+    } else {
+      pbs[p.student_id].school+=Number(p.amount);
+      if(isThis)pbs[p.student_id].termSchool+=Number(p.amount);
+    }
   });
   window._paidByStudentFees=pbs;
 
-  let te=0,tc=0,tfe=0,tfc=0;
+  let te=0,tc=0,tfe=0,tfc=0,termTc=0,termTfc=0;
   let funcCashCount=0,funcPendingCount=0,funcReqCount=0,funcPartialCount=0;
   (students||[]).forEach(s=>{
     const sf=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.transport_fee)||0);
     const ff=Number(s.functional_fee)||FUNC_FEE_DEFAULT;
-    const p=pbs[s.id]||{school:0,func:0};
+    const p=pbs[s.id]||{school:0,func:0,termSchool:0,termFunc:0};
     const funcPaid=Math.max(Number(s.functional_fee_paid)||0,p.func||0);
     te+=sf;tc+=p.school;tfe+=ff;tfc+=funcPaid;
+    termTc+=p.termSchool;termTfc+=p.termFunc;
     const st=s.functional_fee_status||'pending';
     if(st==='cash')funcCashCount++;
     else if(st==='requirements')funcReqCount++;
@@ -1320,7 +1371,7 @@ async function pageFees(root){
   const funcExpected=students.length*FUNC_FEE_DEFAULT;
 
   root.innerHTML=
-  '<div class="page-head"><div><h1>💰 Fees Management</h1><div class="sub">'+getCurrentYear()+' · Term '+getCurrentTerm()+'</div></div>'+
+  '<div class="page-head"><div><h1>💰 Fees Management</h1><div class="sub">'+termLabel()+'</div></div>'+
   '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
   '<button class="btn ghost" onclick="printFeesList()">🖨️ Print</button>'+
   '<button class="btn ghost" onclick="exportFeesToExcel()">📥 Excel</button>'+
@@ -1333,14 +1384,14 @@ async function pageFees(root){
 
   (_feesTab==='school'
     ? '<div class="grid grid-kpi" style="margin-bottom:14px">'+
-      '<div class="kpi kpi-ok"><div class="v">'+fmtUGX(te)+'</div><div class="l">Expected</div></div>'+
-      '<div class="kpi kpi-navy"><div class="v">'+fmtUGX(tc)+'</div><div class="l">Collected</div></div>'+
+      '<div class="kpi kpi-ok"><div class="v">'+fmtUGX(te)+'</div><div class="l">Total Expected</div></div>'+
+      '<div class="kpi kpi-navy"><div class="v">'+fmtUGX(termTc)+'</div><div class="l">This Term</div></div>'+
+      '<div class="kpi kpi-navy"><div class="v">'+fmtUGX(tc)+'</div><div class="l">All-Time Collected</div></div>'+
       '<div class="kpi kpi-bad"><div class="v">'+fmtUGX(to)+'</div><div class="l">Outstanding</div></div>'+
-      '<div class="kpi kpi-warn"><div class="v">'+Math.round(te?(tc/te)*100:0)+'%</div><div class="l">Collection Rate</div></div>'+
       '</div>'
     : '<div class="grid grid-kpi" style="margin-bottom:14px">'+
       '<div class="kpi kpi-navy"><div class="v">'+fmtUGX(funcExpected)+'</div><div class="l">Expected</div></div>'+
-      '<div class="kpi kpi-ok"><div class="v">'+fmtUGX(tfc)+'</div><div class="l">Collected</div></div>'+
+      '<div class="kpi kpi-ok"><div class="v">'+fmtUGX(tfc)+'</div><div class="l">All-Time Collected</div></div>'+
       '<div class="kpi kpi-bad"><div class="v">'+fmtUGX(Math.max(0,funcExpected-tfc))+'</div><div class="l">Shortfall</div></div>'+
       '<div class="kpi kpi-ok"><div class="v">'+funcCashCount+'</div><div class="l">💵 Paid in Full</div></div>'+
       '<div class="kpi kpi-warn"><div class="v">'+(funcPartialCount+funcReqCount)+'</div><div class="l">📦 Req / Partial</div></div>'+
@@ -1349,14 +1400,14 @@ async function pageFees(root){
 
   '<div class="card"><div class="grid grid-3" style="margin-bottom:14px">'+
   '<div><label>Class</label><select id="feesClassFilter" onchange="filterFeesTable()"><option value="">All classes</option>'+
-    classes.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('')+'</select></div>'+
+  classes.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('')+'</select></div>'+
   (_feesTab==='school'
     ? '<div><label>Show</label><select id="feesOwingFilter" onchange="filterFeesTable()">'+
-        '<option value="all">All pupils</option><option value="owing">Owing</option><option value="paid">Fully paid</option></select></div>'
-    : '<div><label>Functional status</label><select id="feesOwingFilter" onchange="filterFeesTable()">'+
-        '<option value="all">All pupils</option><option value="cash">💵 Paid in cash</option>'+
-        '<option value="requirements">📦 Requirements</option><option value="pending">⏳ Not paid</option>'+
-        '<option value="partial">🟡 Partial</option></select></div>')+
+      '<option value="all">All pupils</option><option value="owing">Owing</option><option value="paid">Fully paid</option></select></div>'
+    : '<div><label>Status</label><select id="feesOwingFilter" onchange="filterFeesTable()">'+
+      '<option value="all">All pupils</option><option value="cash">💵 Paid in cash</option>'+
+      '<option value="requirements">📦 Requirements</option><option value="pending">⏳ Not paid</option>'+
+      '<option value="partial">🟡 Partial</option></select></div>')+
   '<div style="display:flex;align-items:flex-end;gap:8px">'+
   '<button class="btn ghost" style="flex:1" onclick="resetFeesFilters()">🔄 Reset</button>'+
   (_feesTab==='func'?'<button class="btn gold" style="flex:1" onclick="bulkMarkFuncPaid()">💵 Bulk Mark Paid</button>':'')+
@@ -1409,7 +1460,8 @@ function filterFeesTable(){
     c.innerHTML='<div class="table-wrap"><table><thead><tr>'+
     '<th>Adm No</th><th>Name</th><th>Class</th>'+
     '<th style="text-align:right">Expected</th>'+
-    '<th style="text-align:right">Paid</th>'+
+    '<th style="text-align:right">This Term</th>'+
+    '<th style="text-align:right">All-Time</th>'+
     '<th style="text-align:right">Balance</th>'+
     '<th>🧾 Func.</th>'+
     '<th style="text-align:right">Actions</th>'+
@@ -1417,7 +1469,7 @@ function filterFeesTable(){
     list.map(s=>{
       const cls=(window._allClassesForFees||[]).find(c=>c.id===s.class_id);
       const sf=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.transport_fee)||0);
-      const p=paid[s.id]||{school:0};
+      const p=paid[s.id]||{school:0,termSchool:0};
       const bal=sf-p.school;
       const funcPaid=Math.max(Number(s.functional_fee_paid)||0,(paid[s.id]||{func:0}).func||0);
       const funcBadge=functionalStatusBadge(s.functional_fee_status)+(funcPaid>0?' <span class="muted" style="font-size:10px">'+funcPaid.toLocaleString()+'</span>':'');
@@ -1425,7 +1477,8 @@ function filterFeesTable(){
       '<td>'+esc(s.first_name+' '+(s.last_name||''))+'</td>'+
       '<td><span class="badge info">'+esc(cls?cls.name:'—')+'</span></td>'+
       '<td style="text-align:right">'+sf.toLocaleString()+'</td>'+
-      '<td style="text-align:right;color:#047857">'+p.school.toLocaleString()+'</td>'+
+      '<td style="text-align:right;color:var(--navy);font-weight:600">'+p.termSchool.toLocaleString()+'</td>'+
+      '<td style="text-align:right;color:#047857;font-weight:600">'+p.school.toLocaleString()+'</td>'+
       '<td style="text-align:right"><span class="badge '+(bal>0?'bad':'ok')+'">'+bal.toLocaleString()+'</span></td>'+
       '<td>'+funcBadge+'</td>'+
       '<td style="text-align:right;white-space:nowrap">'+
@@ -1489,7 +1542,7 @@ async function bulkMarkFuncPaid(){
           payment_method:'Cash',notes:'Bulk mark paid',paid_at:iso,academic_year:cy,term:ct
         })});
       }
-      await rest('/rest/v1/students?id=eq.'+s.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({functional_fee_status:'cash',functional_fee_paid:ff})});
+      await rest('/rest/v1/students?id=eq.'+s.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({functional_fee_status:'cash',functional_fee_paid:ff,functional_fee:ff})});
       n++;
     }catch(e){}
   }
@@ -1504,13 +1557,16 @@ function exportFeesToExcel(){
   const data=list.map(s=>{
     const cls=classes.find(c=>c.id===s.class_id);
     const sf=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.transport_fee)||0);
-    const p=paid[s.id]||{school:0};
+    const p=paid[s.id]||{school:0,termSchool:0};
     const funcPaid=Math.max(Number(s.functional_fee_paid)||0,(paid[s.id]||{func:0}).func||0);
     return{
       'Adm No':s.admission_no,
       'Name':s.first_name+' '+(s.last_name||''),
       'Class':cls?cls.name:'',
-      'Expected':sf,'Paid':p.school,'Balance':sf-p.school,
+      'Expected':sf,
+      'This Term':p.termSchool,
+      'All-Time Paid':p.school,
+      'Balance':sf-p.school,
       'Func Expected':Number(s.functional_fee)||FUNC_FEE_DEFAULT,
       'Func Paid':funcPaid,
       'Func Shortfall':Math.max(0,(Number(s.functional_fee)||FUNC_FEE_DEFAULT)-funcPaid),
@@ -1518,7 +1574,7 @@ function exportFeesToExcel(){
     };
   });
   const ws=XLSX.utils.json_to_sheet(data);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Fees');
-  XLSX.writeFile(wb,'Fees_'+new Date().toISOString().slice(0,10)+'.xlsx');toast('Exported','ok');
+  XLSX.writeFile(wb,'Fees_'+termLabel().replace(/\s/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.xlsx');toast('Exported','ok');
 }
 window.exportFeesToExcel=exportFeesToExcel;
 
@@ -1528,11 +1584,11 @@ function printFeesList(){
   const rows=list.map((s,i)=>{
     const cls=classes.find(c=>c.id===s.class_id);
     const sf=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.transport_fee)||0);
-    const p=paid[s.id]||{school:0};const bal=sf-p.school;
+    const p=paid[s.id]||{school:0,termSchool:0};const bal=sf-p.school;
     const funcPaid=Math.max(Number(s.functional_fee_paid)||0,(paid[s.id]||{func:0}).func||0);
-    return '<tr><td>'+(i+1)+'</td><td>'+esc(s.admission_no)+'</td><td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b></td><td>'+esc(cls?cls.name:'—')+'</td><td style="text-align:right">'+sf.toLocaleString()+'</td><td style="text-align:right;color:#047857">'+p.school.toLocaleString()+'</td><td style="text-align:right;color:'+(bal>0?'#b91c1c':'#047857')+'">'+bal.toLocaleString()+'</td><td style="text-align:right">'+funcPaid.toLocaleString()+'</td></tr>';
+    return '<tr><td>'+(i+1)+'</td><td>'+esc(s.admission_no)+'</td><td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b></td><td>'+esc(cls?cls.name:'—')+'</td><td style="text-align:right">'+sf.toLocaleString()+'</td><td style="text-align:right">'+p.termSchool.toLocaleString()+'</td><td style="text-align:right">'+p.school.toLocaleString()+'</td><td style="text-align:right;color:'+(bal>0?'#b91c1c':'#047857')+'">'+bal.toLocaleString()+'</td><td style="text-align:right">'+funcPaid.toLocaleString()+'</td></tr>';
   }).join('');
-  printHTML('Fees Report','<table><thead><tr><th>#</th><th>Adm No</th><th>Name</th><th>Class</th><th style="text-align:right">Expected</th><th style="text-align:right">Paid</th><th style="text-align:right">Balance</th><th style="text-align:right">Func. Paid</th></tr></thead><tbody>'+rows+'</tbody></table>');
+  printHTML('Fees Report — '+termLabel(),'<table><thead><tr><th>#</th><th>Adm No</th><th>Name</th><th>Class</th><th style="text-align:right">Expected</th><th style="text-align:right">This Term</th><th style="text-align:right">All-Time</th><th style="text-align:right">Balance</th><th style="text-align:right">Func. Paid</th></tr></thead><tbody>'+rows+'</tbody></table>');
 }
 window.printFeesList=printFeesList;
 
@@ -1561,7 +1617,7 @@ async function recordPayment(id,preselectFor){
   ' — paid '+fmtUGX(funcPaid)+' of '+fmtUGX(ff)+
   (funcShort>0?' <b style="color:#b91c1c">(short '+fmtUGX(funcShort)+')</b>':' <b style="color:#047857">✓</b>')+
   '</div>'+
-  '<div style="color:var(--navy)">📅 Tagged: <b>'+getCurrentYear()+' · Term '+getCurrentTerm()+'</b></div></div>'+
+  '<div style="color:var(--navy)">📅 Tagging to: <b>'+termLabel()+'</b></div></div>'+
   '<div class="grid grid-2">'+
   '<div><label>Payment for *</label><select id="p_for" onchange="onPaymentForChange()">'+
   '<option value="School Fees"'+(preselectFor!=='Functional Fees'?' selected':'')+'>📚 School Fees</option>'+
@@ -1628,7 +1684,7 @@ async function savePayment(id){
     const sp=pays.filter(p=>p.payment_for!=='Functional Fees').reduce((s,p)=>s+Number(p.amount),0);
     const fp=pays.filter(p=>p.payment_for==='Functional Fees').reduce((s,p)=>s+Number(p.amount),0);
 
-    const upd={current_balance:Math.max(0,te-sp),functional_fee_paid:fp};
+    const upd={current_balance:Math.max(0,te-sp),functional_fee_paid:fp,functional_fee:ff};
     const curStatus=st[0].functional_fee_status||'pending';
     if(curStatus!=='requirements'){
       if(fp>=ff) upd.functional_fee_status='cash';
@@ -1652,6 +1708,7 @@ async function viewPaymentHistory(studentId){
   const sf=(Number(st.balance_bf)||0)+(Number(st.actual_fee)||0)+(Number(st.transport_fee)||0);
   const ff=Number(st.functional_fee)||FUNC_FEE_DEFAULT;
   const rows=(pays||[]).map(p=>'<tr><td style="font-size:12.5px">'+fmtDate(p.paid_at)+' '+fmtTime(p.paid_at)+'</td>'+
+  '<td>'+esc((p.academic_year||'—')+' T'+(p.term||'—'))+'</td>'+
   '<td>'+(p.payment_for==='Functional Fees'?'<span class="badge warn">🧾</span>':'<span class="badge info">📚</span>')+'</td>'+
   '<td style="text-align:right"><b>'+Number(p.amount).toLocaleString()+'</b></td>'+
   '<td>'+esc(p.payment_method||'')+'</td>'+
@@ -1661,7 +1718,7 @@ async function viewPaymentHistory(studentId){
   '<div>📚 <b>School paid:</b> '+sp.toLocaleString()+' of '+sf.toLocaleString()+'</div>'+
   '<div>🧾 <b>Func. paid:</b> '+fp.toLocaleString()+' of '+ff.toLocaleString()+'</div></div>'+
   '<div style="display:flex;gap:6px;margin-bottom:10px"><button class="btn sm" onclick="closeModal();recordPayment(\''+studentId+'\')">＋ School</button><button class="btn sm gold" onclick="closeModal();recordPayment(\''+studentId+'\',\'Functional Fees\')">＋ Func.</button></div>'+
-  ((pays||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>For</th><th style="text-align:right">Amount</th><th>Method</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<div class="empty">No payments.</div>')+
+  ((pays||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Term</th><th>For</th><th style="text-align:right">Amount</th><th>Method</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<div class="empty">No payments.</div>')+
   '<div class="actions"><button class="btn ghost" onclick="closeModal()">Close</button></div>');
 }
 window.viewPaymentHistory=viewPaymentHistory;
@@ -1673,7 +1730,7 @@ async function cfmDelPay(pid,sid){closeModal();try{await rest('/rest/v1/payments
 window.cfmDelPay=cfmDelPay;
 
 /* ============================================================
-   ATTENDANCE
+   ATTENDANCE (date-based, tags term)
    ============================================================ */
 async function pageAttendance(root){
   const classes=await loadClasses();
@@ -1687,7 +1744,7 @@ async function pageAttendance(root){
   const present=(records||[]).filter(r=>r.status==='present').length;
   const absent=(records||[]).filter(r=>r.status==='absent').length;
   root.innerHTML=
-  '<div class="page-head"><div><h1>📅 Rollcall</h1><div class="sub">'+fmtDate(fDate)+'</div></div>'+
+  '<div class="page-head"><div><h1>📅 Rollcall</h1><div class="sub">'+fmtDate(fDate)+' · saves to '+termLabel()+'</div></div>'+
   '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ok" onclick="markAllPresent()">✅ All Present</button><button class="btn" onclick="saveAttendance()">💾 Save</button></div></div>'+
   '<div class="card"><div class="grid grid-2"><div><label>Class</label><select onchange="window._attClass=this.value;nav(\'attendance\')">'+classes.map(c=>'<option value="'+c.id+'"'+(c.id===fClass?' selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></div><div><label>Date</label><input type="date" value="'+fDate+'" onchange="window._attDate=this.value;nav(\'attendance\')"></div></div></div>'+
   '<div class="grid grid-kpi" style="margin-bottom:14px"><div class="kpi kpi-ok"><div class="v">'+present+'</div><div class="l">Present</div></div><div class="kpi kpi-bad"><div class="v">'+absent+'</div><div class="l">Absent</div></div><div class="kpi kpi-plain"><div class="v">'+(students||[]).length+'</div><div class="l">Total</div></div></div>'+
@@ -1715,7 +1772,7 @@ async function saveAttendance(){
   try{
     await rest('/rest/v1/attendance?school_id=eq.'+_schoolId+'&class_id=eq.'+fClass+'&date=eq.'+fDate,{method:'DELETE'});
     await rest('/rest/v1/attendance',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(rows)});
-    toast('Saved '+rows.length+' records','ok');nav('attendance');
+    toast('Saved '+rows.length+' records for '+termLabel(),'ok');nav('attendance');
   }catch(e){toast(e.message,'bad');}
 }
 window.saveAttendance=saveAttendance;
@@ -1737,7 +1794,7 @@ async function pageDebtors(root){
   const total=debtors.reduce((s,x)=>s+x.owed,0);
   window._debtorsCache={debtors,classes};
   root.innerHTML=
-  '<div class="page-head"><div><h1>📋 Debtors</h1><div class="sub">'+debtors.length+' pupils · '+fmtUGX(total)+'</div></div><button class="btn ghost" onclick="printDebtors()">🖨️ Print</button></div>'+
+  '<div class="page-head"><div><h1>📋 Debtors</h1><div class="sub">'+debtors.length+' pupils · '+fmtUGX(total)+' · cumulative (all terms)</div></div><button class="btn ghost" onclick="printDebtors()">🖨️ Print</button></div>'+
   '<div class="card">'+(debtors.length?'<div class="table-wrap"><table><thead><tr><th>#</th><th>Adm No</th><th>Name</th><th>Class</th><th>Parent</th><th>Contact</th><th style="text-align:right">Owed</th><th></th></tr></thead><tbody>'+
   debtors.map((s,i)=>{
     const cls=classes.find(c=>c.id===s.class_id);
@@ -1759,12 +1816,12 @@ function printDebtors(){
 window.printDebtors=printDebtors;
 
 /* ============================================================
-   UNIFORMS
+   UNIFORMS (term-filtered sales)
    ============================================================ */
 async function pageUniforms(root){
   const [items,sales,students]=await Promise.all([
     rest('/rest/v1/uniform_items?school_id=eq.'+_schoolId+'&select=*&order=category,name').catch(()=>[]),
-    rest('/rest/v1/uniform_sales?school_id=eq.'+_schoolId+'&select=*&order=sold_at.desc&limit=500').catch(()=>[]),
+    rest('/rest/v1/uniform_sales?school_id=eq.'+_schoolId+termFilter()+'&select=*&order=sold_at.desc&limit=500').catch(()=>[]),
     rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,first_name,last_name,admission_no&status=eq.active&order=first_name').catch(()=>[])
   ]);
   window._uniformItems=items||[];
@@ -1778,12 +1835,12 @@ async function pageUniforms(root){
   UNIFORM_CATEGORIES.forEach(c=>grouped[c]=[]);
   (items||[]).forEach(i=>{const c=i.category||'Other';if(!grouped[c])grouped[c]=[];grouped[c].push(i);});
   root.innerHTML=
-  '<div class="page-head"><div><h1>👕 Uniforms</h1></div>'+
+  '<div class="page-head"><div><h1>👕 Uniforms</h1><div class="sub">'+termLabel()+'</div></div>'+
   '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="printUniformReport()">🖨️</button><button class="btn ghost" onclick="addUniformItem()">＋ Item</button><button class="btn gold" onclick="sellUniform()">🛒 Sell</button></div></div>'+
   '<div class="grid grid-kpi" style="margin-bottom:14px">'+
   '<div class="kpi"><div class="v">'+fmtUGX(stockValue)+'</div><div class="l">Stock Value</div></div>'+
   '<div class="kpi kpi-ok"><div class="v">'+fmtUGX(todayTotal)+'</div><div class="l">Today Sales</div></div>'+
-  '<div class="kpi kpi-navy"><div class="v">'+fmtUGX(salesTotal)+'</div><div class="l">All-time</div></div>'+
+  '<div class="kpi kpi-navy"><div class="v">'+fmtUGX(salesTotal)+'</div><div class="l">'+termLabel()+' Sales</div></div>'+
   '</div>'+
   UNIFORM_CATEGORIES.map(cat=>{
     const list=grouped[cat];if(!list.length)return'';
@@ -1793,12 +1850,12 @@ async function pageUniforms(root){
     '</tbody></table></div></div>';
   }).join('')+
   ((items||[]).length===0?'<div class="card"><div class="empty">No items.</div></div>':'')+
-  '<div class="card"><h3>🧾 Recent Sales</h3>'+((sales||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Pupil</th><th>Item</th><th>Qty</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
+  '<div class="card"><h3>🧾 Sales in '+termLabel()+'</h3>'+((sales||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Pupil</th><th>Item</th><th>Qty</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
   sales.slice(0,50).map(s=>{
     const st=(students||[]).find(x=>x.id===s.student_id);
     const it=(items||[]).find(x=>x.id===s.uniform_item_id);
     return '<tr><td>'+fmtDate(s.sold_at)+'</td><td>'+esc(st?st.first_name+' '+(st.last_name||''):'—')+'</td><td>'+esc(it?it.name:'—')+'</td><td>'+Number(s.quantity)+'</td><td style="text-align:right">'+Number(s.total_amount).toLocaleString()+'</td></tr>';
-  }).join('')+'</tbody></table></div>':'<div class="empty">No sales.</div>')+'</div>';
+  }).join('')+'</tbody></table></div>':'<div class="empty">No sales this term.</div>')+'</div>';
 }
 window.pageUniforms=pageUniforms;
 
@@ -1926,27 +1983,27 @@ window.cfmDelUniformItem=cfmDelUniformItem;
 async function printUniformReport(){
   const [items,sales,students]=await Promise.all([
     rest('/rest/v1/uniform_items?school_id=eq.'+_schoolId+'&select=*').catch(()=>[]),
-    rest('/rest/v1/uniform_sales?school_id=eq.'+_schoolId+'&select=*&order=sold_at.desc').catch(()=>[]),
+    rest('/rest/v1/uniform_sales?school_id=eq.'+_schoolId+termFilter()+'&select=*&order=sold_at.desc').catch(()=>[]),
     rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,first_name,last_name,admission_no').catch(()=>[])
   ]);
   const findS=id=>(students||[]).find(x=>x.id===id);
   const findI=id=>(items||[]).find(x=>x.id===id);
   const stockValue=(items||[]).reduce((s,i)=>s+(Number(i.current_stock)||0)*(Number(i.unit_cost)||0),0);
   const salesTotal=(sales||[]).reduce((s,x)=>s+Number(x.total_amount),0);
-  let html='<div class="summary"><div><b>Items</b>'+(items||[]).length+'</div><div><b>Stock Value</b>UGX '+stockValue.toLocaleString()+'</div><div><b>Total Sales</b>UGX '+salesTotal.toLocaleString()+'</div></div>';
+  let html='<div class="summary"><div><b>Items</b>'+(items||[]).length+'</div><div><b>Stock Value</b>UGX '+stockValue.toLocaleString()+'</div><div><b>'+termLabel()+' Sales</b>UGX '+salesTotal.toLocaleString()+'</div></div>';
   if((sales||[]).length){
-    html+='<h3>Sales History</h3><table><thead><tr><th>Date</th><th>Pupil</th><th>Item</th><th>Qty</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
+    html+='<h3>Sales — '+termLabel()+'</h3><table><thead><tr><th>Date</th><th>Pupil</th><th>Item</th><th>Qty</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
     sales.map(s=>{
       const st=findS(s.student_id);const it=findI(s.uniform_item_id);
       return '<tr><td>'+fmtDate(s.sold_at)+'</td><td>'+esc(st?st.first_name+' '+(st.last_name||''):'—')+'</td><td>'+esc(it?it.name:'')+'</td><td>'+Number(s.quantity)+'</td><td style="text-align:right">'+Number(s.total_amount).toLocaleString()+'</td></tr>';
     }).join('')+'</tbody></table>';
   }
-  printHTML('Uniform Report',html);
+  printHTML('Uniform Report — '+termLabel(),html);
 }
 window.printUniformReport=printUniformReport;
 
 /* ============================================================
-   TIMETABLE
+   TIMETABLE (schedule — no term filter needed for now)
    ============================================================ */
 async function pageTimetable(root){
   const [classes,subjects,staff]=await Promise.all([
@@ -2026,20 +2083,20 @@ function printTimetable(){
 window.printTimetable=printTimetable;
 
 /* ============================================================
-   MESSAGES
+   MESSAGES (term-filtered)
    ============================================================ */
 async function pageMessages(root){
   const [messages,students]=await Promise.all([
-    rest('/rest/v1/messages?school_id=eq.'+_schoolId+'&select=*&order=sent_at.desc&limit=200').catch(()=>[]),
+    rest('/rest/v1/messages?school_id=eq.'+_schoolId+termFilter()+'&select=*&order=sent_at.desc&limit=200').catch(()=>[]),
     rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,first_name,last_name,admission_no,parent_name,parent_contact&status=eq.active&order=first_name').catch(()=>[])
   ]);
   window._msgStudents=students||[];
-  root.innerHTML='<div class="page-head"><div><h1>💬 Messages</h1><div class="sub">'+(messages||[]).length+' sent</div></div>'+
+  root.innerHTML='<div class="page-head"><div><h1>💬 Messages</h1><div class="sub">'+termLabel()+' · '+(messages||[]).length+' sent</div></div>'+
   '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn gold" onclick="bulkSMS()">📢 Bulk SMS</button><button class="btn" onclick="composeMessage()">＋ Compose</button></div></div>'+
   '<div class="card">'+((messages||[]).length?'<div class="table-wrap"><table><thead><tr><th>Sent</th><th>Recipient</th><th>Phone</th><th>Message</th></tr></thead><tbody>'+
   messages.slice(0,100).map(m=>'<tr><td style="font-size:12px">'+fmtDate(m.sent_at)+' '+fmtTime(m.sent_at)+'</td>'+
   '<td>'+esc(m.recipient_name||'—')+'</td><td>'+esc(m.recipient_phone||'—')+'</td>'+
-  '<td style="max-width:400px;font-size:12.5px">'+esc((m.body||'').slice(0,120))+((m.body||'').length>120?'…':'')+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">No messages yet.</div>')+'</div>';
+  '<td style="max-width:400px;font-size:12.5px">'+esc((m.body||'').slice(0,120))+((m.body||'').length>120?'…':'')+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">No messages this term.</div>')+'</div>';
 }
 window.pageMessages=pageMessages;
 
@@ -2112,25 +2169,25 @@ async function sendBulkSMS(){
   if(!recipients.length){toast('No recipients','bad');return;}
   const rows=recipients.map(s=>({school_id:_schoolId,student_id:s.id,recipient_name:s.parent_name||'',recipient_phone:s.parent_contact,recipient_type:'parent',body,channel:'sms',academic_year:getCurrentYear(),term:getCurrentTerm()}));
   try{
-    for(let i=0;i<rows.length;i+=50)await rest('/rest/v1/messages',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(rows.slice(i,i+50))});
+    for(let i=0;i<rows.length;i+=50)await rest('/rest/v1/messages',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify(rows.slice(i,i+50))});
     toast('Queued '+rows.length,'ok');closeModal();nav('messages');
   }catch(e){toast(e.message,'bad');}
 }
 window.sendBulkSMS=sendBulkSMS;
 
 /* ============================================================
-   HEALTH
+   HEALTH (term-filtered)
    ============================================================ */
 async function pageHealth(root){
   const [records,students]=await Promise.all([
-    rest('/rest/v1/health_records?school_id=eq.'+_schoolId+'&select=*&order=visit_date.desc&limit=300').catch(()=>[]),
+    rest('/rest/v1/health_records?school_id=eq.'+_schoolId+termFilter()+'&select=*&order=visit_date.desc&limit=300').catch(()=>[]),
     rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,first_name,last_name,admission_no&status=eq.active&order=first_name').catch(()=>[])
   ]);
   window._healthStudents=students||[];
   const sMap={};(students||[]).forEach(s=>sMap[s.id]=s);
-  root.innerHTML='<div class="page-head"><div><h1>🏥 Health</h1></div><button class="btn" onclick="addHealth()">＋ Visit</button></div>'+
+  root.innerHTML='<div class="page-head"><div><h1>🏥 Health</h1><div class="sub">'+termLabel()+'</div></div><button class="btn" onclick="addHealth()">＋ Visit</button></div>'+
   '<div class="card">'+((records||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Pupil</th><th>Complaint</th><th>Treatment</th><th>Attended By</th></tr></thead><tbody>'+
-  records.map(r=>{const s=sMap[r.student_id];return '<tr><td>'+fmtDate(r.visit_date)+'</td><td><b>'+esc(s?s.first_name+' '+(s.last_name||''):'—')+'</b></td><td>'+esc(r.complaint||'')+'</td><td>'+esc(r.treatment||'')+'</td><td>'+esc(r.attended_by||'')+'</td></tr>';}).join('')+'</tbody></table></div>':'<div class="empty">No records.</div>')+'</div>';
+  records.map(r=>{const s=sMap[r.student_id];return '<tr><td>'+fmtDate(r.visit_date)+'</td><td><b>'+esc(s?s.first_name+' '+(s.last_name||''):'—')+'</b></td><td>'+esc(r.complaint||'')+'</td><td>'+esc(r.treatment||'')+'</td><td>'+esc(r.attended_by||'')+'</td></tr>';}).join('')+'</tbody></table></div>':'<div class="empty">No records this term.</div>')+'</div>';
 }
 window.pageHealth=pageHealth;
 
@@ -2152,7 +2209,7 @@ async function saveHealth(){
   const comp=document.getElementById('h_complaint').value.trim();
   if(!sid||!comp){toast('Required fields missing','bad');return;}
   try{
-    await rest('/rest/v1/health_records',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,student_id:sid,visit_date:document.getElementById('h_date').value,complaint:comp,treatment:document.getElementById('h_treat').value.trim()||null,medication:document.getElementById('h_med').value.trim()||null,attended_by:document.getElementById('h_by').value.trim()||null,outcome:document.getElementById('h_out').value,notes:document.getElementById('h_notes').value.trim()||null})});
+    await rest('/rest/v1/health_records',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,student_id:sid,visit_date:document.getElementById('h_date').value,complaint:comp,treatment:document.getElementById('h_treat').value.trim()||null,medication:document.getElementById('h_med').value.trim()||null,attended_by:document.getElementById('h_by').value.trim()||null,outcome:document.getElementById('h_out').value,notes:document.getElementById('h_notes').value.trim()||null,academic_year:getCurrentYear(),term:getCurrentTerm()})});
     toast('Saved','ok');closeModal();nav(activeRoute);
   }catch(e){toast(e.message,'bad');}
 }
@@ -2221,7 +2278,7 @@ window.saveFeeStruct=saveFeeStruct;
 async function applyFeeStructure(){
   const year=window._fsYear||getCurrentYear();
   const term=window._fsTerm||getCurrentTerm();
-  if(!confirm('Apply fee structure to all active pupils?'))return;
+  if(!confirm('Apply fee structure to all active pupils for '+year+' Term '+term+'?'))return;
   const [structs,students]=await Promise.all([
     rest('/rest/v1/fee_structures?school_id=eq.'+_schoolId+'&year=eq.'+year+'&term=eq.'+term+'&select=*'),
     rest('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=id,class_id,boarding_status')
@@ -2241,7 +2298,7 @@ async function applyFeeStructure(){
 window.applyFeeStructure=applyFeeStructure;
 
 /* ============================================================
-   PAYROLL
+   PAYROLL & ADVANCES
    ============================================================ */
 async function pageSalariesPro(root){
   const [staff,salaries]=await Promise.all([
@@ -2315,9 +2372,6 @@ async function cfmPaySalary(id){
 }
 window.cfmPaySalary=cfmPaySalary;
 
-/* ============================================================
-   ADVANCES
-   ============================================================ */
 async function pageAdvancesPro(root){
   const [staff,advances]=await Promise.all([
     loadStaff(),
@@ -2352,7 +2406,7 @@ async function saveAdvance(){
   const sid=document.getElementById('ad_staff').value;
   const amt=parseFloat(document.getElementById('ad_amt').value);
   if(!sid||!amt){toast('Fill required','bad');return;}
-  try{await rest('/rest/v1/staff_advances',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,staff_id:sid,amount:amt,balance:amt,reason:document.getElementById('ad_reason').value.trim()||null,given_date:document.getElementById('ad_date').value,status:'active'})});
+  try{await rest('/rest/v1/staff_advances',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,staff_id:sid,amount:amt,balance:amt,reason:document.getElementById('ad_reason').value.trim()||null,given_date:document.getElementById('ad_date').value,status:'active'})});
   toast('Advance recorded','ok');closeModal();nav('advances2');}
   catch(e){toast(e.message,'bad');}
 }
@@ -2718,7 +2772,7 @@ async function saveMarksGrid(){
 window.saveMarksGrid=saveMarksGrid;
 
 /* ============================================================
-   REPORT CARDS (cumulative BOT → MOT → EOT)
+   REPORT CARDS (cumulative BOT→MOT→EOT)
    ============================================================ */
 function buildReportCardBody(student,rd){
   const {exams,cls,subjects,marksByStudent,classAvgPct,classSize,attMap,rankMap,year,term,stageLabel}=rd;
@@ -2788,8 +2842,8 @@ async function pageReports(root){
   if(!(exams||[]).length){root.innerHTML='<div class="page-head"><div><h1>📄 Report Cards</h1></div></div><div class="card"><div class="empty">Create an exam first.</div></div>';return;}
   if(!(classes||[]).length){root.innerHTML='<div class="page-head"><div><h1>📄 Report Cards</h1></div></div><div class="card"><div class="empty">Create classes first.</div></div>';return;}
   if(!(subjects||[]).length){root.innerHTML='<div class="page-head"><div><h1>📄 Report Cards</h1></div></div><div class="card"><div class="empty">Add subjects first.</div></div>';return;}
-  const year=window._rcYear!=null?Number(window._rcYear):getCurrentYear();
-  const term=window._rcTerm!=null?Number(window._rcTerm):getCurrentTerm();
+  const year=getCurrentYear();
+  const term=getCurrentTerm();
   const cId=window._rcClassId||(classes[0]&&classes[0].id);
   const cls=classes.find(c=>c.id===cId)||classes[0];
   const termExams=(exams||[]).filter(e=>Number(e.year)===year&&Number(e.term)===term).sort((a,b)=>{
@@ -2798,14 +2852,9 @@ async function pageReports(root){
     return new Date(a.created_at||0)-new Date(b.created_at||0);
   });
   if(!termExams.length){
-    root.innerHTML='<div class="page-head"><div><h1>📄 Report Cards</h1></div></div>'+
-    '<div class="card"><div style="margin-bottom:12px"><b>No exams for '+year+' Term '+term+'</b></div>'+
-    '<div class="grid grid-3">'+
-    '<div><label>Year</label><input type="number" value="'+year+'" onchange="window._rcYear=this.value;window._rcStage=null;nav(\'reports\')"></div>'+
-    '<div><label>Term</label><select onchange="window._rcTerm=this.value;window._rcStage=null;nav(\'reports\')">'+
-    '<option value="1"'+(term==1?' selected':'')+'>Term 1</option><option value="2"'+(term==2?' selected':'')+'>Term 2</option><option value="3"'+(term==3?' selected':'')+'>Term 3</option></select></div>'+
-    '<div><label>Class</label><select onchange="window._rcClassId=this.value;nav(\'reports\')">'+classes.map(c=>'<option value="'+c.id+'"'+(c.id===cls.id?' selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></div>'+
-    '</div></div>';return;
+    root.innerHTML='<div class="page-head"><div><h1>📄 Report Cards</h1><div class="sub">'+termLabel()+'</div></div></div>'+
+    '<div class="card"><div class="empty">No exams found for '+termLabel()+'. Create one under <b>Exams</b>.</div></div>';
+    return;
   }
   const stageRanks=[...new Set(termExams.map(e=>examStageRank(e.type)))].sort((a,b)=>a-b);
   const highestStage=stageRanks[stageRanks.length-1];
@@ -2856,14 +2905,11 @@ async function pageReports(root){
     return {value:r,label:examStageFullLabel(r),count:includes.length};
   });
   root.innerHTML=
-  '<div class="page-head"><div><h1>📄 Report Cards</h1><div class="sub">'+esc(cls.name)+' · '+year+' · Term '+term+' · <b>'+esc(stageLabel)+'</b></div></div>'+
+  '<div class="page-head"><div><h1>📄 Report Cards</h1><div class="sub">'+esc(cls.name)+' · '+termLabel()+' · <b>'+esc(stageLabel)+'</b></div></div>'+
   '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="printBroadsheet()">📊 Broadsheet</button><button class="btn ghost" onclick="exportReportToExcel()">📥 Excel</button><button class="btn" onclick="printAllReportCards()">🖨️ Print All</button></div></div>'+
   '<div class="card"><div class="grid grid-3">'+
-  '<div><label>Year</label><input type="number" value="'+year+'" onchange="window._rcYear=this.value;window._rcStage=null;nav(\'reports\')"></div>'+
-  '<div><label>Term</label><select onchange="window._rcTerm=this.value;window._rcStage=null;nav(\'reports\')">'+
-  '<option value="1"'+(term==1?' selected':'')+'>Term 1</option><option value="2"'+(term==2?' selected':'')+'>Term 2</option><option value="3"'+(term==3?' selected':'')+'>Term 3</option></select></div>'+
   '<div><label>Class</label><select onchange="window._rcClassId=this.value;nav(\'reports\')">'+classes.map(c=>'<option value="'+c.id+'"'+(c.id===cls.id?' selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></div>'+
-  '<div style="grid-column:1/-1"><label>Report Stage (cumulative)</label><select onchange="window._rcStage=this.value;nav(\'reports\')">'+
+  '<div style="grid-column:2/-1"><label>Report Stage (cumulative)</label><select onchange="window._rcStage=this.value;nav(\'reports\')">'+
   stageOptions.map(o=>'<option value="'+o.value+'"'+(o.value===selectedStage?' selected':'')+'>'+esc(o.label)+' — includes '+o.count+' exam'+(o.count>1?'s':'')+' ('+termExams.filter(e=>examStageRank(e.type)<=o.value).map(e=>examStageLabel(e.type)).join(' + ')+')</option>').join('')+
   '</select></div></div></div>'+
   '<div class="grid grid-kpi" style="margin-bottom:14px">'+
@@ -2985,11 +3031,11 @@ function exportReportToExcel(){
 window.exportReportToExcel=exportReportToExcel;
 
 /* ============================================================
-   REPORTS (daily / weekly / monthly / termly)
+   REPORTS
    ============================================================ */
 let _reportTab='daily';
 async function pageReportsAll(root){
-  root.innerHTML='<div class="page-head"><div><h1>📈 Reports</h1></div><button class="btn ghost" onclick="printCurrentReport()">🖨️ Print</button></div>'+
+  root.innerHTML='<div class="page-head"><div><h1>📈 Reports</h1><div class="sub">'+termLabel()+'</div></div><button class="btn ghost" onclick="printCurrentReport()">🖨️ Print</button></div>'+
   '<div class="card"><div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">'+
   ['daily|📅 Daily','weekly|📆 Weekly','monthly|🗓️ Monthly','termly|📚 Termly'].map(t=>{
     const[k,l]=t.split('|');const a=_reportTab===k;
@@ -3102,11 +3148,11 @@ async function renderTermlyReport(y,t){
   students.forEach(s=>{const sf=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.transport_fee)||0);te+=sf;tc+=pbs[s.id]||0;});
   const exT=expenses.reduce((x,e)=>x+Number(e.amount),0);
   const unT=uniform.reduce((x,u)=>x+Number(u.total_amount),0);
-  body.innerHTML='<div style="margin-bottom:12px"><b>Term:</b> '+y+' · Term '+t+'</div>'+
+  body.innerHTML='<div style="margin-bottom:12px"><b>Term:</b> '+y+' Term '+t+'</div>'+
   '<div class="grid grid-kpi" style="margin-bottom:14px">'+
   '<div class="kpi kpi-navy"><div class="v">'+students.length+'</div><div class="l">Pupils</div></div>'+
   '<div class="kpi kpi-ok"><div class="v">'+fmtUGX(te)+'</div><div class="l">Expected</div></div>'+
-  '<div class="kpi kpi-navy"><div class="v">'+fmtUGX(tc)+'</div><div class="l">Collected</div></div>'+
+  '<div class="kpi kpi-navy"><div class="v">'+fmtUGX(tc)+'</div><div class="l">Collected (term)</div></div>'+
   '<div class="kpi kpi-bad"><div class="v">'+fmtUGX(te-tc)+'</div><div class="l">Outstanding</div></div>'+
   '<div class="kpi kpi-warn"><div class="v">'+fmtUGX(unT)+'</div><div class="l">Uniforms</div></div>'+
   '<div class="kpi kpi-bad"><div class="v">'+fmtUGX(exT)+'</div><div class="l">Expenses</div></div></div>';
@@ -3116,8 +3162,6 @@ window.renderTermlyReport=renderTermlyReport;
 function printCurrentReport(){
   const r=window._currentReportData;
   if(!r){toast('Switch to Daily tab to print','bad');return;}
-  const findStudent=id=>(r.allStudents||[]).find(s=>s.id===id);
-  const findUI=id=>(r.uniformItems||[]).find(u=>u.id===id);
   let html='<p><b>Date:</b> '+fmtDate(r.date)+'</p>';
   html+='<div class="summary"><div><b>Present</b>'+r.present+'</div><div><b>Absent</b>'+r.absent+'</div><div><b>Fees</b>UGX '+r.collTotal.toLocaleString()+'</div><div><b>Uniforms</b>UGX '+r.uniformTotal.toLocaleString()+'</div><div><b>Expenses</b>UGX '+r.expTotal.toLocaleString()+'</div></div>';
   printHTML(r.title,html);
@@ -3152,21 +3196,21 @@ async function delAnnouncement(id){if(!confirm('Delete?'))return;try{await rest(
 window.delAnnouncement=delAnnouncement;
 
 /* ============================================================
-   PASS OUTS
+   PASS OUTS (term-filtered)
    ============================================================ */
 async function pagePassOuts(root){
   const [passOuts,students]=await Promise.all([
-    rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&select=*&order=signed_out_at.desc').catch(()=>[]),
+    rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+termFilter()+'&select=*&order=signed_out_at.desc').catch(()=>[]),
     rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,first_name,last_name,admission_no&status=eq.active&order=first_name')
   ]);
   window._passOutsStudents=students||[];
   const out=(passOuts||[]).filter(p=>p.status==='out');
-  root.innerHTML='<div class="page-head"><div><h1>🚪 Pass Outs</h1><div class="sub">'+out.length+' currently out</div></div><button class="btn" onclick="newPassOut()">＋ Sign Out</button></div>'+
+  root.innerHTML='<div class="page-head"><div><h1>🚪 Pass Outs</h1><div class="sub">'+termLabel()+' · '+out.length+' currently out</div></div><button class="btn" onclick="newPassOut()">＋ Sign Out</button></div>'+
   '<div class="card">'+((passOuts||[]).length?'<div class="table-wrap"><table><thead><tr><th>Pupil</th><th>Reason</th><th>Out</th><th>Status</th><th></th></tr></thead><tbody>'+
   passOuts.slice(0,100).map(p=>{
     const st=students.find(s=>s.id===p.student_id);const isOut=p.status==='out';
     return '<tr><td><b>'+esc(st?st.first_name+' '+(st.last_name||''):'—')+'</b></td><td>'+esc(p.reason||'')+'</td><td>'+fmtDate(p.signed_out_at)+'</td><td>'+(isOut?'<span class="badge warn">🚶 Out</span>':'<span class="badge ok">✅</span>')+'</td><td style="text-align:right">'+(isOut?'<button class="btn sm ok" onclick="signInStudent(\''+p.id+'\')">In</button> ':'')+'<button class="btn sm danger" onclick="delPassOut(\''+p.id+'\')">✕</button></td></tr>';
-  }).join('')+'</tbody></table></div>':'<div class="empty">No pass outs.</div>')+'</div>';
+  }).join('')+'</tbody></table></div>':'<div class="empty">No pass outs this term.</div>')+'</div>';
 }
 window.pagePassOuts=pagePassOuts;
 
@@ -3195,17 +3239,17 @@ async function delPassOut(id){if(!confirm('Delete?'))return;try{await rest('/res
 window.delPassOut=delPassOut;
 
 /* ============================================================
-   DISCIPLINE
+   DISCIPLINE (term-filtered)
    ============================================================ */
 async function pageDiscipline(root){
   const [records,students]=await Promise.all([
-    rest('/rest/v1/discipline?school_id=eq.'+_schoolId+'&select=*&order=incident_date.desc').catch(()=>[]),
+    rest('/rest/v1/discipline?school_id=eq.'+_schoolId+termFilter()+'&select=*&order=incident_date.desc').catch(()=>[]),
     rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,first_name,last_name,admission_no&order=first_name')
   ]);
   window._disciplineStudents=students||[];
-  root.innerHTML='<div class="page-head"><div><h1>⚠️ Discipline</h1></div><button class="btn" onclick="addDiscipline()">＋ Record</button></div>'+
+  root.innerHTML='<div class="page-head"><div><h1>⚠️ Discipline</h1><div class="sub">'+termLabel()+'</div></div><button class="btn" onclick="addDiscipline()">＋ Record</button></div>'+
   '<div class="card">'+((records||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Student</th><th>Category</th><th>Description</th></tr></thead><tbody>'+
-  records.map(r=>{const st=(students||[]).find(s=>s.id===r.student_id);return '<tr><td>'+fmtDate(r.incident_date)+'</td><td><b>'+esc(st?st.first_name+' '+(st.last_name||''):'—')+'</b></td><td><span class="badge warn">'+esc(r.category||'')+'</span></td><td>'+esc(r.description||'')+'</td></tr>';}).join('')+'</tbody></table></div>':'<div class="empty">No records.</div>')+'</div>';
+  records.map(r=>{const st=(students||[]).find(s=>s.id===r.student_id);return '<tr><td>'+fmtDate(r.incident_date)+'</td><td><b>'+esc(st?st.first_name+' '+(st.last_name||''):'—')+'</b></td><td><span class="badge warn">'+esc(r.category||'')+'</span></td><td>'+esc(r.description||'')+'</td></tr>';}).join('')+'</tbody></table></div>':'<div class="empty">No records this term.</div>')+'</div>';
 }
 window.pageDiscipline=pageDiscipline;
 
@@ -3269,14 +3313,14 @@ async function saveTerm(){try{await rest('/rest/v1/terms',{method:'POST',headers
 window.saveTerm=saveTerm;
 
 /* ============================================================
-   EXPENSES
+   EXPENSES (term-filtered)
    ============================================================ */
 async function pageExpenses(root){
-  const e=await rest('/rest/v1/expenses?school_id=eq.'+_schoolId+'&select=*&order=date.desc').catch(()=>[]);
+  const e=await rest('/rest/v1/expenses?school_id=eq.'+_schoolId+termFilter()+'&select=*&order=date.desc').catch(()=>[]);
   const tot=(e||[]).reduce((s,x)=>s+Number(x.amount),0);
-  root.innerHTML='<div class="page-head"><div><h1>Expenses</h1><div class="sub">'+fmtUGX(tot)+'</div></div><button class="btn" onclick="addExp()">＋ Add</button></div>'+
+  root.innerHTML='<div class="page-head"><div><h1>Expenses</h1><div class="sub">'+termLabel()+' · '+fmtUGX(tot)+'</div></div><button class="btn" onclick="addExp()">＋ Add</button></div>'+
   '<div class="card">'+((e||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Description</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
-  e.map(x=>'<tr><td>'+fmtDate(x.date)+'</td><td>'+esc(x.description)+'</td><td style="text-align:right">'+Number(x.amount).toLocaleString()+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">No expenses.</div>')+'</div>';
+  e.map(x=>'<tr><td>'+fmtDate(x.date)+'</td><td>'+esc(x.description)+'</td><td style="text-align:right">'+Number(x.amount).toLocaleString()+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">No expenses this term.</div>')+'</div>';
 }
 window.pageExpenses=pageExpenses;
 
@@ -3287,7 +3331,7 @@ async function saveExp(){
   const d=document.getElementById('ex_desc').value.trim();
   const a=parseFloat(document.getElementById('ex_amount').value);
   if(!d||!a){toast('Fill required','bad');return;}
-  try{await rest('/rest/v1/expenses',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,description:d,amount:a,date:document.getElementById('ex_date').value,academic_year:getCurrentYear(),term:getCurrentTerm()})});closeModal();nav('expenses');}
+  try{await rest('/rest/v1/expenses',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,description:d,amount:a,date:document.getElementById('ex_date').value,academic_year:getCurrentYear(),term:getCurrentTerm()})});closeModal();nav('expenses');}
   catch(e){toast(e.message,'bad');}
 }
 window.saveExp=saveExp;
@@ -3311,7 +3355,7 @@ window.addStaffM=addStaffM;
 async function saveStaff(){
   const n=document.getElementById('st_name').value.trim();
   if(!n){toast('Name','bad');return;}
-  try{await rest('/rest/v1/staff',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,full_name:n,role:document.getElementById('st_role').value,telephone:document.getElementById('st_phone').value.trim()||null})});_staffCache=null;closeModal();nav('staff');}
+  try{await rest('/rest/v1/staff',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,full_name:n,role:document.getElementById('st_role').value,telephone:document.getElementById('st_phone').value.trim()||null})});_staffCache=null;closeModal();nav('staff');}
   catch(e){toast(e.message,'bad');}
 }
 window.saveStaff=saveStaff;
@@ -3347,13 +3391,9 @@ async function saveSchoolInfo(){
 window.saveSchoolInfo=saveSchoolInfo;
 
 /* ============================================================
-   EXCEL IMPORT — matches Eudes spreadsheet layout
-   Columns: Name | Class | STATUS | B/F | Actual Fee | Funct |
-            Transport | 1st dep | 2nd dep | 3rd dep | Total | Balance
+   EXCEL IMPORT
    ============================================================ */
-async function eudesImport(){
-  document.getElementById('excelInput').click();
-}
+async function eudesImport(){document.getElementById('excelInput').click();}
 window.eudesImport=eudesImport;
 
 async function eudesImportFilePicked(input){
@@ -3391,15 +3431,13 @@ async function eudesImportFilePicked(input){
         const neg=/^\(.*\)$/.test(s);
         s=s.replace(/[^0-9.\-]/g,'');
         if(s===''||s==='-')return 0;
-        let n=parseFloat(s);
-        if(isNaN(n))return 0;
+        let n=parseFloat(s);if(isNaN(n))return 0;
         return neg?-Math.abs(n):n;
       };
       const parsed=[];const seenNames=new Set();
       for(let i=1;i<rows.length;i++){
         const row=rows[i];if(!row)continue;
-        const fullName=String(row[cName]||'').trim();
-        if(!fullName)continue;
+        const fullName=String(row[cName]||'').trim();if(!fullName)continue;
         const lower=fullName.toLowerCase();
         if(lower==='name'||lower.indexOf('total')!==-1)continue;
         if(seenNames.has(lower))continue;
@@ -3411,16 +3449,11 @@ async function eudesImportFilePicked(input){
         else if(statusRaw==='bar')boarding='BAR';
         else if(statusRaw==='day'||statusRaw==='')boarding='Day';
         else boarding=statusRaw.charAt(0).toUpperCase()+statusRaw.slice(1);
-        parsed.push({
-          fullName,clsRaw,clsLower:clsRaw.toLowerCase(),boarding,
-          bf:num(row[cBF]),act:num(row[cAct]),func:num(row[cFunc]),trans:num(row[cTrans]),
-          d1:num(row[cD1]),d2:num(row[cD2]),d3:num(row[cD3])
-        });
+        parsed.push({fullName,clsRaw,clsLower:clsRaw.toLowerCase(),boarding,bf:num(row[cBF]),act:num(row[cAct]),func:num(row[cFunc]),trans:num(row[cTrans]),d1:num(row[cD1]),d2:num(row[cD2]),d3:num(row[cD3])});
       }
       if(!parsed.length){toast('No valid rows','bad');input.value='';return;}
       const classes=await loadClasses();
-      const classMap={};
-      classes.forEach(c=>classMap[c.name.trim().toLowerCase()]=c.id);
+      const classMap={};classes.forEach(c=>classMap[c.name.trim().toLowerCase()]=c.id);
       const unknownClasses=[...new Set(parsed.map(p=>p.clsRaw).filter(c=>c&&!classMap[c.toLowerCase()]))];
       const funcPaidCount=parsed.filter(p=>p.func>0).length;
       const totalFunc=parsed.reduce((s,p)=>s+p.func,0);
@@ -3428,10 +3461,10 @@ async function eudesImportFilePicked(input){
       const classTotals={};
       parsed.forEach(p=>{const k=p.clsRaw||'(none)';classTotals[k]=(classTotals[k]||0)+1;});
       modal(
-        '<h3>📋 Import Preview</h3>'+
+        '<h3>📋 Import Preview — '+termLabel()+'</h3>'+
         '<div style="background:var(--brandsoft);padding:14px;border-radius:10px;font-size:13px;line-height:1.9">'+
         '<div><b>Pupils found:</b> '+parsed.length+'</div>'+
-        '<div><b>Functional fee paid (Funct &gt; 0):</b> '+funcPaidCount+' pupils · '+fmtUGX(totalFunc)+'</div>'+
+        '<div><b>Functional fee paid:</b> '+funcPaidCount+' pupils · '+fmtUGX(totalFunc)+'</div>'+
         '<div><b>Total fees expected:</b> '+fmtUGX(totalFees)+'</div>'+
         '</div>'+
         '<h3 style="margin-top:16px;font-size:13px">Class breakdown</h3>'+
@@ -3439,7 +3472,7 @@ async function eudesImportFilePicked(input){
         Object.entries(classTotals).map(([k,v])=>'<span class="mini-stat">'+esc(k)+': '+v+'</span>').join('')+
         '</div>'+
         (unknownClasses.length?'<div class="err" style="margin-top:12px"><b>⚠️ New classes will be created:</b><br>'+unknownClasses.map(esc).join(', ')+'</div>':'')+
-        '<div style="margin-top:14px"><label><input type="checkbox" id="impFuncAsPayment" style="width:auto;margin-right:6px" checked> Record functional fee as payment entry</label></div>'+
+        '<div style="margin-top:14px"><label><input type="checkbox" id="impFuncAsPayment" style="width:auto;margin-right:6px" checked> Record functional fee as payment entry ('+termLabel()+')</label></div>'+
         '<div class="actions"><button class="btn ghost" onclick="closeModal();document.getElementById(\'excelInput\').value=\'\'">Cancel</button>'+
         '<button class="btn ok" onclick="eudesImportCommit()">✅ Import '+parsed.length+' Pupils</button></div>'
       );
@@ -3497,7 +3530,7 @@ async function eudesImportCommit(){
       const sid=stu[0].id;created++;
       const mkPay=async(amt,label,forType)=>{
         if(!amt||amt<=0)return false;
-        await rest('/rest/v1/payments',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
+        await rest('/rest/v1/payments',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({
           school_id:_schoolId,student_id:sid,amount:amt,payment_for:forType,payment_method:'Cash',notes:label,paid_at:iso,academic_year:cy,term:ct
         })});
         return true;
@@ -3510,7 +3543,7 @@ async function eudesImportCommit(){
       }
     }catch(e){console.warn('Row failed',p.fullName,e);}
   }
-  toast('✅ '+created+' pupils · '+payments+' payments','ok');
+  toast('✅ '+created+' pupils · '+payments+' payments · tagged '+termLabel(),'ok');
   nav('students');
 }
 window.eudesImportCommit=eudesImportCommit;
@@ -3540,7 +3573,7 @@ async function handleAuthRedirect(){
 }
 handleAuthRedirect();
 
-console.log('%c✅ EUDES ULTIMATE v2 loaded · Functional Fee integrated · Ctrl+K for commands','color:#d4a017;font-weight:800;font-size:14px');
+console.log('%c✅ EUDES ULTIMATE — Term-Aware Build','color:#d4a017;font-weight:800;font-size:14px');
 </script>
 </body>
 </html>
