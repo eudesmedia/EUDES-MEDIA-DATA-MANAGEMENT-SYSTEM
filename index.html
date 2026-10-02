@@ -38,7 +38,8 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .exit-chip{background:#dc2626;color:#fff;font-size:10.5px;font-weight:700;padding:4px 12px;border-radius:999px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
 .exit-chip:hover{background:#b91c1c}
 .header-school{display:flex;align-items:flex-start;gap:10px;font-size:16px;font-weight:800;margin-bottom:8px;line-height:1.2;text-transform:uppercase}
-.header-school .logo{width:36px;height:36px;border-radius:10px;background:var(--gold);display:grid;place-items:center;font-size:18px;flex-shrink:0;color:var(--navy)}
+.header-school .logo{width:44px;height:44px;border-radius:10px;background:var(--gold);display:grid;place-items:center;font-size:20px;flex-shrink:0;color:var(--navy);overflow:hidden}
+.header-school .logo img{width:100%;height:100%;object-fit:cover}
 .header-school .name{flex:1;padding-top:2px}
 .header-meta{font-size:12.5px;color:#cbd5e1;line-height:1.7;display:flex;gap:6px;flex-wrap:wrap;margin-bottom:2px}
 .header-meta .sep{opacity:.5}
@@ -92,7 +93,8 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .toast.bad{background:#7f1d1d}.toast.ok{background:#065f46}
 .auth-bg{position:fixed;inset:0;background:linear-gradient(135deg,var(--navy) 0%,var(--navy4) 100%);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;overflow:auto}
 .auth-card{background:#fff;border-radius:20px;padding:30px 26px;width:100%;max-width:440px;box-shadow:0 40px 80px -20px rgba(0,0,0,.5);margin:auto}
-.auth-card .logo{width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,var(--navy),var(--navy4));display:grid;place-items:center;color:var(--gold);font-weight:800;font-size:24px;margin:0 auto 14px}
+.auth-card .logo{width:66px;height:66px;border-radius:16px;background:linear-gradient(135deg,var(--navy),var(--navy4));display:grid;place-items:center;color:var(--gold);font-weight:800;font-size:26px;margin:0 auto 14px;overflow:hidden}
+.auth-card .logo img{width:100%;height:100%;object-fit:cover}
 .auth-card h1{text-align:center;font-size:19px;margin:0 0 6px}
 .auth-card .sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:22px}
 .tabs{display:flex;background:#f1f5f9;border-radius:999px;padding:4px;margin-bottom:22px}
@@ -149,11 +151,6 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .receipt .rhead{text-align:center;border-bottom:1px dashed #cbd5e1;padding-bottom:10px;margin-bottom:10px}
 .receipt .rrow{display:flex;justify-content:space-between}
 .receipt .rtotal{border-top:1px dashed #cbd5e1;margin-top:10px;padding-top:10px;font-weight:700;font-size:14px}
-.bulk-bar{position:sticky;top:0;background:var(--navy);color:#fff;padding:10px 14px;border-radius:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;font-size:13px;z-index:5}
-.bulk-bar b{font-size:13.5px}
-.bulk-bar .spacer{flex:1}
-.bulk-bar .btn{background:rgba(255,255,255,.15);color:#fff}
-.bulk-bar .btn:hover{background:rgba(255,255,255,.25)}
 .alert-item{display:flex;gap:10px;align-items:center;padding:12px;border-radius:10px;background:#fff;border-left:4px solid var(--gold);margin-bottom:8px;font-size:13px;box-shadow:0 1px 3px rgba(15,23,42,.04);cursor:pointer}
 .alert-item.danger{border-left-color:var(--bad)}
 .alert-item.ok{border-left-color:var(--ok);cursor:default}
@@ -162,11 +159,13 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .alert-item .txt{flex:1}
 .alert-item .txt b{display:block;color:var(--navy)}
 .alert-item .txt span{color:var(--muted);font-size:12px}
-.chk{width:16px;height:16px;accent-color:var(--navy);cursor:pointer}
 .rc-multi th{background:var(--navy);color:#fff;font-size:11px;text-transform:uppercase;text-align:center;padding:8px 6px}
 .rc-multi th .sub{font-size:9px;font-weight:400;opacity:.75;text-transform:none;display:block;margin-top:2px}
 .rc-multi td{padding:8px 10px;font-size:12.5px;border:1px solid #e2e8f0}
 .rc-multi tfoot td{background:#f1f5f9;font-weight:700;border-top:2px solid #0a2540}
+.logo-uploader{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.logo-preview{width:96px;height:96px;border-radius:14px;background:#eef2f7;display:grid;place-items:center;overflow:hidden;border:2px solid var(--line);flex-shrink:0;font-size:36px;color:var(--muted)}
+.logo-preview img{width:100%;height:100%;object-fit:cover}
 </style>
 </head>
 <body>
@@ -175,7 +174,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 
 <div class="auth-bg" id="authScreen">
   <div class="auth-card">
-    <div class="logo">E</div>
+    <div class="logo" id="authLogo">E</div>
     <h1>Eudes School Management</h1>
     <div class="sub">Powered by Eudes Media</div>
     <div class="tabs">
@@ -219,7 +218,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
         <button class="exit-chip" onclick="doLogout()">Exit</button>
       </div>
       <div class="header-school">
-        <div class="logo">🏛️</div>
+        <div class="logo" id="headerLogo">🏛️</div>
         <div class="name" id="headerSchoolName">SCHOOL NAME</div>
       </div>
       <div class="header-meta" id="headerMeta">—</div>
@@ -317,18 +316,22 @@ function fmtLongDate(d){return d.toLocaleDateString('en-GB',{weekday:'short',day
 function printHTML(title,bodyHTML,extraCSS){
   const w=window.open('','_blank');
   if(!w){toast('Please allow popups','bad');return;}
+  const logo=_school&&(_school.logo_data||_school.logo_url);
   w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>'+title+'</title><style>'+
     '*{box-sizing:border-box}body{font-family:Inter,system-ui,sans-serif;color:#111;padding:20px;margin:0}'+
     'h1{font-size:20px;margin:0 0 4px}h2{font-size:16px;margin:0 0 8px;color:#333}h3{font-size:14px;margin:16px 0 8px;color:#0a2540}.muted{color:#666;font-size:12px}'+
     'table{width:100%;border-collapse:collapse;margin-top:12px}th,td{padding:8px 10px;text-align:left;border-bottom:1px solid #ddd;font-size:12.5px}'+
     'th{background:#0a2540;color:#fff;text-transform:uppercase;font-size:11px;letter-spacing:.05em}'+
     '.header{text-align:center;padding-bottom:14px;border-bottom:2px solid #111;margin-bottom:14px}'+
+    '.header img{width:70px;height:70px;object-fit:contain;margin-bottom:8px}'+
     '.footer{text-align:center;font-size:10px;color:#888;margin-top:20px;padding-top:10px;border-top:1px solid #eee}'+
     '.summary{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;background:#f8fafc;padding:12px;border-radius:8px;margin-top:12px;font-size:13px}'+
     '.summary div b{display:block;font-size:11px;color:#666;text-transform:uppercase;margin-bottom:2px}'+
     '@media print{@page{margin:10mm}}'+
     '</style>'+(extraCSS?'<style>'+extraCSS+'</style>':'')+
-    '</head><body><div class="header"><h1>'+esc(_school?_school.name:'School')+'</h1>'+
+    '</head><body><div class="header">'+
+    (logo?'<img src="'+esc(logo)+'" alt="logo">':'')+
+    '<h1>'+esc(_school?_school.name:'School')+'</h1>'+
     '<div class="muted">'+esc(_school?.address||'')+(_school?.telephone?' · '+esc(_school.telephone):'')+'</div>'+
     '<h2 style="margin-top:10px">'+title+'</h2><div class="muted">Printed: '+new Date().toLocaleString()+'</div></div>'+
     bodyHTML+'<div class="footer">Powered by EUDES MEDIA</div><script>setTimeout(()=>window.print(),300);<\/script></body></html>');
@@ -439,6 +442,7 @@ async function boot(){
   document.getElementById('app').style.display='block';
   populateTermSelector();
   renderHeader();
+  renderAuthLogo();
   renderNav();
   renderBottomBar();
   tickClock();
@@ -446,6 +450,14 @@ async function boot(){
   await nav('dashboard');
 }
 window.boot=boot;
+
+function renderAuthLogo(){
+  const el=document.getElementById('authLogo');
+  if(!el)return;
+  const src=_school&&(_school.logo_data||_school.logo_url);
+  if(src){el.innerHTML='<img src="'+esc(src)+'" alt="logo">';el.style.background='#fff';}
+  else{el.innerHTML='E';el.style.background='';}
+}
 
 function tickClock(){const now=new Date();const d=document.getElementById('headerDate');const t=document.getElementById('headerTime');if(d)d.textContent='📅 '+fmtLongDate(now);if(t)t.textContent='🕐 '+now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+' (EAT)';}
 
@@ -484,6 +496,20 @@ function renderHeader(){
   metaEl.innerHTML=parts.length?parts.join('<span class="sep">·</span>'):'—';
   if(_role)roleEl.textContent=String(_role).replace(/_/g,' ').toUpperCase();
   titleEl.textContent=(_school.name||'SCHOOL')+' | Management';
+
+  const logoEl=document.getElementById('headerLogo');
+  if(logoEl){
+    const src=_school.logo_data||_school.logo_url||'';
+    if(src){
+      logoEl.innerHTML='<img src="'+esc(src)+'" alt="logo">';
+      logoEl.style.background='#fff';
+      logoEl.style.padding='2px';
+    } else {
+      logoEl.innerHTML='🏛️';
+      logoEl.style.background='';
+      logoEl.style.padding='';
+    }
+  }
 }
 window.renderHeader=renderHeader;
 
@@ -725,13 +751,13 @@ async function pageDashboard(root){
   '<div class="kpi kpi-warn" style="padding:12px"><div class="v" style="font-size:16px">'+funcReqCount+'</div><div class="l">📦 Requirements</div></div>'+
   '<div class="kpi kpi-bad" style="padding:12px"><div class="v" style="font-size:16px">'+funcPendingCount+'</div><div class="l">⏳ Pending</div></div>'+
   '</div>'+
-  '<button class="btn ghost block" style="margin-top:10px" onclick="nav(\'fees\');setTimeout(()=>{_feesTab=\'func\';nav(\'fees\')},50)">Open Functional Fee →</button>'+
+  '<button class="btn ghost block" style="margin-top:10px" onclick="_feesTab=\'func\';nav(\'fees\')">Open Functional Fee →</button>'+
   '</div>'+
 
   '<div class="grid grid-2" style="margin-bottom:14px">'+
   '<div class="card"><h3>🔔 Alerts</h3>'+
   (debtors>0?'<div class="alert-item danger" onclick="nav(\'debtors\')"><span class="ico">⚠️</span><div class="txt"><b>'+debtors+' debtors</b><span>Click to view</span></div></div>':'')+
-  (funcPendingCount>0?'<div class="alert-item" onclick="nav(\'fees\')"><span class="ico">🧾</span><div class="txt"><b>'+funcPendingCount+' functional fees pending</b><span>Click to review</span></div></div>':'')+
+  (funcPendingCount>0?'<div class="alert-item" onclick="_feesTab=\'func\';nav(\'fees\')"><span class="ico">🧾</span><div class="txt"><b>'+funcPendingCount+' functional fees pending</b><span>Click to review</span></div></div>':'')+
   (passOuts.length>0?'<div class="alert-item" onclick="nav(\'passouts\')"><span class="ico">🚪</span><div class="txt"><b>'+passOuts.length+' pupils out</b><span>Check pass-outs</span></div></div>':'')+
   (presentToday===0?'<div class="alert-item info" onclick="nav(\'attendance\')"><span class="ico">📅</span><div class="txt"><b>Attendance not taken today</b><span>Click to take rollcall</span></div></div>':'')+
   (debtors===0&&funcPendingCount===0&&passOuts.length===0&&presentToday>0?'<div class="alert-item ok"><span class="ico">✅</span><div class="txt"><b>All normal</b><span>No alerts today</span></div></div>':'')+
@@ -886,7 +912,7 @@ async function addStudent(){
   '<div><label>Last Name</label><input id="s_ln"></div>'+
   '<div><label>Gender</label><select id="s_gender"><option value="male">Male</option><option value="female">Female</option></select></div>'+
   '<div><label>Class</label><select id="s_class">'+classes.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('')+'</select></div>'+
-  '<div><label>Boarding</label><select id="s_boarding"><option>Day</option><option>Boarding</option></select></div>'+
+  '<div><label>Boarding</label><select id="s_boarding"><option>Day</option><option>Boarding</option><option>BAR</option></select></div>'+
   '<div><label>Parent Name</label><input id="s_parent_name"></div>'+
   '<div><label>Parent Contact</label><input id="s_parent_contact"></div>'+
   '<div style="grid-column:1/-1"><label>Location</label><input id="s_location"></div>'+
@@ -1096,8 +1122,11 @@ async function printIDCard(id){
   const st=(await rest('/rest/v1/students?id=eq.'+id+'&select=*'))[0];
   const classes=await loadClasses();
   const cls=(classes||[]).find(c=>c.id===st.class_id);
+  const logo=_school&&(_school.logo_data||_school.logo_url);
   const html='<div style="width:340px;padding:16px;border:2px solid #0a2540;border-radius:12px;font-family:Inter,sans-serif">'+
-  '<div style="text-align:center;border-bottom:2px solid #d4a017;padding-bottom:8px;margin-bottom:10px"><div style="font-weight:800;color:#0a2540;font-size:14px">'+esc(_school.name.toUpperCase())+'</div>'+
+  '<div style="text-align:center;border-bottom:2px solid #d4a017;padding-bottom:8px;margin-bottom:10px">'+
+  (logo?'<img src="'+esc(logo)+'" style="width:50px;height:50px;object-fit:contain;margin-bottom:4px">':'')+
+  '<div style="font-weight:800;color:#0a2540;font-size:14px">'+esc(_school.name.toUpperCase())+'</div>'+
   '<div style="font-size:10px;color:#666">'+esc(_school.address||'')+'</div></div>'+
   '<div style="font-size:11px;font-weight:700;text-align:center;color:#d4a017;letter-spacing:.1em;margin-bottom:10px">STUDENT IDENTITY CARD</div>'+
   '<div style="display:flex;gap:10px">'+
@@ -1357,6 +1386,7 @@ async function recordPayment(id,preselectFor){
     '<option value="Cash">💵 Cash</option>'+
     '<option value="Mobile Money">📱 Mobile Money</option>'+
     '<option value="Bank Transfer">🏦 Bank Transfer</option>'+
+    '<option value="Bank">🏦 Bank</option>'+
     '<option value="Cheque">📝 Cheque</option></select></div>'+
   '<div><label>Date & time *</label><input id="p_date" type="datetime-local" value="'+l+'"></div>'+
   '<div id="txnIdField" style="display:none"><label>Transaction ID *</label><input id="p_txn"></div>'+
@@ -1399,7 +1429,7 @@ async function savePayment(id){
       paid_at:new Date(dv).toISOString(),academic_year:getCurrentYear(),term:getCurrentTerm()
     })});
     const [st,pays]=await Promise.all([
-      rest('/rest/v1/students?id=eq.'+id+'&select=total_expected,functional_fee,functional_fee_status'),
+      rest('/rest/v1/students?id=eq.'+id+'&select=total_expected,functional_fee'),
       rest('/rest/v1/payments?student_id=eq.'+id+'&select=amount,payment_for')
     ]);
     const te=Number(st[0].total_expected)||0;
@@ -1407,9 +1437,7 @@ async function savePayment(id){
     const sp=pays.filter(p=>p.payment_for!=='Functional Fees').reduce((s,p)=>s+Number(p.amount),0);
     const fp=pays.filter(p=>p.payment_for==='Functional Fees').reduce((s,p)=>s+Number(p.amount),0);
     const upd={current_balance:te-sp,functional_fee_paid:fp};
-    if(pf==='Functional Fees'){
-      if(fp>=ff)upd.functional_fee_status='cash';
-    }
+    if(pf==='Functional Fees'&&fp>=ff)upd.functional_fee_status='cash';
     await rest('/rest/v1/students?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(upd)});
     toast('Payment: '+fmtUGX(amt),'ok');closeModal();nav(activeRoute);
   }catch(e){toast(e.message,'bad');}
@@ -1443,7 +1471,10 @@ async function printReceipt(paymentId){
   if(!p){toast('Not found','bad');return;}
   const st=(await rest('/rest/v1/students?id=eq.'+p.student_id+'&select=*'))[0];
   const receiptNo='RCP-'+String(p.id).slice(0,8).toUpperCase();
-  const html='<div class="receipt"><div class="rhead"><div style="font-size:16px;font-weight:800">'+esc(_school.name)+'</div>'+
+  const logo=_school&&(_school.logo_data||_school.logo_url);
+  const html='<div class="receipt">'+
+  (logo?'<div style="text-align:center;margin-bottom:8px"><img src="'+esc(logo)+'" style="width:60px;height:60px;object-fit:contain"></div>':'')+
+  '<div class="rhead"><div style="font-size:16px;font-weight:800">'+esc(_school.name)+'</div>'+
   '<div>'+esc(_school.address||'')+'</div><div>'+esc(_school.telephone||'')+'</div>'+
   '<div style="margin-top:8px;font-weight:700">OFFICIAL RECEIPT</div>'+
   '<div>No: '+receiptNo+'</div></div>'+
@@ -1724,7 +1755,7 @@ async function saveMarksGrid(){
 window.saveMarksGrid=saveMarksGrid;
 
 /* ============================================================
-   REPORT CARDS (cumulative BOT → MOT → EOT)
+   REPORT CARDS
    ============================================================ */
 function buildReportCardBody(student,rd){
   const {exams,cls,subjects,marksByStudent,classAvgPct,classSize,attMap,rankMap,year,term,stageLabel}=rd;
@@ -1744,7 +1775,7 @@ function buildReportCardBody(student,rd){
   const attPct=att.total?((att.present/att.total)*100).toFixed(0):'—';
   const g=gradeOf(avg);
   const comment=autoComment(avg,student.first_name);
-  const stageTitle = stageLabel ? stageLabel+' Report Card' : 'Terminal Report Card';
+  const stageTitle=stageLabel?stageLabel+' Report Card':'Terminal Report Card';
 
   let html='';
   html+='<div class="rc-title">'+esc(stageTitle)+'</div>';
@@ -2073,7 +2104,6 @@ async function renderDailyReport(dateStr){
   const expTotal=exps.reduce((s,e)=>s+Number(e.amount),0);
   const uniformTotal=uniformSales.reduce((s,x)=>s+Number(x.total_amount),0);
   const findS=id=>(allStudents||[]).find(s=>s.id===id);
-  const findI=id=>(uniformItems||[]).find(u=>u.id===id);
   window._currentReportData={title:'Daily Report — '+fmtDate(dateStr),date:dateStr,present,absent,collTotal,expTotal,uniformTotal,uniformSales,uniformItems,allStudents};
   let html='<div style="margin-bottom:12px"><label>Date</label><input type="date" value="'+dateStr+'" onchange="renderDailyReport(this.value)"></div>';
   html+='<div class="grid grid-kpi" style="margin-bottom:14px">'+
@@ -2434,7 +2464,7 @@ async function saveDiscipline(){
   const sid=document.getElementById('di_student').value;
   const desc=document.getElementById('di_desc').value.trim();
   if(!sid||!desc){toast('Fill required','bad');return;}
-  try{await rest('/rest/v1/discipline',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,student_id:sid,incident_date:document.getElementById('di_date').value,category:document.getElementById('di_cat').value,description:desc,academic_year:getCurrentYear(),term:getCurrentTerm()})});closeModal();nav('discipline');}
+  try{await rest('/rest/v1/discipline',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,student_id:sid,incident_date:document.getElementById('di_date').value,category:document.getElementById('di_cat').value,description:desc,academic_year:getCurrentYear(),term:getCurrentTerm()})});closeModal();nav('discipline');}
   catch(e){toast(e.message,'bad');}
 }
 window.saveDiscipline=saveDiscipline;
@@ -2586,19 +2616,71 @@ async function delAnnouncement(id){if(!confirm('Delete?'))return;try{await rest(
 window.delAnnouncement=delAnnouncement;
 
 /* ============================================================
-   SETTINGS
+   SETTINGS (with logo upload)
    ============================================================ */
 async function pageSettings(root){
+  const hasLogo=!!(_school.logo_data||_school.logo_url);
   root.innerHTML='<div class="page-head"><div><h1>Settings</h1></div></div>'+
+
+  '<div class="card"><h3>🏫 School Logo</h3>'+
+  '<div class="logo-uploader">'+
+  '<div class="logo-preview" id="logoPreview">'+
+  (hasLogo?'<img src="'+esc(_school.logo_data||_school.logo_url)+'">':'🏛️')+
+  '</div>'+
+  '<div style="flex:1;min-width:220px">'+
+  '<div class="muted" style="margin-bottom:8px">PNG or JPG. Square images look best. Max ~800KB.</div>'+
+  '<input type="file" id="logoInput" accept="image/*" style="display:none" onchange="handleLogoUpload(this)">'+
+  '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+  '<button class="btn" onclick="document.getElementById(\'logoInput\').click()">📷 Upload Logo</button>'+
+  (hasLogo?'<button class="btn ghost" onclick="removeLogo()">🗑️ Remove</button>':'')+
+  '</div></div></div></div>'+
+
   '<div class="card"><h3>School Profile</h3><div class="grid grid-2">'+
   '<div><label>Name</label><input id="set_name" value="'+esc(_school.name||'')+'"></div>'+
   '<div><label>Telephone</label><input id="set_phone" value="'+esc(_school.telephone||'')+'"></div>'+
   '<div><label>Address</label><input id="set_addr" value="'+esc(_school.address||'')+'"></div>'+
   '<div><label>Motto</label><input id="set_motto" value="'+esc(_school.motto||'')+'"></div></div>'+
   '<div class="actions"><button class="btn" onclick="saveSchoolInfo()">💾 Save</button></div></div>'+
-  '<div class="card"><h3>My Account</h3><div><label>Full Name</label><input value="'+esc(_profile.full_name||'')+'" disabled></div><div style="margin-top:12px"><label>Email</label><input value="'+esc(SESSION.email||'')+'" disabled></div><div style="margin-top:12px"><label>Role</label><input value="'+esc(_role||'')+'" disabled></div></div>';
+
+  '<div class="card"><h3>My Account</h3>'+
+  '<div><label>Full Name</label><input value="'+esc(_profile.full_name||'')+'" disabled></div>'+
+  '<div style="margin-top:12px"><label>Email</label><input value="'+esc(SESSION.email||'')+'" disabled></div>'+
+  '<div style="margin-top:12px"><label>Role</label><input value="'+esc(_role||'')+'" disabled></div></div>';
 }
 window.pageSettings=pageSettings;
+
+async function handleLogoUpload(input){
+  if(!input.files||!input.files[0])return;
+  const file=input.files[0];
+  if(file.size>800*1024){toast('Image too large. Keep under 800KB.','bad');input.value='';return;}
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    const dataUrl=e.target.result;
+    const prev=document.getElementById('logoPreview');
+    if(prev)prev.innerHTML='<img src="'+dataUrl+'">';
+    toast('Saving logo…','ok');
+    try{
+      await rest('/rest/v1/schools?id=eq.'+_schoolId,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({logo_data:dataUrl})});
+      _school.logo_data=dataUrl;
+      renderHeader();
+      renderAuthLogo();
+      toast('Logo saved ✓','ok');
+    }catch(err){toast('Failed: '+err.message,'bad');}
+  };
+  reader.readAsDataURL(file);
+}
+window.handleLogoUpload=handleLogoUpload;
+
+async function removeLogo(){
+  if(!confirm('Remove the school logo?'))return;
+  try{
+    await rest('/rest/v1/schools?id=eq.'+_schoolId,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({logo_data:null,logo_url:null})});
+    delete _school.logo_data;delete _school.logo_url;
+    renderHeader();renderAuthLogo();nav('settings');
+    toast('Logo removed','ok');
+  }catch(e){toast(e.message,'bad');}
+}
+window.removeLogo=removeLogo;
 
 async function saveSchoolInfo(){
   const n=document.getElementById('set_name').value.trim();
