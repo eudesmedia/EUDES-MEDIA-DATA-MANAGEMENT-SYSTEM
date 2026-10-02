@@ -72,6 +72,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .badge.bad{background:var(--badsoft);color:#b91c1c;border:1px solid #fecaca}
 .badge.info{background:var(--brandsoft);color:var(--navy);border:1px solid #c7d2fe}
 .badge.warn{background:var(--warnsoft);color:#92400e;border:1px solid #fde68a}
+.badge.req{background:#e0e7ff;color:#3730a3;border:1px solid #a5b4fc}
 .btn{background:var(--navy);color:#fff;padding:10px 16px;border-radius:999px;font-weight:600;font-size:13px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .btn:hover{background:var(--navy3)}
 .btn:disabled{opacity:.5}
@@ -126,7 +127,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .alert-item .ico{font-size:20px}
 .alert-item .txt{flex:1}
 .alert-item .txt b{display:block;color:var(--navy)}
-.alert-item .txt span{color:var(--muted);font-size:12px}
+.alert-item .txt span{color:var(--muted);font-size:12px;display:block}
 .logo-preview{width:96px;height:96px;border-radius:14px;background:#eef2f7;display:grid;place-items:center;overflow:hidden;border:2px solid var(--line);flex-shrink:0;font-size:36px;color:var(--muted)}
 .logo-preview img{width:100%;height:100%;object-fit:cover}
 .fp-hero{text-align:center;padding:32px 20px;background:linear-gradient(135deg,var(--brandsoft),#fff);border-radius:16px;border:2px dashed #c7d2fe}
@@ -227,7 +228,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 
 <script>
 /* ============================================================
-   EUDES SCHOOL MANAGEMENT — FINGERPRINT SYSTEM
+   EUDES SCHOOL MANAGEMENT — COMPLETE
    ============================================================ */
 const SUPA_URL='https://wabeempxckdtjvrkzhpv.supabase.co';
 const SUPA_KEY='sb_publishable_n0uAm0Gcq7qR2dJM4jMZGQ_wiV__Cfp';
@@ -280,7 +281,10 @@ function fmtUGX(n){return 'UGX '+(Number(n)||0).toLocaleString();}
 function fmtDate(ts){if(!ts)return '—';const d=new Date(ts);return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();}
 function fmtTime(ts){if(!ts)return '';return new Date(ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
 function fmtLongDate(d){return d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});}
-window.toast=toast;window.modal=modal;window.closeModal=closeModal;window.esc=esc;window.fmtUGX=fmtUGX;window.fmtDate=fmtDate;
+function fmtDuration(ms){const mins=Math.round(ms/60000);const h=Math.floor(mins/60);const m=mins%60;return (h?h+'h ':'')+m+'m';}
+
+window.toast=toast;window.modal=modal;window.closeModal=closeModal;window.esc=esc;
+window.fmtUGX=fmtUGX;window.fmtDate=fmtDate;
 
 function printHTML(title,bodyHTML,extraCSS){
   const w=window.open('','_blank');
@@ -325,11 +329,8 @@ async function doLogin(){
   err.style.display='none';
   if(!email||!pass){err.textContent='Enter email and password';err.style.display='block';return;}
   btn.disabled=true;btn.textContent='Signing in…';
-  try{
-    const data=await auth('/auth/v1/token?grant_type=password',{email,password:pass});
-    setSession(data);
-    await boot();
-  }catch(e){err.textContent=e.message;err.style.display='block';}
+  try{const data=await auth('/auth/v1/token?grant_type=password',{email,password:pass});setSession(data);await boot();}
+  catch(e){err.textContent=e.message;err.style.display='block';}
   btn.disabled=false;btn.textContent='Sign In';
 }
 window.doLogin=doLogin;
@@ -343,9 +344,7 @@ async function doRegister(){
   const addr=document.getElementById('regAddr').value.trim();
   const phone=document.getElementById('regPhone').value.trim();
   const head=document.getElementById('regHead').value.trim();
-  const err=document.getElementById('regErr');
-  const ok=document.getElementById('regOk');
-  const btn=document.getElementById('regBtn');
+  const err=document.getElementById('regErr');const ok=document.getElementById('regOk');const btn=document.getElementById('regBtn');
   err.style.display='none';ok.style.display='none';
   if(!name||!email||!pass||!school||!slug){err.textContent='Fill all required';err.style.display='block';return;}
   if(pass.length<8){err.textContent='Password min 8 characters';err.style.display='block';return;}
@@ -355,7 +354,7 @@ async function doRegister(){
     if(!data.access_token){ok.textContent='Check email to confirm, then sign in.';ok.style.display='block';btn.disabled=false;btn.textContent='Create School';return;}
     setSession(data);
     await rest('/rest/v1/rpc/create_school_and_become_owner',{method:'POST',body:JSON.stringify({p_school_name:school,p_school_slug:slug,p_motto:null,p_address:addr||null,p_telephone:phone||null,p_email:email,p_head_teacher:head||null})});
-    ok.textContent='School created. Pending approval.';ok.style.display='block';
+    ok.textContent='School created. Pending approval. WhatsApp +254757208077.';ok.style.display='block';
     setTimeout(boot,500);
   }catch(e){err.textContent=e.message;err.style.display='block';}
   btn.disabled=false;btn.textContent='Create School';
@@ -469,11 +468,11 @@ const ROUTES={
   students:{label:'Students',icon:'🎓',render:pageStudents,bottom:true},
   student_profile:{label:'Profile',icon:'👤',render:pageStudentProfile},
   attendance:{label:'Attendance',icon:'📅',render:pageAttendance,bottom:true},
+  passouts:{label:'Pass Outs',icon:'🚪',render:pagePassOuts,bottom:true},
   fees:{label:'Fees',icon:'💰',render:pageFees,bottom:true},
   fingerprint:{label:'Fingerprints',icon:'🖐️',render:pageFingerprint,bottom:true},
-  staff:{label:'Staff',icon:'👨‍🏫',render:pageStaff,bottom:true},
+  staff:{label:'Staff',icon:'👨‍🏫',render:pageStaff},
   staff_att:{label:'Staff Att.',icon:'⏰',render:pageStaffAttendance},
-  passouts:{label:'Pass Outs',icon:'🚪',render:pagePassOuts},
   debtors:{label:'Debtors',icon:'👥',render:pageDebtors},
   marks:{label:'Marks',icon:'✍️',render:pageMarks},
   exams:{label:'Exams',icon:'📝',render:pageExams},
@@ -548,7 +547,7 @@ function examStageLabel(type){const r=examStageRank(type);if(r===1)return 'BOT';
 function examStageFullLabel(rank){return {1:'Beginning of Term',2:'Mid Term',3:'End of Term'}[rank]||'Other';}
 
 /* ============================================================
-   FINGERPRINT ENGINE (WebAuthn)
+   FINGERPRINT ENGINE
    ============================================================ */
 const FP_CRED_KEY='eudes_fp_cred';
 const FP_SESS_KEY='eudes_fp_session';
@@ -563,18 +562,13 @@ async function fpAvailable(){
 }
 window.fpAvailable=fpAvailable;
 
-/* ---- Generic prompt: returns credentialId ---- */
 async function fpPrompt(allowCredId){
   const challenge=crypto.getRandomValues(new Uint8Array(32));
   try{
     const a=await navigator.credentials.get({
-      publicKey:{
-        challenge,
-        rpId:location.hostname,
+      publicKey:{challenge,rpId:location.hostname,
         allowCredentials:allowCredId?[{type:'public-key',id:unb64u(allowCredId)}]:[],
-        userVerification:'required',
-        timeout:60000
-      }
+        userVerification:'required',timeout:60000}
     });
     if(!a)return{error:'Cancelled'};
     return{credentialId:b64u(a.rawId)};
@@ -585,20 +579,17 @@ async function fpPrompt(allowCredId){
   }
 }
 
-/* ---- Register a credential (generic) ---- */
 async function fpRegister({name,displayName,userId}){
   const challenge=crypto.getRandomValues(new Uint8Array(32));
   const uid=userId||crypto.getRandomValues(new Uint8Array(16));
   try{
     const c=await navigator.credentials.create({
-      publicKey:{
-        challenge,
+      publicKey:{challenge,
         rp:{name:_school?.name||'Eudes School',id:location.hostname},
         user:{id:uid,name,displayName:displayName||name},
         pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
         authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'required',requireResidentKey:true},
-        timeout:90000,attestation:'none'
-      }
+        timeout:90000,attestation:'none'}
     });
     if(!c)return{error:'Cancelled'};
     return{credentialId:b64u(c.rawId)};
@@ -609,9 +600,7 @@ async function fpRegister({name,displayName,userId}){
   }
 }
 
-/* ============================================================
-   LOGIN FINGERPRINT (admin)
-   ============================================================ */
+/* Login fingerprint */
 async function enableLoginFingerprint(){
   if(!_profile||!SESSION){toast('Sign in first','bad');return;}
   if(!(await fpAvailable())){toast('Device has no fingerprint sensor','bad');return;}
@@ -640,7 +629,7 @@ window.disableLoginFingerprint=disableLoginFingerprint;
 async function loginWithFingerprint(){
   const credId=safeStorage.getItem(FP_CRED_KEY);
   const sess=safeStorage.getItem(FP_SESS_KEY);
-  if(!credId||!sess){toast('Set up fingerprint unlock in Settings first','bad');return;}
+  if(!credId||!sess){toast('Set up fingerprint in Settings first','bad');return;}
   if(!(await fpAvailable())){toast('No sensor','bad');return;}
   const r=await fpPrompt(credId);
   if(r.error){toast(r.error,'bad');return;}
@@ -658,64 +647,37 @@ async function showFingerprintButtonIfReady(){
 }
 window.showFingerprintButtonIfReady=showFingerprintButtonIfReady;
 
-/* ============================================================
-   REGISTER FINGERPRINTS FOR PEOPLE
-   ============================================================ */
+/* Register fingerprints for staff/pupils */
 async function registerPersonFP(type,id){
   if(!(await fpAvailable())){toast('No fingerprint sensor on this device','bad');return;}
-
   let label='',subtitle='';
-  if(type==='student'){
-    const st=(await rest('/rest/v1/students?id=eq.'+id+'&select=*'))[0];
-    if(!st){toast('Pupil not found','bad');return;}
-    label=st.first_name+' '+(st.last_name||'');
-    subtitle=st.admission_no;
-  } else {
-    const sf=(await rest('/rest/v1/staff?id=eq.'+id+'&select=*'))[0];
-    if(!sf){toast('Staff not found','bad');return;}
-    label=sf.full_name;
-    subtitle=sf.role||'';
-  }
+  if(type==='student'){const st=(await rest('/rest/v1/students?id=eq.'+id+'&select=*'))[0];if(!st){toast('Not found','bad');return;}label=st.first_name+' '+(st.last_name||'');subtitle=st.admission_no;}
+  else{const sf=(await rest('/rest/v1/staff?id=eq.'+id+'&select=*'))[0];if(!sf){toast('Not found','bad');return;}label=sf.full_name;subtitle=sf.role||'';}
 
-  modal(
-    '<div style="text-align:center;padding:20px">'+
-      '<div style="font-size:60px;margin-bottom:14px">🖐️</div>'+
-      '<h3 style="margin-bottom:6px">'+esc(label)+'</h3>'+
-      '<div class="muted" id="regFPmsg" style="margin-bottom:20px">Ask them to touch the fingerprint sensor 2–3 times…</div>'+
-      '<div id="regFPresult"></div>'+
-      '<button class="btn ghost block" style="margin-top:20px" onclick="closeModal()">Cancel</button>'+
-    '</div>'
-  );
+  modal('<div style="text-align:center;padding:20px">'+
+    '<div class="fp-hero" id="regHero"><div class="icon">🖐️</div><h3 style="margin-bottom:6px">'+esc(label)+'</h3><div class="muted" id="regMsg">Ask them to touch the sensor 2–3 times…</div></div>'+
+    '<div id="regResult" style="margin-top:16px"></div>'+
+    '<button class="btn ghost block" style="margin-top:20px" onclick="closeModal()">Cancel</button></div>');
 
   toast('Touch the sensor now…','ok');
-  const r=await fpRegister({
-    name:(type==='student'?'student:':'staff:')+id,
-    displayName:label,
-    userId:crypto.getRandomValues(new Uint8Array(16))
-  });
-  const el=document.getElementById('regFPresult');
-  const msg=document.getElementById('regFPmsg');
+  const r=await fpRegister({name:(type==='student'?'student:':'staff:')+id,displayName:label,userId:crypto.getRandomValues(new Uint8Array(16))});
+  const el=document.getElementById('regResult');
   if(!el)return;
-
   if(r.error){
-    msg.textContent='';
-    el.innerHTML='<div class="alert-item danger"><span class="ico">❌</span><div class="txt"><b>Failed</b><span>'+esc(r.error)+'</span></div></div>'+
-      '<button class="btn block" style="margin-top:12px" onclick="closeModal();registerPersonFP(\''+type+'\',\''+id+'\')">🖐️ Try again</button>';
+    document.getElementById('regHero').innerHTML='<div class="icon">❌</div><h3 style="margin-bottom:6px">Failed</h3><div class="muted">'+esc(r.error)+'</div>';
+    el.innerHTML='<button class="btn block" onclick="closeModal();registerPersonFP(\''+type+'\',\''+id+'\')">🖐️ Try again</button>';
     return;
   }
-
   try{
     await rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&'+(type==='student'?'student_id':'staff_id')+'=eq.'+id+'&purpose=eq.attendance',{method:'DELETE'});
     const row={credential_id:r.credentialId,school_id:_schoolId,purpose:'attendance',device_label:navigator.userAgent.slice(0,80)};
     if(type==='student')row.student_id=id;else row.staff_id=id;
-    await rest('/rest/v1/fp_credentials',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify(row)});
+    await rest('/rest/v1/fp_credentials',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(row)});
     const now=new Date().toISOString();
     if(type==='student')await rest('/rest/v1/students?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({fp_registered_at:now})});
     else await rest('/rest/v1/staff?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({fp_registered_at:now})});
-
-    msg.textContent='';
-    el.innerHTML='<div class="alert-item ok"><span class="ico">✅</span><div class="txt"><b>'+esc(label)+'</b><span>Fingerprint registered successfully</span></div></div>'+
-      '<button class="btn ok block" style="margin-top:12px" onclick="closeModal();nav(\'fingerprint\')">Done</button>';
+    document.getElementById('regHero').innerHTML='<div class="icon">✅</div><h3 style="margin-bottom:6px">'+esc(label)+'</h3><div class="muted">Registered successfully</div>';
+    el.innerHTML='<button class="btn ok block" onclick="closeModal();nav(\'fingerprint\')">Done</button>';
   }catch(e){
     el.innerHTML='<div class="alert-item danger"><span class="ico">❌</span><div class="txt"><b>Save failed</b><span>'+esc(e.message)+'</span></div></div>';
   }
@@ -727,27 +689,21 @@ async function removePersonFP(type,id){
   try{
     const col=type==='student'?'student_id':'staff_id';
     await rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&'+col+'=eq.'+id+'&purpose=eq.attendance',{method:'DELETE'});
-    const now=null;
-    if(type==='student')await rest('/rest/v1/students?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({fp_registered_at:now})});
-    else await rest('/rest/v1/staff?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({fp_registered_at:now})});
-    toast('Removed','ok');nav('fingerprint');
+    if(type==='student')await rest('/rest/v1/students?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({fp_registered_at:null})});
+    else await rest('/rest/v1/staff?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({fp_registered_at:null})});
+    toast('Removed','ok');nav(activeRoute);
   }catch(e){toast(e.message,'bad');}
 }
 window.removePersonFP=removePersonFP;
 
-/* ============================================================
-   LOOKUP: who touched the sensor?
-   ============================================================ */
 async function fpIdentify(){
   if(!(await fpAvailable()))return{error:'No fingerprint sensor on this device'};
   const r=await fpPrompt(null);
   if(r.error)return r;
   let row=null;
-  try{
-    row=(await rest('/rest/v1/fp_credentials?credential_id=eq.'+encodeURIComponent(r.credentialId)+'&school_id=eq.'+_schoolId+'&purpose=eq.attendance&select=staff_id,student_id'))[0];
-  }catch(e){}
+  try{row=(await rest('/rest/v1/fp_credentials?credential_id=eq.'+encodeURIComponent(r.credentialId)+'&school_id=eq.'+_schoolId+'&purpose=eq.attendance&select=staff_id,student_id'))[0];}
+  catch(e){}
   if(!row)return{error:'Not registered in this school'};
-
   if(row.student_id){
     const st=(await rest('/rest/v1/students?id=eq.'+row.student_id+'&select=id,first_name,last_name,admission_no,class_id,status'))[0];
     return{type:'student',student:st,credentialId:r.credentialId};
@@ -760,243 +716,66 @@ async function fpIdentify(){
 }
 window.fpIdentify=fpIdentify;
 
-/* ============================================================
-   PUPIL ATTENDANCE VIA FINGERPRINT
-   ============================================================ */
+/* Fingerprint pupil attendance */
 async function fpPupilAttendance(){
   const cnt=(await rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&purpose=eq.attendance&student_id=not.is.null&select=id').catch(()=>[])).length;
   if(!cnt){toast('No pupil fingerprints registered yet','bad');return;}
 
-  modal(
-    '<div style="text-align:center;padding:20px">'+
-      '<div class="fp-hero" id="fpHero"><div class="icon">🖐️</div><h3 style="margin-bottom:6px">Pupil touches the sensor</h3><div class="muted" id="fpMsg">Waiting for fingerprint…</div></div>'+
-      '<div id="fpResult" style="margin-top:16px"></div>'+
-      '<button class="btn ghost block" style="margin-top:20px" onclick="closeModal()">Close</button>'+
-    '</div>'
-  );
+  modal('<div style="text-align:center;padding:20px">'+
+    '<div class="fp-hero" id="fpHero"><div class="icon">🖐️</div><h3 style="margin-bottom:6px">Pupil touches the sensor</h3><div class="muted">Waiting for fingerprint…</div></div>'+
+    '<div id="fpResult" style="margin-top:16px"></div>'+
+    '<button class="btn ghost block" style="margin-top:20px" onclick="closeModal()">Close</button></div>');
 
   const r=await fpIdentify();
   const el=document.getElementById('fpResult');
-  const msg=document.getElementById('fpMsg');
   if(!el)return;
-
-  if(r.error){
-    document.getElementById('fpHero').innerHTML='<div class="icon">❌</div><h3 style="margin-bottom:6px">Not recognised</h3><div class="muted">'+esc(r.error)+'</div>';
+  if(r.error||r.type!=='student'){
+    document.getElementById('fpHero').innerHTML='<div class="icon">❌</div><h3 style="margin-bottom:6px">'+(r.error||'Not a pupil')+'</h3>';
     el.innerHTML='<button class="btn block" onclick="closeModal();fpPupilAttendance()">🖐️ Try again</button>';
     return;
   }
-  if(r.type!=='student'){
-    document.getElementById('fpHero').innerHTML='<div class="icon">👨‍🏫</div><h3 style="margin-bottom:6px">Staff detected</h3><div class="muted">'+esc(r.staff?r.staff.full_name:'—')+'</div>';
-    el.innerHTML='<button class="btn block" onclick="closeModal();fpPupilAttendance()">🖐️ Next pupil</button>';
-    return;
-  }
-
   const st=r.student;
   if(!st||st.status!=='active'){
-    document.getElementById('fpHero').innerHTML='<div class="icon">⚠️</div><h3 style="margin-bottom:6px">Not active</h3><div class="muted">'+esc(st?st.first_name:'—')+'</div>';
-    el.innerHTML='<button class="btn block" onclick="closeModal();fpPupilAttendance()">🖐️ Next</button>';
+    document.getElementById('fpHero').innerHTML='<div class="icon">⚠️</div><h3 style="margin-bottom:6px">Not active</h3>';
     return;
   }
-
   const today=new Date().toISOString().slice(0,10);
   try{
     await rest('/rest/v1/attendance?school_id=eq.'+_schoolId+'&student_id=eq.'+st.id+'&date=eq.'+today,{method:'DELETE'});
     await rest('/rest/v1/attendance',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,student_id:st.id,class_id:st.class_id,status:'present',date:today,academic_year:getCurrentYear(),term:getCurrentTerm()})});
     document.getElementById('fpHero').innerHTML='<div class="icon">✅</div><h3 style="margin-bottom:6px">'+esc(st.first_name+' '+(st.last_name||''))+'</h3><div class="muted">'+esc(st.admission_no)+' · Present · '+new Date().toLocaleTimeString()+'</div>';
     el.innerHTML='<button class="btn ok block" onclick="closeModal();fpPupilAttendance()">🖐️ Next pupil</button>'+
-      '<button class="btn ghost block" style="margin-top:8px" onclick="closeModal();nav(\'attendance\')">Done — back to list</button>';
-  }catch(e){el.innerHTML='<div class="alert-item danger"><span class="ico">❌</span><div class="txt"><b>Save failed</b><span>'+esc(e.message)+'</span></div></div>';}
+      '<button class="btn ghost block" style="margin-top:8px" onclick="closeModal();nav(\'attendance\')">Done</button>';
+  }catch(e){toast(e.message,'bad');}
 }
 window.fpPupilAttendance=fpPupilAttendance;
 
-/* ============================================================
-   STAFF ATTENDANCE VIA FINGERPRINT
-   ============================================================ */
+/* Fingerprint staff attendance */
 async function fpStaffAttendance(){
   const cnt=(await rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&purpose=eq.attendance&staff_id=not.is.null&select=id').catch(()=>[])).length;
-  if(!cnt){toast('No staff fingerprints registered yet','bad');return;}
-
-  modal(
-    '<div style="text-align:center;padding:20px">'+
-      '<div class="fp-hero" id="fpHero"><div class="icon">🖐️</div><h3 style="margin-bottom:6px">Staff touches the sensor</h3><div class="muted" id="fpMsg">Waiting for fingerprint…</div></div>'+
-      '<div id="fpResult" style="margin-top:16px"></div>'+
-      '<button class="btn ghost block" style="margin-top:20px" onclick="closeModal()">Close</button>'+
-    '</div>'
-  );
-
+  if(!cnt){toast('No staff fingerprints registered','bad');return;}
+  modal('<div style="text-align:center;padding:20px">'+
+    '<div class="fp-hero" id="fpHero"><div class="icon">🖐️</div><h3 style="margin-bottom:6px">Staff touches the sensor</h3><div class="muted">Waiting for fingerprint…</div></div>'+
+    '<div id="fpResult" style="margin-top:16px"></div>'+
+    '<button class="btn ghost block" style="margin-top:20px" onclick="closeModal()">Close</button></div>');
   const r=await fpIdentify();
   const el=document.getElementById('fpResult');
   if(!el)return;
-
   if(r.error||r.type!=='staff'){
-    document.getElementById('fpHero').innerHTML='<div class="icon">❌</div><h3 style="margin-bottom:6px">'+(r.error?'Not recognised':'Not a staff card')+'</h3><div class="muted">'+esc(r.error||'')+'</div>';
+    document.getElementById('fpHero').innerHTML='<div class="icon">❌</div><h3 style="margin-bottom:6px">'+(r.error||'Not a staff')+'</h3>';
     el.innerHTML='<button class="btn block" onclick="closeModal();fpStaffAttendance()">🖐️ Try again</button>';
     return;
   }
-
-  const sf=r.staff;
-  const today=new Date().toISOString().slice(0,10);
+  const sf=r.staff;const today=new Date().toISOString().slice(0,10);
   try{
     await rest('/rest/v1/staff_attendance?school_id=eq.'+_schoolId+'&staff_id=eq.'+sf.id+'&date=eq.'+today,{method:'DELETE'});
-    await rest('/rest/v1/staff_attendance',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,staff_id:sf.id,date:today,status:'present',source:'fingerprint',notes:'Fingerprint '+new Date().toLocaleTimeString()})});
+    await rest('/rest/v1/staff_attendance',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,staff_id:sf.id,date:today,status:'present',source:'fingerprint',notes:'Fingerprint '+new Date().toLocaleTimeString()})});
     document.getElementById('fpHero').innerHTML='<div class="icon">✅</div><h3 style="margin-bottom:6px">'+esc(sf.full_name)+'</h3><div class="muted">Present · '+new Date().toLocaleTimeString()+'</div>';
-    el.innerHTML='<button class="btn ok block" onclick="closeModal();fpStaffAttendance()">🖐️ Next person</button>'+
+    el.innerHTML='<button class="btn ok block" onclick="closeModal();fpStaffAttendance()">🖐️ Next</button>'+
       '<button class="btn ghost block" style="margin-top:8px" onclick="closeModal();nav(\'staff_att\')">Done</button>';
-  }catch(e){el.innerHTML='<div class="alert-item danger"><span class="ico">❌</span><div class="txt"><b>Failed</b><span>'+esc(e.message)+'</span></div></div>';}
+  }catch(e){toast(e.message,'bad');}
 }
 window.fpStaffAttendance=fpStaffAttendance;
-
-/* ============================================================
-   PASS OUT / IN VIA FINGERPRINT
-   ============================================================ */
-async function fpPassOut(){
-  const cnt=(await rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&purpose=eq.attendance&student_id=not.is.null&select=id').catch(()=>[])).length;
-  if(!cnt){toast('No pupil fingerprints registered','bad');return;}
-
-  modal(
-    '<div style="text-align:center;padding:20px">'+
-      '<div class="fp-hero" id="fpHero"><div class="icon">🚪</div><h3 style="margin-bottom:6px">Pupil touches to sign out</h3><div class="muted" id="fpMsg">Waiting for fingerprint…</div></div>'+
-      '<div id="fpResult" style="margin-top:16px"></div>'+
-      '<button class="btn ghost block" style="margin-top:20px" onclick="closeModal()">Close</button>'+
-    '</div>'
-  );
-
-  const r=await fpIdentify();
-  const el=document.getElementById('fpResult');
-  if(!el)return;
-
-  if(r.error||r.type!=='student'){
-    document.getElementById('fpHero').innerHTML='<div class="icon">❌</div><h3 style="margin-bottom:6px">'+(r.error||'Not a pupil')+'</h3>';
-    el.innerHTML='<button class="btn block" onclick="closeModal();fpPassOut()">🖐️ Try again</button>';
-    return;
-  }
-
-  const st=r.student;
-  if(!st||st.status!=='active'){
-    document.getElementById('fpHero').innerHTML='<div class="icon">⚠️</div><h3 style="margin-bottom:6px">Not active</h3>';
-    return;
-  }
-
-  document.getElementById('fpHero').innerHTML='<div class="icon">👤</div><h3 style="margin-bottom:6px">'+esc(st.first_name+' '+(st.last_name||''))+'</h3><div class="muted">'+esc(st.admission_no)+'</div>';
-  el.innerHTML=
-    '<div style="text-align:left"><label>Reason</label>'+
-      '<select id="fpPoReason" style="margin-bottom:10px"><option>Sick</option><option>Family</option><option>Going Home</option><option>Other</option></select>'+
-      '<label>Picked up by</label><input id="fpPoPicked" placeholder="Optional">'+
-    '</div>'+
-    '<button class="btn danger block" style="margin-top:14px" onclick="cfmFPPassOut(\''+st.id+'\')">🚪 Sign Out Now</button>'+
-    '<button class="btn ghost block" style="margin-top:8px" onclick="closeModal();fpPassOut()">Cancel</button>';
-}
-window.fpPassOut=fpPassOut;
-
-async function cfmFPPassOut(studentId){
-  const reason=document.getElementById('fpPoReason').value;
-  const picked=document.getElementById('fpPoPicked').value.trim();
-  try{
-    await rest('/rest/v1/pass_outs',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,student_id:studentId,reason,signed_out_at:new Date().toISOString(),picked_up_by:picked||null,status:'out',academic_year:getCurrentYear(),term:getCurrentTerm()})});
-    closeModal();toast('✅ Signed out','ok');
-    setTimeout(()=>{if(confirm('Sign out another pupil?'))fpPassOut();else nav('passouts');},300);
-  }catch(e){toast(e.message,'bad');}
-}
-window.cfmFPPassOut=cfmFPPassOut;
-
-async function fpPassIn(){
-  modal(
-    '<div style="text-align:center;padding:20px">'+
-      '<div class="fp-hero" id="fpHero"><div class="icon">🏠</div><h3 style="margin-bottom:6px">Pupil touches to sign in</h3><div class="muted" id="fpMsg">Waiting for fingerprint…</div></div>'+
-      '<div id="fpResult" style="margin-top:16px"></div>'+
-      '<button class="btn ghost block" style="margin-top:20px" onclick="closeModal()">Close</button>'+
-    '</div>'
-  );
-  const r=await fpIdentify();
-  const el=document.getElementById('fpResult');
-  if(!el)return;
-  if(r.error||r.type!=='student'){
-    document.getElementById('fpHero').innerHTML='<div class="icon">❌</div><h3 style="margin-bottom:6px">'+(r.error||'Not a pupil')+'</h3>';
-    el.innerHTML='<button class="btn block" onclick="closeModal();fpPassIn()">🖐️ Try again</button>';
-    return;
-  }
-  const st=r.student;
-  let openPass=null;
-  try{const rows=await rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&student_id=eq.'+st.id+'&status=eq.out&select=id&limit=1');openPass=rows[0];}catch(e){}
-  if(!openPass){
-    document.getElementById('fpHero').innerHTML='<div class="icon">ℹ️</div><h3 style="margin-bottom:6px">'+esc(st.first_name)+'</h3><div class="muted">No open pass-out</div>';
-    el.innerHTML='<button class="btn block" onclick="closeModal();fpPassIn()">🖐️ Next</button>';
-    return;
-  }
-  try{
-    await rest('/rest/v1/pass_outs?id=eq.'+openPass.id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({signed_in_at:new Date().toISOString(),status:'returned'})});
-    document.getElementById('fpHero').innerHTML='<div class="icon">✅</div><h3 style="margin-bottom:6px">'+esc(st.first_name+' '+(st.last_name||''))+'</h3><div class="muted">Signed back in</div>';
-    el.innerHTML='<button class="btn ok block" onclick="closeModal();fpPassIn()">🖐️ Next</button>'+
-      '<button class="btn ghost block" style="margin-top:8px" onclick="closeModal();nav(\'passouts\')">Done</button>';
-  }catch(e){toast(e.message,'bad');}
-}
-window.fpPassIn=fpPassIn;
-
-/* ============================================================
-   FINGERPRINT PAGE (registration)
-   ============================================================ */
-async function pageFingerprint(root){
-  const classes=await loadClasses();
-  const cId=window._fpClassId||(classes[0]&&classes[0].id)||'';
-  const cls=classes.find(c=>c.id===cId)||classes[0];
-  const staff=await loadStaff();
-  const tab=window._fpTab||'students';
-
-  const [students,fps]=await Promise.all([
-    cls?rest('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+cls.id+'&status=eq.active&select=*&order=first_name'):Promise.resolve([]),
-    rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&purpose=eq.attendance&select=student_id,staff_id').catch(()=>[])
-  ]);
-  const stuSet=new Set((fps||[]).filter(f=>f.student_id).map(f=>f.student_id));
-  const staSet=new Set((fps||[]).filter(f=>f.staff_id).map(f=>f.staff_id));
-  const stuReg=students.filter(s=>stuSet.has(s.id)).length;
-  const staReg=staff.filter(s=>staSet.has(s.id)).length;
-
-  const avail=await fpAvailable();
-
-  root.innerHTML=
-  '<div class="page-head"><div><h1>🖐️ Fingerprints</h1><div class="sub">Register once, use forever</div></div>'+
-  '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
-    '<button class="btn gold" onclick="fpPupilAttendance()">🖐️ Pupil Attendance</button>'+
-    '<button class="btn gold" onclick="fpStaffAttendance()">🖐️ Staff Attendance</button>'+
-  '</div></div>'+
-  (avail?'':'<div class="alert-item danger"><span class="ico">⚠️</span><div class="txt"><b>No fingerprint sensor</b><span>Use a phone or a laptop with a fingerprint reader</span></div></div>')+
-  '<div class="card"><h3>How it works</h3><div class="muted" style="line-height:1.9;font-size:12.5px">'+
-    '1. <b>Register</b> each person\'s fingerprint once on this device (tap 🖐️ Register next to their name).<br>'+
-    '2. <b>Daily attendance</b>: tap 🖐️ Pupil Attendance → each pupil touches the sensor → marked present.<br>'+
-    '3. <b>Staff</b>: same with 🖐️ Staff Attendance.<br>'+
-    '4. <b>Pass outs</b>: tap 🖐️ Sign Out / Sign In from the Pass Outs page.'+
-  '</div></div>'+
-  '<div class="card" style="padding:6px"><div style="display:flex;gap:6px;flex-wrap:wrap">'+
-    '<button class="pill'+(tab==='students'?' active':'')+'" onclick="window._fpTab=\'students\';nav(\'fingerprint\')">🎓 Pupils ('+stuReg+'/'+students.length+')</button>'+
-    '<button class="pill'+(tab==='staff'?' active':'')+'" onclick="window._fpTab=\'staff\';nav(\'fingerprint\')">👨‍🏫 Staff ('+staReg+'/'+staff.length+')</button>'+
-  '</div></div>'+
-  (tab==='staff'
-    ? '<div class="card"><h3>Staff Fingerprints</h3>'+
-      (staff.length?'<div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Status</th><th style="text-align:right">Action</th></tr></thead><tbody>'+
-      staff.map(s=>{const has=staSet.has(s.id);
-        return '<tr><td><b>'+esc(s.full_name)+'</b></td><td>'+esc(s.role||'')+'</td>'+
-        '<td>'+(has?'<span class="badge ok">✅ Registered</span>':'<span class="badge warn">⏳ Not set</span>')+'</td>'+
-        '<td style="text-align:right;white-space:nowrap">'+
-          (has?'<button class="btn sm danger" onclick="removePersonFP(\'staff\',\''+s.id+'\')">Remove</button>':'<button class="btn sm ok" onclick="registerPersonFP(\'staff\',\''+s.id+'\')">🖐️ Register</button>')+
-        '</td></tr>';
-      }).join('')+'</tbody></table></div>':'<div class="empty">No staff.</div>')+'</div>'
-    : '<div class="card"><div class="grid grid-2" style="margin-bottom:14px">'+
-      '<div><label>Class</label><select onchange="window._fpClassId=this.value;nav(\'fingerprint\')">'+
-      (classes.length?classes.map(c=>'<option value="'+c.id+'"'+(c.id===cls?.id?' selected':'')+'>'+esc(c.name)+'</option>').join(''):'<option>No classes</option>')+
-      '</select></div>'+
-      '<div style="display:flex;align-items:flex-end;gap:6px"><div class="mini-stat">✅ Registered: '+stuReg+'</div><div class="mini-stat">⏳ Pending: '+(students.length-stuReg)+'</div></div>'+
-      '</div>'+
-      (students.length?'<div class="table-wrap"><table><thead><tr><th>#</th><th>Adm No</th><th>Name</th><th>Status</th><th style="text-align:right">Action</th></tr></thead><tbody>'+
-      students.map((s,i)=>{const has=stuSet.has(s.id);
-        return '<tr><td>'+(i+1)+'</td><td><b>'+esc(s.admission_no)+'</b></td><td>'+esc(s.first_name+' '+(s.last_name||''))+'</td>'+
-        '<td>'+(has?'<span class="badge ok">✅ Registered</span>':'<span class="badge warn">⏳ Not set</span>')+'</td>'+
-        '<td style="text-align:right;white-space:nowrap">'+
-          (has?'<button class="btn sm danger" onclick="removePersonFP(\'student\',\''+s.id+'\')">Remove</button>':'<button class="btn sm ok" onclick="registerPersonFP(\'student\',\''+s.id+'\')">🖐️ Register</button>')+
-        '</td></tr>';
-      }).join('')+'</tbody></table></div>':'<div class="empty">No pupils in this class.</div>')+
-      '</div>');
-}
-window.pageFingerprint=pageFingerprint;
 
 /* ============================================================
    DASHBOARD
@@ -1043,15 +822,14 @@ async function pageDashboard(root){
   '</div>'+
   '<div class="card"><h3>🖐️ Fingerprint Status</h3>'+
   '<div class="grid grid-3">'+
-    '<div class="kpi kpi-navy" style="padding:12px"><div class="v" style="font-size:16px">'+stuFpCount+' / '+active.length+'</div><div class="l">Pupil Fingerprints</div></div>'+
-    '<div class="kpi kpi-navy" style="padding:12px"><div class="v" style="font-size:16px">'+staFpCount+' / '+staff.length+'</div><div class="l">Staff Fingerprints</div></div>'+
-    '<div class="kpi kpi-ok" style="padding:12px"><div class="v" style="font-size:14px">Fast Check-In</div><div class="l">1 touch per person</div></div>'+
+  '<div class="kpi kpi-navy" style="padding:12px"><div class="v" style="font-size:16px">'+stuFpCount+' / '+active.length+'</div><div class="l">Pupil Fingerprints</div></div>'+
+  '<div class="kpi kpi-navy" style="padding:12px"><div class="v" style="font-size:16px">'+staFpCount+' / '+staff.length+'</div><div class="l">Staff Fingerprints</div></div>'+
+  '<div class="kpi kpi-ok" style="padding:12px"><div class="v" style="font-size:14px">1 touch per person</div><div class="l">Fast Check-In</div></div>'+
   '</div>'+
   '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">'+
-    '<button class="btn gold" onclick="fpPupilAttendance()">🖐️ Pupil Attendance</button>'+
-    '<button class="btn gold" onclick="fpStaffAttendance()">🖐️ Staff Attendance</button>'+
-    '<button class="btn ghost" onclick="nav(\'fingerprint\')">Manage Fingerprints →</button>'+
-  '</div></div>'+
+  '<button class="btn gold" onclick="fpPupilAttendance()">🖐️ Pupil Attendance</button>'+
+  '<button class="btn gold" onclick="fpStaffAttendance()">🖐️ Staff Attendance</button>'+
+  '<button class="btn ghost" onclick="nav(\'fingerprint\')">Manage →</button></div></div>'+
   '<div class="card"><h3>🧾 Functional Fee</h3>'+
   '<div class="grid grid-3">'+
   '<div class="kpi kpi-ok" style="padding:12px"><div class="v" style="font-size:16px">'+fmtUGX(funcCollected)+'</div><div class="l">Collected</div></div>'+
@@ -1061,8 +839,8 @@ async function pageDashboard(root){
   '</div><button class="btn ghost block" style="margin-top:10px" onclick="_feesTab=\'func\';nav(\'fees\')">Open →</button></div>'+
   '<div class="grid grid-2" style="margin-bottom:14px">'+
   '<div class="card"><h3>🔔 Alerts</h3>'+
-  (debtors>0?'<div class="alert-item danger" onclick="nav(\'debtors\')"><span class="ico">⚠️</span><div class="txt"><b>'+debtors+' debtors</b></div></div>':'')+
-  (passOuts.length>0?'<div class="alert-item" onclick="nav(\'passouts\')"><span class="ico">🚪</span><div class="txt"><b>'+passOuts.length+' pupils out</b></div></div>':'')+
+  (debtors>0?'<div class="alert-item danger" onclick="nav(\'debtors\')"><span class="ico">⚠️</span><div class="txt"><b>'+debtors+' debtors</b><span>Click to view</span></div></div>':'')+
+  (passOuts.length>0?'<div class="alert-item danger" onclick="window._poFilterStatus=\'out\';window._poFilterQ=\'\';nav(\'passouts\')"><span class="ico">🚪</span><div class="txt"><b>'+passOuts.length+' pupil'+(passOuts.length!==1?'s':'')+' currently OUT</b><span>Tap to see who</span></div></div>':'')+
   (presentToday===0?'<div class="alert-item info" onclick="fpPupilAttendance()"><span class="ico">🖐️</span><div class="txt"><b>Attendance not taken today</b><span>Tap for fingerprint mode</span></div></div>':'')+
   (debtors===0&&passOuts.length===0&&presentToday>0?'<div class="alert-item ok"><span class="ico">✅</span><div class="txt"><b>All normal</b></div></div>':'')+
   '</div>'+
@@ -1081,21 +859,24 @@ window.pageDashboard=pageDashboard;
    ============================================================ */
 async function pageStudents(root){
   const classes=await loadClasses();
-  const [students,payments]=await Promise.all([
+  const [students,payments,openPassOuts]=await Promise.all([
     rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=*&order=created_at.desc'),
-    rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=student_id,amount,payment_for')
+    rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=student_id,amount,payment_for'),
+    rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&status=eq.out&select=student_id,signed_out_at,reason').catch(()=>[])
   ]);
   window._allStudents=students||[];
   const pbs={};
   payments.forEach(p=>{if(!pbs[p.student_id])pbs[p.student_id]={school:0,func:0};if(p.payment_for==='Functional Fees')pbs[p.student_id].func+=Number(p.amount);else pbs[p.student_id].school+=Number(p.amount);});
   window._paidByStudent=pbs;
+  const openMap={};(openPassOuts||[]).forEach(p=>{openMap[p.student_id]=p;});
+  window._openPassOuts=openMap;
   root.innerHTML=
   '<div class="page-head"><div><h1>Pupils</h1><div class="sub" id="studentCount">Loading…</div></div>'+
   '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="printStudentsList()">🖨️ Print</button><button class="btn" onclick="addStudent()">＋ Register</button></div></div>'+
   '<div class="card"><div class="grid grid-3" style="margin-bottom:14px">'+
   '<input id="studentSearchInput" placeholder="Search…" value="'+esc(window._stFilterSearch||'')+'" oninput="filterStudentsTable(this.value,document.getElementById(\'studentClassFilter\').value)">'+
   '<select id="studentClassFilter" onchange="filterStudentsTable(document.getElementById(\'studentSearchInput\').value,this.value)"><option value="">All classes</option>'+classes.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('')+'</select>'+
-  '<select id="studentFuncFilter" onchange="filterStudentsTable(document.getElementById(\'studentSearchInput\').value,document.getElementById(\'studentClassFilter\').value)"><option value="">All statuses</option><option value="pending">⏳ Pending</option><option value="cash">💵 Cash</option><option value="requirements">📦 Req.</option></select></div>'+
+  '<select id="studentFuncFilter" onchange="filterStudentsTable(document.getElementById(\'studentSearchInput\').value,document.getElementById(\'studentClassFilter\').value)"><option value="">All statuses</option><option value="pending">⏳ Pending</option><option value="cash">💵 Cash</option><option value="requirements">📦 Req.</option><option value="out">🚪 Currently Out</option></select></div>'+
   '<div id="studentsTableContainer"></div></div>';
   filterStudentsTable(window._stFilterSearch||'','');
 }
@@ -1107,9 +888,11 @@ function filterStudentsTable(q,fClass){
   const fFunc=document.getElementById('studentFuncFilter')?.value||'';
   const classes=_classesCache||[];
   const paid=window._paidByStudent||{};
+  const openMap=window._openPassOuts||{};
   const filtered=(window._allStudents||[]).filter(s=>{
     if(fClass&&s.class_id!==fClass)return false;
-    if(fFunc&&s.functional_fee_status!==fFunc)return false;
+    if(fFunc==='out'&&!openMap[s.id])return false;
+    if(fFunc&&fFunc!=='out'&&s.functional_fee_status!==fFunc)return false;
     if(q){const hay=(s.first_name+' '+(s.last_name||'')+' '+s.admission_no+' '+(s.parent_name||'')+' '+(s.parent_contact||'')).toLowerCase();if(hay.indexOf(q)===-1)return false;}
     return true;
   });
@@ -1123,17 +906,20 @@ function filterStudentsTable(q,fClass){
     const sf=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.transport_fee)||0);
     const p=paid[s.id]||{school:0};
     const bal=sf-p.school;
-    return '<tr><td><b>'+esc(s.admission_no)+'</b></td>'+
-    '<td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b>'+(s.fp_registered_at?' <span class="badge ok" title="Fingerprint registered">🖐️</span>':'')+'</td>'+
-    '<td><span class="badge info">'+esc(cls?cls.name:'—')+'</span></td>'+
-    '<td>'+esc(s.parent_name||'—')+'</td>'+
-    '<td>'+functionalStatusBadge(s.functional_fee_status)+'</td>'+
-    '<td style="text-align:right"><span class="badge '+(bal>0?'bad':'ok')+'">'+bal.toLocaleString()+'</span></td>'+
-    '<td style="text-align:right;white-space:nowrap">'+
-    '<button class="btn sm" onclick="recordPayment(\''+s.id+'\')">💵</button> '+
-    '<button class="btn sm ghost" onclick="openProfile(\''+s.id+'\')">👤</button> '+
-    '<button class="btn sm ghost" onclick="editStudent(\''+s.id+'\')">✏️</button> '+
-    '<button class="btn sm danger" onclick="deleteStudent(\''+s.id+'\')">✕</button></td></tr>';
+    const openPO=openMap[s.id];
+    const outBadge=openPO?' <span class="badge" style="background:#dc2626;color:#fff;border-color:#991b1b" title="Out since '+new Date(openPO.signed_out_at).toLocaleString()+'">🚪 OUT</span>':'';
+    return '<tr style="'+(openPO?'background:#fef3c7':'')+'">'+
+      '<td><b>'+esc(s.admission_no)+'</b></td>'+
+      '<td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b>'+(s.fp_registered_at?' <span class="badge ok" title="Fingerprint registered">🖐️</span>':'')+outBadge+'</td>'+
+      '<td><span class="badge info">'+esc(cls?cls.name:'—')+'</span></td>'+
+      '<td>'+esc(s.parent_name||'—')+'</td>'+
+      '<td>'+functionalStatusBadge(s.functional_fee_status)+'</td>'+
+      '<td style="text-align:right"><span class="badge '+(bal>0?'bad':'ok')+'">'+bal.toLocaleString()+'</span></td>'+
+      '<td style="text-align:right;white-space:nowrap">'+
+      '<button class="btn sm" onclick="recordPayment(\''+s.id+'\')">💵</button> '+
+      '<button class="btn sm ghost" onclick="openProfile(\''+s.id+'\')">👤</button> '+
+      '<button class="btn sm ghost" onclick="editStudent(\''+s.id+'\')">✏️</button> '+
+      '<button class="btn sm danger" onclick="deleteStudent(\''+s.id+'\')">✕</button></td></tr>';
   }).join('')+'</tbody></table></div>';
 }
 window.filterStudentsTable=filterStudentsTable;
@@ -1231,7 +1017,7 @@ window.cfmDelStudent=cfmDelStudent;
 /* ============================================================
    STUDENT PROFILE
    ============================================================ */
-function openProfile(id){window._profileId=id;nav('student_profile');}
+function openProfile(id){window._profileId=id;window._profileTab='overview';nav('student_profile');}
 window.openProfile=openProfile;
 
 async function pageStudentProfile(root){
@@ -1261,22 +1047,47 @@ async function pageStudentProfile(root){
   const initials=(st.first_name||'?')[0]+((st.last_name||' ')[0]||'');
   const hasFP=fps.length>0;
 
+  const openPass=(passouts||[]).find(p=>p.status==='out');
+  let outBanner='';
+  if(openPass){
+    const outAt=new Date(openPass.signed_out_at);
+    const expected=openPass.expected_return_at?new Date(openPass.expected_return_at):null;
+    const durationMs=Date.now()-outAt.getTime();
+    const overdue=expected&&Date.now()>expected.getTime();
+    outBanner=
+      '<div class="alert-item danger" style="border-left-width:6px;padding:16px;margin-bottom:14px">'+
+        '<span class="ico" style="font-size:28px">🚪</span>'+
+        '<div class="txt" style="line-height:1.7">'+
+          '<b style="font-size:15px">🚨 PUPIL IS CURRENTLY SIGNED OUT</b>'+
+          '<span><b>Reason:</b> '+esc(openPass.reason||'—')+
+          (openPass.picked_up_by?' · <b>Picked up by:</b> '+esc(openPass.picked_up_by):'')+'</span>'+
+          '<span><b>Signed out:</b> '+outAt.toLocaleDateString('en-GB')+' at '+outAt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' — <b>'+fmtDuration(durationMs)+' ago</b></span>'+
+          (expected?'<span><b>Expected return:</b> '+expected.toLocaleDateString('en-GB')+' at '+expected.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+(overdue?' <b style="color:#b91c1c">— OVERDUE</b>':'')+'</span>':'')+
+          (openPass.notes?'<span><b>Notes:</b> '+esc(openPass.notes)+'</span>':'')+
+        '</div>'+
+        '<button class="btn ok sm" onclick="signInStudent(\''+openPass.id+'\',true)">🏠 Sign In</button>'+
+      '</div>';
+  }
+
   root.innerHTML=
   '<div class="page-head"><button class="btn ghost" onclick="nav(\'students\')">← Back</button>'+
   '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
-  (hasFP
-    ?'<button class="btn ghost" onclick="removePersonFP(\'student\',\''+id+'\')">🗑️ Remove FP</button>'
-    :'<button class="btn gold" onclick="registerPersonFP(\'student\',\''+id+'\')">🖐️ Register Fingerprint</button>')+
+  (hasFP?'<button class="btn ghost" onclick="removePersonFP(\'student\',\''+id+'\')">🗑️ Remove FP</button>':'<button class="btn gold" onclick="registerPersonFP(\'student\',\''+id+'\')">🖐️ Register Fingerprint</button>')+
+  (openPass?'<button class="btn ok" onclick="signInStudent(\''+openPass.id+'\',true)">🏠 Sign In</button>':'<button class="btn danger" onclick="openManualPassOut('+JSON.stringify(st).replace(/"/g,'&quot;')+')">🚪 Sign Out</button>')+
   '<button class="btn" onclick="recordPayment(\''+id+'\')">💵 Pay</button></div></div>'+
-  '<div class="profile-hero"><div class="avatar">'+esc(initials.toUpperCase())+'</div><div class="info">'+
-  '<h1>'+esc(st.first_name+' '+(st.last_name||''))+'</h1>'+
+  outBanner+
+  '<div class="profile-hero" style="'+(openPass?'background:linear-gradient(135deg,#7f1d1d,#dc2626)':'')+'">'+
+  '<div class="avatar">'+esc(initials.toUpperCase())+'</div><div class="info">'+
+  '<h1>'+esc(st.first_name+' '+(st.last_name||''))+(openPass?' 🚪':'')+'</h1>'+
   '<div class="meta">'+esc(st.admission_no)+' · '+esc(clsObj?clsObj.name:'—')+' · '+esc(st.boarding_status||'Day')+'</div>'+
-  '<div style="margin-top:6px">'+
+  '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">'+
   '<span class="badge '+(bal<=0?'ok':'bad')+'" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">Balance: '+fmtUGX(bal)+'</span> '+
-  (hasFP?'<span class="badge ok" style="background:rgba(5,150,105,.3);color:#fff;border-color:rgba(5,150,105,.5)">🖐️ Fingerprint</span>':'')+
+  '<span class="badge info" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">Att: '+attPct+'%</span> '+
+  (hasFP?'<span class="badge ok" style="background:rgba(5,150,105,.3);color:#fff;border-color:rgba(5,150,105,.5)">🖐️ FP</span>':'')+
+  (openPass?'<span class="badge" style="background:#dc2626;color:#fff;border-color:#991b1b">🚪 OUT</span>':'')+
   '</div></div></div>'+
   '<div class="tabs-bar">'+
-  ['overview|📊 Overview','fees|💰 Fees','attendance|📅 Attendance','passouts|🚪 Pass Outs'].map(t=>{
+  ['overview|📊 Overview','fees|💰 Fees','attendance|📅 Attendance','passouts|🚪 Pass Outs'+(passouts&&passouts.length?' ('+passouts.length+')':'')].map(t=>{
     const[k,l]=t.split('|');
     return '<button class="'+(tab===k?'active':'')+'" onclick="window._profileTab=\''+k+'\';nav(\'student_profile\')">'+l+'</button>';
   }).join('')+
@@ -1296,8 +1107,30 @@ async function pageStudentProfile(root){
     ((attendance||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Status</th></tr></thead><tbody>'+
     attendance.map(a=>'<tr><td>'+fmtDate(a.date)+'</td><td>'+(a.status==='present'?'<span class="badge ok">Present</span>':'<span class="badge bad">Absent</span>')+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">No records.</div>')+'</div>';
   } else if(tab==='passouts'){
-    tc.innerHTML='<div class="card"><h3>Pass Outs</h3>'+((passouts||[]).length?'<div class="table-wrap"><table><thead><tr><th>Out</th><th>In</th><th>Reason</th><th>Status</th></tr></thead><tbody>'+
-    passouts.map(p=>'<tr><td>'+fmtDate(p.signed_out_at)+'</td><td>'+(p.signed_in_at?fmtDate(p.signed_in_at):'—')+'</td><td>'+esc(p.reason||'')+'</td><td>'+(p.status==='out'?'<span class="badge warn">Out</span>':'<span class="badge ok">Returned</span>')+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">No pass outs.</div>')+'</div>';
+    if(!passouts||!passouts.length){
+      tc.innerHTML='<div class="card"><div class="empty">No pass-out history.</div></div>';
+    } else {
+      tc.innerHTML='<div class="card"><h3>🚪 Pass-Out History <span class="muted" style="font-weight:400;font-size:12px">('+passouts.length+' record'+(passouts.length>1?'s':'')+')</span></h3>'+
+      '<div class="table-wrap"><table><thead><tr>'+
+      '<th>#</th><th>Reason</th><th>Picked Up By</th><th>Signed Out</th><th>Returned</th><th>Duration</th><th>Status</th><th></th></tr></thead><tbody>'+
+      passouts.map((p,i)=>{
+        const outAt=new Date(p.signed_out_at);
+        const inAt=p.signed_in_at?new Date(p.signed_in_at):null;
+        const isOut=p.status==='out';
+        let duration='—';
+        if(outAt&&inAt)duration=fmtDuration(inAt-outAt);
+        else if(outAt&&isOut)duration='<b style="color:#b91c1c">'+fmtDuration(Date.now()-outAt.getTime())+' (ongoing)</b>';
+        return '<tr style="'+(isOut?'background:#fef3c7':'')+'">'+
+          '<td>'+(i+1)+'</td>'+
+          '<td><span class="badge warn">'+esc(p.reason||'—')+'</span></td>'+
+          '<td>'+esc(p.picked_up_by||'—')+'</td>'+
+          '<td style="font-size:12.5px"><b>'+outAt.toLocaleDateString('en-GB')+'</b><br><span class="muted">🕐 '+outAt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</span></td>'+
+          '<td style="font-size:12.5px">'+(inAt?'<b>'+inAt.toLocaleDateString('en-GB')+'</b><br><span class="muted">🕐 '+inAt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</span>':'<span class="muted">—</span>')+'</td>'+
+          '<td style="font-size:12.5px">'+duration+'</td>'+
+          '<td>'+(isOut?'<span class="badge bad">🚪 OUT</span>':'<span class="badge ok">✅ Returned</span>')+'</td>'+
+          '<td>'+(isOut?'<button class="btn sm ok" onclick="signInStudent(\''+p.id+'\',true)">🏠 In</button>':'')+'</td></tr>';
+      }).join('')+'</tbody></table></div></div>';
+    }
   }
 }
 window.pageStudentProfile=pageStudentProfile;
@@ -1321,20 +1154,19 @@ async function pageFees(root){
   const to=te-tc;
   root.innerHTML=
   '<div class="page-head"><div><h1>Fees</h1><div class="sub">'+getCurrentYear()+' · Term '+getCurrentTerm()+'</div></div>'+
-  '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="printFeesList()">🖨️ Print</button><button class="btn ghost" onclick="exportFeesToExcel()">📥 Excel</button></div></div>'+
+  '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="printFeesList()">🖨️</button><button class="btn ghost" onclick="exportFeesToExcel()">📥</button></div></div>'+
   '<div class="card" style="padding:6px"><div style="display:flex;gap:6px;flex-wrap:wrap">'+
-    '<button class="pill'+(_feesTab==='school'?' active':'')+'" onclick="_feesTab=\'school\';nav(\'fees\')">📚 School Fees</button>'+
-    '<button class="pill'+(_feesTab==='func'?' active':'')+'" onclick="_feesTab=\'func\';nav(\'fees\')">🧾 Functional Fee</button>'+
-  '</div></div>'+
+  '<button class="pill'+(_feesTab==='school'?' active':'')+'" onclick="_feesTab=\'school\';nav(\'fees\')">📚 School Fees</button>'+
+  '<button class="pill'+(_feesTab==='func'?' active':'')+'" onclick="_feesTab=\'func\';nav(\'fees\')">🧾 Functional Fee</button></div></div>'+
   (_feesTab==='school'
     ? '<div class="grid grid-kpi" style="margin-bottom:14px"><div class="kpi kpi-ok"><div class="v">'+fmtUGX(te)+'</div><div class="l">Expected</div></div><div class="kpi kpi-navy"><div class="v">'+fmtUGX(tc)+'</div><div class="l">Collected</div></div><div class="kpi kpi-bad"><div class="v">'+fmtUGX(to)+'</div><div class="l">Outstanding</div></div><div class="kpi kpi-warn"><div class="v">'+Math.round(te?(tc/te)*100:0)+'%</div><div class="l">Rate</div></div></div>'
     : '<div class="grid grid-kpi" style="margin-bottom:14px"><div class="kpi kpi-navy"><div class="v">'+fmtUGX(tfe)+'</div><div class="l">Expected</div></div><div class="kpi kpi-ok"><div class="v">'+fmtUGX(tfc)+'</div><div class="l">Collected</div></div><div class="kpi kpi-bad"><div class="v">'+fmtUGX(Math.max(0,tfe-tfc))+'</div><div class="l">Shortfall</div></div><div class="kpi kpi-ok"><div class="v">'+funcPaidCount+'</div><div class="l">💵 Paid</div></div><div class="kpi kpi-warn"><div class="v">'+funcReqCount+'</div><div class="l">📦 Req.</div></div><div class="kpi kpi-bad"><div class="v">'+funcPendingCount+'</div><div class="l">⏳ Pending</div></div></div>')+
   '<div class="card"><div class="grid grid-3" style="margin-bottom:14px">'+
-    '<div><label>Class</label><select id="feesClassFilter" onchange="filterFeesTable()"><option value="">All</option>'+classes.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('')+'</select></div>'+
-    (_feesTab==='school'
-      ? '<div><label>Show</label><select id="feesOwingFilter" onchange="filterFeesTable()"><option value="all">All</option><option value="owing">Owing</option><option value="paid">Paid</option></select></div>'
-      : '<div><label>Status</label><select id="feesOwingFilter" onchange="filterFeesTable()"><option value="all">All</option><option value="cash">💵 Cash</option><option value="requirements">📦 Req.</option><option value="pending">⏳ Pending</option></select></div>')+
-    '<div style="display:flex;align-items:flex-end;gap:8px"><button class="btn ghost" style="flex:1" onclick="resetFeesFilters()">Reset</button>'+(_feesTab==='func'?'<button class="btn gold" style="flex:1" onclick="bulkMarkFuncPaid()">Bulk Paid</button>':'')+'</div>'+
+  '<div><label>Class</label><select id="feesClassFilter" onchange="filterFeesTable()"><option value="">All</option>'+classes.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('')+'</select></div>'+
+  (_feesTab==='school'
+    ? '<div><label>Show</label><select id="feesOwingFilter" onchange="filterFeesTable()"><option value="all">All</option><option value="owing">Owing</option><option value="paid">Paid</option></select></div>'
+    : '<div><label>Status</label><select id="feesOwingFilter" onchange="filterFeesTable()"><option value="all">All</option><option value="cash">💵 Cash</option><option value="requirements">📦 Req.</option><option value="pending">⏳ Pending</option></select></div>')+
+  '<div style="display:flex;align-items:flex-end;gap:8px"><button class="btn ghost" style="flex:1" onclick="resetFeesFilters()">Reset</button>'+(_feesTab==='func'?'<button class="btn gold" style="flex:1" onclick="bulkMarkFuncPaid()">Bulk Paid</button>':'')+'</div>'+
   '</div><div id="feesTableContainer"></div></div>';
   filterFeesTable();
 }
@@ -1454,7 +1286,7 @@ async function savePayment(id){
 window.savePayment=savePayment;
 
 /* ============================================================
-   ATTENDANCE (manual)
+   ATTENDANCE
    ============================================================ */
 async function pageAttendance(root){
   const classes=await loadClasses();
@@ -1470,10 +1302,9 @@ async function pageAttendance(root){
   root.innerHTML=
   '<div class="page-head"><div><h1>📅 Attendance</h1><div class="sub">'+fmtDate(fDate)+'</div></div>'+
   '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
-    '<button class="btn gold" onclick="fpPupilAttendance()">🖐️ Fingerprint Mode</button>'+
-    '<button class="btn ok" onclick="markAllPresent()">✅ All Present</button>'+
-    '<button class="btn" onclick="saveAttendance()">💾 Save</button>'+
-  '</div></div>'+
+  '<button class="btn gold" onclick="fpPupilAttendance()">🖐️ Fingerprint Mode</button>'+
+  '<button class="btn ok" onclick="markAllPresent()">✅ All Present</button>'+
+  '<button class="btn" onclick="saveAttendance()">💾 Save</button></div></div>'+
   '<div class="card"><div class="grid grid-2"><div><label>Class</label><select onchange="window._attClass=this.value;nav(\'attendance\')">'+classes.map(c=>'<option value="'+c.id+'"'+(c.id===fClass?' selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></div><div><label>Date</label><input type="date" value="'+fDate+'" onchange="window._attDate=this.value;nav(\'attendance\')"></div></div></div>'+
   '<div class="grid grid-kpi" style="margin-bottom:14px"><div class="kpi kpi-ok"><div class="v">'+present+'</div><div class="l">Present</div></div><div class="kpi kpi-bad"><div class="v">'+absent+'</div><div class="l">Absent</div></div><div class="kpi kpi-plain"><div class="v">'+(students||[]).length+'</div><div class="l">Total</div></div></div>'+
   '<div class="card"><h3>Manual Mark</h3>'+((students||[]).length?'<div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Status</th></tr></thead><tbody>'+
@@ -1497,11 +1328,289 @@ async function saveAttendance(){
 window.saveAttendance=saveAttendance;
 
 /* ============================================================
+   PASS OUTS
+   ============================================================ */
+async function pagePassOuts(root){
+  const [passOuts,students]=await Promise.all([
+    rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&select=*&order=signed_out_at.desc').catch(()=>[]),
+    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,first_name,last_name,admission_no,parent_name,parent_contact,class_id&order=first_name').catch(()=>[])
+  ]);
+  window._passOutsList=passOuts||[];
+  window._passOutsStudents=students||[];
+  if(window._poFilterQ===undefined)window._poFilterQ='';
+  if(window._poFilterStatus===undefined)window._poFilterStatus='all';
+
+  const out=(passOuts||[]).filter(p=>p.status==='out');
+  const returned=(passOuts||[]).filter(p=>p.status!=='out');
+  root.innerHTML=
+  '<div class="page-head"><div><h1>🚪 Pass Outs</h1><div class="sub">'+out.length+' currently out · '+returned.length+' returned</div></div>'+
+  '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+  '<button class="btn gold" onclick="fpPassOut()">🖐️ Fingerprint Out</button>'+
+  '<button class="btn gold" onclick="fpPassIn()">🖐️ Fingerprint In</button>'+
+  '<button class="btn" onclick="newPassOut()">＋ Manual</button></div></div>'+
+  '<div class="card">'+
+  '<div class="grid grid-3" style="margin-bottom:14px">'+
+  '<div style="grid-column:span 2"><label>🔍 Search pupil / reason / parent</label>'+
+  '<input id="poSearchInput" placeholder="Type name, adm no, parent, reason..." value="'+esc(window._poFilterQ)+'" oninput="window._poFilterQ=this.value;renderPassOutsTable()"></div>'+
+  '<div><label>Status</label><select id="poStatusFilter" onchange="window._poFilterStatus=this.value;renderPassOutsTable()">'+
+  '<option value="all"'+(window._poFilterStatus==='all'?' selected':'')+'>All ('+(passOuts||[]).length+')</option>'+
+  '<option value="out"'+(window._poFilterStatus==='out'?' selected':'')+'>🚪 Currently out ('+out.length+')</option>'+
+  '<option value="returned"'+(window._poFilterStatus==='returned'?' selected':'')+'>✅ Returned ('+returned.length+')</option>'+
+  '</select></div></div>'+
+  '<div id="poTableContainer"></div></div>';
+  renderPassOutsTable();
+}
+window.pagePassOuts=pagePassOuts;
+
+function renderPassOutsTable(){
+  const list=window._passOutsList||[];
+  const students=window._passOutsStudents||[];
+  const q=(window._poFilterQ||'').toLowerCase().trim();
+  const status=window._poFilterStatus||'all';
+  const stuMap={};students.forEach(s=>stuMap[s.id]=s);
+  const clsMap={};(_classesCache||[]).forEach(c=>clsMap[c.id]=c.name);
+
+  let filtered=list.filter(p=>{
+    if(status==='out'&&p.status!=='out')return false;
+    if(status==='returned'&&p.status==='out')return false;
+    if(q){
+      const st=stuMap[p.student_id];
+      const hay=((st?st.first_name+' '+(st.last_name||''):'')+' '+(st?st.admission_no:'')+' '+(st?st.parent_name||'':'')+' '+(st?st.parent_contact||'':'')+' '+(p.reason||'')+' '+(p.picked_up_by||'')+' '+(p.notes||'')).toLowerCase();
+      if(hay.indexOf(q)===-1)return false;
+    }
+    return true;
+  });
+
+  const c=document.getElementById('poTableContainer');
+  if(!c)return;
+  if(!filtered.length){
+    c.innerHTML='<div class="empty">'+(q||status!=='all'?'No records match your filter.':'No pass-outs yet.')+'</div>';
+    return;
+  }
+  c.innerHTML='<div class="table-wrap"><table><thead><tr>'+
+  '<th>#</th><th>Pupil</th><th>Adm</th><th>Class</th><th>Reason</th><th>Picked Up By</th>'+
+  '<th>Signed Out</th><th>Returned</th><th>Duration</th><th>Status</th><th></th></tr></thead><tbody>'+
+  filtered.slice(0,300).map((p,i)=>{
+    const st=stuMap[p.student_id];
+    const outAt=new Date(p.signed_out_at);
+    const inAt=p.signed_in_at?new Date(p.signed_in_at):null;
+    const isOut=p.status==='out';
+    let duration='—';
+    if(outAt&&inAt)duration=fmtDuration(inAt-outAt);
+    else if(outAt&&isOut)duration='<b style="color:#b91c1c">'+fmtDuration(Date.now()-outAt.getTime())+' ongoing</b>';
+    return '<tr style="'+(isOut?'background:#fef3c7':'')+'">'+
+      '<td>'+(i+1)+'</td>'+
+      '<td><b>'+esc(st?st.first_name+' '+(st.last_name||''):'Unknown')+'</b>'+
+        (st&&st.parent_contact?'<div class="muted" style="font-size:11px">📞 '+esc(st.parent_contact)+'</div>':'')+'</td>'+
+      '<td style="font-size:12.5px">'+esc(st?st.admission_no:'—')+'</td>'+
+      '<td style="font-size:12.5px">'+esc(st&&st.class_id?clsMap[st.class_id]||'—':'—')+'</td>'+
+      '<td><span class="badge warn">'+esc(p.reason||'—')+'</span></td>'+
+      '<td style="font-size:12.5px">'+esc(p.picked_up_by||'—')+'</td>'+
+      '<td style="font-size:12px;white-space:nowrap"><b>'+outAt.toLocaleDateString('en-GB')+'</b><br><span class="muted">🕐 '+outAt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</span></td>'+
+      '<td style="font-size:12px;white-space:nowrap">'+(inAt?'<b>'+inAt.toLocaleDateString('en-GB')+'</b><br><span class="muted">🕐 '+inAt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</span>':'<span class="muted">—</span>')+'</td>'+
+      '<td style="font-size:12px;white-space:nowrap">'+duration+'</td>'+
+      '<td>'+(isOut?'<span class="badge bad">🚪 OUT</span>':'<span class="badge ok">✅</span>')+'</td>'+
+      '<td style="white-space:nowrap">'+
+        (st?'<button class="btn sm ghost" onclick="openProfile(\''+st.id+'\')">👤</button> ':'')+
+        (isOut?'<button class="btn sm ok" onclick="signInStudent(\''+p.id+'\')">🏠 In</button> ':'')+
+        '<button class="btn sm danger" onclick="delPassOut(\''+p.id+'\')">✕</button></td></tr>';
+  }).join('')+'</tbody></table></div>'+
+  (filtered.length>300?'<div class="muted" style="text-align:center;padding:8px">Showing first 300 of '+filtered.length+'. Use search to narrow.</div>':'');
+}
+window.renderPassOutsTable=renderPassOutsTable;
+
+function newPassOut(){
+  const students=window._passOutsStudents||[];
+  if(!students.length){toast('No pupils','bad');return;}
+  const now=new Date();const tz=now.getTimezoneOffset()*60000;
+  const nowLocal=new Date(now-tz).toISOString().slice(0,16);
+  const in24h=new Date(now.getTime()+24*3600000-tz).toISOString().slice(0,16);
+  modal('<h3>🚪 Sign Out Pupil</h3>'+
+  '<div><label>Pupil *</label><select id="po_student">'+students.map(s=>'<option value="'+s.id+'">'+esc(s.first_name+' '+(s.last_name||'')+' — '+s.admission_no)+'</option>').join('')+'</select></div>'+
+  '<div class="grid grid-2" style="margin-top:12px">'+
+  '<div style="grid-column:1/-1"><label>Reason *</label><select id="po_reason"><option>Sick</option><option>Family</option><option>Going Home</option><option>Medical</option><option>Other</option></select></div>'+
+  '<div style="grid-column:1/-1"><label>Picked up by</label><input id="po_picked" placeholder="Name of adult"></div>'+
+  '<div><label>Signed out at</label><input id="po_out" type="datetime-local" value="'+nowLocal+'"></div>'+
+  '<div><label>Expected return</label><input id="po_expected" type="datetime-local" value="'+in24h+'"></div>'+
+  '<div style="grid-column:1/-1"><label>Notes</label><input id="po_notes"></div></div>'+
+  '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="savePassOut()">Sign Out</button></div>');
+}
+window.newPassOut=newPassOut;
+
+async function savePassOut(){
+  const sid=document.getElementById('po_student').value;
+  const outAt=document.getElementById('po_out').value;
+  const exp=document.getElementById('po_expected').value;
+  if(!sid||!outAt){toast('Fill required','bad');return;}
+  try{await rest('/rest/v1/pass_outs',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,student_id:sid,reason:document.getElementById('po_reason').value,signed_out_at:new Date(outAt).toISOString(),expected_return_at:exp?new Date(exp).toISOString():null,picked_up_by:document.getElementById('po_picked').value.trim()||null,notes:document.getElementById('po_notes').value.trim()||null,status:'out',academic_year:getCurrentYear(),term:getCurrentTerm()})});toast('Signed out','ok');closeModal();nav('passouts');}
+  catch(e){toast(e.message,'bad');}
+}
+window.savePassOut=savePassOut;
+
+async function signInStudent(id,fromProfile){
+  try{
+    await rest('/rest/v1/pass_outs?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({signed_in_at:new Date().toISOString(),status:'returned'})});
+    toast('Signed in ✅','ok');
+    if(fromProfile)nav('student_profile');else nav(activeRoute);
+  }catch(e){toast(e.message,'bad');}
+}
+window.signInStudent=signInStudent;
+
+async function delPassOut(id){if(!confirm('Delete this pass-out record?'))return;try{await rest('/rest/v1/pass_outs?id=eq.'+id,{method:'DELETE'});nav('passouts');}catch(e){toast(e.message,'bad');}}
+window.delPassOut=delPassOut;
+
+/* Fingerprint pass-out */
+async function fpPassOut(preStudentId){
+  const cnt=(await rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&purpose=eq.attendance&student_id=not.is.null&select=id').catch(()=>[])).length;
+  if(!cnt&&!preStudentId){toast('No pupil fingerprints registered','bad');return;}
+  if(preStudentId){
+    const st=(await rest('/rest/v1/students?id=eq.'+preStudentId+'&select=*'))[0];
+    if(!st){toast('Not found','bad');return;}
+    openManualPassOut(st);
+    return;
+  }
+  modal('<div style="text-align:center;padding:20px">'+
+    '<div class="fp-hero" id="fpHero"><div class="icon">🚪</div><h3 style="margin-bottom:6px">Pupil touches to sign out</h3><div class="muted">Waiting for fingerprint…</div></div>'+
+    '<div id="fpResult" style="margin-top:16px"></div>'+
+    '<button class="btn ghost block" style="margin-top:20px" onclick="closeModal()">Close</button></div>');
+  const r=await fpIdentify();
+  const el=document.getElementById('fpResult');
+  if(!el)return;
+  if(r.error||r.type!=='student'){
+    document.getElementById('fpHero').innerHTML='<div class="icon">❌</div><h3 style="margin-bottom:6px">'+(r.error||'Not a pupil')+'</h3>';
+    el.innerHTML='<button class="btn block" onclick="closeModal();fpPassOut()">🖐️ Try again</button>';
+    return;
+  }
+  const st=r.student;
+  if(!st||st.status!=='active'){
+    document.getElementById('fpHero').innerHTML='<div class="icon">⚠️</div><h3 style="margin-bottom:6px">Not active</h3>';
+    return;
+  }
+  openManualPassOut(st);
+}
+window.fpPassOut=fpPassOut;
+
+function openManualPassOut(st){
+  const now=new Date();const tz=now.getTimezoneOffset()*60000;
+  const nowLocal=new Date(now-tz).toISOString().slice(0,16);
+  const in24h=new Date(now.getTime()+24*3600000-tz).toISOString().slice(0,16);
+  modal('<div style="text-align:center;padding:8px 0 12px"><div style="font-size:48px">🚪</div>'+
+    '<h3 style="margin-bottom:4px">'+esc(st.first_name+' '+(st.last_name||''))+'</h3>'+
+    '<div class="muted">'+esc(st.admission_no)+'</div></div>'+
+    '<div class="grid grid-2">'+
+    '<div style="grid-column:1/-1"><label>Reason *</label><select id="fpPoReason"><option>Sick</option><option>Family</option><option>Going Home</option><option>Medical</option><option>Other</option></select></div>'+
+    '<div style="grid-column:1/-1"><label>Picked up by</label><input id="fpPoPicked" placeholder="Name of adult"></div>'+
+    '<div><label>Signed out at</label><input id="fpPoOut" type="datetime-local" value="'+nowLocal+'"></div>'+
+    '<div><label>Expected return</label><input id="fpPoExpected" type="datetime-local" value="'+in24h+'"></div>'+
+    '<div style="grid-column:1/-1"><label>Notes</label><input id="fpPoNotes"></div></div>'+
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button>'+
+    '<button class="btn danger" onclick="cfmFPPassOut(\''+st.id+'\')">🚪 Confirm Sign Out</button></div>');
+}
+window.openManualPassOut=openManualPassOut;
+
+async function cfmFPPassOut(studentId){
+  const reason=document.getElementById('fpPoReason').value;
+  const picked=document.getElementById('fpPoPicked').value.trim();
+  const outAt=document.getElementById('fpPoOut').value;
+  const expected=document.getElementById('fpPoExpected').value;
+  const notes=document.getElementById('fpPoNotes').value.trim();
+  if(!outAt){toast('Pick time','bad');return;}
+  try{
+    await rest('/rest/v1/pass_outs',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,student_id:studentId,reason,signed_out_at:new Date(outAt).toISOString(),expected_return_at:expected?new Date(expected).toISOString():null,picked_up_by:picked||null,notes:notes||null,status:'out',academic_year:getCurrentYear(),term:getCurrentTerm()})});
+    closeModal();toast('✅ Signed out','ok');
+    setTimeout(()=>nav(activeRoute),300);
+  }catch(e){toast(e.message,'bad');}
+}
+window.cfmFPPassOut=cfmFPPassOut;
+
+async function fpPassIn(){
+  modal('<div style="text-align:center;padding:20px">'+
+    '<div class="fp-hero" id="fpHero"><div class="icon">🏠</div><h3 style="margin-bottom:6px">Pupil touches to sign in</h3><div class="muted">Waiting for fingerprint…</div></div>'+
+    '<div id="fpResult" style="margin-top:16px"></div>'+
+    '<button class="btn ghost block" style="margin-top:20px" onclick="closeModal()">Close</button></div>');
+  const r=await fpIdentify();
+  const el=document.getElementById('fpResult');
+  if(!el)return;
+  if(r.error||r.type!=='student'){
+    document.getElementById('fpHero').innerHTML='<div class="icon">❌</div><h3 style="margin-bottom:6px">'+(r.error||'Not a pupil')+'</h3>';
+    el.innerHTML='<button class="btn block" onclick="closeModal();fpPassIn()">🖐️ Try again</button>';
+    return;
+  }
+  const st=r.student;
+  let openPass=null;
+  try{const rows=await rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&student_id=eq.'+st.id+'&status=eq.out&select=id&limit=1');openPass=rows[0];}catch(e){}
+  if(!openPass){
+    document.getElementById('fpHero').innerHTML='<div class="icon">ℹ️</div><h3 style="margin-bottom:6px">'+esc(st.first_name)+'</h3><div class="muted">No open pass-out</div>';
+    el.innerHTML='<button class="btn block" onclick="closeModal();fpPassIn()">🖐️ Next</button>';
+    return;
+  }
+  try{
+    await rest('/rest/v1/pass_outs?id=eq.'+openPass.id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({signed_in_at:new Date().toISOString(),status:'returned'})});
+    document.getElementById('fpHero').innerHTML='<div class="icon">✅</div><h3 style="margin-bottom:6px">'+esc(st.first_name+' '+(st.last_name||''))+'</h3><div class="muted">Signed back in</div>';
+    el.innerHTML='<button class="btn ok block" onclick="closeModal();fpPassIn()">🖐️ Next</button>'+
+      '<button class="btn ghost block" style="margin-top:8px" onclick="closeModal();nav(\'passouts\')">Done</button>';
+  }catch(e){toast(e.message,'bad');}
+}
+window.fpPassIn=fpPassIn;
+
+/* ============================================================
+   FINGERPRINT PAGE
+   ============================================================ */
+async function pageFingerprint(root){
+  const classes=await loadClasses();
+  const cId=window._fpClassId||(classes[0]&&classes[0].id)||'';
+  const cls=classes.find(c=>c.id===cId)||classes[0];
+  const staff=await loadStaff();
+  const tab=window._fpTab||'students';
+  const [students,fps]=await Promise.all([
+    cls?rest('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+cls.id+'&status=eq.active&select=*&order=first_name'):Promise.resolve([]),
+    rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&purpose=eq.attendance&select=student_id,staff_id').catch(()=>[])
+  ]);
+  const stuSet=new Set((fps||[]).filter(f=>f.student_id).map(f=>f.student_id));
+  const staSet=new Set((fps||[]).filter(f=>f.staff_id).map(f=>f.staff_id));
+  const stuReg=students.filter(s=>stuSet.has(s.id)).length;
+  const staReg=staff.filter(s=>staSet.has(s.id)).length;
+  const avail=await fpAvailable();
+
+  root.innerHTML=
+  '<div class="page-head"><div><h1>🖐️ Fingerprints</h1><div class="sub">Register once, use forever</div></div>'+
+  '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+  '<button class="btn gold" onclick="fpPupilAttendance()">🖐️ Pupil Attendance</button>'+
+  '<button class="btn gold" onclick="fpStaffAttendance()">🖐️ Staff Attendance</button></div></div>'+
+  (avail?'':'<div class="alert-item danger"><span class="ico">⚠️</span><div class="txt"><b>No fingerprint sensor</b><span>Use a phone or laptop with a fingerprint reader</span></div></div>')+
+  '<div class="card"><h3>How it works</h3><div class="muted" style="line-height:1.9;font-size:12.5px">'+
+  '1. <b>Register</b> each person\'s fingerprint once on this device (tap 🖐️ Register).<br>'+
+  '2. <b>Daily attendance</b>: tap 🖐️ Pupil Attendance → each pupil touches the sensor.<br>'+
+  '3. <b>Pass outs</b>: tap 🖐️ Fingerprint Out from Pass Outs page.</div></div>'+
+  '<div class="card" style="padding:6px"><div style="display:flex;gap:6px;flex-wrap:wrap">'+
+  '<button class="pill'+(tab==='students'?' active':'')+'" onclick="window._fpTab=\'students\';nav(\'fingerprint\')">🎓 Pupils ('+stuReg+'/'+students.length+')</button>'+
+  '<button class="pill'+(tab==='staff'?' active':'')+'" onclick="window._fpTab=\'staff\';nav(\'fingerprint\')">👨‍🏫 Staff ('+staReg+'/'+staff.length+')</button></div></div>'+
+  (tab==='staff'
+    ? '<div class="card"><h3>Staff Fingerprints</h3>'+(staff.length?'<div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Status</th><th style="text-align:right">Action</th></tr></thead><tbody>'+
+      staff.map(s=>{const has=staSet.has(s.id);
+        return '<tr><td><b>'+esc(s.full_name)+'</b></td><td>'+esc(s.role||'')+'</td>'+
+        '<td>'+(has?'<span class="badge ok">✅ Registered</span>':'<span class="badge warn">⏳ Not set</span>')+'</td>'+
+        '<td style="text-align:right;white-space:nowrap">'+(has?'<button class="btn sm danger" onclick="removePersonFP(\'staff\',\''+s.id+'\')">Remove</button>':'<button class="btn sm ok" onclick="registerPersonFP(\'staff\',\''+s.id+'\')">🖐️ Register</button>')+'</td></tr>';
+      }).join('')+'</tbody></table></div>':'<div class="empty">No staff.</div>')+'</div>'
+    : '<div class="card"><div class="grid grid-2" style="margin-bottom:14px">'+
+      '<div><label>Class</label><select onchange="window._fpClassId=this.value;nav(\'fingerprint\')">'+
+      (classes.length?classes.map(c=>'<option value="'+c.id+'"'+(c.id===cls?.id?' selected':'')+'>'+esc(c.name)+'</option>').join(''):'<option>No classes</option>')+'</select></div>'+
+      '<div style="display:flex;align-items:flex-end;gap:6px"><div class="mini-stat">✅ '+stuReg+'</div><div class="mini-stat">⏳ '+(students.length-stuReg)+'</div></div></div>'+
+      (students.length?'<div class="table-wrap"><table><thead><tr><th>#</th><th>Adm</th><th>Name</th><th>Status</th><th style="text-align:right">Action</th></tr></thead><tbody>'+
+      students.map((s,i)=>{const has=stuSet.has(s.id);
+        return '<tr><td>'+(i+1)+'</td><td><b>'+esc(s.admission_no)+'</b></td><td>'+esc(s.first_name+' '+(s.last_name||''))+'</td>'+
+        '<td>'+(has?'<span class="badge ok">✅ Registered</span>':'<span class="badge warn">⏳ Not set</span>')+'</td>'+
+        '<td style="text-align:right;white-space:nowrap">'+(has?'<button class="btn sm danger" onclick="removePersonFP(\'student\',\''+s.id+'\')">Remove</button>':'<button class="btn sm ok" onclick="registerPersonFP(\'student\',\''+s.id+'\')">🖐️ Register</button>')+'</td></tr>';
+      }).join('')+'</tbody></table></div>':'<div class="empty">No pupils.</div>')+'</div>');
+}
+window.pageFingerprint=pageFingerprint;
+
+/* ============================================================
    STAFF
    ============================================================ */
 async function pageStaff(root){
   let staff=[];try{staff=await rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=*&order=full_name');_staffCache=staff;}catch(e){}
-  const [fps]=await Promise.all([rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&staff_id=not.is.null&purpose=eq.attendance&select=staff_id').catch(()=>[])]);
+  const fps=await rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&staff_id=not.is.null&purpose=eq.attendance&select=staff_id').catch(()=>[]);
   const staSet=new Set(fps.map(f=>f.staff_id));
   root.innerHTML='<div class="page-head"><div><h1>Staff</h1><div class="sub">'+(staff||[]).length+'</div></div><button class="btn" onclick="addStaffM()">＋ Add</button></div>'+
   '<div class="card">'+((staff||[]).length?'<div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Phone</th><th>🖐️</th><th></th></tr></thead><tbody>'+
@@ -1531,12 +1640,11 @@ async function pageStaffAttendance(root){
   const present=(recs||[]).filter(r=>r.status==='present').length;
   root.innerHTML='<div class="page-head"><div><h1>⏰ Staff Attendance</h1><div class="sub">'+fmtDate(date)+' · Present: '+present+'/'+staff.length+'</div></div>'+
   '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
-    '<button class="btn gold" onclick="fpStaffAttendance()">🖐️ Fingerprint Check-In</button>'+
-    '<button class="btn ghost" onclick="markAllStaffPresent()">✅ All Present</button>'+
-    '<button class="btn" onclick="saveStaffAtt()">💾 Save</button>'+
-  '</div></div>'+
+  '<button class="btn gold" onclick="fpStaffAttendance()">🖐️ Fingerprint Check-In</button>'+
+  '<button class="btn ghost" onclick="markAllStaffPresent()">✅ All Present</button>'+
+  '<button class="btn" onclick="saveStaffAtt()">💾 Save</button></div></div>'+
   '<div class="card"><div><label>Date</label><input type="date" value="'+date+'" onchange="window._saDate=this.value;nav(\'staff_att\')"></div></div>'+
-  '<div class="card"><h3>🖐️ Fingerprint Registration</h3><div class="muted" style="margin-bottom:12px">Each staff member registers once. After that they just touch the sensor to check in.</div>'+
+  '<div class="card"><h3>🖐️ Fingerprint Registration</h3><div class="muted" style="margin-bottom:12px">Each staff registers once, then just touches to check in.</div>'+
   '<div class="table-wrap"><table><thead><tr><th>Staff</th><th>Role</th><th>Fingerprint</th><th style="text-align:right">Action</th></tr></thead><tbody>'+
   staff.map(s=>{const has=fpMap[s.id]>0;
     return '<tr><td><b>'+esc(s.full_name)+'</b></td><td>'+esc(s.role||'')+'</td>'+
@@ -1565,37 +1673,6 @@ async function saveStaffAtt(){
 window.saveStaffAtt=saveStaffAtt;
 
 /* ============================================================
-   PASS OUTS
-   ============================================================ */
-async function pagePassOuts(root){
-  const [passOuts,students]=await Promise.all([
-    rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&select=*&order=signed_out_at.desc').catch(()=>[]),
-    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,first_name,last_name,admission_no&status=eq.active&order=first_name')
-  ]);
-  window._passOutsStudents=students||[];
-  const out=(passOuts||[]).filter(p=>p.status==='out');
-  root.innerHTML='<div class="page-head"><div><h1>🚪 Pass Outs</h1><div class="sub">'+out.length+' currently out</div></div>'+
-  '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
-    '<button class="btn gold" onclick="fpPassOut()">🖐️ Fingerprint Out</button>'+
-    '<button class="btn gold" onclick="fpPassIn()">🖐️ Fingerprint In</button>'+
-    '<button class="btn" onclick="newPassOut()">＋ Manual</button>'+
-  '</div></div>'+
-  '<div class="card">'+((passOuts||[]).length?'<div class="table-wrap"><table><thead><tr><th>Pupil</th><th>Reason</th><th>Out</th><th>Status</th><th></th></tr></thead><tbody>'+
-  passOuts.slice(0,100).map(p=>{const st=students.find(s=>s.id===p.student_id);const isOut=p.status==='out';
-    return '<tr><td><b>'+esc(st?st.first_name+' '+(st.last_name||''):'—')+'</b></td><td>'+esc(p.reason||'')+'</td><td>'+fmtDate(p.signed_out_at)+'</td><td>'+(isOut?'<span class="badge warn">🚶 Out</span>':'<span class="badge ok">✅</span>')+'</td><td style="text-align:right">'+(isOut?'<button class="btn sm ok" onclick="signInStudent(\''+p.id+'\')">In</button> ':'')+'<button class="btn sm danger" onclick="delPassOut(\''+p.id+'\')">✕</button></td></tr>';
-  }).join('')+'</tbody></table></div>':'<div class="empty">No pass outs.</div>')+'</div>';
-}
-window.pagePassOuts=pagePassOuts;
-function newPassOut(){const students=window._passOutsStudents||[];if(!students.length){toast('No pupils','bad');return;}const now=new Date();const tz=now.getTimezoneOffset()*60000;const l=new Date(now-tz).toISOString().slice(0,16);modal('<h3>🚪 Sign Out (Manual)</h3><div><label>Pupil</label><select id="po_student">'+students.map(s=>'<option value="'+s.id+'">'+esc(s.first_name+' '+(s.last_name||'')+' — '+s.admission_no)+'</option>').join('')+'</select></div><div style="margin-top:12px"><label>Reason</label><select id="po_reason"><option>Sick</option><option>Family</option><option>Going Home</option><option>Other</option></select></div><div style="margin-top:12px"><label>Out</label><input id="po_out" type="datetime-local" value="'+l+'"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="savePassOut()">Sign Out</button></div>');}
-window.newPassOut=newPassOut;
-async function savePassOut(){const sid=document.getElementById('po_student').value;const outAt=document.getElementById('po_out').value;if(!sid||!outAt){toast('Fill','bad');return;}try{await rest('/rest/v1/pass_outs',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,student_id:sid,reason:document.getElementById('po_reason').value,signed_out_at:new Date(outAt).toISOString(),status:'out',academic_year:getCurrentYear(),term:getCurrentTerm()})});toast('Signed out','ok');closeModal();nav('passouts');}catch(e){toast(e.message,'bad');}}
-window.savePassOut=savePassOut;
-async function signInStudent(id){try{await rest('/rest/v1/pass_outs?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({signed_in_at:new Date().toISOString(),status:'returned'})});toast('Signed in','ok');nav('passouts');}catch(e){toast(e.message,'bad');}}
-window.signInStudent=signInStudent;
-async function delPassOut(id){if(!confirm('Delete?'))return;try{await rest('/rest/v1/pass_outs?id=eq.'+id,{method:'DELETE'});nav('passouts');}catch(e){toast(e.message,'bad');}}
-window.delPassOut=delPassOut;
-
-/* ============================================================
    DEBTORS
    ============================================================ */
 async function pageDebtors(root){
@@ -1609,9 +1686,9 @@ async function pageDebtors(root){
   const total=debtors.reduce((s,x)=>s+x.owed,0);
   window._debtorsCache={debtors,classes};
   root.innerHTML='<div class="page-head"><div><h1>📋 Debtors</h1><div class="sub">'+debtors.length+' · '+fmtUGX(total)+'</div></div><button class="btn ghost" onclick="printDebtors()">🖨️</button></div>'+
-  '<div class="card">'+(debtors.length?'<div class="table-wrap"><table><thead><tr><th>#</th><th>Adm</th><th>Name</th><th>Class</th><th style="text-align:right">Owed</th><th></th></tr></thead><tbody>'+
+  '<div class="card">'+(debtors.length?'<div class="table-wrap"><table><thead><tr><th>#</th><th>Adm</th><th>Name</th><th>Class</th><th>Parent</th><th style="text-align:right">Owed</th><th></th></tr></thead><tbody>'+
   debtors.map((s,i)=>{const cls=classes.find(c=>c.id===s.class_id);
-    return '<tr><td>'+(i+1)+'</td><td><b>'+esc(s.admission_no)+'</b></td><td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b></td><td><span class="badge info">'+esc(cls?cls.name:'—')+'</span></td><td style="text-align:right"><span class="badge bad">'+s.owed.toLocaleString()+'</span></td><td><button class="btn sm" onclick="recordPayment(\''+s.id+'\')">💵</button></td></tr>';
+    return '<tr><td>'+(i+1)+'</td><td><b>'+esc(s.admission_no)+'</b></td><td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b></td><td><span class="badge info">'+esc(cls?cls.name:'—')+'</span></td><td>'+esc(s.parent_name||'—')+'</td><td style="text-align:right"><span class="badge bad">'+s.owed.toLocaleString()+'</span></td><td><button class="btn sm" onclick="recordPayment(\''+s.id+'\')">💵</button></td></tr>';
   }).join('')+'</tbody></table></div>':'<div class="empty">🎉 No debtors!</div>')+'</div>';
 }
 window.pageDebtors=pageDebtors;
@@ -1875,7 +1952,7 @@ async function pageSettings(root){
   '<div class="actions"><button class="btn" onclick="saveSchoolInfo()">💾 Save</button></div></div>'+
   '<div class="card"><h3>🔐 Fingerprint Unlock (Admin)</h3>'+
   (fpAvail?(fpEnabled?'<div class="alert-item ok"><span class="ico">✅</span><div class="txt"><b>Enabled on this device</b></div></div><div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn ghost" onclick="enableLoginFingerprint()">🔄 Re-register</button><button class="btn danger" onclick="disableLoginFingerprint()">Disable</button></div>':'<div class="muted" style="margin-bottom:12px">Sign in with your fingerprint instead of typing a password.</div><button class="btn ok block" onclick="enableLoginFingerprint()">🔐 Enable Fingerprint Unlock</button>')
-    :'<div class="alert-item" style="border-left-color:#64748b"><span class="ico">ℹ️</span><div class="txt"><b>Not available</b><span>Device has no fingerprint/Face ID sensor</span></div></div>')+'</div>'+
+    :'<div class="alert-item" style="border-left-color:#64748b"><span class="ico">ℹ️</span><div class="txt"><b>Not available</b><span>Device has no fingerprint sensor</span></div></div>')+'</div>'+
   '<div class="card"><h3>My Account</h3><div><label>Name</label><input value="'+esc(_profile.full_name||'')+'" disabled></div><div style="margin-top:12px"><label>Email</label><input value="'+esc(SESSION.email||'')+'" disabled></div><div style="margin-top:12px"><label>Role</label><input value="'+esc(_role||'')+'" disabled></div></div>';
 }
 window.pageSettings=pageSettings;
