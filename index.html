@@ -88,6 +88,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .btn.danger{background:var(--bad)}
 .btn.ok{background:var(--ok)}
 .btn.gold{background:var(--gold)}
+.btn.wa{background:#25D366;color:#fff}
 .btn.sm{padding:6px 12px;font-size:11.5px;border-radius:999px}
 .btn.block{width:100%}
 .table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--line);background:#fff;margin-bottom:6px}
@@ -203,7 +204,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 
 <script>
 /* ============================================================
-   EUDES SCHOOL MANAGEMENT — Complete Single File (v2)
+   EUDES SCHOOL MANAGEMENT — Complete Single File (v3)
    ============================================================ */
 const SUPA_URL='https://wabeempxckdtjvrkzhpv.supabase.co';
 const SUPA_KEY='sb_publishable_n0uAm0Gcq7qR2dJM4jMZGQ_wiV__Cfp';
@@ -250,7 +251,6 @@ let _examsCache=null,_marksClass=null,_marksExam=null,_subjClass=null;
 let _repClass=null,_repStage=3,_repPupil='';
 let _importMatches=null,_importClasses=null;
 
-/* ---------- UI HELPERS ---------- */
 function toast(msg,type){const el=document.createElement('div');el.className='toast'+(type==='bad'?' bad':(type==='ok'?' ok':''));el.textContent=msg;document.getElementById('toastRoot').appendChild(el);setTimeout(()=>el.remove(),3500);}
 function modal(html){const root=document.getElementById('modalRoot');root.innerHTML='<div class="modal-bg"><div class="modal">'+html+'</div></div>';root.querySelector('.modal-bg').addEventListener('click',e=>{if(e.target.classList.contains('modal-bg'))closeModal();});}
 function closeModal(){document.getElementById('modalRoot').innerHTML='';}
@@ -307,6 +307,9 @@ function printHTML(title,bodyHTML){
   w.document.close();
 }
 window.printHTML=printHTML;
+
+function telLink(num){if(!num)return '';const clean=String(num).replace(/[^0-9+]/g,'');return clean;}
+function waLink(num){if(!num)return '';let clean=String(num).replace(/[^0-9]/g,'');if(clean.startsWith('0'))clean='256'+clean.slice(1);return clean;}
 
 /* ============================================================
    AUTH
@@ -441,7 +444,6 @@ function clearClassesCache(){_classesCache=null;}
 window.clearClassesCache=clearClassesCache;
 window.loadClasses=loadClasses;
 
-/* ---------- SUBJECTS PER CLASS (joins class_subjects ⋈ subjects) ---------- */
 async function loadSubjectsForClass(classId){
   if(!classId)return [];
   const rows=await rest('/rest/v1/class_subjects?school_id=eq.'+_schoolId+'&class_id=eq.'+classId+'&select=subject_id,staff_id,subjects:subject_id(id,code,name,is_compulsory)')||[];
@@ -459,9 +461,6 @@ async function loadSubjectsForClass(classId){
 }
 window.loadSubjectsForClass=loadSubjectsForClass;
 
-/* ============================================================
-   CLASS NAME ALIASES
-   ============================================================ */
 const CLASS_ALIASES = {
   'baby':'Baby Class','baby class':'Baby Class','nursery baby':'Baby Class','babyclass':'Baby Class',
   'middle':'Middle Class','middle class':'Middle Class','middleclass':'Middle Class',
@@ -497,9 +496,6 @@ function parseMoney(v){
 window.normalizeClassName=normalizeClassName;
 window.parseMoney=parseMoney;
 
-/* ============================================================
-   ROUTES
-   ============================================================ */
 const ROUTES={
   dashboard:{label:'Dashboard',icon:'📊',render:pageDashboard,bottom:true},
   students:{label:'Students',icon:'🎓',render:pageStudents,bottom:true},
@@ -550,11 +546,11 @@ async function pageDashboard(root){
   const cy=getCurrentYear(),ct=getCurrentTerm();
   const today=new Date().toISOString().slice(0,10);
   const [students,classes,payments,att,expenses,uniformSales,passOuts,staff]=await Promise.all([
-    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,status,residence,functional_fee,functional_fee_status,functional_fee_paid,balance_bf,actual_fee,holiday_fee,academics_fee,transport_fee,deposit_1,deposit_2,deposit_3').catch(()=>[]),
+    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,status,residence,balance_bf,actual_fee,holiday_fee,academics_fee,functional_fee,transport_fee,deposit_1,deposit_2,deposit_3').catch(()=>[]),
     rest('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=id,name,sort_order&order=sort_order').catch(()=>[]),
     rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=student_id,amount,payment_for,paid_at').catch(()=>[]),
     rest('/rest/v1/attendance?school_id=eq.'+_schoolId+'&date=eq.'+today+'&select=status').catch(()=>[]),
-    rest('/rest/v1/expenses?school_id=eq.'+_schoolId+'&academic_year=eq.'+cy+'&term=eq.'+ct+'&select=amount').catch(()=>[]),
+    rest('/rest/v1/expenses?school_id=eq.'+_schoolId+'&year=eq.'+cy+'&term=eq.'+ct+'&select=amount').catch(()=>rest('/rest/v1/expenses?school_id=eq.'+_schoolId+'&select=amount').catch(()=>[])),
     rest('/rest/v1/uniform_sales?school_id=eq.'+_schoolId+'&select=total_amount,sold_at').catch(()=>[]),
     rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&status=eq.out&select=id').catch(()=>[]),
     rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=id').catch(()=>[])
@@ -1340,7 +1336,7 @@ async function setAtt(studentId,classId,status){
   const date=window._attDate;
   try{
     await rest('/rest/v1/attendance?school_id=eq.'+_schoolId+'&student_id=eq.'+studentId+'&date=eq.'+date,{method:'DELETE'});
-    await rest('/rest/v1/attendance',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,student_id:studentId,class_id:classId,date,status,academic_year:getCurrentYear(),term:getCurrentTerm()})});
+    await rest('/rest/v1/attendance',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,student_id:studentId,class_id:classId,date,status,year:getCurrentYear(),term:getCurrentTerm()})});
     loadAttTable();
   }catch(e){toast(e.message,'bad');}
 }
@@ -1359,7 +1355,7 @@ async function markAllPresent(){
 window.markAllPresent=markAllPresent;
 
 /* ============================================================
-   MARKS  (uses class_subjects ⋈ subjects)
+   MARKS
    ============================================================ */
 async function pageMarks(root){
   clearClassesCache();
@@ -1371,7 +1367,7 @@ async function pageMarks(root){
     if(!_examsCache.length){
       const defaults=[{name:'Beginning of Term',stage:1},{name:'Mid Term',stage:2},{name:'End of Term',stage:3}];
       for(const d of defaults){
-        await rest('/rest/v1/exams',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,name:d.name,stage:d.stage,academic_year:cy,term:ct})});
+        await rest('/rest/v1/exams',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,name:d.name,stage:d.stage,year:cy,term:ct})});
       }
       _examsCache=await rest('/rest/v1/exams?school_id=eq.'+_schoolId+'&select=*&order=stage')||[];
     }
@@ -1464,7 +1460,7 @@ async function setMark(inputEl){
 window.setMark=setMark;
 
 /* ============================================================
-   REPORTS (uses class_subjects ⋈ subjects)
+   REPORTS
    ============================================================ */
 async function pageReports(root){
   clearClassesCache();
@@ -1795,7 +1791,7 @@ async function delClass(id){
 window.delClass=delClass;
 
 /* ============================================================
-   SUBJECTS (junction table view)
+   SUBJECTS
    ============================================================ */
 async function pageSubjects(root){
   clearClassesCache();
@@ -1803,7 +1799,6 @@ async function pageSubjects(root){
   if(!_subjClass&&classes[0])_subjClass=classes[0].id;
   const classObj=classes.find(c=>c.id===_subjClass);
   const subjects=await loadSubjectsForClass(_subjClass);
-  const allSubjects=await rest('/rest/v1/subjects?school_id=eq.'+_schoolId+'&select=*&order=code')||[];
   const classOpts=classes.map(c=>'<option value="'+c.id+'"'+(_subjClass===c.id?' selected':'')+'>'+esc(c.name)+'</option>').join('');
   let rows='';
   if(subjects.length){
@@ -1822,8 +1817,7 @@ window.pageSubjects=pageSubjects;
 
 function addSubject(){
   modal('<h3>Add Subject to Class</h3>'+
-    '<p class="muted">This adds an existing subject from the master list to the currently selected class.</p>'+
-    '<div><label>Subject Code *</label><input id="s_code" placeholder="e.g. ENG" style="text-transform:uppercase"></div>'+
+    '<div><label>Subject Code *</label><input id="s_code" placeholder="e.g. ENG"></div>'+
     '<div style="margin-top:12px"><label>Subject Name *</label><input id="s_name" placeholder="e.g. English"></div>'+
     '<div style="margin-top:12px"><label>Include in grading?</label><select id="s_graded"><option value="true">Yes</option><option value="false">No (recorded only)</option></select></div>'+
     '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveSubject()">Save</button></div>');
@@ -1836,7 +1830,6 @@ async function saveSubject(){
   const graded=document.getElementById('s_graded').value==='true';
   if(!code||!name){toast('Fill code and name','bad');return;}
   try{
-    // 1. Find or create subject in master list
     let subjectId=null;
     const existing=await rest('/rest/v1/subjects?school_id=eq.'+_schoolId+'&code=eq.'+encodeURIComponent(code)+'&select=id');
     if(existing&&existing.length){subjectId=existing[0].id;}
@@ -1845,7 +1838,6 @@ async function saveSubject(){
       subjectId=(created&&created[0])?created[0].id:null;
     }
     if(!subjectId){toast('Failed to create subject','bad');return;}
-    // 2. Link subject to class
     await rest('/rest/v1/class_subjects',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,class_id:_subjClass,subject_id:subjectId})});
     toast('Added','ok');closeModal();nav('subjects');
   }catch(e){toast(e.message,'bad');}
@@ -1868,7 +1860,7 @@ async function pageExams(root){
   _examsCache=await rest('/rest/v1/exams?school_id=eq.'+_schoolId+'&select=*&order=stage')||[];
   let rows='';
   _examsCache.forEach(e=>{
-    rows+='<tr><td><b>'+esc(e.name)+'</b></td><td>Stage '+e.stage+'</td><td>'+e.academic_year+'</td><td>'+e.term+'</td><td><button class="btn sm danger" onclick="delExam(\''+e.id+'\')">✕</button></td></tr>';
+    rows+='<tr><td><b>'+esc(e.name)+'</b></td><td>Stage '+e.stage+'</td><td>'+(e.year||e.academic_year||'')+'</td><td>'+e.term+'</td><td><button class="btn sm danger" onclick="delExam(\''+e.id+'\')">✕</button></td></tr>';
   });
   root.innerHTML=
   '<div class="page-head"><div><h1>📝 Exams</h1><div class="sub">'+_examsCache.length+' exams</div></div><button class="btn" onclick="addExam()">＋ Add Exam</button></div>'+
@@ -1888,7 +1880,7 @@ async function saveExam(){
   const name=document.getElementById('e_name').value.trim();
   const stage=parseInt(document.getElementById('e_stage').value);
   if(!name){toast('Enter name','bad');return;}
-  try{await rest('/rest/v1/exams',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,name,stage,academic_year:getCurrentYear(),term:getCurrentTerm()})});toast('Added','ok');closeModal();_examsCache=null;nav('exams');}
+  try{await rest('/rest/v1/exams',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,name,stage,year:getCurrentYear(),term:getCurrentTerm()})});toast('Added','ok');closeModal();_examsCache=null;nav('exams');}
   catch(e){toast(e.message,'bad');}
 }
 window.saveExam=saveExam;
@@ -1918,16 +1910,16 @@ async function pageDebtors(root){
   const totalOwed=debtors.reduce((t,d)=>t+d.bal,0);
   let rows='';
   debtors.forEach(d=>{
-    rows+='<tr><td>'+esc(d.s.admission_no)+'</td><td><b>'+esc(d.s.first_name+' '+(d.s.last_name||''))+'</b></td><td>'+esc(d.cls?d.cls.name:'—')+'</td><td>'+esc(d.s.parent_name||'—')+'</td><td style="text-align:right;font-weight:700;color:#b91c1c">'+fmtNum(d.bal)+'</td><td><button class="btn sm" onclick="recordPayment(\''+d.s.id+'\')">💵 Pay</button></td></tr>';
+    rows+='<tr><td>'+esc(d.s.admission_no)+'</td><td><b>'+esc(d.s.first_name+' '+(d.s.last_name||''))+'</b></td><td>'+esc(d.cls?d.cls.name:'—')+'</td><td>'+esc(d.s.parent_name||'—')+'</td><td>'+esc(d.s.parent_contact||'—')+'</td><td style="text-align:right;font-weight:700;color:#b91c1c">'+fmtNum(d.bal)+'</td><td><button class="btn sm" onclick="recordPayment(\''+d.s.id+'\')">💵</button></td></tr>';
   });
   root.innerHTML=
   '<div class="page-head"><div><h1>👥 Debtors</h1><div class="sub">'+debtors.length+' pupils · '+fmtUGX(totalOwed)+' outstanding</div></div><button class="btn ghost" onclick="printDebtors()">🖨️ Print</button></div>'+
-  '<div class="card"><div class="table-wrap"><table><thead><tr><th>Adm</th><th>Name</th><th>Class</th><th>Parent</th><th style="text-align:right">Balance</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+  '<div class="card"><div class="table-wrap"><table><thead><tr><th>Adm</th><th>Name</th><th>Class</th><th>Parent</th><th>Contact</th><th style="text-align:right">Balance</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 window.pageDebtors=pageDebtors;
 
 function printDebtors(){
-  const rows=(window._allStudents||[]).map((s,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(s.first_name+' '+(s.last_name||''))+'</td><td>'+esc(s.admission_no)+'</td><td>'+(s.parent_name||'')+'</td></tr>').join('');
+  const rows=(window._allStudents||[]).map((s,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(s.first_name+' '+(s.last_name||''))+'</td><td>'+esc(s.admission_no)+'</td><td>'+(s.parent_name||'')+'</td><td>'+(s.parent_contact||'')+'</td></tr>').join('');
   printHTML('Debtors',rows?'<table>'+rows+'</table>':'<p>No debtors</p>');
 }
 window.printDebtors=printDebtors;
@@ -1937,7 +1929,7 @@ window.printDebtors=printDebtors;
    ============================================================ */
 async function pagePassOuts(root){
   const [students,passes]=await Promise.all([
-    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=id,first_name,last_name,admission_no,class_id'),
+    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=id,first_name,last_name,admission_no,class_id,parent_contact'),
     rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&select=*&order=signed_out_at.desc&limit=100')
   ]);
   let rows='';
@@ -1978,38 +1970,79 @@ async function returnPass(id){
 window.returnPass=returnPass;
 
 /* ============================================================
-   STAFF
+   STAFF  (uses `telephone` column)
    ============================================================ */
 async function pageStaff(root){
   const staff=await rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=*&order=full_name')||[];
   let rows='';
   staff.forEach(s=>{
-    rows+='<tr><td><b>'+esc(s.full_name)+'</b></td><td>'+esc(s.role||'')+'</td><td>'+esc(s.phone||'')+'</td><td><button class="btn sm danger" onclick="delStaff(\''+s.id+'\')">✕</button></td></tr>';
+    const tel=s.telephone||s.phone||s.contact||'';
+    const wa=waLink(tel);
+    const telClean=telLink(tel);
+    let contactCell='—';
+    if(tel){
+      contactCell='<div style="font-weight:600">'+esc(tel)+'</div>';
+      contactCell+='<div style="display:flex;gap:4px;margin-top:4px">';
+      if(wa)contactCell+='<a href="https://wa.me/'+wa+'" target="_blank" class="btn sm wa" style="text-decoration:none">💬 WhatsApp</a>';
+      if(telClean)contactCell+='<a href="tel:'+telClean+'" class="btn sm ghost" style="text-decoration:none">📞 Call</a>';
+      contactCell+='</div>';
+    }
+    rows+='<tr>'+
+      '<td><b>'+esc(s.full_name)+'</b></td>'+
+      '<td>'+esc(s.role||'')+'</td>'+
+      '<td>'+contactCell+'</td>'+
+      '<td>'+esc(s.email||'—')+'</td>'+
+      '<td style="text-align:right;white-space:nowrap">'+
+      '<button class="btn sm ghost" onclick="editStaff(\''+s.id+'\')">✏️</button> '+
+      '<button class="btn sm danger" onclick="delStaff(\''+s.id+'\')">✕</button>'+
+      '</td></tr>';
   });
   root.innerHTML=
   '<div class="page-head"><div><h1>👨‍🏫 Staff</h1><div class="sub">'+staff.length+' members</div></div><button class="btn" onclick="addStaff()">＋ Add Staff</button></div>'+
-  '<div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Phone</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+  '<div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Contact</th><th>Email</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 window.pageStaff=pageStaff;
 
-function addStaff(){
-  modal('<h3>Add Staff</h3>'+
-    '<div><label>Full Name *</label><input id="sf_name"></div>'+
-    '<div style="margin-top:12px"><label>Role</label><input id="sf_role" placeholder="Teacher"></div>'+
-    '<div style="margin-top:12px"><label>Phone</label><input id="sf_phone"></div>'+
-    '<div style="margin-top:12px"><label>Email</label><input id="sf_email" type="email"></div>'+
-    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveStaff()">Save</button></div>');
-}
+function addStaff(){openStaffModal(null);}
 window.addStaff=addStaff;
 
-async function saveStaff(){
-  const full_name=document.getElementById('sf_name').value.trim();
-  const role=document.getElementById('sf_role').value.trim();
-  const phone=document.getElementById('sf_phone').value.trim();
-  const email=document.getElementById('sf_email').value.trim();
-  if(!full_name){toast('Enter name','bad');return;}
-  try{await rest('/rest/v1/staff',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,full_name,role,phone,email})});toast('Added','ok');closeModal();nav('staff');}
-  catch(e){toast(e.message,'bad');}
+async function editStaff(id){
+  const staff=await rest('/rest/v1/staff?id=eq.'+id+'&select=*');
+  openStaffModal(staff&&staff[0]);
+}
+window.editStaff=editStaff;
+
+async function openStaffModal(existing){
+  const s=existing||{};
+  modal('<h3>'+(existing?'Edit Staff':'Add Staff')+'</h3>'+
+    '<div><label>Full Name *</label><input id="sf_name" value="'+esc(s.full_name||'')+'"></div>'+
+    '<div class="grid grid-2" style="margin-top:12px">'+
+    '<div><label>Role</label><input id="sf_role" placeholder="Teacher" value="'+esc(s.role||'')+'"></div>'+
+    '<div><label>Telephone</label><input id="sf_tel" placeholder="+256..." value="'+esc(s.telephone||'')+'"></div>'+
+    '</div>'+
+    '<div class="grid grid-2" style="margin-top:12px">'+
+    '<div><label>Email</label><input id="sf_email" type="email" value="'+esc(s.email||'')+'"></div>'+
+    '<div><label>Address</label><input id="sf_addr" value="'+esc(s.address||'')+'"></div>'+
+    '</div>'+
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveStaff(\''+(existing?existing.id:'')+'\')">Save</button></div>');
+}
+window.openStaffModal=openStaffModal;
+
+async function saveStaff(id){
+  const body={
+    school_id:_schoolId,
+    full_name:document.getElementById('sf_name').value.trim(),
+    role:document.getElementById('sf_role').value.trim()||null,
+    telephone:document.getElementById('sf_tel').value.trim()||null,
+    email:document.getElementById('sf_email').value.trim()||null,
+    address:document.getElementById('sf_addr').value.trim()||null
+  };
+  if(!body.full_name){toast('Enter name','bad');return;}
+  try{
+    if(id)await rest('/rest/v1/staff?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify(body)});
+    else await rest('/rest/v1/staff',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify(body)});
+    toast('Saved','ok');closeModal();nav('staff');
+  }catch(e){toast(e.message,'bad');}
 }
 window.saveStaff=saveStaff;
 
@@ -2045,12 +2078,12 @@ async function loadStaffAtt(){
   let rows='';
   staff.forEach(s=>{
     const st=map[s.id]||'';
-    rows+='<tr><td><b>'+esc(s.full_name)+'</b></td><td>'+esc(s.role||'')+'</td><td style="text-align:center">'+
+    rows+='<tr><td><b>'+esc(s.full_name)+'</b></td><td>'+esc(s.role||'')+'</td><td>'+esc(s.telephone||'')+'</td><td style="text-align:center">'+
     '<button class="btn sm '+(st==='present'?'ok':'ghost')+'" onclick="setStaffAtt(\''+s.id+'\',\''+date+'\',\'present\')">✓ Present</button> '+
     '<button class="btn sm '+(st==='absent'?'danger':'ghost')+'" onclick="setStaffAtt(\''+s.id+'\',\''+date+'\',\'absent\')">✗ Absent</button>'+
     '</td></tr>';
   });
-  c.innerHTML='<div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th style="text-align:center">Status</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+  c.innerHTML='<div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Telephone</th><th style="text-align:center">Status</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 window.loadStaffAtt=loadStaffAtt;
 
@@ -2102,7 +2135,8 @@ window.saveUniform=saveUniform;
    ============================================================ */
 async function pageExpenses(root){
   const cy=getCurrentYear(),ct=getCurrentTerm();
-  const rows=await rest('/rest/v1/expenses?school_id=eq.'+_schoolId+'&academic_year=eq.'+cy+'&term=eq.'+ct+'&select=*&order=spent_at.desc')||[];
+  let rows=await rest('/rest/v1/expenses?school_id=eq.'+_schoolId+'&select=*&order=spent_at.desc').catch(()=>[]);
+  rows=rows.filter(e=>(e.year===cy||e.academic_year===cy)&&e.term===ct);
   const total=rows.reduce((s,x)=>s+Number(x.amount),0);
   let body='';
   rows.forEach(e=>{
@@ -2128,8 +2162,12 @@ async function saveExpense(){
   const amount=Number(document.getElementById('x_a').value);
   const category=document.getElementById('x_c').value.trim();
   if(!description||!amount){toast('Fill required','bad');return;}
-  try{await rest('/rest/v1/expenses',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,description,amount,category,academic_year:getCurrentYear(),term:getCurrentTerm()})});toast('Saved','ok');closeModal();nav('expenses');}
-  catch(e){toast(e.message,'bad');}
+  const body={school_id:_schoolId,description,amount,category,year:getCurrentYear(),term:getCurrentTerm()};
+  try{
+    try{await rest('/rest/v1/expenses',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify(body)});}
+    catch(e){body.academic_year=body.year;delete body.year;await rest('/rest/v1/expenses',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify(body)});}
+    toast('Saved','ok');closeModal();nav('expenses');
+  }catch(e){toast(e.message,'bad');}
 }
 window.saveExpense=saveExpense;
 
@@ -2140,12 +2178,13 @@ async function pageMessages(root){
   const msgs=await rest('/rest/v1/messages?school_id=eq.'+_schoolId+'&select=*&order=sent_at.desc&limit=100')||[];
   let rows='';
   msgs.forEach(m=>{
-    rows+='<tr><td>'+fmtDate(m.sent_at)+'</td><td>'+esc(m.parent_contact||'—')+'</td><td>'+esc(m.body)+'</td></tr>';
+    const wa=waLink(m.parent_contact);
+    rows+='<tr><td>'+fmtDate(m.sent_at)+'</td><td>'+esc(m.parent_contact||'—')+'</td><td>'+esc(m.body)+'</td><td>'+(wa?'<a href="https://wa.me/'+wa+'" target="_blank" class="btn sm wa" style="text-decoration:none">💬 Resend</a>':'')+'</td></tr>';
   });
   root.innerHTML=
   '<div class="page-head"><h1>💬 Messages</h1><div class="sub">'+msgs.length+' messages</div></div>'+
   '<div class="card"><button class="btn" onclick="addMessage()">＋ New Message</button></div>'+
-  '<div class="card"><div class="table-wrap"><table><thead><tr><th>Date</th><th>To</th><th>Body</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+  '<div class="card"><div class="table-wrap"><table><thead><tr><th>Date</th><th>To</th><th>Body</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 window.pageMessages=pageMessages;
 
