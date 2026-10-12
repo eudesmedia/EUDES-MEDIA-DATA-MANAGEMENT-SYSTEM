@@ -156,10 +156,11 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .rc-sign div{flex:1;min-width:150px}
 .rc-multi th{background:var(--navy);color:#fff;font-size:11px;text-transform:uppercase;text-align:center;padding:8px 6px}
 .rc-multi th .sub{font-size:9px;font-weight:400;opacity:.75;text-transform:none;display:block;margin-top:2px}
-.rc-multi td{padding:8px 10px;font-size:12.5px;border:1px solid #e2e8f0}
+.rc-multi td{padding:8px 10px;font-size:12.5px;border:1px solid #e2e8f0;text-align:center}
+.rc-multi td.subject{text-align:left;font-weight:600}
 .rc-multi tfoot td{background:#f1f5f9;font-weight:700;border-top:2px solid #0a2540}
+.rc-multi tr.no-grade td{color:#94a3b8;font-style:italic}
 .report-preview{background:#fff;padding:24px;border:1px solid var(--line);border-radius:12px;margin-top:14px}
-.receipt{background:#fff;border:1px dashed #cbd5e1;border-radius:12px;padding:20px;font-family:monospace;font-size:12.5px;line-height:1.7;max-width:420px;margin:0 auto}
 @media print{
   body{background:#fff}
   .no-print{display:none!important}
@@ -247,10 +248,57 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 <script>
 /* ============================================================
    EUDES SCHOOL MANAGEMENT — PART 1
+   Core helpers, auth, routing, class/subject structure
    ============================================================ */
 const SUPA_URL='https://wabeempxckdtjvrkzhpv.supabase.co';
 const SUPA_KEY='sb_publishable_n0uAm0Gcq7qR2dJM4jMZGQ_wiV__Cfp';
 const FUNC_FEE_DEFAULT=70000;
+
+/* ============================================================
+   BUILT-IN CLASSES AND SUBJECTS (Baby to P.7)
+   ============================================================ */
+const BUILTIN_CLASSES=[
+  {name:'Baby Class',   level:'pre'},
+  {name:'Middle Class', level:'pre'},
+  {name:'Top Class',    level:'pre'},
+  {name:'Primary 1',    level:'lower'},
+  {name:'Primary 2',    level:'lower'},
+  {name:'Primary 3',    level:'lower'},
+  {name:'Primary 4',    level:'upper'},
+  {name:'Primary 5',    level:'upper'},
+  {name:'Primary 6',    level:'upper'},
+  {name:'Primary 7',    level:'upper'}
+];
+
+const BUILTIN_SUBJECTS=[
+  // Pre-primary
+  {code:'DRAW',name:'Drawing',level:'pre',graded:true},
+  {code:'MUS',name:'Music',level:'pre',graded:true},
+  {code:'NUM',name:'Number Work',level:'pre',graded:true},
+  {code:'LANG',name:'Language Development',level:'pre',graded:true},
+  {code:'READ',name:'Reading',level:'pre',graded:true},
+  {code:'WRIT',name:'Writing',level:'pre',graded:true,classes:['Top Class']},
+  // Lower primary P.1 - P.3
+  {code:'ENG',name:'English',level:'lower',graded:true},
+  {code:'LIT1',name:'Literacy 1',level:'lower',graded:true},
+  {code:'LIT2',name:'Literacy 2',level:'lower',graded:true},
+  {code:'RE',name:'Religious Education',level:'lower',graded:true},
+  // Upper primary P.4 - P.7
+  {code:'ENG-U',name:'English',level:'upper',graded:true},
+  {code:'MATH',name:'Mathematics',level:'upper',graded:true},
+  {code:'SCI',name:'Science',level:'upper',graded:true},
+  {code:'SST',name:'Social Studies',level:'upper',graded:true},
+  // Computer only for P.5 and P.6 (not graded)
+  {code:'COMP',name:'Computer',level:'upper',graded:false,classes:['Primary 5','Primary 6']}
+];
+
+/* Academic years: current year up to 2050 */
+function getAcademicYears(){
+  const cy=new Date().getFullYear();
+  const years=[];
+  for(let y=cy;y<=2050;y++)years.push(y);
+  return years;
+}
 
 function getCurrentYear(){return parseInt(safeStorage.getItem('eudes_year'))||new Date().getFullYear();}
 function getCurrentTerm(){return parseInt(safeStorage.getItem('eudes_term'))||1;}
@@ -400,11 +448,11 @@ async function boot(){
   catch(e){document.getElementById('loginErr').textContent='Profile error';document.getElementById('loginErr').style.display='block';return;}
   if(!_profile){document.getElementById('loginErr').textContent='Profile not found.';document.getElementById('loginErr').style.display='block';return;}
   _schoolId=_profile.school_id;_role=_profile.role;
-  if(!_schoolId){
+  if(!_schoolId||_schoolId==='undefined'||_schoolId==='null'){
     switchTab('register');
     document.getElementById('regErr').textContent='Account not linked to a school.';
     document.getElementById('regErr').style.display='block';
-    ['regName','regEmail','regPass'].forEach(id=>document.getElementById(id).parentElement.style.display='none');
+    ['regName','regEmail','regPass'].forEach(id=>{const el=document.getElementById(id);if(el&&el.parentElement)el.parentElement.style.display='none';});
     document.getElementById('regBtn').textContent='Create School';
     document.getElementById('regBtn').onclick=createSchoolOnly;
     return;
@@ -417,12 +465,60 @@ async function boot(){
   }
   document.getElementById('authScreen').style.display='none';
   document.getElementById('app').style.display='block';
+  await ensureClassesAndSubjects();
   populateTermSelector();renderHeader();renderAuthLogo();renderNav();renderBottomBar();tickClock();
   setInterval(tickClock,30000);
   showFingerprintButtonIfReady();
   await nav('dashboard');
 }
 window.boot=boot;
+
+/* Ensure the 10 classes and their subjects exist in the DB (once per school) */
+async function ensureClassesAndSubjects(){
+  try{
+    const existing=await rest('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=id,name');
+    const exNames=(existing||[]).map(c=>c.name);
+    const toCreate=BUILTIN_CLASSES.filter(c=>exNames.indexOf(c.name)===-1);
+    for(let i=0;i<toCreate.length;i++){
+      const c=toCreate[i];
+      await rest('/rest/v1/classes',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,name:c.name,sort_order:i})});
+    }
+    const classes=await rest('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=id,name');
+    _classesCache=classes||[];
+    const clsByName={};_classesCache.forEach(c=>clsByName[c.name]=c.id);
+
+    const existingSub=await rest('/rest/v1/subjects?school_id=eq.'+_schoolId+'&select=id,code').catch(()=>[]);
+    const exCodes=(existingSub||[]).map(s=>s.code);
+
+    for(let i=0;i<BUILTIN_SUBJECTS.length;i++){
+      const s=BUILTIN_SUBJECTS[i];
+      if(exCodes.indexOf(s.code)!==-1)continue;
+      let classIds=null;
+      if(s.classes){
+        classIds=s.classes.map(n=>clsByName[n]).filter(Boolean);
+      }else{
+        const matching=_classesCache.filter(c=>{
+          if(s.level==='pre')return c.name==='Baby Class'||c.name==='Middle Class'||c.name==='Top Class';
+          if(s.level==='lower')return c.name==='Primary 1'||c.name==='Primary 2'||c.name==='Primary 3';
+          if(s.level==='upper')return c.name==='Primary 4'||c.name==='Primary 5'||c.name==='Primary 6'||c.name==='Primary 7';
+          return false;
+        });
+        classIds=matching.map(c=>c.id);
+      }
+      try{
+        await rest('/rest/v1/subjects',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({
+          school_id:_schoolId,
+          code:s.code,
+          name:s.name,
+          is_compulsory:s.graded,
+          level:s.level,
+          class_ids:classIds
+        })});
+      }catch(e){console.warn('Subject create skip:',s.code,e.message);}
+    }
+  }catch(e){console.warn('ensureClassesAndSubjects:',e.message);}
+}
+window.ensureClassesAndSubjects=ensureClassesAndSubjects;
 
 function renderAuthLogo(){const el=document.getElementById('authLogo');if(!el)return;const src=_school&&(_school.logo_data||_school.logo_url);if(src){el.innerHTML='<img src="'+esc(src)+'">';el.style.background='#fff';}else{el.innerHTML='E';el.style.background='';}}
 function tickClock(){const now=new Date();const d=document.getElementById('headerDate');const t=document.getElementById('headerTime');if(d)d.textContent='📅 '+fmtLongDate(now);if(t)t.textContent='🕐 '+now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+' (EAT)';}
@@ -466,9 +562,9 @@ window.renderHeader=renderHeader;
 
 function populateTermSelector(){
   const ySel=document.getElementById('termYearSelect');const tSel=document.getElementById('termTermSelect');if(!ySel||!tSel)return;
-  const cy=getCurrentYear(),ct=getCurrentTerm();const currentYear=new Date().getFullYear();
-  const years=[];for(let y=currentYear-2;y<=currentYear+1;y++)years.push(y);
-  if(!years.includes(cy))years.push(cy);years.sort((a,b)=>b-a);
+  const cy=getCurrentYear(),ct=getCurrentTerm();
+  const years=getAcademicYears();
+  if(years.indexOf(cy)===-1)years.unshift(cy);
   ySel.innerHTML=years.map(y=>'<option value="'+y+'"'+(y===cy?' selected':'')+'>'+y+'</option>').join('');
   tSel.value=ct;
 }
@@ -477,6 +573,16 @@ window.changePeriod=changePeriod;
 
 async function loadClasses(){if(_classesCache)return _classesCache;const d=await rest('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=id,name&order=sort_order');_classesCache=d||[];return _classesCache;}
 async function loadStaff(){if(_staffCache)return _staffCache;try{_staffCache=await rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=id,full_name,role&order=full_name')||[];}catch(e){_staffCache=[];}return _staffCache;}
+
+/* Subject helpers - FILTER subjects by class_id via class_ids array */
+async function loadSubjectsForClass(classId){
+  const all=await rest('/rest/v1/subjects?school_id=eq.'+_schoolId+'&select=*&order=code').catch(()=>[]);
+  return (all||[]).filter(s=>{
+    if(!s.class_ids||!s.class_ids.length)return false;
+    return s.class_ids.indexOf(classId)!==-1;
+  });
+}
+window.loadSubjectsForClass=loadSubjectsForClass;
 
 /* ============================================================
    SHARED HELPERS
@@ -646,7 +752,7 @@ async function fpPupilAttendance(){
   const today=new Date().toISOString().slice(0,10);
   try{
     await rest('/rest/v1/attendance?school_id=eq.'+_schoolId+'&student_id=eq.'+st.id+'&date=eq.'+today,{method:'DELETE'});
-    await rest('/rest/v1/attendance',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,student_id:st.id,class_id:st.class_id,status:'present',date:today,academic_year:getCurrentYear(),term:getCurrentTerm()})});
+    await rest('/rest/v1/attendance',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,student_id:st.id,class_id:st.class_id,status:'present',date:today,academic_year:getCurrentYear(),term:getCurrentTerm()})});
     document.getElementById('fpHero').innerHTML='<div class="icon">✅</div><h3 style="margin-bottom:6px">'+esc(st.first_name+' '+(st.last_name||''))+'</h3><div class="muted">'+esc(st.admission_no)+' · Present · '+new Date().toLocaleTimeString()+'</div>';
     el.innerHTML='<button class="btn ok block" onclick="closeModal();fpPupilAttendance()">🖐️ Next pupil</button>'+
       '<button class="btn ghost block" style="margin-top:8px" onclick="closeModal();nav(\'attendance\')">Done</button>';
@@ -670,7 +776,7 @@ async function fpStaffAttendance(){
   const sf=r.staff;const today=new Date().toISOString().slice(0,10);
   try{
     await rest('/rest/v1/staff_attendance?school_id=eq.'+_schoolId+'&staff_id=eq.'+sf.id+'&date=eq.'+today,{method:'DELETE'});
-    await rest('/rest/v1/staff_attendance',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,staff_id:sf.id,date:today,status:'present',source:'fingerprint',notes:'Fingerprint '+new Date().toLocaleTimeString()})});
+    await rest('/rest/v1/staff_attendance',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,staff_id:sf.id,date:today,status:'present',source:'fingerprint',notes:'Fingerprint '+new Date().toLocaleTimeString()})});
     document.getElementById('fpHero').innerHTML='<div class="icon">✅</div><h3 style="margin-bottom:6px">'+esc(sf.full_name)+'</h3><div class="muted">Present · '+new Date().toLocaleTimeString()+'</div>';
     el.innerHTML='<button class="btn ok block" onclick="closeModal();fpStaffAttendance()">🖐️ Next</button>'+
       '<button class="btn ghost block" style="margin-top:8px" onclick="closeModal();nav(\'staff_att\')">Done</button>';
@@ -694,9 +800,7 @@ const ROUTES={
   debtors:{label:'Debtors',icon:'👥',render:pageDebtors},
   marks:{label:'Marks',icon:'✍️',render:pageMarks},
   exams:{label:'Exams',icon:'📝',render:pageExams},
-  subjects:{label:'Subjects',icon:'📚',render:pageSubjects},
   reports:{label:'Report Cards',icon:'📄',render:pageReports},
-  classes:{label:'Classes',icon:'🏫',render:pageClasses},
   uniforms:{label:'Uniforms',icon:'👕',render:pageUniforms},
   expenses:{label:'Expenses',icon:'💸',render:pageExpenses},
   messages:{label:'Messages',icon:'💬',render:pageMessages},
@@ -723,6 +827,7 @@ function renderBottomBar(){
 }
 function doGlobalSearch(){const v=document.getElementById('globalSearch').value.trim();if(!v)return;window._stFilterSearch=v;nav('students');setTimeout(()=>{const el=document.getElementById('studentSearchInput');if(el){el.value=v;filterStudentsTable(v,'');}},300);}
 window.doGlobalSearch=doGlobalSearch;
+</script
 /* ============================================================
    DASHBOARD
    ============================================================ */
@@ -1616,38 +1721,6 @@ function printDebtors(){const c=window._debtorsCache;if(!c||!c.debtors.length){t
 window.printDebtors=printDebtors;
 
 /* ============================================================
-   CLASSES
-   ============================================================ */
-async function pageClasses(root){
-  const classes=await rest('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=*&order=sort_order');
-  _classesCache=classes||[];
-  root.innerHTML='<div class="page-head"><div><h1>Classes</h1></div><button class="btn" onclick="addClass()">＋ Add</button></div>'+
-  '<div class="card">'+((classes||[]).length?'<div class="table-wrap"><table><thead><tr><th>Class</th><th></th></tr></thead><tbody>'+
-  (classes||[]).map(c=>'<tr><td><b>'+esc(c.name)+'</b></td><td style="text-align:right"><button class="btn sm danger" onclick="cfmDelCls(\''+c.id+'\')">✕</button></td></tr>').join('')+'</tbody></table></div>':'<div class="empty">No classes.</div>')+'</div>';
-}
-window.pageClasses=pageClasses;
-function addClass(){modal('<h3>Add Class</h3><div><label>Name</label><input id="c_name"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveCls()">Save</button></div>');}
-window.addClass=addClass;
-async function saveCls(){const n=document.getElementById('c_name').value.trim();if(!n){toast('Name','bad');return;}try{await rest('/rest/v1/classes',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,name:n,sort_order:0})});_classesCache=null;closeModal();nav('classes');}catch(e){toast(e.message,'bad');}}
-window.saveCls=saveCls;
-async function cfmDelCls(id){if(!confirm('Delete?'))return;try{await rest('/rest/v1/classes?id=eq.'+id,{method:'DELETE'});_classesCache=null;nav('classes');}catch(e){toast(e.message,'bad');}}
-window.cfmDelCls=cfmDelCls;
-
-/* ============================================================
-   SUBJECTS
-   ============================================================ */
-async function pageSubjects(root){
-  const s=await rest('/rest/v1/subjects?school_id=eq.'+_schoolId+'&select=*&order=code');
-  root.innerHTML='<div class="page-head"><div><h1>Subjects</h1></div><button class="btn" onclick="addSub()">＋ Add</button></div>'+
-  '<div class="card">'+((s||[]).length?'<div class="table-wrap"><table><thead><tr><th>Code</th><th>Name</th></tr></thead><tbody>'+(s||[]).map(x=>'<tr><td>'+esc(x.code)+'</td><td>'+esc(x.name)+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">No subjects.</div>')+'</div>';
-}
-window.pageSubjects=pageSubjects;
-function addSub(){modal('<h3>Add Subject</h3><div><label>Code</label><input id="sb_code"></div><div style="margin-top:12px"><label>Name</label><input id="sb_name"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveSub()">Save</button></div>');}
-window.addSub=addSub;
-async function saveSub(){const c=document.getElementById('sb_code').value.trim().toUpperCase();const n=document.getElementById('sb_name').value.trim();if(!c||!n){toast('Fill','bad');return;}try{await rest('/rest/v1/subjects',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,code:c,name:n,is_compulsory:true})});closeModal();nav('subjects');}catch(e){toast(e.message,'bad');}}
-window.saveSub=saveSub;
-
-/* ============================================================
    EXAMS
    ============================================================ */
 async function pageExams(root){
@@ -1667,61 +1740,113 @@ async function doDelExam(id){closeModal();try{await rest('/rest/v1/marks?exam_id
 window.doDelExam=doDelExam;
 
 /* ============================================================
-   MARKS
+   MARKS — FILTERED BY CLASS SUBJECTS
    ============================================================ */
 async function pageMarks(root){
-  const [exams,classes,subjects]=await Promise.all([
+  const [exams,classes]=await Promise.all([
     rest('/rest/v1/exams?school_id=eq.'+_schoolId+'&select=*&order=created_at.desc'),
-    rest('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=*&order=sort_order'),
-    rest('/rest/v1/subjects?school_id=eq.'+_schoolId+'&select=*&order=code')
+    rest('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=*&order=sort_order')
   ]);
-  if(!(exams||[]).length||!(classes||[]).length||!(subjects||[]).length){root.innerHTML='<div class="card"><div class="empty">Create exam, class, subject first.</div></div>';return;}
-  const eId=window._marksExamId||exams[0].id;const cId=window._marksClassId||classes[0].id;const sId=window._marksSubjectId||subjects[0].id;
-  const exam=exams.find(e=>e.id===eId)||exams[0];const cls=classes.find(c=>c.id===cId)||classes[0];const subj=subjects.find(s=>s.id===sId)||subjects[0];
-  const [students,marks]=await Promise.all([
+  if(!(exams||[]).length||!(classes||[]).length){root.innerHTML='<div class="card"><div class="empty">Create exams and classes first.</div></div>';return;}
+  const eId=window._marksExamId||exams[0].id;
+  const cId=window._marksClassId||classes[0].id;
+  const exam=exams.find(e=>e.id===eId)||exams[0];
+  const cls=classes.find(c=>c.id===cId)||classes[0];
+  const subjects=await loadSubjectsForClass(cls.id);
+  window._marksExamId=eId;
+  window._marksClassId=cId;
+  const [students,allMarks]=await Promise.all([
     rest('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+cls.id+'&status=eq.active&select=*&order=first_name'),
-    rest('/rest/v1/marks?school_id=eq.'+_schoolId+'&exam_id=eq.'+exam.id+'&subject_id=eq.'+subj.id+'&select=*')
+    rest('/rest/v1/marks?school_id=eq.'+_schoolId+'&exam_id=eq.'+exam.id+'&select=*').catch(()=>[])
   ]);
-  root.innerHTML='<div class="page-head"><div><h1>Marks</h1><div class="sub">'+esc(exam.name)+' · '+esc(cls.name)+' · '+esc(subj.name)+'</div></div><button class="btn" onclick="saveMarksGrid()">💾 Save</button></div>'+
-  '<div class="card"><div class="grid grid-3">'+
+  const markMap={};(allMarks||[]).forEach(m=>{if(!markMap[m.student_id])markMap[m.student_id]={};markMap[m.student_id][m.subject_id]=Number(m.score);});
+  root.innerHTML='<div class="page-head"><div><h1>✍️ Enter Marks</h1><div class="sub">'+esc(exam.name)+' · '+esc(cls.name)+' — showing only this class\'s subjects</div></div>'+
+  '<button class="btn" onclick="saveMarksGrid()">💾 Save All</button></div>'+
+  '<div class="card"><div class="grid grid-2">'+
   '<div><label>Exam</label><select onchange="window._marksExamId=this.value;nav(\'marks\')">'+exams.map(e=>'<option value="'+e.id+'"'+(e.id===exam.id?' selected':'')+'>'+esc(e.name)+'</option>').join('')+'</select></div>'+
-  '<div><label>Class</label><select onchange="window._marksClassId=this.value;nav(\'marks\')">'+classes.map(c=>'<option value="'+c.id+'"'+(c.id===cls.id?' selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></div>'+
-  '<div><label>Subject</label><select onchange="window._marksSubjectId=this.value;nav(\'marks\')">'+subjects.map(s=>'<option value="'+s.id+'"'+(s.id===subj.id?' selected':'')+'>'+esc(s.code)+'</option>').join('')+'</select></div></div></div>'+
-  '<div class="card">'+((students||[]).length?'<div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Score</th><th>Grade</th></tr></thead><tbody>'+
-  students.map((s,i)=>{const m=(marks||[]).find(x=>x.student_id===s.id);const g=gradeOf(m?m.score:null);
-    return '<tr><td>'+(i+1)+'</td><td>'+esc(s.first_name+' '+(s.last_name||''))+'</td><td><input type="number" min="0" max="100" class="mk-input" data-student="'+s.id+'" value="'+(m?m.score:'')+'" style="max-width:130px" oninput="updateMarkGrade(this)"></td><td><span class="mk-grade badge '+(g.cls||'info')+'">'+g.g+'</span></td></tr>';
-  }).join('')+'</tbody></table></div>':'<div class="empty">No pupils.</div>')+'</div>';
+  '<div><label>Class</label><select onchange="window._marksClassId=this.value;nav(\'marks\')">'+classes.map(c=>'<option value="'+c.id+'"'+(c.id===cls.id?' selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></div></div>'+
+  '<div class="alert-item info" style="margin-top:12px"><span class="ico">📚</span><div class="txt"><b>Subjects for '+esc(cls.name)+'</b><span>'+subjects.map(s=>esc(s.name)).join(' · ')+'</span></div></div></div>'+
+  '<div class="card">'+((students||[]).length?
+    (subjects.length?'<div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th>'+subjects.map(s=>'<th style="text-align:center">'+esc(s.code)+(s.graded===false?' <span style="font-weight:400;opacity:.7">(na)</span>':'')+'</th>').join('')+'<th>Total</th><th>Grade</th></tr></thead><tbody>'+
+    students.map((s,i)=>{
+      const per=markMap[s.id]||{};
+      const graded=subjects.filter(x=>x.graded!==false);
+      let total=0,count=0;
+      graded.forEach(sb=>{const v=per[sb.id];if(v!=null&&!isNaN(v)){total+=Number(v);count++;}});
+      const avg=count?total/count:0;const g=gradeOf(avg);
+      return '<tr><td>'+(i+1)+'</td><td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b></td>'+
+        subjects.map(sb=>'<td><input type="number" min="0" max="100" class="marks-input" style="max-width:80px" data-sid="'+s.id+'" data-sub="'+sb.id+'" value="'+(per[sb.id]!=null?per[sb.id]:'')+'"></td>').join('')+
+        '<td style="text-align:right"><b>'+total.toFixed(0)+'</b></td>'+
+        '<td><span class="badge '+(g.cls||'info')+'">'+g.g+'</span></td></tr>';
+    }).join('')+'</tbody></table></div>'
+    :'<div class="empty">No subjects configured for this class.</div>')
+    :'<div class="empty">No pupils in this class.</div>')+'</div>';
 }
 window.pageMarks=pageMarks;
-function updateMarkGrade(inp){const g=gradeOf(inp.value);const td=inp.closest('tr').querySelector('.mk-grade');if(td){td.className='mk-grade badge '+(g.cls||'info');td.textContent=g.g;}}
-window.updateMarkGrade=updateMarkGrade;
-async function saveMarksGrid(){const examId=window._marksExamId;const subjectId=window._marksSubjectId;const rows=[];document.querySelectorAll('.mk-input').forEach(inp=>{const v=inp.value.trim();if(v==='')return;const sc=parseFloat(v);if(isNaN(sc)||sc<0||sc>100)return;rows.push({school_id:_schoolId,exam_id:examId,subject_id:subjectId,student_id:inp.dataset.student,score:sc,academic_year:getCurrentYear(),term:getCurrentTerm()});});if(!rows.length){toast('Nothing','bad');return;}try{await rest('/rest/v1/marks?school_id=eq.'+_schoolId+'&exam_id=eq.'+examId+'&subject_id=eq.'+subjectId,{method:'DELETE'});await rest('/rest/v1/marks',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify(rows)});toast(rows.length+' saved','ok');}catch(e){toast(e.message,'bad');}}
+
+async function saveMarksGrid(){
+  const examId=window._marksExamId;
+  const classId=window._marksClassId;
+  if(!examId||!classId||examId==='undefined'||classId==='undefined'){toast('Please select Exam and Class first','bad');return;}
+  const rows=[];
+  document.querySelectorAll('.marks-input').forEach(inp=>{
+    const v=inp.value.trim();
+    if(v==='')return;
+    const sc=parseFloat(v);
+    if(isNaN(sc)||sc<0||sc>100)return;
+    rows.push({school_id:_schoolId,exam_id:examId,subject_id:inp.dataset.sub,student_id:inp.dataset.sid,score:sc,academic_year:getCurrentYear(),term:getCurrentTerm()});
+  });
+  if(!rows.length){toast('No marks to save','bad');return;}
+  try{
+    const students=await rest('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+classId+'&select=id');
+    const sids=(students||[]).map(s=>s.id);
+    if(sids.length){
+      await rest('/rest/v1/marks?school_id=eq.'+_schoolId+'&exam_id=eq.'+examId+'&student_id=in.('+sids.join(',')+')',{method:'DELETE'});
+    }
+    await rest('/rest/v1/marks',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(rows)});
+    toast(rows.length+' marks saved','ok');
+  }catch(e){toast(e.message,'bad');}
+}
 window.saveMarksGrid=saveMarksGrid;
 /* ============================================================
-   REPORT CARDS — NEW VERSION
-   Pupil dropdown + P.1 position + simplified card
+   REPORT CARDS — FILTERED BY CLASS SUBJECTS
+   Shows ONLY the subjects of the selected class
    ============================================================ */
 function buildReportCardBody(student,rd){
   const {exams,cls,subjects,marksByStudent,rankMap,year,term,stageLabel}=rd;
   const perExam=marksByStudent[student.id]||{};
   let grandTotal=0,assessCount=0;
-  const subjectRows=subjects.map(s=>{const scores=exams.map(e=>{const sc=perExam[e.id]?.[s.id];if(sc!=null&&!isNaN(sc)){grandTotal+=Number(sc);assessCount++;}return sc!=null&&!isNaN(sc)?Number(sc):null;});return{subject:s,scores};});
-  const avg=assessCount?grandTotal/assessCount:0;const pos=rankMap[student.id];
+  const subjectRows=subjects.map(s=>{
+    const scores=exams.map(e=>{const sc=perExam[e.id]?.[s.id];if(sc!=null&&!isNaN(sc)){grandTotal+=Number(sc);assessCount++;}return sc!=null&&!isNaN(sc)?Number(sc):null;});
+    return{subject:s,scores,isGraded:s.graded!==false};
+  });
+  const avg=assessCount?grandTotal/assessCount:0;
+  const pos=rankMap[student.id];
   const g=gradeOf(avg);
   const posLabelVal=pos?('P.'+pos):'—';
   let html='';
   html+='<div class="rc-title">'+esc(stageLabel+' Report Card')+'</div>';
   html+='<table class="rc-info"><tr><td><b>Name:</b> '+esc(student.first_name+' '+(student.last_name||''))+'</td><td><b>Adm No:</b> '+esc(student.admission_no)+'</td><td><b>LIN:</b> '+esc(student.lin||'—')+'</td></tr><tr><td><b>Class:</b> '+esc(cls.name)+'</td><td><b>Year:</b> '+year+'</td><td><b>Term:</b> '+term+'</td></tr></table>';
-  html+='<table class="rc-multi"><thead><tr><th>#</th><th>Subject</th>';
+  html+='<table class="rc-multi"><thead><tr><th style="width:30px">#</th><th style="text-align:left">Subject</th>';
   exams.forEach(e=>{html+='<th>'+esc(examStageLabel(e.type))+'<span class="sub">'+esc(e.name)+'</span></th>';});
   html+='<th>Total</th><th>Grade</th><th>Remark</th></tr></thead><tbody>';
-  subjectRows.forEach((r,i)=>{const valid=r.scores.filter(v=>v!=null);const subTotal=valid.reduce((a,b)=>a+b,0);const subAvg=valid.length?subTotal/valid.length:0;const sg=gradeOf(subAvg);
-    html+='<tr><td>'+(i+1)+'</td><td>'+esc(r.subject.name)+'</td>';
-    r.scores.forEach(v=>{html+='<td style="text-align:center">'+(v!=null?v.toFixed(0):'—')+'</td>';});
-    html+='<td style="text-align:right;font-weight:600">'+(valid.length?subTotal.toFixed(0):'—')+'</td><td style="text-align:center"><b>'+sg.g+'</b></td><td>'+esc(valid.length?sg.r:'—')+'</td></tr>';});
-  html+='</tbody><tfoot><tr><td colspan="2">GRAND TOTAL</td>';
-  exams.forEach(e=>{const examTotal=subjects.reduce((sum,sj)=>{const sc=perExam[e.id]?.[sj.id];return sum+(sc!=null&&!isNaN(sc)?Number(sc):0);},0);const hasAny=subjects.some(sj=>perExam[e.id]?.[sj.id]!=null);html+='<td style="text-align:center">'+(hasAny?examTotal.toFixed(0):'—')+'</td>';});
-  html+='<td style="text-align:right">'+grandTotal.toFixed(0)+'</td><td style="text-align:center">'+g.g+'</td><td>Avg: '+avg.toFixed(1)+'%</td></tr></tfoot></table>';
+  subjectRows.forEach((r,i)=>{
+    const valid=r.scores.filter(v=>v!=null);
+    const subTotal=valid.reduce((a,b)=>a+b,0);
+    const subAvg=valid.length?subTotal/valid.length:0;
+    const sg=gradeOf(subAvg);
+    const isG=r.isGraded;
+    html+='<tr class="'+(isG?'':'no-grade')+'"><td>'+(i+1)+'</td><td class="subject">'+esc(r.subject.name)+(isG?'':' (not graded)')+'</td>';
+    r.scores.forEach(v=>{html+='<td>'+(v!=null?v.toFixed(0):'—')+'</td>';});
+    html+='<td><b>'+(valid.length?subTotal.toFixed(0):'—')+'</b></td><td><b>'+(isG?sg.g:'—')+'</b></td><td style="font-size:11px">'+esc(isG?(valid.length?sg.r:'—'):'Not graded')+'</td></tr>';
+  });
+  html+='</tbody><tfoot><tr><td colspan="2" style="text-align:left">GRAND TOTAL</td>';
+  exams.forEach(e=>{
+    const examTotal=subjects.reduce((sum,sj)=>{const sc=perExam[e.id]?.[sj.id];return sum+(sc!=null&&!isNaN(sc)?Number(sc):0);},0);
+    const hasAny=subjects.some(sj=>perExam[e.id]?.[sj.id]!=null);
+    html+='<td>'+(hasAny?examTotal.toFixed(0):'—')+'</td>';
+  });
+  html+='<td>'+grandTotal.toFixed(0)+'</td><td><b>'+g.g+'</b></td><td style="font-size:11px">Avg: '+avg.toFixed(1)+'%</td></tr></tfoot></table>';
   html+='<div class="rc-summary"><div><b>Average</b>'+avg.toFixed(1)+'%</div></div>';
   html+='<div class="rc-position"><span class="label">Position in Class</span><span class="value">'+posLabelVal+'</span></div>';
   html+='<div class="rc-sign"><div>Class Teacher: ___________</div><div>Head Teacher: ___________</div><div>Date: '+new Date().toLocaleDateString()+'</div></div>';
@@ -1730,32 +1855,58 @@ function buildReportCardBody(student,rd){
 
 async function pageReports(root){
   root.innerHTML='<div class="loading">Loading…</div>';
-  const [exams,classes,subjects]=await Promise.all([
+  const [exams,classes]=await Promise.all([
     rest('/rest/v1/exams?school_id=eq.'+_schoolId+'&select=*&order=created_at.desc').catch(()=>[]),
-    rest('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=*&order=sort_order').catch(()=>[]),
-    rest('/rest/v1/subjects?school_id=eq.'+_schoolId+'&select=*&order=code').catch(()=>[])
+    rest('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=*&order=sort_order').catch(()=>[])
   ]);
-  if(!(exams||[]).length||!(classes||[]).length||!(subjects||[]).length){root.innerHTML='<div class="card"><div class="empty">Create exams, classes, subjects first.</div></div>';return;}
+  if(!(exams||[]).length||!(classes||[]).length){root.innerHTML='<div class="card"><div class="empty">Create exams and classes first.</div></div>';return;}
   const year=window._rcYear!=null?Number(window._rcYear):getCurrentYear();
   const term=window._rcTerm!=null?Number(window._rcTerm):getCurrentTerm();
-  const cId=window._rcClassId||(classes[0]&&classes[0].id);const cls=classes.find(c=>c.id===cId)||classes[0];
+  const cId=window._rcClassId||(classes[0]&&classes[0].id);
+  const cls=classes.find(c=>c.id===cId)||classes[0];
   const termExams=(exams||[]).filter(e=>Number(e.year)===year&&Number(e.term)===term).sort((a,b)=>{const dr=examStageRank(a.type)-examStageRank(b.type);if(dr!==0)return dr;return new Date(a.created_at||0)-new Date(b.created_at||0);});
-  if(!termExams.length){root.innerHTML='<div class="page-head"><div><h1>📄 Report Cards</h1></div></div><div class="card"><div class="empty">No exams for '+year+' Term '+term+'.</div></div>';return;}
+  if(!termExams.length){root.innerHTML='<div class="page-head"><div><h1>📄 Report Cards</h1></div></div><div class="card"><div class="empty">No exams for '+year+' Term '+term+'. Create them in <b>Exams</b> page.</div></div>';return;}
   const stageRanks=[...new Set(termExams.map(e=>examStageRank(e.type)))].sort((a,b)=>a-b);
-  const highestStage=stageRanks[stageRanks.length-1];let selectedStage=window._rcStage!=null?Number(window._rcStage):highestStage;
+  const highestStage=stageRanks[stageRanks.length-1];
+  let selectedStage=window._rcStage!=null?Number(window._rcStage):highestStage;
   if(!stageRanks.includes(selectedStage))selectedStage=highestStage;
-  const activeExams=termExams.filter(e=>examStageRank(e.type)<=selectedStage);const activeExamIds=activeExams.map(e=>e.id);
+  const activeExams=termExams.filter(e=>examStageRank(e.type)<=selectedStage);
+  const activeExamIds=activeExams.map(e=>e.id);
   const stageLabel=examStageFullLabel(selectedStage);
+  const subjects=await loadSubjectsForClass(cls.id);
+
   const [students,marks]=await Promise.all([
     rest('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+cls.id+'&status=eq.active&select=*&order=first_name'),
     rest('/rest/v1/marks?school_id=eq.'+_schoolId+'&exam_id=in.('+activeExamIds.join(',')+')&select=*')
   ]);
-  const studs=students||[];const sidSet=new Set(studs.map(s=>s.id));const mks=(marks||[]).filter(m=>sidSet.has(m.student_id));
-  const marksByStudent={};mks.forEach(m=>{if(!marksByStudent[m.student_id])marksByStudent[m.student_id]={};if(!marksByStudent[m.student_id][m.exam_id])marksByStudent[m.student_id][m.exam_id]={};marksByStudent[m.student_id][m.exam_id][m.subject_id]=Number(m.score);});
-  const subjList=subjects||[];
-  const rows=studs.map(s=>{const per=marksByStudent[s.id]||{};let total=0,count=0;activeExams.forEach(e=>{subjList.forEach(sj=>{const v=per[e.id]?.[sj.id];if(v!=null&&!isNaN(v)){total+=Number(v);count++;}});});const avg=count?total/count:0;return{student:s,total,avg,count};});
-  const ranked=rows.filter(r=>r.count>0).slice().sort((a,b)=>b.avg-a.avg);ranked.forEach((r,i)=>{r.position=i+1;});for(let i=1;i<ranked.length;i++){if(ranked[i].avg===ranked[i-1].avg)ranked[i].position=ranked[i-1].position;}
-  const rankMap={};ranked.forEach(r=>rankMap[r.student.id]=r.position);
+  const studs=students||[];
+  const sidSet=new Set(studs.map(s=>s.id));
+  const mks=(marks||[]).filter(m=>sidSet.has(m.student_id));
+  const marksByStudent={};
+  mks.forEach(m=>{
+    if(!marksByStudent[m.student_id])marksByStudent[m.student_id]={};
+    if(!marksByStudent[m.student_id][m.exam_id])marksByStudent[m.student_id][m.exam_id]={};
+    marksByStudent[m.student_id][m.exam_id][m.subject_id]=Number(m.score);
+  });
+  const subjList=subjects;
+  const gradedSubjList=subjList.filter(s=>s.graded!==false);
+  const rows=studs.map(s=>{
+    const per=marksByStudent[s.id]||{};
+    let total=0,count=0;
+    activeExams.forEach(e=>{
+      gradedSubjList.forEach(sj=>{
+        const v=per[e.id]?.[sj.id];
+        if(v!=null&&!isNaN(v)){total+=Number(v);count++;}
+      });
+    });
+    const avg=count?total/count:0;
+    return{student:s,total,avg,count};
+  });
+  const ranked=rows.filter(r=>r.count>0).slice().sort((a,b)=>b.avg-a.avg);
+  ranked.forEach((r,i)=>{r.position=i+1;});
+  for(let i=1;i<ranked.length;i++){if(ranked[i].avg===ranked[i-1].avg)ranked[i].position=ranked[i-1].position;}
+  const rankMap={};
+  ranked.forEach(r=>rankMap[r.student.id]=r.position);
   const rd={exams:activeExams,cls,subjects:subjList,rows,ranked,marksByStudent,rankMap,year,term,stageLabel,selectedStage};
   window._rcData=rd;
   const sortedView=rows.slice().sort((a,b)=>(rankMap[a.student.id]||9999)-(rankMap[b.student.id]||9999));
@@ -1763,28 +1914,43 @@ async function pageReports(root){
   root.innerHTML=
   '<div class="page-head"><div><h1>📄 Report Cards</h1><div class="sub">'+esc(cls.name)+' · '+year+' T'+term+' · '+esc(stageLabel)+'</div></div>'+
   '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="printBroadsheet()">📊 Broadsheet</button><button class="btn" onclick="printAllReportCards()">🖨️ Print All</button></div></div>'+
+
   '<div class="card"><div class="grid grid-3">'+
-  '<div><label>Year</label><input type="number" value="'+year+'" onchange="window._rcYear=this.value;window._rcStage=null;nav(\'reports\')"></div>'+
-  '<div><label>Term</label><select onchange="window._rcTerm=this.value;window._rcStage=null;nav(\'reports\')"><option value="1"'+(term==1?' selected':'')+'>Term 1</option><option value="2"'+(term==2?' selected':'')+'>Term 2</option><option value="3"'+(term==3?' selected':'')+'>Term 3</option></select></div>'+
+  '<div><label>Year</label><select onchange="window._rcYear=parseInt(this.value);window._rcStage=null;nav(\'reports\')">'+
+  getAcademicYears().map(y=>'<option value="'+y+'"'+(y===year?' selected':'')+'>'+y+'</option>').join('')+
+  '</select></div>'+
+  '<div><label>Term</label><select onchange="window._rcTerm=parseInt(this.value);window._rcStage=null;nav(\'reports\')"><option value="1"'+(term==1?' selected':'')+'>Term 1</option><option value="2"'+(term==2?' selected':'')+'>Term 2</option><option value="3"'+(term==3?' selected':'')+'>Term 3</option></select></div>'+
   '<div><label>Class</label><select onchange="window._rcClassId=this.value;nav(\'reports\')">'+classes.map(c=>'<option value="'+c.id+'"'+(c.id===cls.id?' selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></div>'+
-  '<div style="grid-column:1/-1"><label>Stage (cumulative)</label><select onchange="window._rcStage=this.value;nav(\'reports\')">'+
-  stageOptions.map(o=>'<option value="'+o.value+'"'+(o.value===selectedStage?' selected':'')+'>'+esc(o.label)+' — '+o.count+' exam'+(o.count>1?'s':'')+'</option>').join('')+'</select></div></div></div>'+
+  '<div style="grid-column:1/-1"><label>Stage (cumulative)</label><select onchange="window._rcStage=parseInt(this.value);nav(\'reports\')">'+
+  stageOptions.map(o=>'<option value="'+o.value+'"'+(o.value===selectedStage?' selected':'')+'>'+esc(o.label)+' — '+o.count+' exam'+(o.count>1?'s':'')+'</option>').join('')+'</select></div></div>'+
+  '<div class="alert-item info" style="margin-top:12px"><span class="ico">📚</span><div class="txt"><b>Subjects for '+esc(cls.name)+'</b><span>'+subjList.map(s=>esc(s.name)).join(' · ')+'</span></div></div></div>'+
+
   '<div class="card"><h3>👤 Select Pupil to View Report Card</h3>'+
   (studs.length?
     '<div class="grid grid-2">'+
-    '<div><label>Pupil in '+esc(cls.name)+' ('+studs.length+' pupils)</label><select id="rcPupilSelect" onchange="rcShowSingle(this.value)"><option value="">— Choose a pupil —</option>'+sortedView.map(r=>'<option value="'+r.student.id+'">'+esc(r.student.admission_no)+' — '+esc(r.student.first_name+' '+(r.student.last_name||''))+'</option>').join('')+'</select></div>'+
+    '<div><label>Pupil in '+esc(cls.name)+' ('+studs.length+' pupils)</label>'+
+    '<select id="rcPupilSelect" onchange="rcShowSingle(this.value)"><option value="">— Choose a pupil —</option>'+sortedView.map(r=>'<option value="'+r.student.id+'">'+esc(r.student.admission_no)+' — '+esc(r.student.first_name+' '+(r.student.last_name||''))+'</option>').join('')+'</select></div>'+
     '<div style="display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap"><button class="btn gold" onclick="rcPrintSelected()">🖨️ Print Selected</button><button class="btn ghost" onclick="rcClearSelected()">Clear</button></div>'+
     '</div>'
-    :'<div class="empty">No pupils.</div>')+
+    :'<div class="empty">No pupils in this class.</div>')+
   '</div>'+
   '<div id="rcSingleCard"></div>'+
+
   '<div class="card"><h3>📊 Ranking</h3>'+
-  (studs.length?'<div class="table-wrap"><table><thead><tr><th>Pos</th><th>Adm</th><th>Name</th>'+activeExams.map(e=>'<th style="text-align:center">'+esc(examStageLabel(e.type))+'</th>').join('')+'<th style="text-align:right">Tot</th><th style="text-align:right">Avg</th><th>Grade</th><th></th></tr></thead><tbody>'+
-  sortedView.map(r=>{const pos=rankMap[r.student.id];const g=gradeOf(r.avg);const per=marksByStudent[r.student.id]||{};
+  (studs.length?'<div class="table-wrap"><table><thead><tr><th>Pos</th><th>Adm</th><th>Name</th>'+activeExams.map(e=>'<th style="text-align:center">'+esc(examStageLabel(e.type))+'</th>').join('')+'<th style="text-align:right">Tot</th><th style="text-align:right">Avg</th><th>Grade</th><th class="no-print"></th></tr></thead><tbody>'+
+  sortedView.map(r=>{
+    const pos=rankMap[r.student.id];
+    const g=gradeOf(r.avg);
+    const per=marksByStudent[r.student.id]||{};
     return '<tr><td><b>'+(pos?posLabel(pos):'—')+'</b></td><td>'+esc(r.student.admission_no)+'</td><td><b>'+esc(r.student.first_name+' '+(r.student.last_name||''))+'</b></td>'+
-      activeExams.map(e=>{const hasAny=subjList.some(sj=>per[e.id]?.[sj.id]!=null);const examTotal=subjList.reduce((sum,sj)=>sum+(per[e.id]?.[sj.id]!=null?Number(per[e.id][sj.id]):0),0);return '<td style="text-align:center">'+(hasAny?examTotal.toFixed(0):'—')+'</td>';}).join('')+
+      activeExams.map(e=>{
+        const hasAny=gradedSubjList.some(sj=>per[e.id]?.[sj.id]!=null);
+        const examTotal=gradedSubjList.reduce((sum,sj)=>sum+(per[e.id]?.[sj.id]!=null?Number(per[e.id][sj.id]):0),0);
+        return '<td style="text-align:center">'+(hasAny?examTotal.toFixed(0):'—')+'</td>';
+      }).join('')+
       '<td style="text-align:right;font-weight:600">'+r.total.toFixed(0)+'</td><td style="text-align:right">'+r.avg.toFixed(1)+'</td><td><span class="badge '+(g.cls||'info')+'">'+g.g+'</span></td>'+
-      '<td style="text-align:right"><button class="btn sm ghost" onclick="rcShowSingle(\''+r.student.id+'\')">👁️</button> <button class="btn sm" onclick="printOneReportCard(\''+r.student.id+'\')">🖨️</button></td></tr>';}).join('')+'</tbody></table></div>':'<div class="empty">No pupils.</div>')+'</div>';
+      '<td style="text-align:right" class="no-print"><button class="btn sm ghost" onclick="rcShowSingle(\''+r.student.id+'\')">👁️</button> <button class="btn sm" onclick="printOneReportCard(\''+r.student.id+'\')">🖨️</button></td></tr>';
+  }).join('')+'</tbody></table></div>':'<div class="empty">No pupils.</div>')+'</div>';
 }
 window.pageReports=pageReports;
 
@@ -1794,7 +1960,11 @@ function rcShowSingle(id){
   if(!id){container.innerHTML='';return;}
   const rd=window._rcData;if(!rd)return;
   const r=rd.rows.find(x=>x.student.id===id);if(!r){container.innerHTML='';return;}
-  container.innerHTML='<div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#0a2540;color:#fff;border-radius:8px 8px 0 0"><b style="color:#fff">📄 '+esc(r.student.first_name+' '+(r.student.last_name||''))+' — '+esc(r.student.admission_no)+'</b><button class="btn sm gold" onclick="rcPrintSelected()">🖨️ Print This</button></div><div class="report-preview" style="border-radius:0 0 12px 12px">'+buildReportCardBody(r.student,rd)+'</div></div>';
+  container.innerHTML='<div style="margin-bottom:16px">'+
+    '<div class="no-print" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#0a2540;color:#fff;border-radius:8px 8px 0 0">'+
+    '<b style="color:#fff">📄 '+esc(r.student.first_name+' '+(r.student.last_name||''))+' — '+esc(r.student.admission_no)+'</b>'+
+    '<button class="btn sm gold" onclick="rcPrintSelected()">🖨️ Print This</button></div>'+
+    '<div class="report-preview" style="border-radius:0 0 12px 12px">'+buildReportCardBody(r.student,rd)+'</div></div>';
   setTimeout(()=>container.scrollIntoView({behavior:'smooth',block:'start'}),100);
 }
 window.rcShowSingle=rcShowSingle;
@@ -1812,13 +1982,51 @@ function rcClearSelected(){
 }
 window.rcClearSelected=rcClearSelected;
 
-const RC_PRINT_CSS='.rc-title{text-align:center;font-size:15px;font-weight:800;color:#0a2540;text-transform:uppercase;margin:10px 0 6px}.rc-info{width:100%;border-collapse:collapse;margin:10px 0}.rc-info td{padding:6px 10px;font-size:11.5px;border:1px solid #ccc}.rc-summary{padding:10px;background:#f8fafc;border:1px solid #eee;border-radius:8px;text-align:center;margin:10px 0}.rc-summary div{font-size:13px;font-weight:700;color:#0a2540}.rc-position{margin:14px 0;padding:10px 14px;background:#0a2540;color:#fff;border-radius:8px;display:flex;justify-content:space-between}.rc-position .label{font-size:11px;text-transform:uppercase;opacity:.85}.rc-position .value{font-size:20px;font-weight:800;color:#d4a017}.rc-sign{display:flex;justify-content:space-between;gap:12px;margin:16px 0;font-size:10.5px;flex-wrap:wrap}.rc-sign div{flex:1;min-width:140px}.rc-page{margin-bottom:16px}.rc-page-break{page-break-after:always}.rc-multi th{background:#0a2540;color:#fff;font-size:11px;text-transform:uppercase;text-align:center;padding:8px 6px}.rc-multi th .sub{font-size:9px;font-weight:400;opacity:.75;text-transform:none;display:block}.rc-multi td{padding:8px 10px;font-size:12.5px;border:1px solid #e2e8f0}.rc-multi tfoot td{background:#f1f5f9;font-weight:700;border-top:2px solid #0a2540}@media print{.rc-page{page-break-inside:avoid}}';
+const RC_PRINT_CSS='.rc-title{text-align:center;font-size:15px;font-weight:800;color:#0a2540;text-transform:uppercase;margin:10px 0 6px}.rc-info{width:100%;border-collapse:collapse;margin:10px 0}.rc-info td{padding:6px 10px;font-size:11.5px;border:1px solid #ccc}.rc-summary{padding:10px;background:#f8fafc;border:1px solid #eee;border-radius:8px;text-align:center;margin:10px 0}.rc-summary div{font-size:13px;font-weight:700;color:#0a2540}.rc-position{margin:14px 0;padding:10px 14px;background:#0a2540;color:#fff;border-radius:8px;display:flex;justify-content:space-between}.rc-position .label{font-size:11px;text-transform:uppercase;opacity:.85}.rc-position .value{font-size:20px;font-weight:800;color:#d4a017}.rc-sign{display:flex;justify-content:space-between;gap:12px;margin:16px 0;font-size:10.5px;flex-wrap:wrap}.rc-sign div{flex:1;min-width:140px;padding-top:20px;border-top:1px solid #999;text-align:center}.rc-page{margin-bottom:16px}.rc-page-break{page-break-after:always}.rc-multi th{background:#0a2540;color:#fff;font-size:11px;text-transform:uppercase;text-align:center;padding:8px 6px}.rc-multi th .sub{font-size:9px;font-weight:400;opacity:.75;text-transform:none;display:block}.rc-multi td{padding:8px 10px;font-size:12.5px;border:1px solid #e2e8f0;text-align:center}.rc-multi td.subject{text-align:left;font-weight:600}.rc-multi tfoot td{background:#f1f5f9;font-weight:700;border-top:2px solid #0a2540}.rc-multi tr.no-grade td{color:#94a3b8;font-style:italic}@media print{.rc-page{page-break-inside:avoid}}';
 
-function printOneReportCard(studentId){const rd=window._rcData;if(!rd){toast('Reload','bad');return;}const r=rd.rows.find(x=>x.student.id===studentId);if(!r){toast('Not found','bad');return;}const body=buildReportCardBody(r.student,rd);printHTML(rd.stageLabel+' Report — '+r.student.first_name,body,RC_PRINT_CSS);}
+function printOneReportCard(studentId){
+  const rd=window._rcData;if(!rd){toast('Reload','bad');return;}
+  const r=rd.rows.find(x=>x.student.id===studentId);if(!r){toast('Not found','bad');return;}
+  const body=buildReportCardBody(r.student,rd);
+  printHTML(rd.stageLabel+' Report — '+r.student.first_name,body,RC_PRINT_CSS);
+}
 window.printOneReportCard=printOneReportCard;
-function printAllReportCards(){const rd=window._rcData;if(!rd||!rd.rows.length){toast('No pupils','bad');return;}const sorted=rd.rows.slice().sort((a,b)=>(rd.rankMap[a.student.id]||9999)-(rd.rankMap[b.student.id]||9999));let html='';sorted.forEach((r,i)=>{html+='<div class="rc-page'+(i<sorted.length-1?' rc-page-break':'')+'">'+buildReportCardBody(r.student,rd)+'</div>';});printHTML(rd.stageLabel+' Reports — '+rd.cls.name,html,RC_PRINT_CSS);}
+
+function printAllReportCards(){
+  const rd=window._rcData;if(!rd||!rd.rows.length){toast('No pupils','bad');return;}
+  const sorted=rd.rows.slice().sort((a,b)=>(rd.rankMap[a.student.id]||9999)-(rd.rankMap[b.student.id]||9999));
+  let html='';
+  sorted.forEach((r,i)=>{html+='<div class="rc-page'+(i<sorted.length-1?' rc-page-break':'')+'">'+buildReportCardBody(r.student,rd)+'</div>';});
+  printHTML(rd.stageLabel+' Reports — '+rd.cls.name,html,RC_PRINT_CSS);
+}
 window.printAllReportCards=printAllReportCards;
-function printBroadsheet(){const rd=window._rcData;if(!rd||!rd.rows.length){toast('No data','bad');return;}const sorted=rd.rows.slice().sort((a,b)=>(rd.rankMap[a.student.id]||9999)-(rd.rankMap[b.student.id]||9999));let head='<tr><th rowspan="2">Pos</th><th rowspan="2">Adm</th><th rowspan="2">Name</th>';rd.exams.forEach(e=>{head+='<th colspan="'+(rd.subjects.length+1)+'">'+esc(e.name)+'</th>';});head+='<th rowspan="2" style="text-align:right">Tot</th><th rowspan="2" style="text-align:right">Avg</th><th rowspan="2">Grade</th></tr><tr>';rd.exams.forEach(()=>{rd.subjects.forEach(s=>{head+='<th style="text-align:center">'+esc(s.code)+'</th>';});head+='<th style="text-align:center;background:#d4a017">TOT</th>';});head+='</tr>';const bodyRows=sorted.map(r=>{const per=rd.marksByStudent[r.student.id]||{};let cells='<td><b>'+(rd.rankMap[r.student.id]?posLabel(rd.rankMap[r.student.id]):'—')+'</b></td><td>'+esc(r.student.admission_no)+'</td><td>'+esc(r.student.first_name+' '+(r.student.last_name||''))+'</td>';rd.exams.forEach(e=>{let examTotal=0,hasAny=false;rd.subjects.forEach(sj=>{const v=per[e.id]?.[sj.id];if(v!=null&&!isNaN(v)){examTotal+=Number(v);hasAny=true;}cells+='<td style="text-align:center">'+(v!=null?Number(v).toFixed(0):'—')+'</td>';});cells+='<td style="text-align:center;font-weight:700;background:#fff7e6">'+(hasAny?examTotal.toFixed(0):'—')+'</td>';});const g=gradeOf(r.avg);cells+='<td style="text-align:right;font-weight:700">'+r.total.toFixed(0)+'</td><td style="text-align:right">'+r.avg.toFixed(1)+'</td><td style="text-align:center"><b>'+g.g+'</b></td>';return '<tr>'+cells+'</tr>';}).join('');printHTML('Broadsheet — '+rd.cls.name+' — '+rd.stageLabel,'<table><thead>'+head+'</thead><tbody>'+bodyRows+'</tbody></table>');}
+
+function printBroadsheet(){
+  const rd=window._rcData;if(!rd||!rd.rows.length){toast('No data','bad');return;}
+  const sorted=rd.rows.slice().sort((a,b)=>(rd.rankMap[a.student.id]||9999)-(rd.rankMap[b.student.id]||9999));
+  let head='<tr><th rowspan="2">Pos</th><th rowspan="2">Adm</th><th rowspan="2">Name</th>';
+  rd.exams.forEach(e=>{head+='<th colspan="'+(rd.subjects.length+1)+'">'+esc(e.name)+'</th>';});
+  head+='<th rowspan="2" style="text-align:right">Tot</th><th rowspan="2" style="text-align:right">Avg</th><th rowspan="2">Grade</th></tr><tr>';
+  rd.exams.forEach(()=>{rd.subjects.forEach(s=>{head+='<th style="text-align:center">'+esc(s.code)+'</th>';});head+='<th style="text-align:center;background:#d4a017">TOT</th>';});
+  head+='</tr>';
+  const bodyRows=sorted.map(r=>{
+    const per=rd.marksByStudent[r.student.id]||{};
+    let cells='<td><b>'+(rd.rankMap[r.student.id]?posLabel(rd.rankMap[r.student.id]):'—')+'</b></td><td>'+esc(r.student.admission_no)+'</td><td>'+esc(r.student.first_name+' '+(r.student.last_name||''))+'</td>';
+    rd.exams.forEach(e=>{
+      let examTotal=0,hasAny=false;
+      rd.subjects.forEach(sj=>{
+        const v=per[e.id]?.[sj.id];
+        if(v!=null&&!isNaN(v)){examTotal+=Number(v);hasAny=true;}
+        cells+='<td style="text-align:center">'+(v!=null?Number(v).toFixed(0):'—')+'</td>';
+      });
+      cells+='<td style="text-align:center;font-weight:700;background:#fff7e6">'+(hasAny?examTotal.toFixed(0):'—')+'</td>';
+    });
+    const g=gradeOf(r.avg);
+    cells+='<td style="text-align:right;font-weight:700">'+r.total.toFixed(0)+'</td><td style="text-align:right">'+r.avg.toFixed(1)+'</td><td style="text-align:center"><b>'+g.g+'</b></td>';
+    return '<tr>'+cells+'</tr>';
+  }).join('');
+  printHTML('Broadsheet — '+rd.cls.name+' — '+rd.stageLabel,'<table><thead>'+head+'</thead><tbody>'+bodyRows+'</tbody></table>');
+}
 window.printBroadsheet=printBroadsheet;
 
 /* ============================================================
@@ -1828,7 +2036,8 @@ async function pageUniforms(root){
   const items=await rest('/rest/v1/uniform_items?school_id=eq.'+_schoolId+'&select=*&order=category,name').catch(()=>[]);
   const salesTotal=(await rest('/rest/v1/uniform_sales?school_id=eq.'+_schoolId+'&select=total_amount').catch(()=>[])).reduce((s,x)=>s+Number(x.total_amount||0),0);
   const stockValue=(items||[]).reduce((s,i)=>s+(Number(i.current_stock)||0)*(Number(i.unit_cost)||0),0);
-  const grouped={};(items||[]).forEach(i=>{const c=i.category||'Other';if(!grouped[c])grouped[c]=[];grouped[c].push(i);});
+  const grouped={};
+  (items||[]).forEach(i=>{const c=i.category||'Other';if(!grouped[c])grouped[c]=[];grouped[c].push(i);});
   root.innerHTML='<div class="page-head"><div><h1>👕 Uniforms</h1></div><button class="btn" onclick="addUniformItem()">＋ Item</button></div>'+
   '<div class="grid grid-kpi" style="margin-bottom:14px"><div class="kpi"><div class="v">'+fmtUGX(stockValue)+'</div><div class="l">Stock Value</div></div><div class="kpi kpi-navy"><div class="v">'+fmtUGX(salesTotal)+'</div><div class="l">Sales</div></div></div>'+
   Object.entries(grouped).map(([cat,list])=>'<div class="card"><h3>'+esc(cat)+'</h3><div class="table-wrap"><table><thead><tr><th>Item</th><th>Size</th><th style="text-align:right">Stock</th><th style="text-align:right">Price</th><th></th></tr></thead><tbody>'+
@@ -1899,15 +2108,16 @@ async function pageSettings(root){
   '<div><label>Address</label><input id="set_addr" value="'+esc(_school.address||'')+'"></div>'+
   '<div><label>Motto</label><input id="set_motto" value="'+esc(_school.motto||'')+'"></div></div>'+
   '<div class="actions"><button class="btn" onclick="saveSchoolInfo()">💾 Save</button></div></div>'+
+  '<div class="card"><h3>📚 Subjects per Class</h3><div class="muted" style="line-height:1.9">Subjects are auto-loaded when you register the school. Baby, Middle, Top use pre-primary subjects. P.1–P.3 use lower primary. P.4–P.7 use upper primary. P.5 & P.6 also have Computer (not graded).</div></div>'+
   '<div class="card"><h3>🔐 Fingerprint Unlock (Admin)</h3>'+
   (fpAvail?(fpEnabled?'<div class="alert-item ok"><span class="ico">✅</span><div class="txt"><b>Enabled on this device</b></div></div><div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn ghost" onclick="enableLoginFingerprint()">🔄 Re-register</button><button class="btn danger" onclick="disableLoginFingerprint()">Disable</button></div>':'<div class="muted" style="margin-bottom:12px">Sign in with your fingerprint instead of typing a password.</div><button class="btn ok block" onclick="enableLoginFingerprint()">🔐 Enable Fingerprint Unlock</button>')
     :'<div class="alert-item" style="border-left-color:#64748b"><span class="ico">ℹ️</span><div class="txt"><b>Not available</b><span>Device has no fingerprint sensor</span></div></div>')+'</div>'+
   '<div class="card"><h3>My Account</h3><div><label>Name</label><input value="'+esc(_profile.full_name||'')+'" disabled></div><div style="margin-top:12px"><label>Email</label><input value="'+esc(SESSION.email||'')+'" disabled></div><div style="margin-top:12px"><label>Role</label><input value="'+esc(_role||'')+'" disabled></div></div>';
 }
 window.pageSettings=pageSettings;
-async function handleLogoUpload(input){if(!input.files||!input.files[0])return;const file=input.files[0];if(file.size>800*1024){toast('Too large (max 800KB)','bad');input.value='';return;}const reader=new FileReader();reader.onload=async e=>{const dataUrl=e.target.result;const prev=document.getElementById('logoPreview');if(prev)prev.innerHTML='<img src="'+dataUrl+'">';toast('Saving…','ok');try{await rest('/rest/v1/schools?id=eq.'+_schoolId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({logo_data:dataUrl})});_school.logo_data=dataUrl;renderHeader();renderAuthLogo();toast('Saved ✓','ok');}catch(err){toast('Failed: '+err.message,'bad');}};reader.readAsDataURL(file);}
+async function handleLogoUpload(input){if(!input.files||!input.files[0])return;const file=input.files[0];if(file.size>800*1024){toast('Too large (max 800KB)','bad');input.value='';return;}const reader=new FileReader();reader.onload=async e=>{const dataUrl=e.target.result;const prev=document.getElementById('logoPreview');if(prev)prev.innerHTML='<img src="'+dataUrl+'">';toast('Saving…','ok');try{await rest('/rest/v1/schools?id=eq.'+_schoolId,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({logo_data:dataUrl})});_school.logo_data=dataUrl;renderHeader();renderAuthLogo();toast('Saved ✓','ok');}catch(err){toast('Failed: '+err.message,'bad');}};reader.readAsDataURL(file);}
 window.handleLogoUpload=handleLogoUpload;
-async function removeLogo(){if(!confirm('Remove logo?'))return;try{await rest('/rest/v1/schools?id=eq.'+_schoolId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({logo_data:null,logo_url:null})});delete _school.logo_data;delete _school.logo_url;renderHeader();renderAuthLogo();nav('settings');toast('Removed','ok');}catch(e){toast(e.message,'bad');}}
+async function removeLogo(){if(!confirm('Remove logo?'))return;try{await rest('/rest/v1/schools?id=eq.'+_schoolId,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({logo_data:null,logo_url:null})});delete _school.logo_data;delete _school.logo_url;renderHeader();renderAuthLogo();nav('settings');toast('Removed','ok');}catch(e){toast(e.message,'bad');}}
 window.removeLogo=removeLogo;
 async function saveSchoolInfo(){const n=document.getElementById('set_name').value.trim();if(!n){toast('Name','bad');return;}try{await rest('/rest/v1/schools?id=eq.'+_schoolId,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({name:n,telephone:document.getElementById('set_phone').value.trim()||null,address:document.getElementById('set_addr').value.trim()||null,motto:document.getElementById('set_motto').value.trim()||null})});const sc=await rest('/rest/v1/schools?id=eq.'+_schoolId+'&select=*');_school=sc[0];renderHeader();toast('Saved','ok');}catch(e){toast(e.message,'bad');}}
 window.saveSchoolInfo=saveSchoolInfo;
