@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
 <meta name="theme-color" content="#0a2540"/>
 <title>Eudes School Management</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -248,61 +247,11 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 <script>
 /* ============================================================
    EUDES SCHOOL MANAGEMENT — PART 1
-   Core helpers, auth, routing, class/subject structure
+   Core, auth, routing, helpers
    ============================================================ */
 const SUPA_URL='https://wabeempxckdtjvrkzhpv.supabase.co';
 const SUPA_KEY='sb_publishable_n0uAm0Gcq7qR2dJM4jMZGQ_wiV__Cfp';
 const FUNC_FEE_DEFAULT=70000;
-
-/* ============================================================
-   BUILT-IN CLASSES AND SUBJECTS (Baby to P.7)
-   ============================================================ */
-const BUILTIN_CLASSES=[
-  {name:'Baby Class',   level:'pre'},
-  {name:'Middle Class', level:'pre'},
-  {name:'Top Class',    level:'pre'},
-  {name:'Primary 1',    level:'lower'},
-  {name:'Primary 2',    level:'lower'},
-  {name:'Primary 3',    level:'lower'},
-  {name:'Primary 4',    level:'upper'},
-  {name:'Primary 5',    level:'upper'},
-  {name:'Primary 6',    level:'upper'},
-  {name:'Primary 7',    level:'upper'}
-];
-
-const BUILTIN_SUBJECTS=[
-  // Pre-primary
-  {code:'DRAW',name:'Drawing',level:'pre',graded:true},
-  {code:'MUS',name:'Music',level:'pre',graded:true},
-  {code:'NUM',name:'Number Work',level:'pre',graded:true},
-  {code:'LANG',name:'Language Development',level:'pre',graded:true},
-  {code:'READ',name:'Reading',level:'pre',graded:true},
-  {code:'WRIT',name:'Writing',level:'pre',graded:true,classes:['Top Class']},
-  // Lower primary P.1 - P.3
-  {code:'ENG',name:'English',level:'lower',graded:true},
-  {code:'LIT1',name:'Literacy 1',level:'lower',graded:true},
-  {code:'LIT2',name:'Literacy 2',level:'lower',graded:true},
-  {code:'RE',name:'Religious Education',level:'lower',graded:true},
-  // Upper primary P.4 - P.7
-  {code:'ENG-U',name:'English',level:'upper',graded:true},
-  {code:'MATH',name:'Mathematics',level:'upper',graded:true},
-  {code:'SCI',name:'Science',level:'upper',graded:true},
-  {code:'SST',name:'Social Studies',level:'upper',graded:true},
-  // Computer only for P.5 and P.6 (not graded)
-  {code:'COMP',name:'Computer',level:'upper',graded:false,classes:['Primary 5','Primary 6']}
-];
-
-/* Academic years: current year up to 2050 */
-function getAcademicYears(){
-  const cy=new Date().getFullYear();
-  const years=[];
-  for(let y=cy;y<=2050;y++)years.push(y);
-  return years;
-}
-
-function getCurrentYear(){return parseInt(safeStorage.getItem('eudes_year'))||new Date().getFullYear();}
-function getCurrentTerm(){return parseInt(safeStorage.getItem('eudes_term'))||1;}
-function setCurrentPeriod(y,t){safeStorage.setItem('eudes_year',String(y));safeStorage.setItem('eudes_term',String(t));}
 
 let _memoryStore={};
 const safeStorage={
@@ -310,6 +259,11 @@ const safeStorage={
   setItem:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){_memoryStore[k]=String(v);}},
   removeItem:k=>{try{localStorage.removeItem(k);}catch(e){delete _memoryStore[k];}}
 };
+
+function getCurrentYear(){return parseInt(safeStorage.getItem('eudes_year'))||new Date().getFullYear();}
+function getCurrentTerm(){return parseInt(safeStorage.getItem('eudes_term'))||1;}
+function setCurrentPeriod(y,t){safeStorage.setItem('eudes_year',String(y));safeStorage.setItem('eudes_term',String(t));}
+function getAcademicYears(){const cy=new Date().getFullYear();const a=[];for(let y=cy;y<=2050;y++)a.push(y);return a;}
 
 function getToken(){const s=safeStorage.getItem('eudes_session');if(!s)return null;try{return JSON.parse(s).access_token;}catch(e){return null;}}
 function getUser(){const s=safeStorage.getItem('eudes_session');if(!s)return null;try{return JSON.parse(s).user;}catch(e){return null;}}
@@ -345,7 +299,6 @@ function closeModal(){document.getElementById('modalRoot').innerHTML='';}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function fmtUGX(n){return 'UGX '+(Number(n)||0).toLocaleString();}
 function fmtDate(ts){if(!ts)return '—';const d=new Date(ts);return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();}
-function fmtTime(ts){if(!ts)return '';return new Date(ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
 function fmtLongDate(d){return d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});}
 function fmtDuration(ms){const mins=Math.round(ms/60000);const h=Math.floor(mins/60);const m=mins%60;return (h?h+'h ':'')+m+'m';}
 
@@ -364,8 +317,6 @@ function printHTML(title,bodyHTML,extraCSS){
     '.header{text-align:center;padding-bottom:14px;border-bottom:2px solid #111;margin-bottom:14px}'+
     '.header img{width:70px;height:70px;object-fit:contain;margin-bottom:8px}'+
     '.footer{text-align:center;font-size:10px;color:#888;margin-top:20px;padding-top:10px;border-top:1px solid #eee}'+
-    '.summary{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;background:#f8fafc;padding:12px;border-radius:8px;margin-top:12px;font-size:13px}'+
-    '.summary div b{display:block;font-size:11px;color:#666;text-transform:uppercase}'+
     '@media print{@page{margin:10mm}}</style>'+(extraCSS?'<style>'+extraCSS+'</style>':'')+
     '</head><body><div class="header">'+(logo?'<img src="'+esc(logo)+'">':'')+
     '<h1>'+esc(_school?_school.name:'School')+'</h1>'+
@@ -448,7 +399,7 @@ async function boot(){
   catch(e){document.getElementById('loginErr').textContent='Profile error';document.getElementById('loginErr').style.display='block';return;}
   if(!_profile){document.getElementById('loginErr').textContent='Profile not found.';document.getElementById('loginErr').style.display='block';return;}
   _schoolId=_profile.school_id;_role=_profile.role;
-  if(!_schoolId||_schoolId==='undefined'||_schoolId==='null'){
+  if(!_schoolId){
     switchTab('register');
     document.getElementById('regErr').textContent='Account not linked to a school.';
     document.getElementById('regErr').style.display='block';
@@ -465,60 +416,12 @@ async function boot(){
   }
   document.getElementById('authScreen').style.display='none';
   document.getElementById('app').style.display='block';
-  await ensureClassesAndSubjects();
   populateTermSelector();renderHeader();renderAuthLogo();renderNav();renderBottomBar();tickClock();
   setInterval(tickClock,30000);
   showFingerprintButtonIfReady();
   await nav('dashboard');
 }
 window.boot=boot;
-
-/* Ensure the 10 classes and their subjects exist in the DB (once per school) */
-async function ensureClassesAndSubjects(){
-  try{
-    const existing=await rest('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=id,name');
-    const exNames=(existing||[]).map(c=>c.name);
-    const toCreate=BUILTIN_CLASSES.filter(c=>exNames.indexOf(c.name)===-1);
-    for(let i=0;i<toCreate.length;i++){
-      const c=toCreate[i];
-      await rest('/rest/v1/classes',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,name:c.name,sort_order:i})});
-    }
-    const classes=await rest('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=id,name');
-    _classesCache=classes||[];
-    const clsByName={};_classesCache.forEach(c=>clsByName[c.name]=c.id);
-
-    const existingSub=await rest('/rest/v1/subjects?school_id=eq.'+_schoolId+'&select=id,code').catch(()=>[]);
-    const exCodes=(existingSub||[]).map(s=>s.code);
-
-    for(let i=0;i<BUILTIN_SUBJECTS.length;i++){
-      const s=BUILTIN_SUBJECTS[i];
-      if(exCodes.indexOf(s.code)!==-1)continue;
-      let classIds=null;
-      if(s.classes){
-        classIds=s.classes.map(n=>clsByName[n]).filter(Boolean);
-      }else{
-        const matching=_classesCache.filter(c=>{
-          if(s.level==='pre')return c.name==='Baby Class'||c.name==='Middle Class'||c.name==='Top Class';
-          if(s.level==='lower')return c.name==='Primary 1'||c.name==='Primary 2'||c.name==='Primary 3';
-          if(s.level==='upper')return c.name==='Primary 4'||c.name==='Primary 5'||c.name==='Primary 6'||c.name==='Primary 7';
-          return false;
-        });
-        classIds=matching.map(c=>c.id);
-      }
-      try{
-        await rest('/rest/v1/subjects',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({
-          school_id:_schoolId,
-          code:s.code,
-          name:s.name,
-          is_compulsory:s.graded,
-          level:s.level,
-          class_ids:classIds
-        })});
-      }catch(e){console.warn('Subject create skip:',s.code,e.message);}
-    }
-  }catch(e){console.warn('ensureClassesAndSubjects:',e.message);}
-}
-window.ensureClassesAndSubjects=ensureClassesAndSubjects;
 
 function renderAuthLogo(){const el=document.getElementById('authLogo');if(!el)return;const src=_school&&(_school.logo_data||_school.logo_url);if(src){el.innerHTML='<img src="'+esc(src)+'">';el.style.background='#fff';}else{el.innerHTML='E';el.style.background='';}}
 function tickClock(){const now=new Date();const d=document.getElementById('headerDate');const t=document.getElementById('headerTime');if(d)d.textContent='📅 '+fmtLongDate(now);if(t)t.textContent='🕐 '+now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+' (EAT)';}
@@ -574,18 +477,8 @@ window.changePeriod=changePeriod;
 async function loadClasses(){if(_classesCache)return _classesCache;const d=await rest('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=id,name&order=sort_order');_classesCache=d||[];return _classesCache;}
 async function loadStaff(){if(_staffCache)return _staffCache;try{_staffCache=await rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=id,full_name,role&order=full_name')||[];}catch(e){_staffCache=[];}return _staffCache;}
 
-/* Subject helpers - FILTER subjects by class_id via class_ids array */
-async function loadSubjectsForClass(classId){
-  const all=await rest('/rest/v1/subjects?school_id=eq.'+_schoolId+'&select=*&order=code').catch(()=>[]);
-  return (all||[]).filter(s=>{
-    if(!s.class_ids||!s.class_ids.length)return false;
-    return s.class_ids.indexOf(classId)!==-1;
-  });
-}
-window.loadSubjectsForClass=loadSubjectsForClass;
-
 /* ============================================================
-   SHARED HELPERS
+   SHARED
    ============================================================ */
 function functionalStatusBadge(s){
   if(s==='cash')return '<span class="badge ok">💵 Cash</span>';
@@ -612,6 +505,60 @@ function ordinal(n){if(!n)return '—';if(n===1)return '1st';if(n===2)return '2n
 function examStageRank(type){const t=String(type||'').toLowerCase();if(t.includes('begin')||t.includes('bot'))return 1;if(t.includes('mid')||t.includes('mot'))return 2;if(t.includes('end')||t.includes('eot'))return 3;return 0;}
 function examStageLabel(type){const r=examStageRank(type);if(r===1)return 'BOT';if(r===2)return 'MOT';if(r===3)return 'EOT';return 'EX';}
 function examStageFullLabel(rank){return {1:'Beginning of Term',2:'Mid Term',3:'End of Term'}[rank]||'Other';}
+
+/* Load subjects for a class — filter by class_id */
+async function loadSubjectsForClass(classId){
+  const all=await rest('/rest/v1/subjects?school_id=eq.'+_schoolId+'&select=*&order=code').catch(()=>[]);
+  return (all||[]).filter(s=>{
+    if(!s.class_id)return true;
+    return s.class_id===classId;
+  });
+}
+window.loadSubjectsForClass=loadSubjectsForClass;
+
+/* ============================================================
+   ROUTES
+   ============================================================ */
+const ROUTES={
+  dashboard:{label:'Dashboard',icon:'📊',render:pageDashboard,bottom:true},
+  students:{label:'Students',icon:'🎓',render:pageStudents,bottom:true},
+  student_profile:{label:'Profile',icon:'👤',render:pageStudentProfile},
+  attendance:{label:'Attendance',icon:'📅',render:pageAttendance,bottom:true},
+  passouts:{label:'Pass Outs',icon:'🚪',render:pagePassOuts,bottom:true},
+  fees:{label:'Fees',icon:'💰',render:pageFees,bottom:true},
+  fingerprint:{label:'Fingerprints',icon:'🖐️',render:pageFingerprint,bottom:true},
+  staff:{label:'Staff',icon:'👨‍🏫',render:pageStaff},
+  staff_att:{label:'Staff Att.',icon:'⏰',render:pageStaffAttendance},
+  debtors:{label:'Debtors',icon:'👥',render:pageDebtors},
+  marks:{label:'Marks',icon:'✍️',render:pageMarks},
+  exams:{label:'Exams',icon:'📝',render:pageExams},
+  reports:{label:'Report Cards',icon:'📄',render:pageReports},
+  uniforms:{label:'Uniforms',icon:'👕',render:pageUniforms},
+  expenses:{label:'Expenses',icon:'💸',render:pageExpenses},
+  messages:{label:'Messages',icon:'💬',render:pageMessages},
+  settings:{label:'Settings',icon:'⚙️',render:pageSettings}
+};
+let activeRoute='dashboard';
+async function nav(route){
+  if(!ROUTES[route])return;
+  activeRoute=route;renderNav();renderBottomBar();
+  const main=document.getElementById('main');
+  main.innerHTML='<div class="loading">Loading…</div>';
+  window.scrollTo({top:0,behavior:'smooth'});
+  try{await ROUTES[route].render(main);}
+  catch(e){console.error(e);main.innerHTML='<div class="card"><h3>Error</h3><p class="muted">'+esc(e.message)+'</p><button class="btn ghost" onclick="nav(\''+route+'\')">Retry</button></div>';}
+}
+window.nav=nav;
+function renderNav(){
+  const entries=Object.entries(ROUTES).filter(([k])=>k!=='student_profile');
+  document.getElementById('nav').innerHTML=entries.map(([k,r])=>'<button class="pill'+(k===activeRoute?' active':'')+'" onclick="nav(\''+k+'\')"><span>'+r.icon+'</span><span>'+esc(r.label)+'</span></button>').join('');
+}
+function renderBottomBar(){
+  const entries=Object.entries(ROUTES).filter(([k,r])=>r.bottom);
+  document.getElementById('bottomBar').innerHTML=entries.map(([k,r])=>'<button class="pill'+(k===activeRoute?' active':'')+'" onclick="nav(\''+k+'\')"><span>'+r.icon+'</span><span>'+esc(r.label)+'</span></button>').join('');
+}
+function doGlobalSearch(){const v=document.getElementById('globalSearch').value.trim();if(!v)return;window._stFilterSearch=v;nav('students');setTimeout(()=>{const el=document.getElementById('studentSearchInput');if(el){el.value=v;filterStudentsTable(v,'');}},300);}
+window.doGlobalSearch=doGlobalSearch;
 
 /* ============================================================
    FINGERPRINT ENGINE
@@ -671,6 +618,7 @@ async function loginWithFingerprint(){
 window.loginWithFingerprint=loginWithFingerprint;
 async function showFingerprintButtonIfReady(){const btn=document.getElementById('fingerprintBtn');if(!btn)return;const stored=safeStorage.getItem(FP_CRED_KEY);const avail=await fpAvailable();btn.style.display=(stored&&avail)?'inline-flex':'none';}
 window.showFingerprintButtonIfReady=showFingerprintButtonIfReady;
+
 async function registerPersonFP(type,id){
   if(!(await fpAvailable())){toast('No fingerprint sensor on this device','bad');return;}
   let label='';
@@ -701,6 +649,7 @@ async function registerPersonFP(type,id){
   }catch(e){el.innerHTML='<div class="alert-item danger"><span class="ico">❌</span><div class="txt"><b>Save failed</b><span>'+esc(e.message)+'</span></div></div>';}
 }
 window.registerPersonFP=registerPersonFP;
+
 async function removePersonFP(type,id){
   if(!confirm('Remove this fingerprint?'))return;
   try{
@@ -712,6 +661,7 @@ async function removePersonFP(type,id){
   }catch(e){toast(e.message,'bad');}
 }
 window.removePersonFP=removePersonFP;
+
 async function fpIdentify(){
   if(!(await fpAvailable()))return{error:'No fingerprint sensor on this device'};
   const r=await fpPrompt(null);
@@ -730,6 +680,7 @@ async function fpIdentify(){
   return{error:'No matching record'};
 }
 window.fpIdentify=fpIdentify;
+
 async function fpPupilAttendance(){
   const cnt=(await rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&purpose=eq.attendance&student_id=not.is.null&select=id').catch(()=>[])).length;
   if(!cnt){toast('No pupil fingerprints registered yet','bad');return;}
@@ -745,10 +696,7 @@ async function fpPupilAttendance(){
     return;
   }
   const st=r.student;
-  if(!st||st.status!=='active'){
-    document.getElementById('fpHero').innerHTML='<div class="icon">⚠️</div><h3 style="margin-bottom:6px">Not active</h3>';
-    return;
-  }
+  if(!st||st.status!=='active'){document.getElementById('fpHero').innerHTML='<div class="icon">⚠️</div><h3 style="margin-bottom:6px">Not active</h3>';return;}
   const today=new Date().toISOString().slice(0,10);
   try{
     await rest('/rest/v1/attendance?school_id=eq.'+_schoolId+'&student_id=eq.'+st.id+'&date=eq.'+today,{method:'DELETE'});
@@ -759,6 +707,7 @@ async function fpPupilAttendance(){
   }catch(e){toast(e.message,'bad');}
 }
 window.fpPupilAttendance=fpPupilAttendance;
+
 async function fpStaffAttendance(){
   const cnt=(await rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&purpose=eq.attendance&staff_id=not.is.null&select=id').catch(()=>[])).length;
   if(!cnt){toast('No staff fingerprints registered','bad');return;}
@@ -783,51 +732,7 @@ async function fpStaffAttendance(){
   }catch(e){toast(e.message,'bad');}
 }
 window.fpStaffAttendance=fpStaffAttendance;
-
-/* ============================================================
-   ROUTES
-   ============================================================ */
-const ROUTES={
-  dashboard:{label:'Dashboard',icon:'📊',render:pageDashboard,bottom:true},
-  students:{label:'Students',icon:'🎓',render:pageStudents,bottom:true},
-  student_profile:{label:'Profile',icon:'👤',render:pageStudentProfile},
-  attendance:{label:'Attendance',icon:'📅',render:pageAttendance,bottom:true},
-  passouts:{label:'Pass Outs',icon:'🚪',render:pagePassOuts,bottom:true},
-  fees:{label:'Fees',icon:'💰',render:pageFees,bottom:true},
-  fingerprint:{label:'Fingerprints',icon:'🖐️',render:pageFingerprint,bottom:true},
-  staff:{label:'Staff',icon:'👨‍🏫',render:pageStaff},
-  staff_att:{label:'Staff Att.',icon:'⏰',render:pageStaffAttendance},
-  debtors:{label:'Debtors',icon:'👥',render:pageDebtors},
-  marks:{label:'Marks',icon:'✍️',render:pageMarks},
-  exams:{label:'Exams',icon:'📝',render:pageExams},
-  reports:{label:'Report Cards',icon:'📄',render:pageReports},
-  uniforms:{label:'Uniforms',icon:'👕',render:pageUniforms},
-  expenses:{label:'Expenses',icon:'💸',render:pageExpenses},
-  messages:{label:'Messages',icon:'💬',render:pageMessages},
-  settings:{label:'Settings',icon:'⚙️',render:pageSettings}
-};
-let activeRoute='dashboard';
-async function nav(route){
-  if(!ROUTES[route])return;
-  activeRoute=route;renderNav();renderBottomBar();
-  const main=document.getElementById('main');
-  main.innerHTML='<div class="loading">Loading…</div>';
-  window.scrollTo({top:0,behavior:'smooth'});
-  try{await ROUTES[route].render(main);}
-  catch(e){console.error(e);main.innerHTML='<div class="card"><h3>Error</h3><p class="muted">'+esc(e.message)+'</p><button class="btn ghost" onclick="nav(\''+route+'\')">Retry</button></div>';}
-}
-window.nav=nav;
-function renderNav(){
-  const entries=Object.entries(ROUTES).filter(([k])=>k!=='student_profile');
-  document.getElementById('nav').innerHTML=entries.map(([k,r])=>'<button class="pill'+(k===activeRoute?' active':'')+'" onclick="nav(\''+k+'\')"><span>'+r.icon+'</span><span>'+esc(r.label)+'</span></button>').join('');
-}
-function renderBottomBar(){
-  const entries=Object.entries(ROUTES).filter(([k,r])=>r.bottom);
-  document.getElementById('bottomBar').innerHTML=entries.map(([k,r])=>'<button class="pill'+(k===activeRoute?' active':'')+'" onclick="nav(\''+k+'\')"><span>'+r.icon+'</span><span>'+esc(r.label)+'</span></button>').join('');
-}
-function doGlobalSearch(){const v=document.getElementById('globalSearch').value.trim();if(!v)return;window._stFilterSearch=v;nav('students');setTimeout(()=>{const el=document.getElementById('studentSearchInput');if(el){el.value=v;filterStudentsTable(v,'');}},300);}
-window.doGlobalSearch=doGlobalSearch;
-</script>
+</script
 /* ============================================================
    DASHBOARD
    ============================================================ */
@@ -1356,11 +1261,11 @@ async function saveAttendance(){
   const rows=[];
   document.querySelectorAll('.att-select').forEach(sel=>{if(sel.value==='')return;rows.push({school_id:_schoolId,student_id:sel.dataset.student,class_id:fClass,status:sel.value,date:fDate,academic_year:getCurrentYear(),term:getCurrentTerm()});});
   if(!rows.length){toast('Nothing','bad');return;}
-  try{await rest('/rest/v1/attendance?school_id=eq.'+_schoolId+'&class_id=eq.'+fClass+'&date=eq.'+fDate,{method:'DELETE'});await rest('/rest/v1/attendance',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify(rows)});toast('Saved','ok');nav('attendance');}
+  try{await rest('/rest/v1/attendance?school_id=eq.'+_schoolId+'&class_id=eq.'+fClass+'&date=eq.'+fDate,{method:'DELETE'});await rest('/rest/v1/attendance',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(rows)});toast('Saved','ok');nav('attendance');}
   catch(e){toast(e.message,'bad');}
 }
 window.saveAttendance=saveAttendance;
-
+</script
 /* ============================================================
    PASS OUTS
    ============================================================ */
@@ -1508,10 +1413,7 @@ async function fpPassOut(preStudentId){
     return;
   }
   const st=r.student;
-  if(!st||st.status!=='active'){
-    document.getElementById('fpHero').innerHTML='<div class="icon">⚠️</div><h3 style="margin-bottom:6px">Not active</h3>';
-    return;
-  }
+  if(!st||st.status!=='active'){document.getElementById('fpHero').innerHTML='<div class="icon">⚠️</div><h3 style="margin-bottom:6px">Not active</h3>';return;}
   openManualPassOut(st);
 }
 window.fpPassOut=fpPassOut;
@@ -1740,7 +1642,7 @@ async function doDelExam(id){closeModal();try{await rest('/rest/v1/marks?exam_id
 window.doDelExam=doDelExam;
 
 /* ============================================================
-   MARKS — FILTERED BY CLASS SUBJECTS
+   MARKS — filtered by class subjects
    ============================================================ */
 async function pageMarks(root){
   const [exams,classes]=await Promise.all([
@@ -1767,12 +1669,11 @@ async function pageMarks(root){
   '<div><label>Class</label><select onchange="window._marksClassId=this.value;nav(\'marks\')">'+classes.map(c=>'<option value="'+c.id+'"'+(c.id===cls.id?' selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></div></div>'+
   '<div class="alert-item info" style="margin-top:12px"><span class="ico">📚</span><div class="txt"><b>Subjects for '+esc(cls.name)+'</b><span>'+subjects.map(s=>esc(s.name)).join(' · ')+'</span></div></div></div>'+
   '<div class="card">'+((students||[]).length?
-    (subjects.length?'<div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th>'+subjects.map(s=>'<th style="text-align:center">'+esc(s.code)+(s.graded===false?' <span style="font-weight:400;opacity:.7">(na)</span>':'')+'</th>').join('')+'<th>Total</th><th>Grade</th></tr></thead><tbody>'+
+    (subjects.length?'<div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th>'+subjects.map(s=>'<th style="text-align:center">'+esc(s.code)+(s.is_compulsory===false?' <span style="font-weight:400;opacity:.7">(na)</span>':'')+'</th>').join('')+'<th>Total</th><th>Grade</th></tr></thead><tbody>'+
     students.map((s,i)=>{
       const per=markMap[s.id]||{};
-      const graded=subjects.filter(x=>x.graded!==false);
       let total=0,count=0;
-      graded.forEach(sb=>{const v=per[sb.id];if(v!=null&&!isNaN(v)){total+=Number(v);count++;}});
+      subjects.forEach(sb=>{const v=per[sb.id];if(v!=null&&!isNaN(v)){total+=Number(v);count++;}});
       const avg=count?total/count:0;const g=gradeOf(avg);
       return '<tr><td>'+(i+1)+'</td><td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b></td>'+
         subjects.map(sb=>'<td><input type="number" min="0" max="100" class="marks-input" style="max-width:80px" data-sid="'+s.id+'" data-sub="'+sb.id+'" value="'+(per[sb.id]!=null?per[sb.id]:'')+'"></td>').join('')+
@@ -1800,17 +1701,15 @@ async function saveMarksGrid(){
   try{
     const students=await rest('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+classId+'&select=id');
     const sids=(students||[]).map(s=>s.id);
-    if(sids.length){
-      await rest('/rest/v1/marks?school_id=eq.'+_schoolId+'&exam_id=eq.'+examId+'&student_id=in.('+sids.join(',')+')',{method:'DELETE'});
-    }
+    if(sids.length){await rest('/rest/v1/marks?school_id=eq.'+_schoolId+'&exam_id=eq.'+examId+'&student_id=in.('+sids.join(',')+')',{method:'DELETE'});}
     await rest('/rest/v1/marks',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(rows)});
     toast(rows.length+' marks saved','ok');
   }catch(e){toast(e.message,'bad');}
 }
 window.saveMarksGrid=saveMarksGrid;
+
 /* ============================================================
-   REPORT CARDS — FILTERED BY CLASS SUBJECTS
-   Shows ONLY the subjects of the selected class
+   REPORT CARDS — filtered by class subjects
    ============================================================ */
 function buildReportCardBody(student,rd){
   const {exams,cls,subjects,marksByStudent,rankMap,year,term,stageLabel}=rd;
@@ -1818,7 +1717,7 @@ function buildReportCardBody(student,rd){
   let grandTotal=0,assessCount=0;
   const subjectRows=subjects.map(s=>{
     const scores=exams.map(e=>{const sc=perExam[e.id]?.[s.id];if(sc!=null&&!isNaN(sc)){grandTotal+=Number(sc);assessCount++;}return sc!=null&&!isNaN(sc)?Number(sc):null;});
-    return{subject:s,scores,isGraded:s.graded!==false};
+    return{subject:s,scores,isGraded:s.is_compulsory!==false};
   });
   const avg=assessCount?grandTotal/assessCount:0;
   const pos=rankMap[student.id];
@@ -1865,7 +1764,7 @@ async function pageReports(root){
   const cId=window._rcClassId||(classes[0]&&classes[0].id);
   const cls=classes.find(c=>c.id===cId)||classes[0];
   const termExams=(exams||[]).filter(e=>Number(e.year)===year&&Number(e.term)===term).sort((a,b)=>{const dr=examStageRank(a.type)-examStageRank(b.type);if(dr!==0)return dr;return new Date(a.created_at||0)-new Date(b.created_at||0);});
-  if(!termExams.length){root.innerHTML='<div class="page-head"><div><h1>📄 Report Cards</h1></div></div><div class="card"><div class="empty">No exams for '+year+' Term '+term+'. Create them in <b>Exams</b> page.</div></div>';return;}
+  if(!termExams.length){root.innerHTML='<div class="page-head"><div><h1>📄 Report Cards</h1></div></div><div class="card"><div class="empty">No exams for '+year+' Term '+term+'. Create them in the Exams page.</div></div>';return;}
   const stageRanks=[...new Set(termExams.map(e=>examStageRank(e.type)))].sort((a,b)=>a-b);
   const highestStage=stageRanks[stageRanks.length-1];
   let selectedStage=window._rcStage!=null?Number(window._rcStage):highestStage;
@@ -1874,7 +1773,6 @@ async function pageReports(root){
   const activeExamIds=activeExams.map(e=>e.id);
   const stageLabel=examStageFullLabel(selectedStage);
   const subjects=await loadSubjectsForClass(cls.id);
-
   const [students,marks]=await Promise.all([
     rest('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+cls.id+'&status=eq.active&select=*&order=first_name'),
     rest('/rest/v1/marks?school_id=eq.'+_schoolId+'&exam_id=in.('+activeExamIds.join(',')+')&select=*')
@@ -1889,12 +1787,11 @@ async function pageReports(root){
     marksByStudent[m.student_id][m.exam_id][m.subject_id]=Number(m.score);
   });
   const subjList=subjects;
-  const gradedSubjList=subjList.filter(s=>s.graded!==false);
   const rows=studs.map(s=>{
     const per=marksByStudent[s.id]||{};
     let total=0,count=0;
     activeExams.forEach(e=>{
-      gradedSubjList.forEach(sj=>{
+      subjList.forEach(sj=>{
         const v=per[e.id]?.[sj.id];
         if(v!=null&&!isNaN(v)){total+=Number(v);count++;}
       });
@@ -1914,17 +1811,13 @@ async function pageReports(root){
   root.innerHTML=
   '<div class="page-head"><div><h1>📄 Report Cards</h1><div class="sub">'+esc(cls.name)+' · '+year+' T'+term+' · '+esc(stageLabel)+'</div></div>'+
   '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="printBroadsheet()">📊 Broadsheet</button><button class="btn" onclick="printAllReportCards()">🖨️ Print All</button></div></div>'+
-
   '<div class="card"><div class="grid grid-3">'+
-  '<div><label>Year</label><select onchange="window._rcYear=parseInt(this.value);window._rcStage=null;nav(\'reports\')">'+
-  getAcademicYears().map(y=>'<option value="'+y+'"'+(y===year?' selected':'')+'>'+y+'</option>').join('')+
-  '</select></div>'+
-  '<div><label>Term</label><select onchange="window._rcTerm=parseInt(this.value);window._rcStage=null;nav(\'reports\')"><option value="1"'+(term==1?' selected':'')+'>Term 1</option><option value="2"'+(term==2?' selected':'')+'>Term 2</option><option value="3"'+(term==3?' selected':'')+'>Term 3</option></select></div>'+
+  '<div><label>Year</label><input type="number" value="'+year+'" onchange="window._rcYear=this.value;window._rcStage=null;nav(\'reports\')"></div>'+
+  '<div><label>Term</label><select onchange="window._rcTerm=this.value;window._rcStage=null;nav(\'reports\')"><option value="1"'+(term==1?' selected':'')+'>Term 1</option><option value="2"'+(term==2?' selected':'')+'>Term 2</option><option value="3"'+(term==3?' selected':'')+'>Term 3</option></select></div>'+
   '<div><label>Class</label><select onchange="window._rcClassId=this.value;nav(\'reports\')">'+classes.map(c=>'<option value="'+c.id+'"'+(c.id===cls.id?' selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></div>'+
-  '<div style="grid-column:1/-1"><label>Stage (cumulative)</label><select onchange="window._rcStage=parseInt(this.value);nav(\'reports\')">'+
+  '<div style="grid-column:1/-1"><label>Stage (cumulative)</label><select onchange="window._rcStage=this.value;nav(\'reports\')">'+
   stageOptions.map(o=>'<option value="'+o.value+'"'+(o.value===selectedStage?' selected':'')+'>'+esc(o.label)+' — '+o.count+' exam'+(o.count>1?'s':'')+'</option>').join('')+'</select></div></div>'+
   '<div class="alert-item info" style="margin-top:12px"><span class="ico">📚</span><div class="txt"><b>Subjects for '+esc(cls.name)+'</b><span>'+subjList.map(s=>esc(s.name)).join(' · ')+'</span></div></div></div>'+
-
   '<div class="card"><h3>👤 Select Pupil to View Report Card</h3>'+
   (studs.length?
     '<div class="grid grid-2">'+
@@ -1935,7 +1828,6 @@ async function pageReports(root){
     :'<div class="empty">No pupils in this class.</div>')+
   '</div>'+
   '<div id="rcSingleCard"></div>'+
-
   '<div class="card"><h3>📊 Ranking</h3>'+
   (studs.length?'<div class="table-wrap"><table><thead><tr><th>Pos</th><th>Adm</th><th>Name</th>'+activeExams.map(e=>'<th style="text-align:center">'+esc(examStageLabel(e.type))+'</th>').join('')+'<th style="text-align:right">Tot</th><th style="text-align:right">Avg</th><th>Grade</th><th class="no-print"></th></tr></thead><tbody>'+
   sortedView.map(r=>{
@@ -1944,8 +1836,8 @@ async function pageReports(root){
     const per=marksByStudent[r.student.id]||{};
     return '<tr><td><b>'+(pos?posLabel(pos):'—')+'</b></td><td>'+esc(r.student.admission_no)+'</td><td><b>'+esc(r.student.first_name+' '+(r.student.last_name||''))+'</b></td>'+
       activeExams.map(e=>{
-        const hasAny=gradedSubjList.some(sj=>per[e.id]?.[sj.id]!=null);
-        const examTotal=gradedSubjList.reduce((sum,sj)=>sum+(per[e.id]?.[sj.id]!=null?Number(per[e.id][sj.id]):0),0);
+        const hasAny=subjList.some(sj=>per[e.id]?.[sj.id]!=null);
+        const examTotal=subjList.reduce((sum,sj)=>sum+(per[e.id]?.[sj.id]!=null?Number(per[e.id][sj.id]):0),0);
         return '<td style="text-align:center">'+(hasAny?examTotal.toFixed(0):'—')+'</td>';
       }).join('')+
       '<td style="text-align:right;font-weight:600">'+r.total.toFixed(0)+'</td><td style="text-align:right">'+r.avg.toFixed(1)+'</td><td><span class="badge '+(g.cls||'info')+'">'+g.g+'</span></td>'+
@@ -2036,8 +1928,7 @@ async function pageUniforms(root){
   const items=await rest('/rest/v1/uniform_items?school_id=eq.'+_schoolId+'&select=*&order=category,name').catch(()=>[]);
   const salesTotal=(await rest('/rest/v1/uniform_sales?school_id=eq.'+_schoolId+'&select=total_amount').catch(()=>[])).reduce((s,x)=>s+Number(x.total_amount||0),0);
   const stockValue=(items||[]).reduce((s,i)=>s+(Number(i.current_stock)||0)*(Number(i.unit_cost)||0),0);
-  const grouped={};
-  (items||[]).forEach(i=>{const c=i.category||'Other';if(!grouped[c])grouped[c]=[];grouped[c].push(i);});
+  const grouped={};(items||[]).forEach(i=>{const c=i.category||'Other';if(!grouped[c])grouped[c]=[];grouped[c].push(i);});
   root.innerHTML='<div class="page-head"><div><h1>👕 Uniforms</h1></div><button class="btn" onclick="addUniformItem()">＋ Item</button></div>'+
   '<div class="grid grid-kpi" style="margin-bottom:14px"><div class="kpi"><div class="v">'+fmtUGX(stockValue)+'</div><div class="l">Stock Value</div></div><div class="kpi kpi-navy"><div class="v">'+fmtUGX(salesTotal)+'</div><div class="l">Sales</div></div></div>'+
   Object.entries(grouped).map(([cat,list])=>'<div class="card"><h3>'+esc(cat)+'</h3><div class="table-wrap"><table><thead><tr><th>Item</th><th>Size</th><th style="text-align:right">Stock</th><th style="text-align:right">Price</th><th></th></tr></thead><tbody>'+
@@ -2108,7 +1999,6 @@ async function pageSettings(root){
   '<div><label>Address</label><input id="set_addr" value="'+esc(_school.address||'')+'"></div>'+
   '<div><label>Motto</label><input id="set_motto" value="'+esc(_school.motto||'')+'"></div></div>'+
   '<div class="actions"><button class="btn" onclick="saveSchoolInfo()">💾 Save</button></div></div>'+
-  '<div class="card"><h3>📚 Subjects per Class</h3><div class="muted" style="line-height:1.9">Subjects are auto-loaded when you register the school. Baby, Middle, Top use pre-primary subjects. P.1–P.3 use lower primary. P.4–P.7 use upper primary. P.5 & P.6 also have Computer (not graded).</div></div>'+
   '<div class="card"><h3>🔐 Fingerprint Unlock (Admin)</h3>'+
   (fpAvail?(fpEnabled?'<div class="alert-item ok"><span class="ico">✅</span><div class="txt"><b>Enabled on this device</b></div></div><div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn ghost" onclick="enableLoginFingerprint()">🔄 Re-register</button><button class="btn danger" onclick="disableLoginFingerprint()">Disable</button></div>':'<div class="muted" style="margin-bottom:12px">Sign in with your fingerprint instead of typing a password.</div><button class="btn ok block" onclick="enableLoginFingerprint()">🔐 Enable Fingerprint Unlock</button>')
     :'<div class="alert-item" style="border-left-color:#64748b"><span class="ico">ℹ️</span><div class="txt"><b>Not available</b><span>Device has no fingerprint sensor</span></div></div>')+'</div>'+
