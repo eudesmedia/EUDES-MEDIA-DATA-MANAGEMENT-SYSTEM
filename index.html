@@ -119,16 +119,6 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .bottom-bar .pill{background:var(--navy);color:#fff;border-color:var(--navy);padding:9px 14px;font-size:12px}
 .bottom-bar .pill.active{background:var(--gold);border-color:var(--gold);color:#fff}
 .wa-float{position:fixed;bottom:96px;right:16px;background:#25D366;color:#fff;width:52px;height:52px;border-radius:50%;z-index:99;text-decoration:none;box-shadow:0 10px 20px rgba(0,0,0,.25);display:grid;place-items:center;font-size:22px}
-.profile-hero{background:linear-gradient(135deg,var(--navy),var(--navy3));color:#fff;border-radius:16px;padding:20px;margin-bottom:14px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
-.profile-hero .avatar{width:64px;height:64px;border-radius:50%;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-size:26px;font-weight:800;flex-shrink:0}
-.profile-hero .info{flex:1;min-width:200px}
-.profile-hero .info h1{color:#fff;font-size:20px;margin:0 0 4px}
-.profile-hero .info .meta{color:#cbd5e1;font-size:12.5px;line-height:1.6}
-.tabs-bar{display:flex;gap:6px;overflow-x:auto;padding:4px 0;border-bottom:2px solid var(--line);margin-bottom:14px;scrollbar-width:none}
-.tabs-bar::-webkit-scrollbar{display:none}
-.tabs-bar button{flex:0 0 auto;padding:9px 14px;font-size:12.5px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px}
-.tabs-bar button.active{color:var(--navy);border-bottom-color:var(--gold)}
-.mini-stat{display:inline-block;padding:6px 12px;background:#f1f5f9;border-radius:8px;font-size:12px;font-weight:600;color:var(--navy);margin:2px 4px 2px 0}
 .alert-item{display:flex;gap:10px;align-items:center;padding:12px;border-radius:10px;background:#fff;border-left:4px solid var(--gold);margin-bottom:8px;font-size:13px;box-shadow:0 1px 3px rgba(15,23,42,.04)}
 .alert-item.danger{border-left-color:var(--bad)}
 .alert-item.ok{border-left-color:var(--ok)}
@@ -137,12 +127,6 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .alert-item .txt{flex:1}
 .alert-item .txt b{display:block;color:var(--navy)}
 .alert-item .txt span{color:var(--muted);font-size:12px;display:block}
-.logo-preview{width:96px;height:96px;border-radius:14px;background:#eef2f7;display:grid;place-items:center;overflow:hidden;border:2px solid var(--line);flex-shrink:0;font-size:36px;color:var(--muted)}
-.logo-preview img{width:100%;height:100%;object-fit:cover}
-.receipt{background:#fff;border:1px dashed #cbd5e1;border-radius:12px;padding:20px;font-family:monospace;font-size:12.5px;line-height:1.7;max-width:420px;margin:0 auto}
-.receipt .rhead{text-align:center;border-bottom:1px dashed #cbd5e1;padding-bottom:10px;margin-bottom:10px}
-.receipt .rrow{display:flex;justify-content:space-between}
-.receipt .rtotal{border-top:1px dashed #cbd5e1;margin-top:10px;padding-top:10px;font-weight:700;font-size:14px}
 .subject-chip{display:inline-block;padding:4px 10px;border-radius:999px;background:#e0e9f5;color:var(--navy);font-size:11.5px;font-weight:600;margin:2px 4px 2px 0}
 .stage-selector{display:flex;gap:6px;padding:6px;background:#f1f5f9;border-radius:999px;overflow-x:auto;margin-bottom:12px}
 .stage-selector button{flex:1;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}
@@ -245,14 +229,10 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 
 <script>
 /* ============================================================
-   EUDES SCHOOL MANAGEMENT — COMPLETE
+   EUDES SCHOOL MANAGEMENT — COMPLETE (no fingerprints)
    ============================================================ */
 const SUPA_URL='https://wabeempxckdtjvrkzhpv.supabase.co';
 const SUPA_KEY='sb_publishable_n0uAm0Gcq7qR2dJM4jMZGQ_wiV__Cfp';
-
-function getCurrentYear(){return parseInt(safeStorage.getItem('eudes_year'))||new Date().getFullYear();}
-function getCurrentTerm(){return parseInt(safeStorage.getItem('eudes_term'))||1;}
-function setCurrentPeriod(y,t){safeStorage.setItem('eudes_year',String(y));safeStorage.setItem('eudes_term',String(t));}
 
 let _memoryStore={};
 const safeStorage={
@@ -260,6 +240,10 @@ const safeStorage={
   setItem:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){_memoryStore[k]=String(v);}},
   removeItem:k=>{try{localStorage.removeItem(k);}catch(e){delete _memoryStore[k];}}
 };
+
+function getCurrentYear(){return parseInt(safeStorage.getItem('eudes_year'))||new Date().getFullYear();}
+function getCurrentTerm(){return parseInt(safeStorage.getItem('eudes_term'))||1;}
+function setCurrentPeriod(y,t){safeStorage.setItem('eudes_year',String(y));safeStorage.setItem('eudes_term',String(t));}
 
 function getToken(){const s=safeStorage.getItem('eudes_session');if(!s)return null;try{return JSON.parse(s).access_token;}catch(e){return null;}}
 function getUser(){const s=safeStorage.getItem('eudes_session');if(!s)return null;try{return JSON.parse(s).user;}catch(e){return null;}}
@@ -287,7 +271,7 @@ async function auth(path,body){
   return data;
 }
 
-let _profile=null,_school=null,_schoolId=null,_role=null,_classesCache=null,_subjectsCache={};
+let _profile=null,_school=null,_schoolId=null,_role=null,_classesCache=null,_subjectsCache={},_examsCache=null;
 
 function toast(msg,type){const el=document.createElement('div');el.className='toast'+(type==='bad'?' bad':(type==='ok'?' ok':''));el.textContent=msg;document.getElementById('toastRoot').appendChild(el);setTimeout(()=>el.remove(),3500);}
 function modal(html){const root=document.getElementById('modalRoot');root.innerHTML='<div class="modal-bg"><div class="modal">'+html+'</div></div>';root.querySelector('.modal-bg').addEventListener('click',e=>{if(e.target.classList.contains('modal-bg'))closeModal();});}
@@ -300,7 +284,7 @@ function fmtLongDate(d){return d.toLocaleDateString('en-GB',{weekday:'short',day
 window.toast=toast;window.modal=modal;window.closeModal=closeModal;window.esc=esc;
 window.fmtUGX=fmtUGX;window.fmtDate=fmtDate;
 
-/* ---------- GRADING (UNEB) ---------- */
+/* ---------- GRADING ---------- */
 function gradeOf(score){
   if(score==null||isNaN(score)||score==='')return{g:'—',r:'—',cls:''};
   const s=Number(score);
@@ -315,6 +299,13 @@ function gradeOf(score){
   return{g:'F9',r:'Fail 9',cls:'f9'};
 }
 function posLabel(n){if(!n)return '—';if(n===1)return '1st';if(n===2)return '2nd';if(n===3)return '3rd';return n+'th';}
+function stageFromName(name){
+  const n=String(name||'').toLowerCase();
+  if(n.includes('begin')||n.includes('bot'))return 1;
+  if(n.includes('mid')||n.includes('mot'))return 2;
+  if(n.includes('end')||n.includes('eot'))return 3;
+  return 0;
+}
 window.gradeOf=gradeOf;
 
 /* ---------- PRINT ---------- */
@@ -407,7 +398,7 @@ window.doRegister=doRegister;
 async function doLogout(){
   if(!confirm('Sign out?'))return;
   try{const t=getToken();if(t)await fetch(SUPA_URL+'/auth/v1/logout',{method:'POST',headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+t}});}catch(e){}
-  setSession(null);_profile=null;_school=null;_schoolId=null;_role=null;_classesCache=null;_subjectsCache={};
+  setSession(null);_profile=null;_school=null;_schoolId=null;_role=null;_classesCache=null;_subjectsCache={};_examsCache=null;
   document.getElementById('app').style.display='none';
   document.getElementById('authScreen').style.display='flex';
 }
@@ -417,7 +408,7 @@ async function boot(){
   const user=getUser(),token=getToken();
   if(!user||!token){document.getElementById('authScreen').style.display='flex';document.getElementById('app').style.display='none';return;}
   try{const p=await rest('/rest/v1/profiles?id=eq.'+user.id+'&select=*');_profile=p&&p[0];}
-  catch(e){document.getElementById('loginErr').textContent='Profile error';document.getElementById('loginErr').style.display='block';return;}
+  catch(e){document.getElementById('loginErr').textContent='Profile error: '+e.message;document.getElementById('loginErr').style.display='block';return;}
   if(!_profile){document.getElementById('loginErr').textContent='Profile not found.';document.getElementById('loginErr').style.display='block';return;}
   _schoolId=_profile.school_id;_role=_profile.role;
   if(!_schoolId){
@@ -480,26 +471,49 @@ window.changePeriod=changePeriod;
 /* ---------- CACHED LOADERS ---------- */
 async function loadClasses(){
   if(_classesCache)return _classesCache;
-  _classesCache=await rest('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=id,name,level,sort_order&order=sort_order')||[];
+  try{
+    _classesCache=await rest('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=id,name,level,sort_order&order=sort_order')||[];
+  }catch(e){_classesCache=[];}
   return _classesCache;
 }
 async function loadSubjects(classId){
   if(!classId)return [];
   if(_subjectsCache[classId])return _subjectsCache[classId];
-  const d=await rest('/rest/v1/class_subjects?school_id=eq.'+_schoolId+'&class_id=eq.'+classId+'&select=*&order=code')||[];
+  let d=[];
+  try{d=await rest('/rest/v1/class_subjects?school_id=eq.'+_schoolId+'&class_id=eq.'+classId+'&select=*&order=code')||[];}catch(e){d=[];}
   _subjectsCache[classId]=d;
   return d;
 }
-async function loadSubjectsAll(){
-  const d=await rest('/rest/v1/class_subjects?school_id=eq.'+_schoolId+'&select=*')||[];
-  _subjectsCache={};
-  d.forEach(s=>{if(!_subjectsCache[s.class_id])_subjectsCache[s.class_id]=[];_subjectsCache[s.class_id].push(s);});
-  return _subjectsCache;
+async function loadExams(){
+  if(_examsCache)return _examsCache;
+  let list=[];
+  try{list=await rest('/rest/v1/exams?school_id=eq.'+_schoolId+'&select=*')||[];}catch(e){list=[];}
+  // Normalise: ensure stage exists
+  list=list.map(e=>({...e,stage:(e.stage!=null)?Number(e.stage):stageFromName(e.name)}));
+  list.sort((a,b)=>(a.stage||0)-(b.stage||0));
+  // If empty, seed defaults
+  if(!list.length){
+    const cy=getCurrentYear(),ct=getCurrentTerm();
+    const defaults=[{name:'Beginning of Term',stage:1},{name:'Mid Term',stage:2},{name:'End of Term',stage:3}];
+    for(const d of defaults){
+      try{await rest('/rest/v1/exams',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,name:d.name,stage:d.stage,academic_year:cy,term:ct})});}
+      catch(err){
+        try{await rest('/rest/v1/exams',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,name:d.name})});}catch(e2){}
+      }
+    }
+    try{list=await rest('/rest/v1/exams?school_id=eq.'+_schoolId+'&select=*')||[];}catch(e){list=[];}
+    list=list.map(e=>({...e,stage:(e.stage!=null)?Number(e.stage):stageFromName(e.name)}));
+    list.sort((a,b)=>(a.stage||0)-(b.stage||0));
+  }
+  _examsCache=list;
+  return _examsCache;
 }
 function clearSubjectsCache(){_subjectsCache={};}
 function clearClassesCache(){_classesCache=null;}
+function clearExamsCache(){_examsCache=null;}
 window.clearSubjectsCache=clearSubjectsCache;
 window.clearClassesCache=clearClassesCache;
+window.clearExamsCache=clearExamsCache;
 
 /* ============================================================
    ROUTES
@@ -585,10 +599,6 @@ async function pageDashboard(root){
   '<div class="kpi kpi-ok"><div class="v">'+presentToday+'</div><div class="l">Present Today</div></div>'+
   '<div class="kpi kpi-warn"><div class="v">'+absentToday+'</div><div class="l">Absent Today</div></div>'+
   '</div>'+
-  '<div class="card"><h3>🧾 Functional Fee</h3>'+
-  '<div class="grid grid-3">'+
-  '<div class="kpi kpi-ok" style="padding:12px"><div class="v" style="font-size:16px">'+fmtUGX(funcCollected)+'</div><div class="l">Collected</div></div>'+
-  '</div><button class="btn ghost block" style="margin-top:10px" onclick="nav(\'fees\')">Open Fees →</button></div>'+
   '<div class="grid grid-2" style="margin-bottom:14px">'+
   '<div class="card"><h3>🔔 Alerts</h3>'+
   (debtors>0?'<div class="alert-item danger" onclick="nav(\'debtors\')"><span class="ico">⚠️</span><div class="txt"><b>'+debtors+' debtors</b><span>Click to view</span></div></div>':'')+
@@ -612,8 +622,8 @@ async function pageStudents(root){
   clearClassesCache();
   const classes=await loadClasses();
   const [students,payments,openPassOuts]=await Promise.all([
-    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=*&order=created_at.desc'),
-    rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=student_id,amount,payment_for'),
+    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=*&order=created_at.desc').catch(()=>[]),
+    rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=student_id,amount,payment_for').catch(()=>[]),
     rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&status=eq.out&select=student_id,signed_out_at,reason').catch(()=>[])
   ]);
   window._allStudents=students||[];
@@ -622,8 +632,6 @@ async function pageStudents(root){
   window._paidByStudent=pbs;
   const openMap={};(openPassOuts||[]).forEach(p=>{openMap[p.student_id]=p;});
   window._openPassOuts=openMap;
-  const classesById={};(classes||[]).forEach(c=>classesById[c.id]=c);
-  window._classesById=classesById;
 
   root.innerHTML=
   '<div class="page-head"><div><h1>Pupils</h1><div class="sub" id="studentCount">Loading…</div></div>'+
@@ -761,7 +769,7 @@ async function recordPayment(studentId){
   const bal=sf-p.school;
   modal('<h3>💰 Record Payment</h3>'+
     '<div class="card" style="background:#f8fafc;border:none;margin:0 0 12px"><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b><div class="muted">'+esc(cls?cls.name:'')+' · '+esc(s.admission_no)+'</div>'+
-    '<div class="mini-stat">School Fees: '+fmtUGX(sf)+'</div><div class="mini-stat">Paid: '+fmtUGX(p.school)+'</div><div class="mini-stat" style="background:#fef2f2;color:#b91c1c">Balance: '+fmtUGX(bal)+'</div></div>'+
+    '<div class="subject-chip">School Fees: '+fmtUGX(sf)+'</div><div class="subject-chip">Paid: '+fmtUGX(p.school)+'</div><div class="subject-chip" style="background:#fef2f2;color:#b91c1c">Balance: '+fmtUGX(bal)+'</div></div>'+
     '<div><label>Payment For</label><select id="p_for"><option>School Fees</option><option>Functional Fees</option></select></div>'+
     '<div style="margin-top:12px"><label>Amount</label><input id="p_amount" type="number" value="'+Math.max(0,bal)+'"></div>'+
     '<div style="margin-top:12px"><label>Method</label><select id="p_method"><option>Cash</option><option>Mobile Money</option><option>Bank</option></select></div>'+
@@ -775,7 +783,7 @@ async function savePayment(studentId){
   const method=document.getElementById('p_method').value;
   if(!amount||amount<=0){toast('Enter amount','bad');return;}
   try{
-    await rest('/rest/v1/payments',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,student_id:studentId,amount,payment_for,method,academic_year:getCurrentYear(),term:getCurrentTerm(),receipt_no:'RCP-'+Date.now()})});
+    await rest('/rest/v1/payments',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,student_id:studentId,amount,payment_for,method,academic_year:getCurrentYear(),term:getCurrentTerm(),receipt_no:'RCP-'+Date.now()})});
     if(payment_for==='Functional Fees'){
       const s=(window._allStudents||[]).find(x=>x.id===studentId);
       const newPaid=(Number(s.functional_fee_paid)||0)+amount;
@@ -808,8 +816,8 @@ async function loadAttTable(){
   let url='/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=id,first_name,last_name,admission_no,class_id';
   if(classId)url+='&class_id=eq.'+classId;
   const [students,existing]=await Promise.all([
-    rest(url),
-    rest('/rest/v1/attendance?school_id=eq.'+_schoolId+'&date=eq.'+date+'&select=student_id,status')
+    rest(url).catch(()=>[]),
+    rest('/rest/v1/attendance?school_id=eq.'+_schoolId+'&date=eq.'+date+'&select=student_id,status').catch(()=>[])
   ]);
   const map={};existing.forEach(a=>map[a.student_id]=a.status);
   const classes=_classesCache||[];
@@ -832,7 +840,7 @@ window.loadAttTable=loadAttTable;
 async function setAtt(studentId,date,classId,status){
   try{
     await rest('/rest/v1/attendance?school_id=eq.'+_schoolId+'&student_id=eq.'+studentId+'&date=eq.'+date,{method:'DELETE'});
-    await rest('/rest/v1/attendance',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,student_id:studentId,class_id:classId,date,status,academic_year:getCurrentYear(),term:getCurrentTerm()})});
+    await rest('/rest/v1/attendance',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,student_id:studentId,class_id:classId,date,status,academic_year:getCurrentYear(),term:getCurrentTerm()})});
     loadAttTable();
   }catch(e){toast(e.message,'bad');}
 }
@@ -844,8 +852,8 @@ window.setAtt=setAtt;
 async function pageFees(root){
   const cy=getCurrentYear(),ct=getCurrentTerm();
   const [students,payments]=await Promise.all([
-    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=*'),
-    rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=*&order=paid_at.desc&limit=200')
+    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=*').catch(()=>[]),
+    rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=*&order=paid_at.desc&limit=200').catch(()=>[])
   ]);
   const totalColl=payments.reduce((s,p)=>s+Number(p.amount),0);
   root.innerHTML=
@@ -869,8 +877,8 @@ window.pageFees=pageFees;
 async function pageDebtors(root){
   clearClassesCache();
   const [students,payments,classes]=await Promise.all([
-    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=*'),
-    rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=student_id,amount,payment_for'),
+    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=*').catch(()=>[]),
+    rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=student_id,amount,payment_for').catch(()=>[]),
     loadClasses()
   ]);
   const pbs={};
@@ -885,7 +893,7 @@ async function pageDebtors(root){
   root.innerHTML=
   '<div class="page-head"><h1>Debtors</h1><div class="sub">'+debtors.length+' pupils · '+fmtUGX(totalOwed)+' outstanding</div></div>'+
   '<div class="card"><div class="table-wrap"><table><thead><tr><th>Adm</th><th>Name</th><th>Class</th><th>Parent</th><th style="text-align:right">Balance</th><th></th></tr></thead><tbody>'+
-  debtors.map(d=>'<tr><td>'+esc(d.s.admission_no)+'</td><td><b>'+esc(d.s.first_name+' '+(d.s.last_name||''))+'</b></td><td>'+esc(d.cls?d.cls.name:'')+'</td><td>'+esc(d.s.parent_name||'')+'</td><td style="text-align:right;font-weight:700;color:#b91c1c">'+fmtUGX(d.bal)+'</td><td><button class="btn sm" onclick="recordPayment(\''+d.s.id+'\')">💵 Pay</button></td></tr>').join('')+
+  (debtors.length?debtors.map(d=>'<tr><td>'+esc(d.s.admission_no)+'</td><td><b>'+esc(d.s.first_name+' '+(d.s.last_name||''))+'</b></td><td>'+esc(d.cls?d.cls.name:'')+'</td><td>'+esc(d.s.parent_name||'')+'</td><td style="text-align:right;font-weight:700;color:#b91c1c">'+fmtUGX(d.bal)+'</td><td><button class="btn sm" onclick="recordPayment(\''+d.s.id+'\')">💵 Pay</button></td></tr>').join(''):'<tr><td colspan="6" class="empty">No debtors 🎉</td></tr>')+
   '</tbody></table></div></div>';
 }
 window.pageDebtors=pageDebtors;
@@ -893,36 +901,26 @@ window.pageDebtors=pageDebtors;
 /* ============================================================
    MARKS
    ============================================================ */
-let _marksClass=null,_marksExam=null,_examsCache=null;
+let _marksClass=null,_marksExam=null;
 async function pageMarks(root){
-  clearClassesCache();clearSubjectsCache();
+  clearClassesCache();clearSubjectsCache();clearExamsCache();
   const classes=await loadClasses();
   if(!_marksClass&&classes[0])_marksClass=classes[0].id;
-  const cy=getCurrentYear(),ct=getCurrentTerm();
-  if(!_examsCache){
-    _examsCache=await rest('/rest/v1/exams?school_id=eq.'+_schoolId+'&select=*&order=stage')||[];
-    if(!_examsCache.length){
-      // seed three default exams for this school/year/term
-      const defaults=[{name:'Beginning of Term',stage:1},{name:'Mid Term',stage:2},{name:'End of Term',stage:3}];
-      for(const d of defaults){
-        await rest('/rest/v1/exams',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,name:d.name,stage:d.stage,academic_year:cy,term:ct})});
-      }
-      _examsCache=await rest('/rest/v1/exams?school_id=eq.'+_schoolId+'&select=*&order=stage')||[];
-    }
-  }
-  if(!_marksExam&&_examsCache[0])_marksExam=_examsCache[0].id;
-  await renderMarksInner(root, classes);
+  const exams=await loadExams();
+  if(!_marksExam&&exams[0])_marksExam=exams[0].id;
+  await renderMarksInner(root, classes, exams);
 }
 window.pageMarks=pageMarks;
 
-async function renderMarksInner(root, classesArg){
+async function renderMarksInner(root, classesArg, examsArg){
   const classes=classesArg||await loadClasses();
+  const exams=examsArg||await loadExams();
   const classObj=classes.find(c=>c.id===_marksClass);
-  const examObj=_examsCache.find(e=>e.id===_marksExam);
+  const examObj=exams.find(e=>e.id===_marksExam);
   const subjects=await loadSubjects(_marksClass);
   const [students, marksRows]=await Promise.all([
-    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+_marksClass+'&status=eq.active&select=*&order=first_name'),
-    rest('/rest/v1/marks?school_id=eq.'+_schoolId+'&exam_id=eq.'+_marksExam+'&select=student_id,subject_id,score')
+    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+_marksClass+'&status=eq.active&select=*&order=first_name').catch(()=>[]),
+    _marksExam?rest('/rest/v1/marks?school_id=eq.'+_schoolId+'&exam_id=eq.'+_marksExam+'&select=student_id,subject_id,score').catch(()=>[]):Promise.resolve([])
   ]);
   const marksMap={};marksRows.forEach(m=>{if(!marksMap[m.student_id])marksMap[m.student_id]={};marksMap[m.student_id][m.subject_id]=m.score;});
   window._marksMap=marksMap;
@@ -931,7 +929,7 @@ async function renderMarksInner(root, classesArg){
   '<div class="page-head"><h1>Marks</h1><div class="sub">Enter scores per subject</div></div>'+
   '<div class="card"><div class="grid grid-2">'+
   '<div><label>Class</label><select onchange="_marksClass=this.value;pageMarks(document.getElementById(\'main\'))">'+classes.map(c=>'<option value="'+c.id+'"'+(_marksClass===c.id?' selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></div>'+
-  '<div><label>Exam</label><select onchange="_marksExam=this.value;pageMarks(document.getElementById(\'main\'))">'+_examsCache.map(e=>'<option value="'+e.id+'"'+(_marksExam===e.id?' selected':'')+'>'+esc(e.name)+'</option>').join('')+'</select></div>'+
+  '<div><label>Exam</label><select onchange="_marksExam=this.value;pageMarks(document.getElementById(\'main\'))">'+(exams.length?exams.map(e=>'<option value="'+e.id+'"'+(_marksExam===e.id?' selected':'')+'>'+esc(e.name)+'</option>').join(''):'<option>—</option>')+'</select></div>'+
   '</div>'+
   '<div class="alert-item info" style="margin-top:12px"><span class="ico">📚</span><div class="txt"><b>'+esc(classObj?.name||'')+' subjects ('+subjects.length+')</b><span>'+subjects.map(s=>'<span class="subject-chip">'+esc(s.name)+(s.graded===false?' (na)':'')+'</span>').join('')+'</span></div></div>'+
   '</div>'+
@@ -967,16 +965,14 @@ async function setMark(inputEl){
   const score=val===''?null:parseFloat(val);
   if(score!=null&&(isNaN(score)||score<0||score>100)){toast('Score must be 0-100','bad');inputEl.value='';return;}
   try{
-    if(score==null){
-      await rest('/rest/v1/marks?school_id=eq.'+_schoolId+'&student_id=eq.'+studentId+'&exam_id=eq.'+_marksExam+'&subject_id=eq.'+subjectId,{method:'DELETE'});
-      if(window._marksMap[studentId])delete window._marksMap[studentId][subjectId];
-    }else{
-      await rest('/rest/v1/marks?school_id=eq.'+_schoolId+'&student_id=eq.'+studentId+'&exam_id=eq.'+_marksExam+'&subject_id=eq.'+subjectId,{method:'DELETE'});
-      await rest('/rest/v1/marks',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,student_id:studentId,exam_id:_marksExam,subject_id:subjectId,score})});
+    await rest('/rest/v1/marks?school_id=eq.'+_schoolId+'&student_id=eq.'+studentId+'&exam_id=eq.'+_marksExam+'&subject_id=eq.'+subjectId,{method:'DELETE'});
+    if(score!=null){
+      await rest('/rest/v1/marks',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,student_id:studentId,exam_id:_marksExam,subject_id:subjectId,score})});
       if(!window._marksMap[studentId])window._marksMap[studentId]={};
       window._marksMap[studentId][subjectId]=score;
+    }else{
+      if(window._marksMap[studentId])delete window._marksMap[studentId][subjectId];
     }
-    // recompute row total
     const subjects=(_subjectsCache[_marksClass]||[]);
     const graded=subjects.filter(x=>x.graded!==false);
     const per=window._marksMap[studentId]||{};
@@ -996,7 +992,7 @@ window.setMark=setMark;
    ============================================================ */
 let _repClass=null,_repStage=3,_repPupil='';
 async function pageReports(root){
-  clearClassesCache();clearSubjectsCache();
+  clearClassesCache();clearSubjectsCache();clearExamsCache();
   const classes=await loadClasses();
   if(!_repClass&&classes[0])_repClass=classes[0].id;
   await renderReportsInner(root, classes);
@@ -1007,17 +1003,17 @@ async function renderReportsInner(root, classesArg){
   const classes=classesArg||await loadClasses();
   const classObj=classes.find(c=>c.id===_repClass);
   const subjects=await loadSubjects(_repClass);
-  const students=await rest('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+_repClass+'&status=eq.active&select=*&order=first_name');
-  const exams=(_examsCache||[]).filter(e=>e.stage<=_repStage);
-  if(!_examsCache){_examsCache=await rest('/rest/v1/exams?school_id=eq.'+_schoolId+'&select=*&order=stage')||[];}
+  const students=await rest('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+_repClass+'&status=eq.active&select=*&order=first_name').catch(()=>[]);
+  const allExams=await loadExams();
+  const exams=allExams.filter(e=>(e.stage||0)<=_repStage);
 
-  // Fetch marks for these exams & students
+  // Fetch marks
   const studentIds=students.map(s=>s.id);
   let marksRows=[];
   if(studentIds.length&&exams.length){
     const ids=studentIds.join(',');
     const eids=exams.map(e=>e.id).join(',');
-    marksRows=await rest('/rest/v1/marks?school_id=eq.'+_schoolId+'&student_id=in.('+ids+')&exam_id=in.('+eids+')&select=student_id,exam_id,subject_id,score')||[];
+    marksRows=await rest('/rest/v1/marks?school_id=eq.'+_schoolId+'&student_id=in.('+ids+')&exam_id=in.('+eids+')&select=student_id,exam_id,subject_id,score').catch(()=>[])||[];
   }
   const marks={};marksRows.forEach(m=>{if(!marks[m.student_id])marks[m.student_id]={};if(!marks[m.student_id][m.exam_id])marks[m.student_id][m.exam_id]={};marks[m.student_id][m.exam_id][m.subject_id]=Number(m.score);});
   window._reportData={students,subjects,exams,marks,classObj};
@@ -1058,7 +1054,7 @@ function reportCardBlock(s,subjects,exams,marks,isSingle){
 }
 
 function buildReportCardHTML(s,subjects,exams,marks,students){
-  const cls=(_classesById&&_classesById[s.class_id])||(_classesCache||[]).find(c=>c.id===s.class_id);
+  const cls=(_classesCache||[]).find(c=>c.id===s.class_id);
   const per=marks[s.id]||{};
   const graded=subjects.filter(x=>x.graded!==false);
   const stageLabel={1:'Beginning of Term',2:'Mid Term',3:'End of Term'}[_repStage];
@@ -1116,7 +1112,7 @@ function rankingTable(students,subjects,exams,marks){
   rows.forEach((r,i)=>r.pos=i+1);
   for(let i=1;i<rows.length;i++)if(rows[i].avg===rows[i-1].avg)rows[i].pos=rows[i-1].pos;
   return '<div class="table-wrap"><table><thead><tr><th>Pos</th><th>Adm</th><th>Name</th><th style="text-align:right">Total</th><th>Grade</th><th></th></tr></thead><tbody>'+
-    rows.map(r=>{const g=gradeOf(r.avg);return '<tr><td><b>'+posLabel(r.pos)+'</b></td><td>'+esc(r.s.admission_no)+'</td><td>'+esc(r.s.first_name+' '+(r.s.last_name||''))+'</td><td style="text-align:right">'+r.total.toFixed(0)+'</td><td><span class="badge '+g.cls+'">'+g.g+'</span></td><td><button class="btn sm ghost" onclick="showSingleReport(\''+r.s.id+'\')">View</button></td></tr>';}).join('')+
+    (rows.length?rows.map(r=>{const g=gradeOf(r.avg);return '<tr><td><b>'+posLabel(r.pos)+'</b></td><td>'+esc(r.s.admission_no)+'</td><td>'+esc(r.s.first_name+' '+(r.s.last_name||''))+'</td><td style="text-align:right">'+r.total.toFixed(0)+'</td><td><span class="badge '+g.cls+'">'+g.g+'</span></td><td><button class="btn sm ghost" onclick="showSingleReport(\''+r.s.id+'\')">View</button></td></tr>';}).join(''):'<tr><td colspan="6" class="empty">No marks</td></tr>')+
     '</tbody></table></div>';
 }
 
@@ -1178,7 +1174,6 @@ window.printBroadsheet=printBroadsheet;
 function exportExcel(){
   const d=window._reportData;
   if(!d.students.length){toast('No pupils','bad');return;}
-  const graded=d.subjects.filter(x=>x.graded!==false);
   const rows=d.students.map(s=>{
     const m=d.marks[s.id]||{};
     const row={Adm:s.admission_no,Name:s.first_name+' '+(s.last_name||'')};
@@ -1204,16 +1199,18 @@ window.exportExcel=exportExcel;
    CLASSES + SUBJECTS
    ============================================================ */
 async function pageClasses(root){
-  clearClassesCache();
+  clearClassesCache();clearSubjectsCache();
   const classes=await loadClasses();
-  await loadSubjectsAll();
+  // Preload subject counts
+  await Promise.all(classes.map(c=>loadSubjects(c.id)));
+
   root.innerHTML=
   '<div class="page-head"><div><h1>Classes</h1><div class="sub">'+classes.length+' classes</div></div><button class="btn" onclick="addClass()">＋ Add Class</button></div>'+
-  '<div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Level</th><th>Subjects</th><th>Pupils</th><th></th></tr></thead><tbody>'+
-  classes.map(c=>{
+  '<div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Level</th><th>Subjects</th><th></th></tr></thead><tbody>'+
+  (classes.length?classes.map(c=>{
     const subs=(_subjectsCache[c.id]||[]).length;
-    return '<tr><td><b>'+esc(c.name)+'</b></td><td><span class="badge info">'+esc(c.level||'primary')+'</span></td><td>'+subs+'</td><td>—</td><td><button class="btn sm danger" onclick="delClass(\''+c.id+'\')">✕</button></td></tr>';
-  }).join('')+
+    return '<tr><td><b>'+esc(c.name)+'</b></td><td><span class="badge info">'+esc(c.level||'primary')+'</span></td><td>'+subs+'</td><td><button class="btn sm danger" onclick="delClass(\''+c.id+'\')">✕</button></td></tr>';
+  }).join(''):'<tr><td colspan="4" class="empty">No classes</td></tr>')+
   '</tbody></table></div></div>';
 }
 window.pageClasses=pageClasses;
@@ -1231,7 +1228,7 @@ async function saveClass(){
   const level=document.getElementById('c_level').value;
   if(!name){toast('Enter name','bad');return;}
   try{
-    await rest('/rest/v1/classes',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,name,level,sort_order:99})});
+    await rest('/rest/v1/classes',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,name,level,sort_order:99})});
     toast('Class added','ok');closeModal();clearClassesCache();nav('classes');
   }catch(e){toast(e.message,'bad');}
 }
@@ -1247,7 +1244,7 @@ async function delClass(id){
 window.delClass=delClass;
 
 async function pageSubjects(root){
-  clearClassesCache();
+  clearClassesCache();clearSubjectsCache();
   const classes=await loadClasses();
   if(!_marksClass&&classes[0])_marksClass=classes[0].id;
   const classObj=classes.find(c=>c.id===_marksClass);
@@ -1292,11 +1289,12 @@ window.delSubject=delSubject;
    EXAMS
    ============================================================ */
 async function pageExams(root){
-  _examsCache=await rest('/rest/v1/exams?school_id=eq.'+_schoolId+'&select=*&order=stage')||[];
+  clearExamsCache();
+  const list=await loadExams();
   root.innerHTML=
-  '<div class="page-head"><div><h1>Exams</h1><div class="sub">'+_examsCache.length+' exams</div></div><button class="btn" onclick="addExam()">＋ Add Exam</button></div>'+
+  '<div class="page-head"><div><h1>Exams</h1><div class="sub">'+list.length+' exams</div></div><button class="btn" onclick="addExam()">＋ Add Exam</button></div>'+
   '<div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Stage</th><th>Year</th><th>Term</th><th></th></tr></thead><tbody>'+
-  _examsCache.map(e=>'<tr><td><b>'+esc(e.name)+'</b></td><td>Stage '+e.stage+'</td><td>'+e.academic_year+'</td><td>'+e.term+'</td><td><button class="btn sm danger" onclick="delExam(\''+e.id+'\')">✕</button></td></tr>').join('')+
+  (list.length?list.map(e=>'<tr><td><b>'+esc(e.name)+'</b></td><td>Stage '+(e.stage||'—')+'</td><td>'+(e.academic_year||'—')+'</td><td>'+(e.term||'—')+'</td><td><button class="btn sm danger" onclick="delExam(\''+e.id+'\')">✕</button></td></tr>').join(''):'<tr><td colspan="5" class="empty">No exams</td></tr>')+
   '</tbody></table></div></div>';
 }
 window.pageExams=pageExams;
@@ -1313,16 +1311,21 @@ async function saveExam(){
   const name=document.getElementById('e_name').value.trim();
   const stage=parseInt(document.getElementById('e_stage').value);
   if(!name){toast('Enter name','bad');return;}
+  const cy=getCurrentYear(),ct=getCurrentTerm();
   try{
-    await rest('/rest/v1/exams',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,name,stage,academic_year:getCurrentYear(),term:getCurrentTerm()})});
-    toast('Exam added','ok');closeModal();_examsCache=null;nav('exams');
+    try{
+      await rest('/rest/v1/exams',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,name,stage,academic_year:cy,term:ct})});
+    }catch(e){
+      await rest('/rest/v1/exams',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,name})});
+    }
+    toast('Exam added','ok');closeModal();clearExamsCache();nav('exams');
   }catch(e){toast(e.message,'bad');}
 }
 window.saveExam=saveExam;
 
 async function delExam(id){
   if(!confirm('Delete exam and its marks?'))return;
-  try{await rest('/rest/v1/exams?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');_examsCache=null;nav('exams');}
+  try{await rest('/rest/v1/exams?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');clearExamsCache();nav('exams');}
   catch(e){toast(e.message,'bad');}
 }
 window.delExam=delExam;
@@ -1331,11 +1334,11 @@ window.delExam=delExam;
    STAFF
    ============================================================ */
 async function pageStaff(root){
-  const staff=await rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=*&order=full_name')||[];
+  const staff=await rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=*&order=full_name').catch(()=>[])||[];
   root.innerHTML=
   '<div class="page-head"><div><h1>Staff</h1><div class="sub">'+staff.length+' members</div></div><button class="btn" onclick="addStaff()">＋ Add Staff</button></div>'+
   '<div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Phone</th><th></th></tr></thead><tbody>'+
-  staff.map(s=>'<tr><td><b>'+esc(s.full_name)+'</b></td><td>'+esc(s.role||'')+'</td><td>'+esc(s.phone||'')+'</td><td><button class="btn sm danger" onclick="delStaff(\''+s.id+'\')">✕</button></td></tr>').join('')+
+  (staff.length?staff.map(s=>'<tr><td><b>'+esc(s.full_name)+'</b></td><td>'+esc(s.role||'')+'</td><td>'+esc(s.phone||'')+'</td><td><button class="btn sm danger" onclick="delStaff(\''+s.id+'\')">✕</button></td></tr>').join(''):'<tr><td colspan="4" class="empty">No staff</td></tr>')+
   '</tbody></table></div></div>';
 }
 window.pageStaff=pageStaff;
@@ -1382,8 +1385,8 @@ window.pageStaffAttendance=pageStaffAttendance;
 async function loadStaffAtt(){
   const date=document.getElementById('sa_date').value;
   const [staff,existing]=await Promise.all([
-    rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=*&order=full_name'),
-    rest('/rest/v1/staff_attendance?school_id=eq.'+_schoolId+'&date=eq.'+date+'&select=staff_id,status')
+    rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=*&order=full_name').catch(()=>[]),
+    rest('/rest/v1/staff_attendance?school_id=eq.'+_schoolId+'&date=eq.'+date+'&select=staff_id,status').catch(()=>[])
   ]);
   const map={};existing.forEach(a=>map[a.staff_id]=a.status);
   const c=document.getElementById('saTable');
@@ -1413,23 +1416,24 @@ window.setStaffAtt=setStaffAtt;
    ============================================================ */
 async function pagePassOuts(root){
   const [students,passes]=await Promise.all([
-    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=id,first_name,last_name,admission_no,class_id'),
-    rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&select=*&order=signed_out_at.desc&limit=100')
+    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=id,first_name,last_name,admission_no,class_id').catch(()=>[]),
+    rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&select=*&order=signed_out_at.desc&limit=100').catch(()=>[])
   ]);
   root.innerHTML=
   '<div class="page-head"><h1>Pass Outs</h1><div class="sub">Pupils leaving and returning</div></div>'+
   '<div class="card"><button class="btn" onclick="addPassOut()">＋ New Pass Out</button></div>'+
   '<div class="card"><h3>Recent</h3><div class="table-wrap"><table><thead><tr><th>Pupil</th><th>Reason</th><th>Out</th><th>In</th><th>Status</th><th></th></tr></thead><tbody>'+
-  passes.map(p=>{
+  (passes.length?passes.map(p=>{
     const s=students.find(x=>x.id===p.student_id);
     return '<tr><td>'+esc(s?(s.first_name+' '+(s.last_name||'')):'—')+'</td><td>'+esc(p.reason||'')+'</td><td>'+fmtDate(p.signed_out_at)+'</td><td>'+fmtDate(p.signed_in_at)+'</td><td>'+(p.status==='out'?'<span class="badge bad">OUT</span>':'<span class="badge ok">Returned</span>')+'</td><td>'+(p.status==='out'?'<button class="btn sm ok" onclick="returnPass(\''+p.id+'\')">Return</button>':'')+'</td></tr>';
-  }).join('')+
+  }).join(''):'<tr><td colspan="6" class="empty">No pass outs</td></tr>')+
   '</tbody></table></div></div>';
 }
 window.pagePassOuts=pagePassOuts;
 
 async function addPassOut(){
-  const students=await rest('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=id,first_name,last_name,admission_no&order=first_name');
+  const students=await rest('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=id,first_name,last_name,admission_no&order=first_name').catch(()=>[]);
+  if(!students.length){toast('No pupils to pass out','bad');return;}
   modal('<h3>New Pass Out</h3>'+
     '<div><label>Pupil</label><select id="po_s">'+students.map(s=>'<option value="'+s.id+'">'+esc(s.admission_no+' — '+s.first_name+' '+(s.last_name||''))+'</option>').join('')+'</select></div>'+
     '<div style="margin-top:12px"><label>Reason</label><input id="po_r" placeholder="e.g. Sick"></div>'+
@@ -1455,12 +1459,12 @@ window.returnPass=returnPass;
    UNIFORMS
    ============================================================ */
 async function pageUniforms(root){
-  const sales=await rest('/rest/v1/uniform_sales?school_id=eq.'+_schoolId+'&select=*&order=sold_at.desc&limit=100')||[];
+  const sales=await rest('/rest/v1/uniform_sales?school_id=eq.'+_schoolId+'&select=*&order=sold_at.desc&limit=100').catch(()=>[])||[];
   const total=sales.reduce((s,x)=>s+Number(x.total_amount||0),0);
   root.innerHTML=
   '<div class="page-head"><div><h1>Uniforms</h1><div class="sub">'+sales.length+' sales · '+fmtUGX(total)+'</div></div><button class="btn" onclick="addUniform()">＋ New Sale</button></div>'+
   '<div class="card"><div class="table-wrap"><table><thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Unit</th><th style="text-align:right">Total</th></tr></thead><tbody>'+
-  sales.map(s=>'<tr><td>'+fmtDate(s.sold_at)+'</td><td>'+esc(s.item||'')+'</td><td>'+(s.quantity||1)+'</td><td>'+fmtUGX(s.unit_price||0)+'</td><td style="text-align:right;font-weight:700">'+fmtUGX(s.total_amount||0)+'</td></tr>').join('')+
+  (sales.length?sales.map(s=>'<tr><td>'+fmtDate(s.sold_at)+'</td><td>'+esc(s.item||'')+'</td><td>'+(s.quantity||1)+'</td><td>'+fmtUGX(s.unit_price||0)+'</td><td style="text-align:right;font-weight:700">'+fmtUGX(s.total_amount||0)+'</td></tr>').join(''):'<tr><td colspan="5" class="empty">No sales</td></tr>')+
   '</tbody></table></div></div>';
 }
 window.pageUniforms=pageUniforms;
@@ -1488,12 +1492,12 @@ window.saveUniform=saveUniform;
    ============================================================ */
 async function pageExpenses(root){
   const cy=getCurrentYear(),ct=getCurrentTerm();
-  const rows=await rest('/rest/v1/expenses?school_id=eq.'+_schoolId+'&academic_year=eq.'+cy+'&term=eq.'+ct+'&select=*&order=spent_at.desc')||[];
+  const rows=await rest('/rest/v1/expenses?school_id=eq.'+_schoolId+'&academic_year=eq.'+cy+'&term=eq.'+ct+'&select=*&order=spent_at.desc').catch(()=>[])||[];
   const total=rows.reduce((s,x)=>s+Number(x.amount),0);
   root.innerHTML=
   '<div class="page-head"><div><h1>Expenses</h1><div class="sub">'+cy+' Term '+ct+' · '+fmtUGX(total)+'</div></div><button class="btn" onclick="addExpense()">＋ Add Expense</button></div>'+
   '<div class="card"><div class="table-wrap"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
-  rows.map(e=>'<tr><td>'+fmtDate(e.spent_at)+'</td><td>'+esc(e.description)+'</td><td>'+esc(e.category||'')+'</td><td style="text-align:right;font-weight:700;color:#b91c1c">'+fmtUGX(e.amount)+'</td></tr>').join('')+
+  (rows.length?rows.map(e=>'<tr><td>'+fmtDate(e.spent_at)+'</td><td>'+esc(e.description)+'</td><td>'+esc(e.category||'')+'</td><td style="text-align:right;font-weight:700;color:#b91c1c">'+fmtUGX(e.amount)+'</td></tr>').join(''):'<tr><td colspan="4" class="empty">No expenses</td></tr>')+
   '</tbody></table></div></div>';
 }
 window.pageExpenses=pageExpenses;
@@ -1521,12 +1525,12 @@ window.saveExpense=saveExpense;
    MESSAGES
    ============================================================ */
 async function pageMessages(root){
-  const msgs=await rest('/rest/v1/messages?school_id=eq.'+_schoolId+'&select=*&order=sent_at.desc&limit=100')||[];
+  const msgs=await rest('/rest/v1/messages?school_id=eq.'+_schoolId+'&select=*&order=sent_at.desc&limit=100').catch(()=>[])||[];
   root.innerHTML=
   '<div class="page-head"><h1>Messages</h1><div class="sub">'+msgs.length+' messages</div></div>'+
   '<div class="card"><button class="btn" onclick="addMessage()">＋ Send Message</button></div>'+
   '<div class="card"><div class="table-wrap"><table><thead><tr><th>Date</th><th>To</th><th>Body</th></tr></thead><tbody>'+
-  msgs.map(m=>'<tr><td>'+fmtDate(m.sent_at)+'</td><td>'+esc(m.parent_contact||'—')+'</td><td>'+esc(m.body)+'</td></tr>').join('')+
+  (msgs.length?msgs.map(m=>'<tr><td>'+fmtDate(m.sent_at)+'</td><td>'+esc(m.parent_contact||'—')+'</td><td>'+esc(m.body)+'</td></tr>').join(''):'<tr><td colspan="3" class="empty">No messages</td></tr>')+
   '</tbody></table></div></div>';
 }
 window.pageMessages=pageMessages;
