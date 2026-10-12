@@ -67,12 +67,22 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .kpi.kpi-bad{border-top-color:var(--bad)}.kpi.kpi-bad .v{color:#7f1d1d}
 .kpi.kpi-warn{border-top-color:var(--warn)}.kpi.kpi-warn .v{color:#78350f}
 .kpi.kpi-navy{border-top-color:var(--navy)}
+.kpi.kpi-plain{border-top-color:#94a3b8}
 .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap}
 .badge.ok{background:var(--oksoft);color:#047857;border:1px solid #a7f3d0}
 .badge.bad{background:var(--badsoft);color:#b91c1c;border:1px solid #fecaca}
 .badge.info{background:var(--brandsoft);color:var(--navy);border:1px solid #c7d2fe}
 .badge.warn{background:var(--warnsoft);color:#92400e;border:1px solid #fde68a}
 .badge.req{background:#e0e7ff;color:#3730a3;border:1px solid #a5b4fc}
+.badge.d1{background:#d1fae5;color:#065f46}
+.badge.d2{background:#a7f3d0;color:#047857}
+.badge.c3{background:#dbeafe;color:#1e40af}
+.badge.c4{background:#bfdbfe;color:#1e3a8a}
+.badge.c5{background:#fef3c7;color:#92400e}
+.badge.c6{background:#fed7aa;color:#9a3412}
+.badge.p7{background:#fecaca;color:#991b1b}
+.badge.p8{background:#fca5a5;color:#7f1d1d}
+.badge.f9{background:#dc2626;color:#fff}
 .btn{background:var(--navy);color:#fff;padding:10px 16px;border-radius:999px;font-weight:600;font-size:13px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .btn:hover{background:var(--navy3)}
 .btn:disabled{opacity:.5}
@@ -136,21 +146,29 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .rc-title{text-align:center;font-size:15px;font-weight:800;color:var(--navy);text-transform:uppercase;margin:10px 0 6px}
 .rc-info{width:100%;border-collapse:collapse;margin:10px 0}
 .rc-info td{padding:8px 10px;font-size:12.5px;border:1px solid var(--line)}
-.rc-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;padding:12px;background:#f8fafc;border-radius:10px;border:1px solid var(--line)}
+.rc-summary{display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px;padding:12px;background:#f8fafc;border-radius:10px;border:1px solid var(--line);text-align:center}
 .rc-summary div b{display:block;font-size:10.5px;color:var(--muted);text-transform:uppercase;font-weight:600}
 .rc-summary div{font-size:14px;font-weight:700;color:var(--navy)}
-.rc-comment{margin-top:12px;padding:12px;background:var(--warnsoft);border-left:3px solid var(--gold);border-radius:8px;font-size:13px;line-height:1.6}
+.rc-position{margin-top:16px;padding:12px 16px;background:var(--navy);color:#fff;border-radius:10px;display:flex;justify-content:space-between;align-items:center}
+.rc-position .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;opacity:.85}
+.rc-position .value{font-size:22px;font-weight:800;color:var(--gold)}
 .rc-sign{display:flex;justify-content:space-between;gap:12px;margin-top:18px;font-size:12px;color:var(--text2);flex-wrap:wrap}
 .rc-sign div{flex:1;min-width:150px}
-.gc-key{margin-top:12px;padding:10px;background:#f1f5f9;border-radius:8px;font-size:11px;color:var(--muted);line-height:1.6}
 .rc-multi th{background:var(--navy);color:#fff;font-size:11px;text-transform:uppercase;text-align:center;padding:8px 6px}
 .rc-multi th .sub{font-size:9px;font-weight:400;opacity:.75;text-transform:none;display:block;margin-top:2px}
 .rc-multi td{padding:8px 10px;font-size:12.5px;border:1px solid #e2e8f0}
 .rc-multi tfoot td{background:#f1f5f9;font-weight:700;border-top:2px solid #0a2540}
+.report-preview{background:#fff;padding:24px;border:1px solid var(--line);border-radius:12px;margin-top:14px}
 .receipt{background:#fff;border:1px dashed #cbd5e1;border-radius:12px;padding:20px;font-family:monospace;font-size:12.5px;line-height:1.7;max-width:420px;margin:0 auto}
-.receipt .rhead{text-align:center;border-bottom:1px dashed #cbd5e1;padding-bottom:10px;margin-bottom:10px}
-.receipt .rrow{display:flex;justify-content:space-between}
-.receipt .rtotal{border-top:1px dashed #cbd5e1;margin-top:10px;padding-top:10px;font-weight:700;font-size:14px}
+@media print{
+  body{background:#fff}
+  .no-print{display:none!important}
+  .container{padding:0;max-width:none}
+  .report-preview{border:none;padding:0;margin:0}
+  .card{box-shadow:none;border:none;padding:0;margin:0}
+  .page-break{page-break-after:always}
+  @page{margin:10mm;size:A4 portrait}
+}
 </style>
 </head>
 <body>
@@ -228,7 +246,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 
 <script>
 /* ============================================================
-   EUDES SCHOOL MANAGEMENT — COMPLETE
+   EUDES SCHOOL MANAGEMENT — PART 1
    ============================================================ */
 const SUPA_URL='https://wabeempxckdtjvrkzhpv.supabase.co';
 const SUPA_KEY='sb_publishable_n0uAm0Gcq7qR2dJM4jMZGQ_wiV__Cfp';
@@ -461,6 +479,206 @@ async function loadClasses(){if(_classesCache)return _classesCache;const d=await
 async function loadStaff(){if(_staffCache)return _staffCache;try{_staffCache=await rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=id,full_name,role&order=full_name')||[];}catch(e){_staffCache=[];}return _staffCache;}
 
 /* ============================================================
+   SHARED HELPERS
+   ============================================================ */
+function functionalStatusBadge(s){
+  if(s==='cash')return '<span class="badge ok">💵 Cash</span>';
+  if(s==='requirements')return '<span class="badge req">📦 Req.</span>';
+  return '<span class="badge bad">⏳ Pending</span>';
+}
+window.functionalStatusBadge=functionalStatusBadge;
+function generateLIN(fn){const i=fn?fn.charAt(0).toUpperCase():'X';return 'PM'+i+Math.floor(1000+Math.random()*9000);}
+function gradeOf(score){
+  if(score==null||isNaN(score)||score==='')return{g:'—',r:'—',cls:''};
+  const s=Number(score);
+  if(s>=90)return{g:'D1',r:'Distinction 1',cls:'d1'};
+  if(s>=80)return{g:'D2',r:'Distinction 2',cls:'d2'};
+  if(s>=70)return{g:'C3',r:'Credit 3',cls:'c3'};
+  if(s>=60)return{g:'C4',r:'Credit 4',cls:'c4'};
+  if(s>=55)return{g:'C5',r:'Credit 5',cls:'c5'};
+  if(s>=50)return{g:'C6',r:'Credit 6',cls:'c6'};
+  if(s>=45)return{g:'P7',r:'Pass 7',cls:'p7'};
+  if(s>=40)return{g:'P8',r:'Pass 8',cls:'p8'};
+  return{g:'F9',r:'Fail 9',cls:'f9'};
+}
+function posLabel(n){return n?('P.'+n):'—';}
+function ordinal(n){if(!n)return '—';if(n===1)return '1st';if(n===2)return '2nd';if(n===3)return '3rd';return n+'th';}
+function examStageRank(type){const t=String(type||'').toLowerCase();if(t.includes('begin')||t.includes('bot'))return 1;if(t.includes('mid')||t.includes('mot'))return 2;if(t.includes('end')||t.includes('eot'))return 3;return 0;}
+function examStageLabel(type){const r=examStageRank(type);if(r===1)return 'BOT';if(r===2)return 'MOT';if(r===3)return 'EOT';return 'EX';}
+function examStageFullLabel(rank){return {1:'Beginning of Term',2:'Mid Term',3:'End of Term'}[rank]||'Other';}
+
+/* ============================================================
+   FINGERPRINT ENGINE
+   ============================================================ */
+const FP_CRED_KEY='eudes_fp_cred';
+const FP_SESS_KEY='eudes_fp_session';
+function b64u(buf){const b=new Uint8Array(buf);let s='';for(let i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+function unb64u(str){str=str.replace(/-/g,'+').replace(/_/g,'/');while(str.length%4)str+='=';const bin=atob(str);const b=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)b[i]=bin.charCodeAt(i);return b;}
+async function fpAvailable(){if(!window.PublicKeyCredential)return false;try{return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();}catch(e){return false;}}
+window.fpAvailable=fpAvailable;
+async function fpPrompt(allowCredId){
+  const challenge=crypto.getRandomValues(new Uint8Array(32));
+  try{
+    const a=await navigator.credentials.get({publicKey:{challenge,rpId:location.hostname,allowCredentials:allowCredId?[{type:'public-key',id:unb64u(allowCredId)}]:[],userVerification:'required',timeout:60000}});
+    if(!a)return{error:'Cancelled'};
+    return{credentialId:b64u(a.rawId)};
+  }catch(e){if(e.name==='NotAllowedError')return{error:'Cancelled'};if(e.name==='InvalidStateError')return{error:'Fingerprint not recognised'};return{error:e.message||'Failed'};}
+}
+async function fpRegister({name,displayName,userId}){
+  const challenge=crypto.getRandomValues(new Uint8Array(32));
+  const uid=userId||crypto.getRandomValues(new Uint8Array(16));
+  try{
+    const c=await navigator.credentials.create({publicKey:{challenge,rp:{name:_school?.name||'Eudes School',id:location.hostname},user:{id:uid,name,displayName:displayName||name},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'required',requireResidentKey:true},timeout:90000,attestation:'none'}});
+    if(!c)return{error:'Cancelled'};
+    return{credentialId:b64u(c.rawId)};
+  }catch(e){if(e.name==='NotAllowedError')return{error:'Cancelled'};if(e.name==='InvalidStateError')return{error:'Already registered on this device'};return{error:e.message||'Failed'};}
+}
+async function enableLoginFingerprint(){
+  if(!_profile||!SESSION){toast('Sign in first','bad');return;}
+  if(!(await fpAvailable())){toast('Device has no fingerprint sensor','bad');return;}
+  toast('Touch the sensor…','ok');
+  const r=await fpRegister({name:SESSION.email||'user',displayName:_profile.full_name||SESSION.email||'User',userId:new TextEncoder().encode(SESSION.id)});
+  if(r.error){toast(r.error,'bad');return;}
+  try{
+    await rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&user_id=eq.'+SESSION.id+'&purpose=eq.login',{method:'DELETE'});
+    await rest('/rest/v1/fp_credentials',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({credential_id:r.credentialId,school_id:_schoolId,user_id:SESSION.id,purpose:'login',device_label:navigator.userAgent.slice(0,80)})});
+    safeStorage.setItem(FP_CRED_KEY,r.credentialId);
+    const sess=safeStorage.getItem('eudes_session');
+    if(sess)safeStorage.setItem(FP_SESS_KEY,sess);
+    toast('🔐 Fingerprint unlock enabled','ok');
+    nav('settings');
+  }catch(e){toast(e.message,'bad');}
+}
+window.enableLoginFingerprint=enableLoginFingerprint;
+function disableLoginFingerprint(){if(!confirm('Disable fingerprint unlock on this device?'))return;safeStorage.removeItem(FP_CRED_KEY);safeStorage.removeItem(FP_SESS_KEY);toast('Disabled','ok');nav('settings');}
+window.disableLoginFingerprint=disableLoginFingerprint;
+async function loginWithFingerprint(){
+  const credId=safeStorage.getItem(FP_CRED_KEY);const sess=safeStorage.getItem(FP_SESS_KEY);
+  if(!credId||!sess){toast('Set up fingerprint in Settings first','bad');return;}
+  if(!(await fpAvailable())){toast('No sensor','bad');return;}
+  const r=await fpPrompt(credId);
+  if(r.error){toast(r.error,'bad');return;}
+  safeStorage.setItem('eudes_session',sess);
+  toast('🔓 Unlocked','ok');
+  await boot();
+}
+window.loginWithFingerprint=loginWithFingerprint;
+async function showFingerprintButtonIfReady(){const btn=document.getElementById('fingerprintBtn');if(!btn)return;const stored=safeStorage.getItem(FP_CRED_KEY);const avail=await fpAvailable();btn.style.display=(stored&&avail)?'inline-flex':'none';}
+window.showFingerprintButtonIfReady=showFingerprintButtonIfReady;
+async function registerPersonFP(type,id){
+  if(!(await fpAvailable())){toast('No fingerprint sensor on this device','bad');return;}
+  let label='';
+  if(type==='student'){const st=(await rest('/rest/v1/students?id=eq.'+id+'&select=*'))[0];if(!st){toast('Not found','bad');return;}label=st.first_name+' '+(st.last_name||'');}
+  else{const sf=(await rest('/rest/v1/staff?id=eq.'+id+'&select=*'))[0];if(!sf){toast('Not found','bad');return;}label=sf.full_name;}
+  modal('<div style="text-align:center;padding:20px">'+
+    '<div class="fp-hero" id="regHero"><div class="icon">🖐️</div><h3 style="margin-bottom:6px">'+esc(label)+'</h3><div class="muted">Ask them to touch the sensor 2–3 times…</div></div>'+
+    '<div id="regResult" style="margin-top:16px"></div>'+
+    '<button class="btn ghost block" style="margin-top:20px" onclick="closeModal()">Cancel</button></div>');
+  toast('Touch the sensor now…','ok');
+  const r=await fpRegister({name:(type==='student'?'student:':'staff:')+id,displayName:label,userId:crypto.getRandomValues(new Uint8Array(16))});
+  const el=document.getElementById('regResult');if(!el)return;
+  if(r.error){
+    document.getElementById('regHero').innerHTML='<div class="icon">❌</div><h3 style="margin-bottom:6px">Failed</h3><div class="muted">'+esc(r.error)+'</div>';
+    el.innerHTML='<button class="btn block" onclick="closeModal();registerPersonFP(\''+type+'\',\''+id+'\')">🖐️ Try again</button>';
+    return;
+  }
+  try{
+    await rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&'+(type==='student'?'student_id':'staff_id')+'=eq.'+id+'&purpose=eq.attendance',{method:'DELETE'});
+    const row={credential_id:r.credentialId,school_id:_schoolId,purpose:'attendance',device_label:navigator.userAgent.slice(0,80)};
+    if(type==='student')row.student_id=id;else row.staff_id=id;
+    await rest('/rest/v1/fp_credentials',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(row)});
+    const now=new Date().toISOString();
+    if(type==='student')await rest('/rest/v1/students?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({fp_registered_at:now})});
+    else await rest('/rest/v1/staff?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({fp_registered_at:now})});
+    document.getElementById('regHero').innerHTML='<div class="icon">✅</div><h3 style="margin-bottom:6px">'+esc(label)+'</h3><div class="muted">Registered successfully</div>';
+    el.innerHTML='<button class="btn ok block" onclick="closeModal();nav(\'fingerprint\')">Done</button>';
+  }catch(e){el.innerHTML='<div class="alert-item danger"><span class="ico">❌</span><div class="txt"><b>Save failed</b><span>'+esc(e.message)+'</span></div></div>';}
+}
+window.registerPersonFP=registerPersonFP;
+async function removePersonFP(type,id){
+  if(!confirm('Remove this fingerprint?'))return;
+  try{
+    const col=type==='student'?'student_id':'staff_id';
+    await rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&'+col+'=eq.'+id+'&purpose=eq.attendance',{method:'DELETE'});
+    if(type==='student')await rest('/rest/v1/students?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({fp_registered_at:null})});
+    else await rest('/rest/v1/staff?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({fp_registered_at:null})});
+    toast('Removed','ok');nav(activeRoute);
+  }catch(e){toast(e.message,'bad');}
+}
+window.removePersonFP=removePersonFP;
+async function fpIdentify(){
+  if(!(await fpAvailable()))return{error:'No fingerprint sensor on this device'};
+  const r=await fpPrompt(null);
+  if(r.error)return r;
+  let row=null;
+  try{row=(await rest('/rest/v1/fp_credentials?credential_id=eq.'+encodeURIComponent(r.credentialId)+'&school_id=eq.'+_schoolId+'&purpose=eq.attendance&select=staff_id,student_id'))[0];}catch(e){}
+  if(!row)return{error:'Not registered in this school'};
+  if(row.student_id){
+    const st=(await rest('/rest/v1/students?id=eq.'+row.student_id+'&select=id,first_name,last_name,admission_no,class_id,status'))[0];
+    return{type:'student',student:st,credentialId:r.credentialId};
+  }
+  if(row.staff_id){
+    const sf=(await rest('/rest/v1/staff?id=eq.'+row.staff_id+'&select=id,full_name,role'))[0];
+    return{type:'staff',staff:sf,credentialId:r.credentialId};
+  }
+  return{error:'No matching record'};
+}
+window.fpIdentify=fpIdentify;
+async function fpPupilAttendance(){
+  const cnt=(await rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&purpose=eq.attendance&student_id=not.is.null&select=id').catch(()=>[])).length;
+  if(!cnt){toast('No pupil fingerprints registered yet','bad');return;}
+  modal('<div style="text-align:center;padding:20px">'+
+    '<div class="fp-hero" id="fpHero"><div class="icon">🖐️</div><h3 style="margin-bottom:6px">Pupil touches the sensor</h3><div class="muted">Waiting for fingerprint…</div></div>'+
+    '<div id="fpResult" style="margin-top:16px"></div>'+
+    '<button class="btn ghost block" style="margin-top:20px" onclick="closeModal()">Close</button></div>');
+  const r=await fpIdentify();
+  const el=document.getElementById('fpResult');if(!el)return;
+  if(r.error||r.type!=='student'){
+    document.getElementById('fpHero').innerHTML='<div class="icon">❌</div><h3 style="margin-bottom:6px">'+(r.error||'Not a pupil')+'</h3>';
+    el.innerHTML='<button class="btn block" onclick="closeModal();fpPupilAttendance()">🖐️ Try again</button>';
+    return;
+  }
+  const st=r.student;
+  if(!st||st.status!=='active'){
+    document.getElementById('fpHero').innerHTML='<div class="icon">⚠️</div><h3 style="margin-bottom:6px">Not active</h3>';
+    return;
+  }
+  const today=new Date().toISOString().slice(0,10);
+  try{
+    await rest('/rest/v1/attendance?school_id=eq.'+_schoolId+'&student_id=eq.'+st.id+'&date=eq.'+today,{method:'DELETE'});
+    await rest('/rest/v1/attendance',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,student_id:st.id,class_id:st.class_id,status:'present',date:today,academic_year:getCurrentYear(),term:getCurrentTerm()})});
+    document.getElementById('fpHero').innerHTML='<div class="icon">✅</div><h3 style="margin-bottom:6px">'+esc(st.first_name+' '+(st.last_name||''))+'</h3><div class="muted">'+esc(st.admission_no)+' · Present · '+new Date().toLocaleTimeString()+'</div>';
+    el.innerHTML='<button class="btn ok block" onclick="closeModal();fpPupilAttendance()">🖐️ Next pupil</button>'+
+      '<button class="btn ghost block" style="margin-top:8px" onclick="closeModal();nav(\'attendance\')">Done</button>';
+  }catch(e){toast(e.message,'bad');}
+}
+window.fpPupilAttendance=fpPupilAttendance;
+async function fpStaffAttendance(){
+  const cnt=(await rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&purpose=eq.attendance&staff_id=not.is.null&select=id').catch(()=>[])).length;
+  if(!cnt){toast('No staff fingerprints registered','bad');return;}
+  modal('<div style="text-align:center;padding:20px">'+
+    '<div class="fp-hero" id="fpHero"><div class="icon">🖐️</div><h3 style="margin-bottom:6px">Staff touches the sensor</h3><div class="muted">Waiting for fingerprint…</div></div>'+
+    '<div id="fpResult" style="margin-top:16px"></div>'+
+    '<button class="btn ghost block" style="margin-top:20px" onclick="closeModal()">Close</button></div>');
+  const r=await fpIdentify();
+  const el=document.getElementById('fpResult');if(!el)return;
+  if(r.error||r.type!=='staff'){
+    document.getElementById('fpHero').innerHTML='<div class="icon">❌</div><h3 style="margin-bottom:6px">'+(r.error||'Not a staff')+'</h3>';
+    el.innerHTML='<button class="btn block" onclick="closeModal();fpStaffAttendance()">🖐️ Try again</button>';
+    return;
+  }
+  const sf=r.staff;const today=new Date().toISOString().slice(0,10);
+  try{
+    await rest('/rest/v1/staff_attendance?school_id=eq.'+_schoolId+'&staff_id=eq.'+sf.id+'&date=eq.'+today,{method:'DELETE'});
+    await rest('/rest/v1/staff_attendance',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,staff_id:sf.id,date:today,status:'present',source:'fingerprint',notes:'Fingerprint '+new Date().toLocaleTimeString()})});
+    document.getElementById('fpHero').innerHTML='<div class="icon">✅</div><h3 style="margin-bottom:6px">'+esc(sf.full_name)+'</h3><div class="muted">Present · '+new Date().toLocaleTimeString()+'</div>';
+    el.innerHTML='<button class="btn ok block" onclick="closeModal();fpStaffAttendance()">🖐️ Next</button>'+
+      '<button class="btn ghost block" style="margin-top:8px" onclick="closeModal();nav(\'staff_att\')">Done</button>';
+  }catch(e){toast(e.message,'bad');}
+}
+window.fpStaffAttendance=fpStaffAttendance;
+
+/* ============================================================
    ROUTES
    ============================================================ */
 const ROUTES={
@@ -505,278 +723,6 @@ function renderBottomBar(){
 }
 function doGlobalSearch(){const v=document.getElementById('globalSearch').value.trim();if(!v)return;window._stFilterSearch=v;nav('students');setTimeout(()=>{const el=document.getElementById('studentSearchInput');if(el){el.value=v;filterStudentsTable(v,'');}},300);}
 window.doGlobalSearch=doGlobalSearch;
-
-/* ============================================================
-   SHARED
-   ============================================================ */
-function functionalStatusBadge(s){
-  if(s==='cash')return '<span class="badge ok">💵 Cash</span>';
-  if(s==='requirements')return '<span class="badge req">📦 Req.</span>';
-  return '<span class="badge bad">⏳ Pending</span>';
-}
-window.functionalStatusBadge=functionalStatusBadge;
-function generateLIN(fn){const i=fn?fn.charAt(0).toUpperCase():'X';return 'PM'+i+Math.floor(1000+Math.random()*9000);}
-function gradeOf(score){
-  if(score==null||isNaN(score)||score==='')return{g:'—',r:'—',cls:''};
-  const s=Number(score);
-  if(s>=90)return{g:'D1',r:'Distinction 1',cls:'ok'};
-  if(s>=80)return{g:'D2',r:'Distinction 2',cls:'ok'};
-  if(s>=70)return{g:'C3',r:'Credit 3',cls:'ok'};
-  if(s>=60)return{g:'C4',r:'Credit 4',cls:'info'};
-  if(s>=55)return{g:'C5',r:'Credit 5',cls:'info'};
-  if(s>=50)return{g:'C6',r:'Credit 6',cls:'info'};
-  if(s>=45)return{g:'P7',r:'Pass 7',cls:'warn'};
-  if(s>=40)return{g:'P8',r:'Pass 8',cls:'warn'};
-  return{g:'F9',r:'Fail 9',cls:'bad'};
-}
-function ordinal(n){if(!n)return '—';if(n===1)return '1st';if(n===2)return '2nd';if(n===3)return '3rd';return n+'th';}
-function autoComment(avg,fn){const f=fn||'Pupil';
-  if(avg>=90)return 'Outstanding! '+f+' attained D1.';
-  if(avg>=80)return 'Excellent. '+f+' attained D2.';
-  if(avg>=70)return 'Very good. '+f+' attained C3.';
-  if(avg>=60)return 'Good. '+f+' attained C4.';
-  if(avg>=55)return 'Fair. '+f+' attained C5.';
-  if(avg>=50)return 'Satisfactory. '+f+' attained C6.';
-  if(avg>=45)return 'Average. '+f+' attained P7.';
-  if(avg>=40)return 'Weak pass. '+f+' attained P8.';
-  return 'Unsatisfactory. '+f+' failed (F9).';
-}
-function gradeKeyHTML(){return '<div class="gc-key"><b>UNEB Grading:</b> D1 (90–100) · D2 (80–89) · C3 (70–79) · C4 (60–69) · C5 (55–59) · C6 (50–54) · P7 (45–49) · P8 (40–44) · F9 (0–39)</div>';}
-function examStageRank(type){const t=String(type||'').toLowerCase();if(t.includes('begin')||t.includes('bot'))return 1;if(t.includes('mid')||t.includes('mot'))return 2;if(t.includes('end')||t.includes('eot'))return 3;return 0;}
-function examStageLabel(type){const r=examStageRank(type);if(r===1)return 'BOT';if(r===2)return 'MOT';if(r===3)return 'EOT';return 'EX';}
-function examStageFullLabel(rank){return {1:'Beginning of Term',2:'Mid Term',3:'End of Term'}[rank]||'Other';}
-
-/* ============================================================
-   FINGERPRINT ENGINE
-   ============================================================ */
-const FP_CRED_KEY='eudes_fp_cred';
-const FP_SESS_KEY='eudes_fp_session';
-
-function b64u(buf){const b=new Uint8Array(buf);let s='';for(let i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
-function unb64u(str){str=str.replace(/-/g,'+').replace(/_/g,'/');while(str.length%4)str+='=';const bin=atob(str);const b=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)b[i]=bin.charCodeAt(i);return b;}
-
-async function fpAvailable(){
-  if(!window.PublicKeyCredential)return false;
-  try{return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();}
-  catch(e){return false;}
-}
-window.fpAvailable=fpAvailable;
-
-async function fpPrompt(allowCredId){
-  const challenge=crypto.getRandomValues(new Uint8Array(32));
-  try{
-    const a=await navigator.credentials.get({
-      publicKey:{challenge,rpId:location.hostname,
-        allowCredentials:allowCredId?[{type:'public-key',id:unb64u(allowCredId)}]:[],
-        userVerification:'required',timeout:60000}
-    });
-    if(!a)return{error:'Cancelled'};
-    return{credentialId:b64u(a.rawId)};
-  }catch(e){
-    if(e.name==='NotAllowedError')return{error:'Cancelled'};
-    if(e.name==='InvalidStateError')return{error:'Fingerprint not recognised'};
-    return{error:e.message||'Failed'};
-  }
-}
-
-async function fpRegister({name,displayName,userId}){
-  const challenge=crypto.getRandomValues(new Uint8Array(32));
-  const uid=userId||crypto.getRandomValues(new Uint8Array(16));
-  try{
-    const c=await navigator.credentials.create({
-      publicKey:{challenge,
-        rp:{name:_school?.name||'Eudes School',id:location.hostname},
-        user:{id:uid,name,displayName:displayName||name},
-        pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
-        authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'required',requireResidentKey:true},
-        timeout:90000,attestation:'none'}
-    });
-    if(!c)return{error:'Cancelled'};
-    return{credentialId:b64u(c.rawId)};
-  }catch(e){
-    if(e.name==='NotAllowedError')return{error:'Cancelled'};
-    if(e.name==='InvalidStateError')return{error:'Already registered on this device'};
-    return{error:e.message||'Failed'};
-  }
-}
-
-/* Login fingerprint */
-async function enableLoginFingerprint(){
-  if(!_profile||!SESSION){toast('Sign in first','bad');return;}
-  if(!(await fpAvailable())){toast('Device has no fingerprint sensor','bad');return;}
-  toast('Touch the sensor…','ok');
-  const r=await fpRegister({name:SESSION.email||'user',displayName:_profile.full_name||SESSION.email||'User',userId:new TextEncoder().encode(SESSION.id)});
-  if(r.error){toast(r.error,'bad');return;}
-  try{
-    await rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&user_id=eq.'+SESSION.id+'&purpose=eq.login',{method:'DELETE'});
-    await rest('/rest/v1/fp_credentials',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({credential_id:r.credentialId,school_id:_schoolId,user_id:SESSION.id,purpose:'login',device_label:navigator.userAgent.slice(0,80)})});
-    safeStorage.setItem(FP_CRED_KEY,r.credentialId);
-    const sess=safeStorage.getItem('eudes_session');
-    if(sess)safeStorage.setItem(FP_SESS_KEY,sess);
-    toast('🔐 Fingerprint unlock enabled','ok');
-    nav('settings');
-  }catch(e){toast(e.message,'bad');}
-}
-window.enableLoginFingerprint=enableLoginFingerprint;
-
-function disableLoginFingerprint(){
-  if(!confirm('Disable fingerprint unlock on this device?'))return;
-  safeStorage.removeItem(FP_CRED_KEY);safeStorage.removeItem(FP_SESS_KEY);
-  toast('Disabled','ok');nav('settings');
-}
-window.disableLoginFingerprint=disableLoginFingerprint;
-
-async function loginWithFingerprint(){
-  const credId=safeStorage.getItem(FP_CRED_KEY);
-  const sess=safeStorage.getItem(FP_SESS_KEY);
-  if(!credId||!sess){toast('Set up fingerprint in Settings first','bad');return;}
-  if(!(await fpAvailable())){toast('No sensor','bad');return;}
-  const r=await fpPrompt(credId);
-  if(r.error){toast(r.error,'bad');return;}
-  safeStorage.setItem('eudes_session',sess);
-  toast('🔓 Unlocked','ok');
-  await boot();
-}
-window.loginWithFingerprint=loginWithFingerprint;
-
-async function showFingerprintButtonIfReady(){
-  const btn=document.getElementById('fingerprintBtn');if(!btn)return;
-  const stored=safeStorage.getItem(FP_CRED_KEY);
-  const avail=await fpAvailable();
-  btn.style.display=(stored&&avail)?'inline-flex':'none';
-}
-window.showFingerprintButtonIfReady=showFingerprintButtonIfReady;
-
-/* Register fingerprints for staff/pupils */
-async function registerPersonFP(type,id){
-  if(!(await fpAvailable())){toast('No fingerprint sensor on this device','bad');return;}
-  let label='',subtitle='';
-  if(type==='student'){const st=(await rest('/rest/v1/students?id=eq.'+id+'&select=*'))[0];if(!st){toast('Not found','bad');return;}label=st.first_name+' '+(st.last_name||'');subtitle=st.admission_no;}
-  else{const sf=(await rest('/rest/v1/staff?id=eq.'+id+'&select=*'))[0];if(!sf){toast('Not found','bad');return;}label=sf.full_name;subtitle=sf.role||'';}
-
-  modal('<div style="text-align:center;padding:20px">'+
-    '<div class="fp-hero" id="regHero"><div class="icon">🖐️</div><h3 style="margin-bottom:6px">'+esc(label)+'</h3><div class="muted" id="regMsg">Ask them to touch the sensor 2–3 times…</div></div>'+
-    '<div id="regResult" style="margin-top:16px"></div>'+
-    '<button class="btn ghost block" style="margin-top:20px" onclick="closeModal()">Cancel</button></div>');
-
-  toast('Touch the sensor now…','ok');
-  const r=await fpRegister({name:(type==='student'?'student:':'staff:')+id,displayName:label,userId:crypto.getRandomValues(new Uint8Array(16))});
-  const el=document.getElementById('regResult');
-  if(!el)return;
-  if(r.error){
-    document.getElementById('regHero').innerHTML='<div class="icon">❌</div><h3 style="margin-bottom:6px">Failed</h3><div class="muted">'+esc(r.error)+'</div>';
-    el.innerHTML='<button class="btn block" onclick="closeModal();registerPersonFP(\''+type+'\',\''+id+'\')">🖐️ Try again</button>';
-    return;
-  }
-  try{
-    await rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&'+(type==='student'?'student_id':'staff_id')+'=eq.'+id+'&purpose=eq.attendance',{method:'DELETE'});
-    const row={credential_id:r.credentialId,school_id:_schoolId,purpose:'attendance',device_label:navigator.userAgent.slice(0,80)};
-    if(type==='student')row.student_id=id;else row.staff_id=id;
-    await rest('/rest/v1/fp_credentials',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(row)});
-    const now=new Date().toISOString();
-    if(type==='student')await rest('/rest/v1/students?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({fp_registered_at:now})});
-    else await rest('/rest/v1/staff?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({fp_registered_at:now})});
-    document.getElementById('regHero').innerHTML='<div class="icon">✅</div><h3 style="margin-bottom:6px">'+esc(label)+'</h3><div class="muted">Registered successfully</div>';
-    el.innerHTML='<button class="btn ok block" onclick="closeModal();nav(\'fingerprint\')">Done</button>';
-  }catch(e){
-    el.innerHTML='<div class="alert-item danger"><span class="ico">❌</span><div class="txt"><b>Save failed</b><span>'+esc(e.message)+'</span></div></div>';
-  }
-}
-window.registerPersonFP=registerPersonFP;
-
-async function removePersonFP(type,id){
-  if(!confirm('Remove this fingerprint?'))return;
-  try{
-    const col=type==='student'?'student_id':'staff_id';
-    await rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&'+col+'=eq.'+id+'&purpose=eq.attendance',{method:'DELETE'});
-    if(type==='student')await rest('/rest/v1/students?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({fp_registered_at:null})});
-    else await rest('/rest/v1/staff?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({fp_registered_at:null})});
-    toast('Removed','ok');nav(activeRoute);
-  }catch(e){toast(e.message,'bad');}
-}
-window.removePersonFP=removePersonFP;
-
-async function fpIdentify(){
-  if(!(await fpAvailable()))return{error:'No fingerprint sensor on this device'};
-  const r=await fpPrompt(null);
-  if(r.error)return r;
-  let row=null;
-  try{row=(await rest('/rest/v1/fp_credentials?credential_id=eq.'+encodeURIComponent(r.credentialId)+'&school_id=eq.'+_schoolId+'&purpose=eq.attendance&select=staff_id,student_id'))[0];}
-  catch(e){}
-  if(!row)return{error:'Not registered in this school'};
-  if(row.student_id){
-    const st=(await rest('/rest/v1/students?id=eq.'+row.student_id+'&select=id,first_name,last_name,admission_no,class_id,status'))[0];
-    return{type:'student',student:st,credentialId:r.credentialId};
-  }
-  if(row.staff_id){
-    const sf=(await rest('/rest/v1/staff?id=eq.'+row.staff_id+'&select=id,full_name,role'))[0];
-    return{type:'staff',staff:sf,credentialId:r.credentialId};
-  }
-  return{error:'No matching record'};
-}
-window.fpIdentify=fpIdentify;
-
-/* Fingerprint pupil attendance */
-async function fpPupilAttendance(){
-  const cnt=(await rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&purpose=eq.attendance&student_id=not.is.null&select=id').catch(()=>[])).length;
-  if(!cnt){toast('No pupil fingerprints registered yet','bad');return;}
-
-  modal('<div style="text-align:center;padding:20px">'+
-    '<div class="fp-hero" id="fpHero"><div class="icon">🖐️</div><h3 style="margin-bottom:6px">Pupil touches the sensor</h3><div class="muted">Waiting for fingerprint…</div></div>'+
-    '<div id="fpResult" style="margin-top:16px"></div>'+
-    '<button class="btn ghost block" style="margin-top:20px" onclick="closeModal()">Close</button></div>');
-
-  const r=await fpIdentify();
-  const el=document.getElementById('fpResult');
-  if(!el)return;
-  if(r.error||r.type!=='student'){
-    document.getElementById('fpHero').innerHTML='<div class="icon">❌</div><h3 style="margin-bottom:6px">'+(r.error||'Not a pupil')+'</h3>';
-    el.innerHTML='<button class="btn block" onclick="closeModal();fpPupilAttendance()">🖐️ Try again</button>';
-    return;
-  }
-  const st=r.student;
-  if(!st||st.status!=='active'){
-    document.getElementById('fpHero').innerHTML='<div class="icon">⚠️</div><h3 style="margin-bottom:6px">Not active</h3>';
-    return;
-  }
-  const today=new Date().toISOString().slice(0,10);
-  try{
-    await rest('/rest/v1/attendance?school_id=eq.'+_schoolId+'&student_id=eq.'+st.id+'&date=eq.'+today,{method:'DELETE'});
-    await rest('/rest/v1/attendance',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,student_id:st.id,class_id:st.class_id,status:'present',date:today,academic_year:getCurrentYear(),term:getCurrentTerm()})});
-    document.getElementById('fpHero').innerHTML='<div class="icon">✅</div><h3 style="margin-bottom:6px">'+esc(st.first_name+' '+(st.last_name||''))+'</h3><div class="muted">'+esc(st.admission_no)+' · Present · '+new Date().toLocaleTimeString()+'</div>';
-    el.innerHTML='<button class="btn ok block" onclick="closeModal();fpPupilAttendance()">🖐️ Next pupil</button>'+
-      '<button class="btn ghost block" style="margin-top:8px" onclick="closeModal();nav(\'attendance\')">Done</button>';
-  }catch(e){toast(e.message,'bad');}
-}
-window.fpPupilAttendance=fpPupilAttendance;
-
-/* Fingerprint staff attendance */
-async function fpStaffAttendance(){
-  const cnt=(await rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&purpose=eq.attendance&staff_id=not.is.null&select=id').catch(()=>[])).length;
-  if(!cnt){toast('No staff fingerprints registered','bad');return;}
-  modal('<div style="text-align:center;padding:20px">'+
-    '<div class="fp-hero" id="fpHero"><div class="icon">🖐️</div><h3 style="margin-bottom:6px">Staff touches the sensor</h3><div class="muted">Waiting for fingerprint…</div></div>'+
-    '<div id="fpResult" style="margin-top:16px"></div>'+
-    '<button class="btn ghost block" style="margin-top:20px" onclick="closeModal()">Close</button></div>');
-  const r=await fpIdentify();
-  const el=document.getElementById('fpResult');
-  if(!el)return;
-  if(r.error||r.type!=='staff'){
-    document.getElementById('fpHero').innerHTML='<div class="icon">❌</div><h3 style="margin-bottom:6px">'+(r.error||'Not a staff')+'</h3>';
-    el.innerHTML='<button class="btn block" onclick="closeModal();fpStaffAttendance()">🖐️ Try again</button>';
-    return;
-  }
-  const sf=r.staff;const today=new Date().toISOString().slice(0,10);
-  try{
-    await rest('/rest/v1/staff_attendance?school_id=eq.'+_schoolId+'&staff_id=eq.'+sf.id+'&date=eq.'+today,{method:'DELETE'});
-    await rest('/rest/v1/staff_attendance',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,staff_id:sf.id,date:today,status:'present',source:'fingerprint',notes:'Fingerprint '+new Date().toLocaleTimeString()})});
-    document.getElementById('fpHero').innerHTML='<div class="icon">✅</div><h3 style="margin-bottom:6px">'+esc(sf.full_name)+'</h3><div class="muted">Present · '+new Date().toLocaleTimeString()+'</div>';
-    el.innerHTML='<button class="btn ok block" onclick="closeModal();fpStaffAttendance()">🖐️ Next</button>'+
-      '<button class="btn ghost block" style="margin-top:8px" onclick="closeModal();nav(\'staff_att\')">Done</button>';
-  }catch(e){toast(e.message,'bad');}
-}
-window.fpStaffAttendance=fpStaffAttendance;
-
 /* ============================================================
    DASHBOARD
    ============================================================ */
@@ -1003,7 +949,7 @@ async function updateStudent(id){
   const fpaid=gn('e_functional_fee_paid');
   const tot=bf+af+tf;
   try{
-    await rest('/rest/v1/students?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({admission_no:document.getElementById('e_adm').value.trim(),first_name:document.getElementById('e_fn').value.trim(),last_name:document.getElementById('e_ln').value.trim()||null,class_id:document.getElementById('e_class').value||null,boarding_status:document.getElementById('e_boarding').value,parent_name:document.getElementById('e_parent_name').value.trim()||null,parent_contact:document.getElementById('e_parent_contact').value.trim()||null,balance_bf:bf,actual_fee:af,functional_fee:ff,transport_fee:tf,functional_fee_paid:fpaid,functional_fee_status:document.getElementById('e_func_status').value,total_expected:tot,status:document.getElementById('e_status').value})});
+    await rest('/rest/v1/students?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({admission_no:document.getElementById('e_adm').value.trim(),first_name:document.getElementById('e_fn').value.trim(),last_name:document.getElementById('e_ln').value.trim()||null,class_id:document.getElementById('e_class').value||null,boarding_status:document.getElementById('e_boarding').value,parent_name:document.getElementById('e_parent_name').value.trim()||null,parent_contact:document.getElementById('e_parent_contact').value.trim()||null,balance_bf:bf,actual_fee:af,functional_fee:ff,transport_fee:tf,functional_fee_paid:fpaid,functional_fee_status:document.getElementById('e_func_status').value,total_expected:tot,status:document.getElementById('e_status').value})});
     toast('Updated','ok');closeModal();nav('students');
   }catch(e){toast(e.message,'bad');}
 }
@@ -1046,7 +992,6 @@ async function pageStudentProfile(root){
   const attPct=totalAtt?Math.round(present/totalAtt*100):0;
   const initials=(st.first_name||'?')[0]+((st.last_name||' ')[0]||'');
   const hasFP=fps.length>0;
-
   const openPass=(passouts||[]).find(p=>p.status==='out');
   let outBanner='';
   if(openPass){
@@ -1054,21 +999,17 @@ async function pageStudentProfile(root){
     const expected=openPass.expected_return_at?new Date(openPass.expected_return_at):null;
     const durationMs=Date.now()-outAt.getTime();
     const overdue=expected&&Date.now()>expected.getTime();
-    outBanner=
-      '<div class="alert-item danger" style="border-left-width:6px;padding:16px;margin-bottom:14px">'+
-        '<span class="ico" style="font-size:28px">🚪</span>'+
-        '<div class="txt" style="line-height:1.7">'+
-          '<b style="font-size:15px">🚨 PUPIL IS CURRENTLY SIGNED OUT</b>'+
-          '<span><b>Reason:</b> '+esc(openPass.reason||'—')+
-          (openPass.picked_up_by?' · <b>Picked up by:</b> '+esc(openPass.picked_up_by):'')+'</span>'+
-          '<span><b>Signed out:</b> '+outAt.toLocaleDateString('en-GB')+' at '+outAt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' — <b>'+fmtDuration(durationMs)+' ago</b></span>'+
-          (expected?'<span><b>Expected return:</b> '+expected.toLocaleDateString('en-GB')+' at '+expected.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+(overdue?' <b style="color:#b91c1c">— OVERDUE</b>':'')+'</span>':'')+
-          (openPass.notes?'<span><b>Notes:</b> '+esc(openPass.notes)+'</span>':'')+
-        '</div>'+
-        '<button class="btn ok sm" onclick="signInStudent(\''+openPass.id+'\',true)">🏠 Sign In</button>'+
+    outBanner='<div class="alert-item danger" style="border-left-width:6px;padding:16px;margin-bottom:14px">'+
+      '<span class="ico" style="font-size:28px">🚪</span>'+
+      '<div class="txt" style="line-height:1.7">'+
+      '<b style="font-size:15px">🚨 PUPIL IS CURRENTLY SIGNED OUT</b>'+
+      '<span><b>Reason:</b> '+esc(openPass.reason||'—')+(openPass.picked_up_by?' · <b>Picked up by:</b> '+esc(openPass.picked_up_by):'')+'</span>'+
+      '<span><b>Signed out:</b> '+outAt.toLocaleDateString('en-GB')+' at '+outAt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' — <b>'+fmtDuration(durationMs)+' ago</b></span>'+
+      (expected?'<span><b>Expected return:</b> '+expected.toLocaleDateString('en-GB')+' at '+expected.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+(overdue?' <b style="color:#b91c1c">— OVERDUE</b>':'')+'</span>':'')+
+      '</div>'+
+      '<button class="btn ok sm" onclick="signInStudent(\''+openPass.id+'\',true)">🏠 Sign In</button>'+
       '</div>';
   }
-
   root.innerHTML=
   '<div class="page-head"><button class="btn ghost" onclick="nav(\'students\')">← Back</button>'+
   '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
@@ -1092,7 +1033,6 @@ async function pageStudentProfile(root){
     return '<button class="'+(tab===k?'active':'')+'" onclick="window._profileTab=\''+k+'\';nav(\'student_profile\')">'+l+'</button>';
   }).join('')+
   '</div><div id="profileTab"></div>';
-
   const tc=document.getElementById('profileTab');
   if(tab==='overview'){
     tc.innerHTML='<div class="grid grid-3">'+
@@ -1107,27 +1047,16 @@ async function pageStudentProfile(root){
     ((attendance||[]).length?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Status</th></tr></thead><tbody>'+
     attendance.map(a=>'<tr><td>'+fmtDate(a.date)+'</td><td>'+(a.status==='present'?'<span class="badge ok">Present</span>':'<span class="badge bad">Absent</span>')+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty">No records.</div>')+'</div>';
   } else if(tab==='passouts'){
-    if(!passouts||!passouts.length){
-      tc.innerHTML='<div class="card"><div class="empty">No pass-out history.</div></div>';
-    } else {
-      tc.innerHTML='<div class="card"><h3>🚪 Pass-Out History <span class="muted" style="font-weight:400;font-size:12px">('+passouts.length+' record'+(passouts.length>1?'s':'')+')</span></h3>'+
-      '<div class="table-wrap"><table><thead><tr>'+
-      '<th>#</th><th>Reason</th><th>Picked Up By</th><th>Signed Out</th><th>Returned</th><th>Duration</th><th>Status</th><th></th></tr></thead><tbody>'+
+    if(!passouts||!passouts.length){tc.innerHTML='<div class="card"><div class="empty">No pass-out history.</div></div>';}
+    else{
+      tc.innerHTML='<div class="card"><h3>🚪 Pass-Out History ('+passouts.length+')</h3><div class="table-wrap"><table><thead><tr><th>#</th><th>Reason</th><th>Picked Up By</th><th>Signed Out</th><th>Returned</th><th>Duration</th><th>Status</th><th></th></tr></thead><tbody>'+
       passouts.map((p,i)=>{
-        const outAt=new Date(p.signed_out_at);
-        const inAt=p.signed_in_at?new Date(p.signed_in_at):null;
-        const isOut=p.status==='out';
-        let duration='—';
-        if(outAt&&inAt)duration=fmtDuration(inAt-outAt);
-        else if(outAt&&isOut)duration='<b style="color:#b91c1c">'+fmtDuration(Date.now()-outAt.getTime())+' (ongoing)</b>';
-        return '<tr style="'+(isOut?'background:#fef3c7':'')+'">'+
-          '<td>'+(i+1)+'</td>'+
-          '<td><span class="badge warn">'+esc(p.reason||'—')+'</span></td>'+
-          '<td>'+esc(p.picked_up_by||'—')+'</td>'+
-          '<td style="font-size:12.5px"><b>'+outAt.toLocaleDateString('en-GB')+'</b><br><span class="muted">🕐 '+outAt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</span></td>'+
-          '<td style="font-size:12.5px">'+(inAt?'<b>'+inAt.toLocaleDateString('en-GB')+'</b><br><span class="muted">🕐 '+inAt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</span>':'<span class="muted">—</span>')+'</td>'+
-          '<td style="font-size:12.5px">'+duration+'</td>'+
-          '<td>'+(isOut?'<span class="badge bad">🚪 OUT</span>':'<span class="badge ok">✅ Returned</span>')+'</td>'+
+        const outAt=new Date(p.signed_out_at);const inAt=p.signed_in_at?new Date(p.signed_in_at):null;const isOut=p.status==='out';
+        let duration='—';if(outAt&&inAt)duration=fmtDuration(inAt-outAt);else if(outAt&&isOut)duration='<b style="color:#b91c1c">'+fmtDuration(Date.now()-outAt.getTime())+' ongoing</b>';
+        return '<tr style="'+(isOut?'background:#fef3c7':'')+'"><td>'+(i+1)+'</td><td><span class="badge warn">'+esc(p.reason||'—')+'</span></td><td>'+esc(p.picked_up_by||'—')+'</td>'+
+          '<td style="font-size:12.5px">'+outAt.toLocaleDateString('en-GB')+' '+outAt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</td>'+
+          '<td style="font-size:12.5px">'+(inAt?inAt.toLocaleDateString('en-GB')+' '+inAt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'—')+'</td>'+
+          '<td style="font-size:12.5px">'+duration+'</td><td>'+(isOut?'<span class="badge bad">🚪 OUT</span>':'<span class="badge ok">✅ Returned</span>')+'</td>'+
           '<td>'+(isOut?'<button class="btn sm ok" onclick="signInStudent(\''+p.id+'\',true)">🏠 In</button>':'')+'</td></tr>';
       }).join('')+'</tbody></table></div></div>';
     }
@@ -1339,7 +1268,6 @@ async function pagePassOuts(root){
   window._passOutsStudents=students||[];
   if(window._poFilterQ===undefined)window._poFilterQ='';
   if(window._poFilterStatus===undefined)window._poFilterStatus='all';
-
   const out=(passOuts||[]).filter(p=>p.status==='out');
   const returned=(passOuts||[]).filter(p=>p.status!=='out');
   root.innerHTML=
@@ -1369,7 +1297,6 @@ function renderPassOutsTable(){
   const status=window._poFilterStatus||'all';
   const stuMap={};students.forEach(s=>stuMap[s.id]=s);
   const clsMap={};(_classesCache||[]).forEach(c=>clsMap[c.id]=c.name);
-
   let filtered=list.filter(p=>{
     if(status==='out'&&p.status!=='out')return false;
     if(status==='returned'&&p.status==='out')return false;
@@ -1380,13 +1307,9 @@ function renderPassOutsTable(){
     }
     return true;
   });
-
   const c=document.getElementById('poTableContainer');
   if(!c)return;
-  if(!filtered.length){
-    c.innerHTML='<div class="empty">'+(q||status!=='all'?'No records match your filter.':'No pass-outs yet.')+'</div>';
-    return;
-  }
+  if(!filtered.length){c.innerHTML='<div class="empty">'+(q||status!=='all'?'No records match your filter.':'No pass-outs yet.')+'</div>';return;}
   c.innerHTML='<div class="table-wrap"><table><thead><tr>'+
   '<th>#</th><th>Pupil</th><th>Adm</th><th>Class</th><th>Reason</th><th>Picked Up By</th>'+
   '<th>Signed Out</th><th>Returned</th><th>Duration</th><th>Status</th><th></th></tr></thead><tbody>'+
@@ -1400,8 +1323,7 @@ function renderPassOutsTable(){
     else if(outAt&&isOut)duration='<b style="color:#b91c1c">'+fmtDuration(Date.now()-outAt.getTime())+' ongoing</b>';
     return '<tr style="'+(isOut?'background:#fef3c7':'')+'">'+
       '<td>'+(i+1)+'</td>'+
-      '<td><b>'+esc(st?st.first_name+' '+(st.last_name||''):'Unknown')+'</b>'+
-        (st&&st.parent_contact?'<div class="muted" style="font-size:11px">📞 '+esc(st.parent_contact)+'</div>':'')+'</td>'+
+      '<td><b>'+esc(st?st.first_name+' '+(st.last_name||''):'Unknown')+'</b>'+(st&&st.parent_contact?'<div class="muted" style="font-size:11px">📞 '+esc(st.parent_contact)+'</div>':'')+'</td>'+
       '<td style="font-size:12.5px">'+esc(st?st.admission_no:'—')+'</td>'+
       '<td style="font-size:12.5px">'+esc(st&&st.class_id?clsMap[st.class_id]||'—':'—')+'</td>'+
       '<td><span class="badge warn">'+esc(p.reason||'—')+'</span></td>'+
@@ -1459,7 +1381,6 @@ window.signInStudent=signInStudent;
 async function delPassOut(id){if(!confirm('Delete this pass-out record?'))return;try{await rest('/rest/v1/pass_outs?id=eq.'+id,{method:'DELETE'});nav('passouts');}catch(e){toast(e.message,'bad');}}
 window.delPassOut=delPassOut;
 
-/* Fingerprint pass-out */
 async function fpPassOut(preStudentId){
   const cnt=(await rest('/rest/v1/fp_credentials?school_id=eq.'+_schoolId+'&purpose=eq.attendance&student_id=not.is.null&select=id').catch(()=>[])).length;
   if(!cnt&&!preStudentId){toast('No pupil fingerprints registered','bad');return;}
@@ -1571,7 +1492,6 @@ async function pageFingerprint(root){
   const stuReg=students.filter(s=>stuSet.has(s.id)).length;
   const staReg=staff.filter(s=>staSet.has(s.id)).length;
   const avail=await fpAvailable();
-
   root.innerHTML=
   '<div class="page-head"><div><h1>🖐️ Fingerprints</h1><div class="sub">Register once, use forever</div></div>'+
   '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
@@ -1777,18 +1697,18 @@ function updateMarkGrade(inp){const g=gradeOf(inp.value);const td=inp.closest('t
 window.updateMarkGrade=updateMarkGrade;
 async function saveMarksGrid(){const examId=window._marksExamId;const subjectId=window._marksSubjectId;const rows=[];document.querySelectorAll('.mk-input').forEach(inp=>{const v=inp.value.trim();if(v==='')return;const sc=parseFloat(v);if(isNaN(sc)||sc<0||sc>100)return;rows.push({school_id:_schoolId,exam_id:examId,subject_id:subjectId,student_id:inp.dataset.student,score:sc,academic_year:getCurrentYear(),term:getCurrentTerm()});});if(!rows.length){toast('Nothing','bad');return;}try{await rest('/rest/v1/marks?school_id=eq.'+_schoolId+'&exam_id=eq.'+examId+'&subject_id=eq.'+subjectId,{method:'DELETE'});await rest('/rest/v1/marks',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify(rows)});toast(rows.length+' saved','ok');}catch(e){toast(e.message,'bad');}}
 window.saveMarksGrid=saveMarksGrid;
-
 /* ============================================================
-   REPORT CARDS
+   REPORT CARDS — NEW VERSION
+   Pupil dropdown + P.1 position + simplified card
    ============================================================ */
 function buildReportCardBody(student,rd){
-  const {exams,cls,subjects,marksByStudent,classAvgPct,classSize,attMap,rankMap,year,term,stageLabel}=rd;
+  const {exams,cls,subjects,marksByStudent,rankMap,year,term,stageLabel}=rd;
   const perExam=marksByStudent[student.id]||{};
   let grandTotal=0,assessCount=0;
   const subjectRows=subjects.map(s=>{const scores=exams.map(e=>{const sc=perExam[e.id]?.[s.id];if(sc!=null&&!isNaN(sc)){grandTotal+=Number(sc);assessCount++;}return sc!=null&&!isNaN(sc)?Number(sc):null;});return{subject:s,scores};});
   const avg=assessCount?grandTotal/assessCount:0;const pos=rankMap[student.id];
-  const att=attMap[student.id]||{present:0,absent:0,total:0};const attPct=att.total?((att.present/att.total)*100).toFixed(0):'—';
-  const g=gradeOf(avg);const comment=autoComment(avg,student.first_name);
+  const g=gradeOf(avg);
+  const posLabelVal=pos?('P.'+pos):'—';
   let html='';
   html+='<div class="rc-title">'+esc(stageLabel+' Report Card')+'</div>';
   html+='<table class="rc-info"><tr><td><b>Name:</b> '+esc(student.first_name+' '+(student.last_name||''))+'</td><td><b>Adm No:</b> '+esc(student.admission_no)+'</td><td><b>LIN:</b> '+esc(student.lin||'—')+'</td></tr><tr><td><b>Class:</b> '+esc(cls.name)+'</td><td><b>Year:</b> '+year+'</td><td><b>Term:</b> '+term+'</td></tr></table>';
@@ -1802,10 +1722,9 @@ function buildReportCardBody(student,rd){
   html+='</tbody><tfoot><tr><td colspan="2">GRAND TOTAL</td>';
   exams.forEach(e=>{const examTotal=subjects.reduce((sum,sj)=>{const sc=perExam[e.id]?.[sj.id];return sum+(sc!=null&&!isNaN(sc)?Number(sc):0);},0);const hasAny=subjects.some(sj=>perExam[e.id]?.[sj.id]!=null);html+='<td style="text-align:center">'+(hasAny?examTotal.toFixed(0):'—')+'</td>';});
   html+='<td style="text-align:right">'+grandTotal.toFixed(0)+'</td><td style="text-align:center">'+g.g+'</td><td>Avg: '+avg.toFixed(1)+'%</td></tr></tfoot></table>';
-  html+='<div class="rc-summary"><div><b>Total</b>'+grandTotal.toFixed(0)+'</div><div><b>Average</b>'+avg.toFixed(1)+'%</div><div><b>Position</b>'+(pos?ordinal(pos)+' / '+classSize:'—')+'</div><div><b>Grade</b>'+g.g+' — '+g.r+'</div><div><b>Attendance</b>'+(att.total?att.present+' / '+att.total+' ('+attPct+'%)':'—')+'</div><div><b>Class Avg</b>'+classAvgPct.toFixed(1)+'%</div></div>';
-  html+='<div class="rc-comment"><b>📝 Teacher\'s Comment:</b><br>'+esc(comment)+'</div>';
+  html+='<div class="rc-summary"><div><b>Average</b>'+avg.toFixed(1)+'%</div></div>';
+  html+='<div class="rc-position"><span class="label">Position in Class</span><span class="value">'+posLabelVal+'</span></div>';
   html+='<div class="rc-sign"><div>Class Teacher: ___________</div><div>Head Teacher: ___________</div><div>Date: '+new Date().toLocaleDateString()+'</div></div>';
-  html+=gradeKeyHTML();
   return html;
 }
 
@@ -1827,10 +1746,9 @@ async function pageReports(root){
   if(!stageRanks.includes(selectedStage))selectedStage=highestStage;
   const activeExams=termExams.filter(e=>examStageRank(e.type)<=selectedStage);const activeExamIds=activeExams.map(e=>e.id);
   const stageLabel=examStageFullLabel(selectedStage);
-  const [students,marks,attRecords]=await Promise.all([
+  const [students,marks]=await Promise.all([
     rest('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+cls.id+'&status=eq.active&select=*&order=first_name'),
-    rest('/rest/v1/marks?school_id=eq.'+_schoolId+'&exam_id=in.('+activeExamIds.join(',')+')&select=*'),
-    rest('/rest/v1/attendance?school_id=eq.'+_schoolId+'&class_id=eq.'+cls.id+'&academic_year=eq.'+year+'&term=eq.'+term+'&select=student_id,status').catch(()=>[])
+    rest('/rest/v1/marks?school_id=eq.'+_schoolId+'&exam_id=in.('+activeExamIds.join(',')+')&select=*')
   ]);
   const studs=students||[];const sidSet=new Set(studs.map(s=>s.id));const mks=(marks||[]).filter(m=>sidSet.has(m.student_id));
   const marksByStudent={};mks.forEach(m=>{if(!marksByStudent[m.student_id])marksByStudent[m.student_id]={};if(!marksByStudent[m.student_id][m.exam_id])marksByStudent[m.student_id][m.exam_id]={};marksByStudent[m.student_id][m.exam_id][m.subject_id]=Number(m.score);});
@@ -1838,9 +1756,7 @@ async function pageReports(root){
   const rows=studs.map(s=>{const per=marksByStudent[s.id]||{};let total=0,count=0;activeExams.forEach(e=>{subjList.forEach(sj=>{const v=per[e.id]?.[sj.id];if(v!=null&&!isNaN(v)){total+=Number(v);count++;}});});const avg=count?total/count:0;return{student:s,total,avg,count};});
   const ranked=rows.filter(r=>r.count>0).slice().sort((a,b)=>b.avg-a.avg);ranked.forEach((r,i)=>{r.position=i+1;});for(let i=1;i<ranked.length;i++){if(ranked[i].avg===ranked[i-1].avg)ranked[i].position=ranked[i-1].position;}
   const rankMap={};ranked.forEach(r=>rankMap[r.student.id]=r.position);
-  const classAvgPct=ranked.length?(ranked.reduce((s,r)=>s+r.avg,0)/ranked.length):0;
-  const attMap={};(attRecords||[]).forEach(a=>{if(!attMap[a.student_id])attMap[a.student_id]={present:0,absent:0,total:0};attMap[a.student_id].total++;if(a.status==='absent')attMap[a.student_id].absent++;else attMap[a.student_id].present++;});
-  const rd={exams:activeExams,cls,subjects:subjList,rows,ranked,classAvgPct,classSize:studs.length,attMap,marksByStudent,rankMap,year,term,stageLabel,selectedStage};
+  const rd={exams:activeExams,cls,subjects:subjList,rows,ranked,marksByStudent,rankMap,year,term,stageLabel,selectedStage};
   window._rcData=rd;
   const sortedView=rows.slice().sort((a,b)=>(rankMap[a.student.id]||9999)-(rankMap[b.student.id]||9999));
   const stageOptions=stageRanks.map(r=>({value:r,label:examStageFullLabel(r),count:termExams.filter(e=>examStageRank(e.type)<=r).length}));
@@ -1853,23 +1769,56 @@ async function pageReports(root){
   '<div><label>Class</label><select onchange="window._rcClassId=this.value;nav(\'reports\')">'+classes.map(c=>'<option value="'+c.id+'"'+(c.id===cls.id?' selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></div>'+
   '<div style="grid-column:1/-1"><label>Stage (cumulative)</label><select onchange="window._rcStage=this.value;nav(\'reports\')">'+
   stageOptions.map(o=>'<option value="'+o.value+'"'+(o.value===selectedStage?' selected':'')+'>'+esc(o.label)+' — '+o.count+' exam'+(o.count>1?'s':'')+'</option>').join('')+'</select></div></div></div>'+
+  '<div class="card"><h3>👤 Select Pupil to View Report Card</h3>'+
+  (studs.length?
+    '<div class="grid grid-2">'+
+    '<div><label>Pupil in '+esc(cls.name)+' ('+studs.length+' pupils)</label><select id="rcPupilSelect" onchange="rcShowSingle(this.value)"><option value="">— Choose a pupil —</option>'+sortedView.map(r=>'<option value="'+r.student.id+'">'+esc(r.student.admission_no)+' — '+esc(r.student.first_name+' '+(r.student.last_name||''))+'</option>').join('')+'</select></div>'+
+    '<div style="display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap"><button class="btn gold" onclick="rcPrintSelected()">🖨️ Print Selected</button><button class="btn ghost" onclick="rcClearSelected()">Clear</button></div>'+
+    '</div>'
+    :'<div class="empty">No pupils.</div>')+
+  '</div>'+
+  '<div id="rcSingleCard"></div>'+
   '<div class="card"><h3>📊 Ranking</h3>'+
   (studs.length?'<div class="table-wrap"><table><thead><tr><th>Pos</th><th>Adm</th><th>Name</th>'+activeExams.map(e=>'<th style="text-align:center">'+esc(examStageLabel(e.type))+'</th>').join('')+'<th style="text-align:right">Tot</th><th style="text-align:right">Avg</th><th>Grade</th><th></th></tr></thead><tbody>'+
   sortedView.map(r=>{const pos=rankMap[r.student.id];const g=gradeOf(r.avg);const per=marksByStudent[r.student.id]||{};
-    return '<tr><td><b>'+(pos?ordinal(pos):'—')+'</b></td><td>'+esc(r.student.admission_no)+'</td><td><b>'+esc(r.student.first_name+' '+(r.student.last_name||''))+'</b></td>'+
+    return '<tr><td><b>'+(pos?posLabel(pos):'—')+'</b></td><td>'+esc(r.student.admission_no)+'</td><td><b>'+esc(r.student.first_name+' '+(r.student.last_name||''))+'</b></td>'+
       activeExams.map(e=>{const hasAny=subjList.some(sj=>per[e.id]?.[sj.id]!=null);const examTotal=subjList.reduce((sum,sj)=>sum+(per[e.id]?.[sj.id]!=null?Number(per[e.id][sj.id]):0),0);return '<td style="text-align:center">'+(hasAny?examTotal.toFixed(0):'—')+'</td>';}).join('')+
       '<td style="text-align:right;font-weight:600">'+r.total.toFixed(0)+'</td><td style="text-align:right">'+r.avg.toFixed(1)+'</td><td><span class="badge '+(g.cls||'info')+'">'+g.g+'</span></td>'+
-      '<td style="text-align:right"><button class="btn sm" onclick="printOneReportCard(\''+r.student.id+'\')">🖨️</button></td></tr>';}).join('')+'</tbody></table></div>':'<div class="empty">No pupils.</div>')+'</div>';
+      '<td style="text-align:right"><button class="btn sm ghost" onclick="rcShowSingle(\''+r.student.id+'\')">👁️</button> <button class="btn sm" onclick="printOneReportCard(\''+r.student.id+'\')">🖨️</button></td></tr>';}).join('')+'</tbody></table></div>':'<div class="empty">No pupils.</div>')+'</div>';
 }
 window.pageReports=pageReports;
 
-const RC_PRINT_CSS='.rc-title{text-align:center;font-size:15px;font-weight:800;color:#0a2540;text-transform:uppercase;margin:10px 0 6px}.rc-info{width:100%;border-collapse:collapse;margin:10px 0}.rc-info td{padding:6px 10px;font-size:11.5px;border:1px solid #ccc}.rc-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0;padding:10px;background:#f8fafc;border:1px solid #eee;border-radius:8px}.rc-summary div b{display:block;font-size:9.5px;color:#666;text-transform:uppercase;font-weight:600}.rc-summary div{font-size:12.5px;font-weight:700;color:#0a2540}.rc-comment{margin:12px 0;padding:10px 12px;background:#fffbeb;border-left:3px solid #d4a017;border-radius:6px;font-size:11.5px}.rc-sign{display:flex;justify-content:space-between;gap:12px;margin:16px 0;font-size:10.5px;flex-wrap:wrap}.rc-sign div{flex:1;min-width:140px}.gc-key{margin-top:10px;padding:8px 10px;background:#f1f5f9;border-radius:6px;font-size:9.5px;color:#555}.rc-page{margin-bottom:16px}.rc-page-break{page-break-after:always}.rc-multi th{background:#0a2540;color:#fff;font-size:11px;text-transform:uppercase;text-align:center;padding:8px 6px}.rc-multi th .sub{font-size:9px;font-weight:400;opacity:.75;text-transform:none;display:block}.rc-multi td{padding:8px 10px;font-size:12.5px;border:1px solid #e2e8f0}.rc-multi tfoot td{background:#f1f5f9;font-weight:700;border-top:2px solid #0a2540}@media print{.rc-page{page-break-inside:avoid}}';
+function rcShowSingle(id){
+  const container=document.getElementById('rcSingleCard');
+  if(!container)return;
+  if(!id){container.innerHTML='';return;}
+  const rd=window._rcData;if(!rd)return;
+  const r=rd.rows.find(x=>x.student.id===id);if(!r){container.innerHTML='';return;}
+  container.innerHTML='<div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#0a2540;color:#fff;border-radius:8px 8px 0 0"><b style="color:#fff">📄 '+esc(r.student.first_name+' '+(r.student.last_name||''))+' — '+esc(r.student.admission_no)+'</b><button class="btn sm gold" onclick="rcPrintSelected()">🖨️ Print This</button></div><div class="report-preview" style="border-radius:0 0 12px 12px">'+buildReportCardBody(r.student,rd)+'</div></div>';
+  setTimeout(()=>container.scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+window.rcShowSingle=rcShowSingle;
+function rcPrintSelected(){
+  const sel=document.getElementById('rcPupilSelect');
+  if(!sel||!sel.value){toast('Select a pupil first','bad');return;}
+  printOneReportCard(sel.value);
+}
+window.rcPrintSelected=rcPrintSelected;
+function rcClearSelected(){
+  const sel=document.getElementById('rcPupilSelect');
+  if(sel)sel.value='';
+  const c=document.getElementById('rcSingleCard');
+  if(c)c.innerHTML='';
+}
+window.rcClearSelected=rcClearSelected;
+
+const RC_PRINT_CSS='.rc-title{text-align:center;font-size:15px;font-weight:800;color:#0a2540;text-transform:uppercase;margin:10px 0 6px}.rc-info{width:100%;border-collapse:collapse;margin:10px 0}.rc-info td{padding:6px 10px;font-size:11.5px;border:1px solid #ccc}.rc-summary{padding:10px;background:#f8fafc;border:1px solid #eee;border-radius:8px;text-align:center;margin:10px 0}.rc-summary div{font-size:13px;font-weight:700;color:#0a2540}.rc-position{margin:14px 0;padding:10px 14px;background:#0a2540;color:#fff;border-radius:8px;display:flex;justify-content:space-between}.rc-position .label{font-size:11px;text-transform:uppercase;opacity:.85}.rc-position .value{font-size:20px;font-weight:800;color:#d4a017}.rc-sign{display:flex;justify-content:space-between;gap:12px;margin:16px 0;font-size:10.5px;flex-wrap:wrap}.rc-sign div{flex:1;min-width:140px}.rc-page{margin-bottom:16px}.rc-page-break{page-break-after:always}.rc-multi th{background:#0a2540;color:#fff;font-size:11px;text-transform:uppercase;text-align:center;padding:8px 6px}.rc-multi th .sub{font-size:9px;font-weight:400;opacity:.75;text-transform:none;display:block}.rc-multi td{padding:8px 10px;font-size:12.5px;border:1px solid #e2e8f0}.rc-multi tfoot td{background:#f1f5f9;font-weight:700;border-top:2px solid #0a2540}@media print{.rc-page{page-break-inside:avoid}}';
 
 function printOneReportCard(studentId){const rd=window._rcData;if(!rd){toast('Reload','bad');return;}const r=rd.rows.find(x=>x.student.id===studentId);if(!r){toast('Not found','bad');return;}const body=buildReportCardBody(r.student,rd);printHTML(rd.stageLabel+' Report — '+r.student.first_name,body,RC_PRINT_CSS);}
 window.printOneReportCard=printOneReportCard;
 function printAllReportCards(){const rd=window._rcData;if(!rd||!rd.rows.length){toast('No pupils','bad');return;}const sorted=rd.rows.slice().sort((a,b)=>(rd.rankMap[a.student.id]||9999)-(rd.rankMap[b.student.id]||9999));let html='';sorted.forEach((r,i)=>{html+='<div class="rc-page'+(i<sorted.length-1?' rc-page-break':'')+'">'+buildReportCardBody(r.student,rd)+'</div>';});printHTML(rd.stageLabel+' Reports — '+rd.cls.name,html,RC_PRINT_CSS);}
 window.printAllReportCards=printAllReportCards;
-function printBroadsheet(){const rd=window._rcData;if(!rd||!rd.rows.length){toast('No data','bad');return;}const sorted=rd.rows.slice().sort((a,b)=>(rd.rankMap[a.student.id]||9999)-(rd.rankMap[b.student.id]||9999));let head='<tr><th rowspan="2">Pos</th><th rowspan="2">Adm</th><th rowspan="2">Name</th>';rd.exams.forEach(e=>{head+='<th colspan="'+(rd.subjects.length+1)+'">'+esc(e.name)+'</th>';});head+='<th rowspan="2" style="text-align:right">Tot</th><th rowspan="2" style="text-align:right">Avg</th><th rowspan="2">Grade</th></tr><tr>';rd.exams.forEach(()=>{rd.subjects.forEach(s=>{head+='<th style="text-align:center">'+esc(s.code)+'</th>';});head+='<th style="text-align:center;background:#d4a017">TOT</th>';});head+='</tr>';const bodyRows=sorted.map(r=>{const per=rd.marksByStudent[r.student.id]||{};let cells='<td><b>'+(rd.rankMap[r.student.id]?ordinal(rd.rankMap[r.student.id]):'—')+'</b></td><td>'+esc(r.student.admission_no)+'</td><td>'+esc(r.student.first_name+' '+(r.student.last_name||''))+'</td>';rd.exams.forEach(e=>{let examTotal=0,hasAny=false;rd.subjects.forEach(sj=>{const v=per[e.id]?.[sj.id];if(v!=null&&!isNaN(v)){examTotal+=Number(v);hasAny=true;}cells+='<td style="text-align:center">'+(v!=null?Number(v).toFixed(0):'—')+'</td>';});cells+='<td style="text-align:center;font-weight:700;background:#fff7e6">'+(hasAny?examTotal.toFixed(0):'—')+'</td>';});const g=gradeOf(r.avg);cells+='<td style="text-align:right;font-weight:700">'+r.total.toFixed(0)+'</td><td style="text-align:right">'+r.avg.toFixed(1)+'</td><td style="text-align:center"><b>'+g.g+'</b></td>';return '<tr>'+cells+'</tr>';}).join('');printHTML('Broadsheet — '+rd.cls.name+' — '+rd.stageLabel,'<table><thead>'+head+'</thead><tbody>'+bodyRows+'</tbody></table>');}
+function printBroadsheet(){const rd=window._rcData;if(!rd||!rd.rows.length){toast('No data','bad');return;}const sorted=rd.rows.slice().sort((a,b)=>(rd.rankMap[a.student.id]||9999)-(rd.rankMap[b.student.id]||9999));let head='<tr><th rowspan="2">Pos</th><th rowspan="2">Adm</th><th rowspan="2">Name</th>';rd.exams.forEach(e=>{head+='<th colspan="'+(rd.subjects.length+1)+'">'+esc(e.name)+'</th>';});head+='<th rowspan="2" style="text-align:right">Tot</th><th rowspan="2" style="text-align:right">Avg</th><th rowspan="2">Grade</th></tr><tr>';rd.exams.forEach(()=>{rd.subjects.forEach(s=>{head+='<th style="text-align:center">'+esc(s.code)+'</th>';});head+='<th style="text-align:center;background:#d4a017">TOT</th>';});head+='</tr>';const bodyRows=sorted.map(r=>{const per=rd.marksByStudent[r.student.id]||{};let cells='<td><b>'+(rd.rankMap[r.student.id]?posLabel(rd.rankMap[r.student.id]):'—')+'</b></td><td>'+esc(r.student.admission_no)+'</td><td>'+esc(r.student.first_name+' '+(r.student.last_name||''))+'</td>';rd.exams.forEach(e=>{let examTotal=0,hasAny=false;rd.subjects.forEach(sj=>{const v=per[e.id]?.[sj.id];if(v!=null&&!isNaN(v)){examTotal+=Number(v);hasAny=true;}cells+='<td style="text-align:center">'+(v!=null?Number(v).toFixed(0):'—')+'</td>';});cells+='<td style="text-align:center;font-weight:700;background:#fff7e6">'+(hasAny?examTotal.toFixed(0):'—')+'</td>';});const g=gradeOf(r.avg);cells+='<td style="text-align:right;font-weight:700">'+r.total.toFixed(0)+'</td><td style="text-align:right">'+r.avg.toFixed(1)+'</td><td style="text-align:center"><b>'+g.g+'</b></td>';return '<tr>'+cells+'</tr>';}).join('');printHTML('Broadsheet — '+rd.cls.name+' — '+rd.stageLabel,'<table><thead>'+head+'</thead><tbody>'+bodyRows+'</tbody></table>');}
 window.printBroadsheet=printBroadsheet;
 
 /* ============================================================
@@ -1927,7 +1876,7 @@ async function pageMessages(root){
 window.pageMessages=pageMessages;
 function composeMessage(){const students=window._msgStudents||[];modal('<h3>Compose</h3><div><label>Recipient</label><select id="cm_student"><option value="">— Manual —</option>'+students.map(s=>'<option value="'+s.id+'" data-phone="'+esc(s.parent_contact||'')+'" data-name="'+esc(s.parent_name||'')+'">'+esc(s.first_name+' '+(s.last_name||''))+'</option>').join('')+'</select></div><div class="grid grid-2" style="margin-top:12px"><div><label>Name</label><input id="cm_name"></div><div><label>Phone</label><input id="cm_phone"></div></div><div style="margin-top:12px"><label>Message</label><textarea id="cm_body" rows="4"></textarea></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveMessage()">Send</button></div>');setTimeout(()=>{const sel=document.getElementById('cm_student');sel.onchange=()=>{const o=sel.options[sel.selectedIndex];if(o.value){document.getElementById('cm_phone').value=o.getAttribute('data-phone')||'';document.getElementById('cm_name').value=o.getAttribute('data-name')||'';}};},50);}
 window.composeMessage=composeMessage;
-async function saveMessage(){const name=document.getElementById('cm_name').value.trim();const phone=document.getElementById('cm_phone').value.trim();const body=document.getElementById('cm_body').value.trim();if(!phone||!body){toast('Fill','bad');return;}try{await rest('/rest/v1/messages',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,student_id:document.getElementById('cm_student').value||null,recipient_name:name||null,recipient_phone:phone,recipient_type:'parent',body,channel:'sms',academic_year:getCurrentYear(),term:getCurrentTerm()})});toast('Logged','ok');closeModal();nav('messages');}catch(e){toast(e.message,'bad');}}
+async function saveMessage(){const name=document.getElementById('cm_name').value.trim();const phone=document.getElementById('cm_phone').value.trim();const body=document.getElementById('cm_body').value.trim();if(!phone||!body){toast('Fill','bad');return;}try{await rest('/rest/v1/messages',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,student_id:document.getElementById('cm_student').value||null,recipient_name:name||null,recipient_phone:phone,recipient_type:'parent',body,channel:'sms',academic_year:getCurrentYear(),term:getCurrentTerm()})});toast('Logged','ok');closeModal();nav('messages');}catch(e){toast(e.message,'bad');}}
 window.saveMessage=saveMessage;
 
 /* ============================================================
@@ -1956,15 +1905,15 @@ async function pageSettings(root){
   '<div class="card"><h3>My Account</h3><div><label>Name</label><input value="'+esc(_profile.full_name||'')+'" disabled></div><div style="margin-top:12px"><label>Email</label><input value="'+esc(SESSION.email||'')+'" disabled></div><div style="margin-top:12px"><label>Role</label><input value="'+esc(_role||'')+'" disabled></div></div>';
 }
 window.pageSettings=pageSettings;
-async function handleLogoUpload(input){if(!input.files||!input.files[0])return;const file=input.files[0];if(file.size>800*1024){toast('Too large (max 800KB)','bad');input.value='';return;}const reader=new FileReader();reader.onload=async e=>{const dataUrl=e.target.result;const prev=document.getElementById('logoPreview');if(prev)prev.innerHTML='<img src="'+dataUrl+'">';toast('Saving…','ok');try{await rest('/rest/v1/schools?id=eq.'+_schoolId,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({logo_data:dataUrl})});_school.logo_data=dataUrl;renderHeader();renderAuthLogo();toast('Saved ✓','ok');}catch(err){toast('Failed: '+err.message,'bad');}};reader.readAsDataURL(file);}
+async function handleLogoUpload(input){if(!input.files||!input.files[0])return;const file=input.files[0];if(file.size>800*1024){toast('Too large (max 800KB)','bad');input.value='';return;}const reader=new FileReader();reader.onload=async e=>{const dataUrl=e.target.result;const prev=document.getElementById('logoPreview');if(prev)prev.innerHTML='<img src="'+dataUrl+'">';toast('Saving…','ok');try{await rest('/rest/v1/schools?id=eq.'+_schoolId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({logo_data:dataUrl})});_school.logo_data=dataUrl;renderHeader();renderAuthLogo();toast('Saved ✓','ok');}catch(err){toast('Failed: '+err.message,'bad');}};reader.readAsDataURL(file);}
 window.handleLogoUpload=handleLogoUpload;
-async function removeLogo(){if(!confirm('Remove logo?'))return;try{await rest('/rest/v1/schools?id=eq.'+_schoolId,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({logo_data:null,logo_url:null})});delete _school.logo_data;delete _school.logo_url;renderHeader();renderAuthLogo();nav('settings');toast('Removed','ok');}catch(e){toast(e.message,'bad');}}
+async function removeLogo(){if(!confirm('Remove logo?'))return;try{await rest('/rest/v1/schools?id=eq.'+_schoolId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({logo_data:null,logo_url:null})});delete _school.logo_data;delete _school.logo_url;renderHeader();renderAuthLogo();nav('settings');toast('Removed','ok');}catch(e){toast(e.message,'bad');}}
 window.removeLogo=removeLogo;
 async function saveSchoolInfo(){const n=document.getElementById('set_name').value.trim();if(!n){toast('Name','bad');return;}try{await rest('/rest/v1/schools?id=eq.'+_schoolId,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({name:n,telephone:document.getElementById('set_phone').value.trim()||null,address:document.getElementById('set_addr').value.trim()||null,motto:document.getElementById('set_motto').value.trim()||null})});const sc=await rest('/rest/v1/schools?id=eq.'+_schoolId+'&select=*');_school=sc[0];renderHeader();toast('Saved','ok');}catch(e){toast(e.message,'bad');}}
 window.saveSchoolInfo=saveSchoolInfo;
 
 /* ============================================================
-   AUTH REDIRECT
+   AUTH REDIRECT + BOOT
    ============================================================ */
 async function handleAuthRedirect(){
   const hash=window.location.hash;
