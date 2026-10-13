@@ -100,9 +100,6 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .auth-card .logo img{width:100%;height:100%;object-fit:cover}
 .auth-card h1{text-align:center;font-size:19px;margin:0 0 6px}
 .auth-card .sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:22px}
-.tabs{display:flex;background:#f1f5f9;border-radius:999px;padding:4px;margin-bottom:22px}
-.tabs button{flex:1;padding:10px;font-size:13.5px;font-weight:600;color:var(--muted);border-radius:999px}
-.tabs button.active{background:var(--navy);color:#fff}
 .err{background:var(--badsoft);border:1px solid #fecaca;color:#b91c1c;padding:11px 14px;border-radius:10px;margin-top:14px;font-size:13px}
 .ok{background:var(--oksoft);border:1px solid #a7f3d0;color:#047857;padding:11px 14px;border-radius:10px;margin-top:14px;font-size:13px}
 .loading{padding:60px;text-align:center;color:var(--muted)}
@@ -197,6 +194,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 <script>
 const SUPA_URL='https://wabeempxckdtjvrkzhpv.supabase.co';
 const SUPA_KEY='sb_publishable_n0uAm0Gcq7qR2dJM4jMZGQ_wiV__Cfp';
+const APPLY_SQL=`ALTER TABLE staff_salaries ADD COLUMN IF NOT EXISTS allowances numeric default 0, ADD COLUMN IF NOT EXISTS allowance_notes text, ADD COLUMN IF NOT EXISTS deduction_notes text, ADD COLUMN IF NOT EXISTS advance_deducted numeric default 0;`;
 
 let _memoryStore={};
 const safeStorage={getItem:k=>{try{return localStorage.getItem(k);}catch(e){return _memoryStore[k]||null;}},setItem:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){_memoryStore[k]=String(v);}},removeItem:k=>{try{localStorage.removeItem(k);}catch(e){delete _memoryStore[k];}}};
@@ -245,10 +243,8 @@ function posLabel(n){if(!n)return '—';if(n===1)return '1st';if(n===2)return '2
 window.gradeOf=gradeOf;
 
 function printHTML(title,bodyHTML){
-  const w=window.open('','_blank');
-  if(!w){toast('Allow popups','bad');return;}
-  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>'+esc(title)+'</title><style>*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;padding:12px;margin:0}@page{margin:8mm;size:A4}@media print{body{padding:0}.no-print{display:none}}</style></head><body>'+bodyHTML+'<script>setTimeout(()=>window.print(),400);<\/script></body></html>');
-  w.document.close();
+  const w=window.open('','_blank');if(!w){toast('Allow popups','bad');return;}
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>'+esc(title)+'</title><style>*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;padding:12px;margin:0}@page{margin:8mm;size:A4}@media print{body{padding:0}.no-print{display:none}}</style></head><body>'+bodyHTML+'<script>setTimeout(()=>window.print(),400);<\/script></body></html>');w.document.close();
 }
 window.printHTML=printHTML;
 
@@ -266,11 +262,9 @@ async function boot(){
   _schoolId=_profile.school_id;_role=_profile.role;
   if(!_schoolId){document.getElementById('loginErr').textContent='Account not linked.';document.getElementById('loginErr').style.display='block';return;}
   try{const sc=await rest('/rest/v1/schools?id=eq.'+_schoolId+'&select=*');_school=sc&&sc[0];}catch(e){}
-  document.getElementById('authScreen').style.display='none';
-  document.getElementById('app').style.display='block';
+  document.getElementById('authScreen').style.display='none';document.getElementById('app').style.display='block';
   populateTermSelector();renderHeader();renderAuthLogo();renderNav();renderBottomBar();tickClock();
-  setInterval(tickClock,30000);
-  await nav('dashboard');
+  setInterval(tickClock,30000);await nav('dashboard');
 }
 window.boot=boot;
 
@@ -330,8 +324,7 @@ async function nav(route,param){
   if(!ROUTES[route])return;
   if(route==='student_profile'&&param)_profileStudentId=param;
   activeRoute=route;renderNav();renderBottomBar();
-  const main=document.getElementById('main');
-  main.innerHTML='<div class="loading">Loading…</div>';
+  const main=document.getElementById('main');main.innerHTML='<div class="loading">Loading…</div>';
   window.scrollTo({top:0,behavior:'smooth'});
   try{await ROUTES[route].render(main);}
   catch(e){console.error(e);main.innerHTML='<div class="card"><h3>Error</h3><p class="muted">'+esc(e.message)+'</p><button class="btn ghost" onclick="nav(\''+route+'\')">Retry</button></div>';}
@@ -341,8 +334,6 @@ function renderNav(){const entries=Object.entries(ROUTES).filter(([k])=>k!=='stu
 function renderBottomBar(){const entries=Object.entries(ROUTES).filter(([k,r])=>r.bottom&&k!=='student_profile');document.getElementById('bottomBar').innerHTML=entries.map(([k,r])=>'<button class="pill'+(k===activeRoute?' active':'')+'" onclick="nav(\''+k+'\')"><span>'+r.icon+'</span><span>'+esc(r.label)+'</span></button>').join('');}
 function doGlobalSearch(){const v=document.getElementById('globalSearch').value.trim();if(!v)return;window._stFilterSearch=v;nav('students');}
 window.doGlobalSearch=doGlobalSearch;
-
-/* ---- All page functions pasted inline below ---- */
 
 /* DASHBOARD */
 async function pageDashboard(root){
@@ -382,9 +373,9 @@ function filterStudentsTable(q,fClass){
   const classes=_classesCache||[];
   const filtered=(window._allStudents||[]).filter(s=>{
     if(fClass&&s.class_id!==fClass)return false;
-    const res=s.residence||s.boarding_status||'day';
+    const res=String(s.boarding_status||'day').toLowerCase();
     if(fRes&&res!==fRes)return false;
-    if(q){const hay=(s.first_name+' '+(s.last_name||'')+' '+(s.admission_no||'')+' '+(s.parent_name||'')+' '+(s.parent_contact||'')+' '+(s.lin||'')+' '+(s.location||'')+' '+(s.district||'')+' '+(s.physical_address||'')).toLowerCase();if(hay.indexOf(q)===-1)return false;}
+    if(q){const hay=(s.first_name+' '+(s.last_name||'')+' '+(s.admission_no||'')+' '+(s.parent_name||'')+' '+(s.parent_contact||'')+' '+(s.lin||'')+' '+(s.location||'')).toLowerCase();if(hay.indexOf(q)===-1)return false;}
     return true;
   });
   window._filteredStudents=filtered;
@@ -397,14 +388,34 @@ function filterStudentsTable(q,fClass){
     const charged=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.holiday_fee)||0)+(Number(s.academics_fee)||0)+(Number(s.functional_fee)||0)+(Number(s.transport_fee)||0);
     const collected=(Number(s.deposit_1)||0)+(Number(s.deposit_2)||0)+(Number(s.deposit_3)||0);
     const bal=charged-collected;
-    const res=s.residence||s.boarding_status||'day';
-    const wa=waLink(s.parent_contact||'');const tl=telLink(s.parent_contact||'');
-    const contactCell=s.parent_contact?'<div style="font-weight:600">'+esc(s.parent_contact)+'</div><div style="display:flex;gap:4px;margin-top:4px">'+(wa?'<a href="https://wa.me/'+wa+'" target="_blank" class="btn sm wa" style="text-decoration:none">💬</a>':'')+(tl?'<a href="tel:'+tl+'" class="btn sm ghost" style="text-decoration:none">📞</a>':'')+'</div>':'—';
-    const loc=[s.location,s.district].filter(Boolean).join(' · ')||'—';
+    const res=String(s.boarding_status||'day').toLowerCase();
+    const pName=(s.parent_name||'').trim();
+    const pContact=(s.parent_contact||'').trim();
+    const wa=pContact?waLink(pContact):'';
+    const tl=pContact?telLink(pContact):'';
+    let contactCell='—';
+    if(pName||pContact){
+      contactCell='';
+      if(pName)contactCell+='<b>'+esc(pName)+'</b>';
+      if(pContact){
+        contactCell+='<div style="font-weight:600;margin-top:2px">'+esc(pContact)+'</div>';
+        contactCell+='<div style="display:flex;gap:4px;margin-top:4px">'+(wa?'<a href="https://wa.me/'+wa+'" target="_blank" class="btn sm wa" style="text-decoration:none">💬</a>':'')+(tl?'<a href="tel:'+tl+'" class="btn sm ghost" style="text-decoration:none">📞</a>':'')+'</div>';
+      }
+    }
     const statusBadge=s.status==='active'?'<span class="badge ok">Active</span>':(s.status?'<span class="badge warn">'+esc(s.status)+'</span>':'<span class="badge bad">—</span>');
-    rows+='<tr><td><b>'+esc(s.admission_no||'—')+'</b></td><td><a href="javascript:void(0)" onclick="nav(\'student_profile\',\''+s.id+'\')" style="color:var(--navy);font-weight:600;text-decoration:none">'+esc(s.first_name+' '+(s.last_name||''))+'</a></td><td>'+(cls?'<span class="badge info">'+esc(cls.name)+'</span>':'<span class="badge bad">No class</span>')+'</td><td>'+esc(s.gender||'—')+'</td><td>'+esc(s.lin||'—')+'</td><td><b>'+esc(s.parent_name||'—')+'</b><br>'+contactCell+'</td><td>'+esc(loc)+'</td><td>'+esc(s.physical_address||'—')+'</td><td>'+(res==='boarding'?'<span class="badge warn">Board</span>':'<span class="badge ok">Day</span>')+'</td><td>'+statusBadge+'</td><td style="text-align:right"><span class="badge '+(bal>0?'bad':'ok')+'">'+fmtNum(bal)+'</span></td><td style="text-align:right;white-space:nowrap"><button class="btn sm" onclick="nav(\'student_profile\',\''+s.id+'\')">👤</button> <button class="btn sm gold" onclick="recordPayment(\''+s.id+'\')">💵</button> <button class="btn sm ghost" onclick="editStudent(\''+s.id+'\')">✏️</button> <button class="btn sm danger" onclick="deleteStudent(\''+s.id+'\')">✕</button></td></tr>';
+    rows+='<tr><td><b>'+esc(s.admission_no||'—')+'</b></td>'+
+      '<td><a href="javascript:void(0)" onclick="nav(\'student_profile\',\''+s.id+'\')" style="color:var(--navy);font-weight:600;text-decoration:none">'+esc(s.first_name+' '+(s.last_name||''))+'</a></td>'+
+      '<td>'+(cls?'<span class="badge info">'+esc(cls.name)+'</span>':'<span class="badge bad">No class</span>')+'</td>'+
+      '<td>'+esc(s.gender||'—')+'</td>'+
+      '<td>'+esc(s.lin||'—')+'</td>'+
+      '<td>'+contactCell+'</td>'+
+      '<td>'+esc(s.location||'—')+'</td>'+
+      '<td>'+(res==='boarding'?'<span class="badge warn">Board</span>':'<span class="badge ok">Day</span>')+'</td>'+
+      '<td>'+statusBadge+'</td>'+
+      '<td style="text-align:right"><span class="badge '+(bal>0?'bad':'ok')+'">'+fmtNum(bal)+'</span></td>'+
+      '<td style="text-align:right;white-space:nowrap"><button class="btn sm" onclick="nav(\'student_profile\',\''+s.id+'\')">👤</button> <button class="btn sm gold" onclick="recordPayment(\''+s.id+'\')">💵</button> <button class="btn sm ghost" onclick="editStudent(\''+s.id+'\')">✏️</button> <button class="btn sm danger" onclick="deleteStudent(\''+s.id+'\')">✕</button></td></tr>';
   });
-  c.innerHTML='<div class="table-wrap"><table style="font-size:12.5px"><thead><tr><th>ADM</th><th>Name</th><th>Class</th><th>Gender</th><th>LIN</th><th>Parent / Contact</th><th>Location</th><th>Address</th><th>Type</th><th>Status</th><th style="text-align:right">Balance</th><th style="text-align:right">Actions</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  c.innerHTML='<div class="table-wrap"><table style="font-size:12.5px"><thead><tr><th>ADM</th><th>Name</th><th>Class</th><th>Gender</th><th>LIN</th><th>Parent / Contact</th><th>Location</th><th>Type</th><th>Status</th><th style="text-align:right">Balance</th><th style="text-align:right">Actions</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 window.filterStudentsTable=filterStudentsTable;
 
@@ -425,10 +436,9 @@ async function openStudentModal(existing){
     '<div class="grid grid-2"><div><label>Admission No *</label><input id="m_adm" value="'+esc(s.admission_no||('ADM-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-3)))+'"></div><div><label>Class *</label><select id="m_class"><option value="">— Select —</option>'+classes.map(c=>'<option value="'+c.id+'"'+(s.class_id===c.id?' selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></div></div>'+
     '<div class="grid grid-2" style="margin-top:12px"><div><label>First Name *</label><input id="m_fn" value="'+esc(s.first_name||'')+'"></div><div><label>Last Name</label><input id="m_ln" value="'+esc(s.last_name||'')+'"></div></div>'+
     '<div class="grid grid-3" style="margin-top:12px"><div><label>Gender</label><select id="m_gender"><option value="">—</option><option value="M"'+(s.gender==='M'?' selected':'')+'>M</option><option value="F"'+(s.gender==='F'?' selected':'')+'>F</option></select></div><div><label>DOB</label><input id="m_dob" type="date" value="'+esc(s.date_of_birth||'')+'"></div><div><label>LIN</label><input id="m_lin" value="'+esc(s.lin||'')+'"></div></div>'+
-    '<div class="grid grid-2" style="margin-top:12px"><div><label>Residence</label><select id="m_res"><option value="day"'+((s.residence||s.boarding_status||'day')!=='boarding'?' selected':'')+'>Day</option><option value="boarding"'+((s.residence||s.boarding_status)==='boarding'?' selected':'')+'>Boarding</option></select></div><div><label>Status</label><select id="m_status"><option value="active"'+(s.status!=='inactive'?' selected':'')+'>Active</option><option value="inactive"'+(s.status==='inactive'?' selected':'')+'>Inactive</option></select></div></div>'+
+    '<div class="grid grid-2" style="margin-top:12px"><div><label>Boarding Status</label><select id="m_res"><option value="day"'+(String(s.boarding_status||'day').toLowerCase()!=='boarding'?' selected':'')+'>Day</option><option value="boarding"'+(String(s.boarding_status||'day').toLowerCase()==='boarding'?' selected':'')+'>Boarding</option></select></div><div><label>Status</label><select id="m_status"><option value="active"'+(s.status!=='inactive'?' selected':'')+'>Active</option><option value="inactive"'+(s.status==='inactive'?' selected':'')+'>Inactive</option></select></div></div>'+
     '<h4 style="font-size:12px;text-transform:uppercase;color:#64748b;margin:16px 0 6px">Location</h4>'+
-    '<div class="grid grid-2"><div><label>District</label><input id="m_district" value="'+esc(s.district||'')+'"></div><div><label>Location</label><input id="m_location" value="'+esc(s.location||'')+'"></div></div>'+
-    '<div style="margin-top:12px"><label>Physical Address</label><input id="m_phys" value="'+esc(s.physical_address||'')+'"></div>'+
+    '<div><label>Location (Village / Area)</label><input id="m_location" value="'+esc(s.location||'')+'" placeholder="e.g. Kijabijo"></div>'+
     '<h4 style="font-size:12px;text-transform:uppercase;color:#64748b;margin:16px 0 6px">Parent / Guardian</h4>'+
     '<div class="grid grid-2"><div><label>Parent Name</label><input id="m_par" value="'+esc(s.parent_name||'')+'"></div><div><label>Parent Contact</label><input id="m_pc" value="'+esc(s.parent_contact||'')+'" placeholder="+256..."></div></div>'+
     '<h4 style="font-size:12px;text-transform:uppercase;color:#64748b;margin:16px 0 6px">Fees (UGX)</h4>'+
@@ -442,12 +452,11 @@ async function saveStudent(id){
   const ff={balance_bf:Number(document.getElementById('m_bf').value)||0,actual_fee:Number(document.getElementById('m_fee').value)||0,holiday_fee:Number(document.getElementById('m_hol').value)||0,academics_fee:Number(document.getElementById('m_acad').value)||0,functional_fee:Number(document.getElementById('m_func').value)||0,transport_fee:Number(document.getElementById('m_trans').value)||0,deposit_1:Number(document.getElementById('m_d1').value)||0,deposit_2:Number(document.getElementById('m_d2').value)||0,deposit_3:Number(document.getElementById('m_d3').value)||0};
   const charged=ff.balance_bf+ff.actual_fee+ff.holiday_fee+ff.academics_fee+ff.functional_fee+ff.transport_fee;
   const collected=ff.deposit_1+ff.deposit_2+ff.deposit_3;
-  const residence=document.getElementById('m_res').value;
-  const body=Object.assign({school_id:_schoolId,admission_no:document.getElementById('m_adm').value.trim(),class_id:document.getElementById('m_class').value||null,first_name:document.getElementById('m_fn').value.trim(),last_name:document.getElementById('m_ln').value.trim()||null,gender:document.getElementById('m_gender').value||null,date_of_birth:document.getElementById('m_dob').value||null,lin:document.getElementById('m_lin').value.trim()||null,residence:residence,boarding_status:residence,district:document.getElementById('m_district').value.trim()||null,location:document.getElementById('m_location').value.trim()||null,physical_address:document.getElementById('m_phys').value.trim()||null,parent_name:document.getElementById('m_par').value.trim()||null,parent_contact:document.getElementById('m_pc').value.trim()||null,status:document.getElementById('m_status').value,total_expected:charged,current_balance:charged-collected},ff);
+  const boarding_status=String(document.getElementById('m_res').value||'day').toLowerCase();
+  const body=Object.assign({school_id:_schoolId,admission_no:document.getElementById('m_adm').value.trim(),class_id:document.getElementById('m_class').value||null,first_name:document.getElementById('m_fn').value.trim(),last_name:document.getElementById('m_ln').value.trim()||null,gender:document.getElementById('m_gender').value||null,date_of_birth:document.getElementById('m_dob').value||null,lin:document.getElementById('m_lin').value.trim()||null,boarding_status:boarding_status,location:document.getElementById('m_location').value.trim()||null,parent_name:document.getElementById('m_par').value.trim()||null,parent_contact:document.getElementById('m_pc').value.trim()||null,status:document.getElementById('m_status').value,total_expected:charged,current_balance:charged-collected},ff);
   if(!body.admission_no||!body.first_name){toast('ADM and name required','bad');return;}
   if(!body.class_id){toast('Select class','bad');return;}
-  try{if(id)await rest('/rest/v1/students?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify(body)});else await rest('/rest/v1/students',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify(body)});toast('Saved','ok');closeModal();nav(activeRoute);}
-  catch(e){toast(e.message,'bad');}
+  try{if(id)await rest('/rest/v1/students?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify(body)});else await rest('/rest/v1/students',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify(body)});toast('Saved','ok');closeModal();nav(activeRoute);}catch(e){toast(e.message,'bad');}
 }
 window.saveStudent=saveStudent;
 
@@ -465,10 +474,7 @@ async function recordPayment(studentId){
 window.recordPayment=recordPayment;
 
 async function savePayment(studentId){
-  const amount=Number(document.getElementById('p_amount').value);
-  const payment_for=document.getElementById('p_for').value;
-  const method=document.getElementById('p_method').value;
-  const notes=document.getElementById('p_notes').value.trim();
+  const amount=Number(document.getElementById('p_amount').value);const payment_for=document.getElementById('p_for').value;const method=document.getElementById('p_method').value;const notes=document.getElementById('p_notes').value.trim();
   if(!amount||amount<=0){toast('Enter amount','bad');return;}
   const s=(window._allStudents||[]).find(x=>x.id===studentId);if(!s){toast('Not found','bad');return;}
   try{await rest('/rest/v1/payments',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,student_id:studentId,receipt_no:'RCP-'+Date.now(),year:getCurrentYear(),term:getCurrentTerm(),academic_year:getCurrentYear(),amount,method,payment_method:method,payment_for,notes:notes||null,received_by:_profile?_profile.id:null})});
@@ -481,7 +487,7 @@ async function savePayment(studentId){
 }
 window.savePayment=savePayment;
 
-/* STUDENT PROFILE */
+/* PROFILE */
 async function pageStudentProfile(root){
   if(!_profileStudentId){root.innerHTML='<div class="empty">No pupil selected.</div>';return;}
   clearClassesCache();
@@ -499,12 +505,13 @@ async function pageStudentProfile(root){
   const collected=(Number(s.deposit_1)||0)+(Number(s.deposit_2)||0)+(Number(s.deposit_3)||0);
   const bal=charged-collected;
   const initials=(s.first_name||'?').charAt(0).toUpperCase()+(s.last_name?' '+s.last_name.charAt(0).toUpperCase():'');
-  let hero='<div class="profile-hero no-print"><div class="avatar">'+esc(initials)+'</div><div class="info"><h1>'+esc(s.first_name+' '+(s.last_name||''))+'</h1><div class="meta">📋 '+esc(s.admission_no)+' · '+(cls?'🏫 '+esc(cls.name):'No class')+' · '+(s.residence==='boarding'?'🛏 Boarding':'☀️ Day')+'</div>'+(s.parent_name||s.parent_contact?'<div class="meta">👤 '+esc(s.parent_name||'')+(s.parent_contact?' · 📞 '+esc(s.parent_contact):'')+'</div>':'')+'</div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn gold" onclick="recordPayment(\''+s.id+'\')">💵 Pay</button><button class="btn ghost" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.3)" onclick="editStudent(\''+s.id+'\')">✏️ Edit</button><button class="btn ghost" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.3)" onclick="printStudentStatement(\''+s.id+'\')">🖨️ Print</button></div></div>';
+  const res=String(s.boarding_status||'day').toLowerCase();
+  let hero='<div class="profile-hero no-print"><div class="avatar">'+esc(initials)+'</div><div class="info"><h1>'+esc(s.first_name+' '+(s.last_name||''))+'</h1><div class="meta">📋 '+esc(s.admission_no)+' · '+(cls?'🏫 '+esc(cls.name):'No class')+' · '+(res==='boarding'?'🛏 Boarding':'☀️ Day')+'</div>'+(s.parent_name||s.parent_contact?'<div class="meta">👤 '+esc(s.parent_name||'')+(s.parent_contact?' · 📞 '+esc(s.parent_contact):'')+'</div>':'')+'</div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn gold" onclick="recordPayment(\''+s.id+'\')">💵 Pay</button><button class="btn ghost" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.3)" onclick="editStudent(\''+s.id+'\')">✏️ Edit</button><button class="btn ghost" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.3)" onclick="printStudentStatement(\''+s.id+'\')">🖨️ Print</button></div></div>';
   let kpis='<div class="grid grid-kpi no-print" style="margin-bottom:14px"><div class="kpi"><div class="v">'+fmtUGX(charged)+'</div><div class="l">Charged</div></div><div class="kpi kpi-ok"><div class="v">'+fmtUGX(collected)+'</div><div class="l">Paid</div></div><div class="kpi '+(bal>0?'kpi-bad':'kpi-ok')+'"><div class="v">'+fmtUGX(bal)+'</div><div class="l">Balance</div></div></div>';
   const tabs=[{id:'overview',label:'📋 Overview'},{id:'fees',label:'💰 Fees'},{id:'payments',label:'💳 Payments ('+payments.length+')'},{id:'attendance',label:'📅 Attendance ('+attendance.length+')'},{id:'passouts',label:'🚪 Pass Outs ('+passOuts.length+')'}];
   let tabsHtml='<div class="tabs-bar no-print">'+tabs.map(t=>'<button class="'+(_profileTab===t.id?'active':'')+'" onclick="_profileTab=\''+t.id+'\';pageStudentProfile(document.getElementById(\'main\'))">'+t.label+'</button>').join('')+'</div>';
   let content='';
-  if(_profileTab==='overview'){content='<div class="grid grid-2"><div class="card"><h3>Personal</h3><table><tbody><tr><td style="color:var(--muted)">ADM</td><td><b>'+esc(s.admission_no)+'</b></td></tr><tr><td style="color:var(--muted)">Class</td><td>'+esc(cls?cls.name:'—')+'</td></tr><tr><td style="color:var(--muted)">Residence</td><td>'+esc(s.residence||'day')+'</td></tr><tr><td style="color:var(--muted)">Gender</td><td>'+esc(s.gender||'—')+'</td></tr><tr><td style="color:var(--muted)">DOB</td><td>'+fmtDate(s.date_of_birth)+'</td></tr><tr><td style="color:var(--muted)">LIN</td><td>'+esc(s.lin||'—')+'</td></tr><tr><td style="color:var(--muted)">Location</td><td>'+esc(s.location||s.district||'—')+'</td></tr><tr><td style="color:var(--muted)">Address</td><td>'+esc(s.physical_address||'—')+'</td></tr></tbody></table></div><div class="card"><h3>Parent</h3><table><tbody><tr><td style="color:var(--muted)">Name</td><td>'+esc(s.parent_name||'—')+'</td></tr><tr><td style="color:var(--muted)">Contact</td><td>'+(s.parent_contact?esc(s.parent_contact):'—')+'</td></tr></tbody></table>'+(s.parent_contact?'<div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap"><a href="https://wa.me/'+waLink(s.parent_contact)+'" target="_blank" class="btn wa">💬 WhatsApp</a><a href="tel:'+telLink(s.parent_contact)+'" class="btn ghost">📞 Call</a></div>':'')+'</div></div>';}
+  if(_profileTab==='overview'){content='<div class="grid grid-2"><div class="card"><h3>Personal</h3><table><tbody><tr><td style="color:var(--muted)">ADM</td><td><b>'+esc(s.admission_no)+'</b></td></tr><tr><td style="color:var(--muted)">Class</td><td>'+esc(cls?cls.name:'—')+'</td></tr><tr><td style="color:var(--muted)">Boarding</td><td>'+esc(res)+'</td></tr><tr><td style="color:var(--muted)">Gender</td><td>'+esc(s.gender||'—')+'</td></tr><tr><td style="color:var(--muted)">DOB</td><td>'+fmtDate(s.date_of_birth)+'</td></tr><tr><td style="color:var(--muted)">LIN</td><td>'+esc(s.lin||'—')+'</td></tr><tr><td style="color:var(--muted)">Location</td><td>'+esc(s.location||'—')+'</td></tr></tbody></table></div><div class="card"><h3>Parent</h3><table><tbody><tr><td style="color:var(--muted)">Name</td><td>'+esc(s.parent_name||'—')+'</td></tr><tr><td style="color:var(--muted)">Contact</td><td>'+(s.parent_contact?esc(s.parent_contact):'—')+'</td></tr></tbody></table>'+(s.parent_contact?'<div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap"><a href="https://wa.me/'+waLink(s.parent_contact)+'" target="_blank" class="btn wa">💬 WhatsApp</a><a href="tel:'+telLink(s.parent_contact)+'" class="btn ghost">📞 Call</a></div>':'')+'</div></div>';}
   else if(_profileTab==='fees'){content='<div class="card"><h3>Fee Breakdown</h3><div class="table-wrap"><table><thead><tr><th>Item</th><th style="text-align:right">Amount</th></tr></thead><tbody><tr><td>Balance B/F</td><td style="text-align:right">'+fmtNum(s.balance_bf)+'</td></tr><tr><td>Actual Fee</td><td style="text-align:right">'+fmtNum(s.actual_fee)+'</td></tr><tr><td>Holiday Fee</td><td style="text-align:right">'+fmtNum(s.holiday_fee)+'</td></tr><tr><td>Academics Fee</td><td style="text-align:right">'+fmtNum(s.academics_fee)+'</td></tr><tr><td>Functional Fee</td><td style="text-align:right">'+fmtNum(s.functional_fee)+'</td></tr><tr><td>Transport Fee</td><td style="text-align:right">'+fmtNum(s.transport_fee)+'</td></tr><tr style="background:#f1f5f9"><td><b>Total Charged</b></td><td style="text-align:right"><b>'+fmtNum(charged)+'</b></td></tr><tr><td>Deposit 1</td><td style="text-align:right;color:#047857">'+fmtNum(s.deposit_1)+'</td></tr><tr><td>Deposit 2</td><td style="text-align:right;color:#047857">'+fmtNum(s.deposit_2)+'</td></tr><tr><td>Deposit 3</td><td style="text-align:right;color:#047857">'+fmtNum(s.deposit_3)+'</td></tr><tr style="background:#f1f5f9"><td><b>Total Paid</b></td><td style="text-align:right;color:#047857"><b>'+fmtNum(collected)+'</b></td></tr><tr style="background:'+(bal>0?'#fef2f2':'#ecfdf5')+'"><td><b>Balance</b></td><td style="text-align:right;font-weight:700;color:'+(bal>0?'#b91c1c':'#047857')+'"><b>'+fmtNum(bal)+'</b></td></tr></tbody></table></div></div>';}
   else if(_profileTab==='payments'){if(!payments.length){content='<div class="card empty">No payments.</div>';}else{let running=0;let rows='';[...payments].reverse().forEach(p=>{running+=Number(p.amount);rows='<tr><td>'+fmtDateTime(p.paid_at)+'</td><td>'+esc(p.receipt_no||'—')+'</td><td>'+esc(p.payment_for||'—')+'</td><td>'+esc(p.method||'—')+'</td><td style="text-align:right;color:#047857">'+fmtNum(p.amount)+'</td><td style="text-align:right">'+fmtNum(running)+'</td></tr>'+rows;});content='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">Financial History</h3><button class="btn gold sm" onclick="recordPayment(\''+s.id+'\')">＋ Payment</button></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Receipt</th><th>For</th><th>Method</th><th style="text-align:right">Amount</th><th style="text-align:right">Running</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}}
   else if(_profileTab==='attendance'){if(!attendance.length){content='<div class="card empty">No records.</div>';}else{let rows='';attendance.forEach(a=>{rows+='<tr><td>'+fmtDate(a.date)+'</td><td><span class="badge '+(a.status==='present'?'ok':(a.status==='absent'?'bad':'warn'))+'">'+esc(a.status)+'</span></td></tr>';});content='<div class="card"><div class="table-wrap"><table><thead><tr><th>Date</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}}
@@ -550,7 +557,7 @@ window.renderFeesTable=renderFeesTable;
 /* IMPORT */
 async function pageImport(root){
   clearClassesCache();
-  const students=await rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,admission_no,first_name,last_name,class_id,residence');
+  const students=await rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,admission_no,first_name,last_name,class_id,boarding_status');
   window._allStudents=students||[];
   root.innerHTML='<div class="page-head"><div><h1>📥 Import Fees</h1></div></div><div class="card"><div class="alert-item info"><span class="ico">ℹ️</span><div class="txt"><b>Expected columns</b><span>Name · Class · STATUS · B/F · Actual Fee · holiday · academics · Funct · Transport · 1st deposit · 2nd deposit · 3rd deposit</span></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><input type="file" id="importFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImportFile(event)"><button class="btn" onclick="document.getElementById(\'importFile\').click()">📂 Choose File</button></div><div id="importStatus" class="muted" style="margin-top:12px">No file loaded.</div></div><div id="importPreview"></div>';
 }
@@ -568,7 +575,7 @@ async function processImportRows(rows){
   const headers=rows[headerIdx].map(h=>String(h||'').trim());
   const iName=findColIndex(headers,['name','pupil','full name']);
   const iClass=findColIndex(headers,['class']);
-  const iStatus=findColIndex(headers,['status','residence']);
+  const iStatus=findColIndex(headers,['status','residence','boarding']);
   const iBF=findColIndex(headers,['b/f','bf']);
   const iActual=findColIndex(headers,['actual fee','actual']);
   const iHoliday=findColIndex(headers,['holiday']);
@@ -584,15 +591,10 @@ async function processImportRows(rows){
     const r=rows[i];const rawName=String(r[iName]||'').trim();
     if(!rawName||rawName.toLowerCase().includes('total'))continue;
     const parts=rawName.split(/\s+/);let first=parts[0],last='';if(parts.length>=2)last=parts.slice(1).join(' ');
-    parsed.push({rawName,first_name:first,last_name:last,class_name:iClass>=0?normalizeClassName(r[iClass]):'',residence:iStatus>=0?(String(r[iStatus]).toLowerCase().includes('board')?'boarding':'day'):'',balance_bf:iBF>=0?parseMoney(r[iBF]):0,actual_fee:iActual>=0?parseMoney(r[iActual]):0,holiday_fee:iHoliday>=0?parseMoney(r[iHoliday]):0,academics_fee:iAcademics>=0?parseMoney(r[iAcademics]):0,functional_fee:iFunc>=0?parseMoney(r[iFunc]):0,transport_fee:iTrans>=0?parseMoney(r[iTrans]):0,deposit_1:iD1>=0?parseMoney(r[iD1]):0,deposit_2:iD2>=0?parseMoney(r[iD2]):0,deposit_3:iD3>=0?parseMoney(r[iD3]):0});
+    parsed.push({rawName,first_name:first,last_name:last,class_name:iClass>=0?normalizeClassName(r[iClass]):'',boarding_status:iStatus>=0?(String(r[iStatus]).toLowerCase().includes('board')?'boarding':'day'):'day',balance_bf:iBF>=0?parseMoney(r[iBF]):0,actual_fee:iActual>=0?parseMoney(r[iActual]):0,holiday_fee:iHoliday>=0?parseMoney(r[iHoliday]):0,academics_fee:iAcademics>=0?parseMoney(r[iAcademics]):0,functional_fee:iFunc>=0?parseMoney(r[iFunc]):0,transport_fee:iTrans>=0?parseMoney(r[iTrans]):0,deposit_1:iD1>=0?parseMoney(r[iD1]):0,deposit_2:iD2>=0?parseMoney(r[iD2]):0,deposit_3:iD3>=0?parseMoney(r[iD3]):0});
   }
   const students=window._allStudents||[];const nameIndex={};students.forEach(s=>{const k=normalizeName(s.first_name,s.last_name);if(!nameIndex[k])nameIndex[k]=[];nameIndex[k].push(s);});
-  window._importMatches=parsed.map(row=>{
-    const k=normalizeName(row.first_name,row.last_name);const cands=nameIndex[k]||[];let status='missing',chosen=null;
-    if(cands.length===1){status='exact';chosen=cands[0];}else if(cands.length>1){status='ambiguous';}
-    else{const fm=students.filter(s=>String(s.first_name||'').toLowerCase().trim()===row.first_name.toLowerCase().trim());if(fm.length===1){status='fuzzy';chosen=fm[0];}else if(fm.length>1){status='ambiguous';}}
-    return {row,candidates:cands,status,chosen};
-  });
+  window._importMatches=parsed.map(row=>{const k=normalizeName(row.first_name,row.last_name);const cands=nameIndex[k]||[];let status='missing',chosen=null;if(cands.length===1){status='exact';chosen=cands[0];}else if(cands.length>1){status='ambiguous';}else{const fm=students.filter(s=>String(s.first_name||'').toLowerCase().trim()===row.first_name.toLowerCase().trim());if(fm.length===1){status='fuzzy';chosen=fm[0];}else if(fm.length>1){status='ambiguous';}}return {row,candidates:cands,status,chosen};});
   status.innerHTML='<b style="color:#047857">✅ '+parsed.length+' rows</b>';renderImportPreview();
 }
 window.processImportRows=processImportRows;
@@ -623,8 +625,8 @@ async function applyImport(btn){
   if(!confirm('Apply '+updates.length+' updates, create '+creates.length+' new?'))return;
   if(btn){btn.disabled=true;btn.textContent='Applying…';}
   let u=0,cr=0,err=0;
-  for(const x of updates){try{const r=x.row;const cls=classByName[r.class_name.toLowerCase()];const charged=r.balance_bf+r.actual_fee+r.holiday_fee+r.academics_fee+r.functional_fee+r.transport_fee;const collected=r.deposit_1+r.deposit_2+r.deposit_3;await rest('/rest/v1/students?id=eq.'+x.chosen.id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({class_id:cls?cls.id:(x.chosen.class_id||null),residence:r.residence||x.chosen.residence||'day',balance_bf:r.balance_bf,actual_fee:r.actual_fee,holiday_fee:r.holiday_fee,academics_fee:r.academics_fee,functional_fee:r.functional_fee,transport_fee:r.transport_fee,deposit_1:r.deposit_1,deposit_2:r.deposit_2,deposit_3:r.deposit_3,total_expected:charged,current_balance:charged-collected})});u++;}catch(e){err++;console.error(e);}}
-  for(const x of creates){try{const r=x.row;const cls=classByName[r.class_name.toLowerCase()];const charged=r.balance_bf+r.actual_fee+r.holiday_fee+r.academics_fee+r.functional_fee+r.transport_fee;const collected=r.deposit_1+r.deposit_2+r.deposit_3;await rest('/rest/v1/students',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,admission_no:'ADM-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-5)+Math.floor(Math.random()*100),class_id:cls?cls.id:null,first_name:r.first_name,last_name:r.last_name||null,residence:r.residence||'day',status:'active',balance_bf:r.balance_bf,actual_fee:r.actual_fee,holiday_fee:r.holiday_fee,academics_fee:r.academics_fee,functional_fee:r.functional_fee,transport_fee:r.transport_fee,deposit_1:r.deposit_1,deposit_2:r.deposit_2,deposit_3:r.deposit_3,total_expected:charged,current_balance:charged-collected})});cr++;}catch(e){err++;console.error(e);}}
+  for(const x of updates){try{const r=x.row;const cls=classByName[r.class_name.toLowerCase()];const charged=r.balance_bf+r.actual_fee+r.holiday_fee+r.academics_fee+r.functional_fee+r.transport_fee;const collected=r.deposit_1+r.deposit_2+r.deposit_3;await rest('/rest/v1/students?id=eq.'+x.chosen.id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({class_id:cls?cls.id:(x.chosen.class_id||null),boarding_status:r.boarding_status||x.chosen.boarding_status||'day',balance_bf:r.balance_bf,actual_fee:r.actual_fee,holiday_fee:r.holiday_fee,academics_fee:r.academics_fee,functional_fee:r.functional_fee,transport_fee:r.transport_fee,deposit_1:r.deposit_1,deposit_2:r.deposit_2,deposit_3:r.deposit_3,total_expected:charged,current_balance:charged-collected})});u++;}catch(e){err++;console.error(e);}}
+  for(const x of creates){try{const r=x.row;const cls=classByName[r.class_name.toLowerCase()];const charged=r.balance_bf+r.actual_fee+r.holiday_fee+r.academics_fee+r.functional_fee+r.transport_fee;const collected=r.deposit_1+r.deposit_2+r.deposit_3;await rest('/rest/v1/students',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,admission_no:'ADM-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-5)+Math.floor(Math.random()*100),class_id:cls?cls.id:null,first_name:r.first_name,last_name:r.last_name||null,boarding_status:r.boarding_status||'day',status:'active',balance_bf:r.balance_bf,actual_fee:r.actual_fee,holiday_fee:r.holiday_fee,academics_fee:r.academics_fee,functional_fee:r.functional_fee,transport_fee:r.transport_fee,deposit_1:r.deposit_1,deposit_2:r.deposit_2,deposit_3:r.deposit_3,total_expected:charged,current_balance:charged-collected})});cr++;}catch(e){err++;console.error(e);}}
   toast('Done: '+u+' updated, '+cr+' created, '+err+' errors',err?'bad':'ok');
   window._importMatches=null;nav('fees');
 }
@@ -641,10 +643,8 @@ async function pageAttendance(root){
 window.pageAttendance=pageAttendance;
 
 async function loadAttTable(){
-  const classId=document.getElementById('attClass').value;
-  const date=document.getElementById('attDate').value;
-  let url='/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=id,first_name,last_name,admission_no,class_id';
-  if(classId)url+='&class_id=eq.'+classId;
+  const classId=document.getElementById('attClass').value;const date=document.getElementById('attDate').value;
+  let url='/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=id,first_name,last_name,admission_no,class_id';if(classId)url+='&class_id=eq.'+classId;
   const [students,existing]=await Promise.all([rest(url),rest('/rest/v1/attendance?school_id=eq.'+_schoolId+'&date=eq.'+date+'&select=student_id,status')]);
   const map={};existing.forEach(a=>map[a.student_id]=a.status);window._attMap=map;window._attDate=date;
   const classes=_classesCache||[];const c=document.getElementById('attTable');
@@ -661,8 +661,7 @@ window.markAllPresent=markAllPresent;
 /* MARKS */
 async function pageMarks(root){
   clearClassesCache();
-  const classes=await loadClasses();
-  if(!_marksClass&&classes[0])_marksClass=classes[0].id;
+  const classes=await loadClasses();if(!_marksClass&&classes[0])_marksClass=classes[0].id;
   const cy=getCurrentYear(),ct=getCurrentTerm();
   if(!_examsCache){_examsCache=await rest('/rest/v1/exams?school_id=eq.'+_schoolId+'&select=*&order=stage')||[];if(!_examsCache.length){for(const d of [{name:'Beginning of Term',stage:1},{name:'Mid Term',stage:2},{name:'End of Term',stage:3}]){await rest('/rest/v1/exams',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,name:d.name,stage:d.stage,year:cy,term:ct})});}_examsCache=await rest('/rest/v1/exams?school_id=eq.'+_schoolId+'&select=*&order=stage')||[];}}
   if(!_marksExam&&_examsCache[0])_marksExam=_examsCache[0].id;
@@ -691,7 +690,7 @@ async function setMark(inputEl){
 }
 window.setMark=setMark;
 
-/* REPORTS (Progressive Mothers) */
+/* REPORTS */
 const SCHOOL_HEADER={name:'PROGRESSIVE MOTHERS NUR. & PRIMARY SCHOOL',po:'P.O BOX ....... KAMPALA - UGANDA',tel:'TEL: 0756 585035 / 0779 585035',email:'Email: progressivemotherspri@gmail.com',website:'Website: www.progressivemothers.com'};
 const STAGE_LABELS={1:'BEGINNING OF TERM',2:'MID TERM',3:'END OF TERM'};
 function levelOfClass(c){const n=String(c||'').toLowerCase();if(n.includes('baby')||n.includes('middle')||n.includes('top'))return 'nursery';if(n.includes('primary 1')||n.includes('primary 2')||n.includes('primary 3'))return 'lower';if(n.includes('primary 4')||n.includes('primary 5')||n.includes('primary 6')||n.includes('primary 7'))return 'upper';return 'lower';}
@@ -745,8 +744,7 @@ window.buildReportCardHTML=buildReportCardHTML;
 
 async function pageReports(root){
   clearClassesCache();
-  const classes=await loadClasses();
-  if(!_repClass&&classes[0])_repClass=classes[0].id;
+  const classes=await loadClasses();if(!_repClass&&classes[0])_repClass=classes[0].id;
   const classObj=classes.find(c=>c.id===_repClass);
   const subjects=await loadSubjectsForClass(_repClass);
   const students=await rest('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+_repClass+'&status=eq.active&select=*&order=first_name')||[];
@@ -789,10 +787,8 @@ function printBroadsheet(){
 }
 window.printBroadsheet=printBroadsheet;
 
-/* REPORT CARD EDIT */
 async function pageReportCardEdit(root){
-  const classes=await loadClasses();
-  if(!_rceClass&&classes[0])_rceClass=classes[0].id;
+  const classes=await loadClasses();if(!_rceClass&&classes[0])_rceClass=classes[0].id;
   const students=_rceClass?await rest('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+_rceClass+'&select=*&order=first_name'):[];
   const classOpts=classes.map(c=>'<option value="'+c.id+'"'+(_rceClass===c.id?' selected':'')+'>'+esc(c.name)+'</option>').join('');
   let rows='';students.forEach(s=>{rows+='<tr><td>'+esc(s.admission_no)+'</td><td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b></td><td style="text-align:right">'+(s.position_manual||'—')+'</td><td>'+(s.division_manual||'—')+'</td><td>'+(s.conduct?esc(s.conduct.substring(0,25)):'—')+'</td><td><button class="btn sm" onclick="editReportCard(\''+s.id+'\')">✏️ Edit</button></td></tr>';});
@@ -801,8 +797,7 @@ async function pageReportCardEdit(root){
 window.pageReportCardEdit=pageReportCardEdit;
 
 async function editReportCard(id){
-  const rows=await rest('/rest/v1/students?id=eq.'+id+'&select=*');
-  const s=rows&&rows[0];if(!s){toast('Not found','bad');return;}
+  const rows=await rest('/rest/v1/students?id=eq.'+id+'&select=*');const s=rows&&rows[0];if(!s){toast('Not found','bad');return;}
   modal('<h3>Edit Report — '+esc(s.first_name+' '+(s.last_name||''))+'</h3><div class="grid grid-2"><div><label>Position</label><input id="rc_pos" type="number" value="'+(s.position_manual||'')+'"></div><div><label>Division</label><input id="rc_div" value="'+esc(s.division_manual||'')+'"></div></div><div style="margin-top:12px"><label>Conduct</label><input id="rc_conduct" value="'+esc(s.conduct||'')+'"></div><div style="margin-top:12px"><label>Class Teacher\'s Comment</label><textarea id="rc_ctc" rows="2">'+esc(s.class_teacher_comment||'')+'</textarea></div><div style="margin-top:12px"><label>Head Teacher\'s Comment</label><textarea id="rc_htc" rows="2">'+esc(s.head_teacher_comment||'')+'</textarea></div><div class="grid grid-2" style="margin-top:12px"><div><label>Term Ended On</label><input id="rc_te" type="date" value="'+esc(s.term_ended_on||'')+'"></div><div><label>Next Term Begins</label><input id="rc_nt" type="date" value="'+esc(s.next_term_begins||'')+'"></div></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveReportCard(\''+s.id+'\')">Save</button></div>');
 }
 window.editReportCard=editReportCard;
@@ -815,7 +810,6 @@ window.saveReportCard=saveReportCard;
 
 /* PAYROLL */
 const ALLOWANCE_OPTIONS=['House Allowance','Transport Allowance','Lunch Allowance','Overtime','Responsibility Allowance','Acting Allowance','Risk Allowance','Medical Allowance','Rent Allowance','Air time','Bonus','Holiday Pay','Other'];
-const DEDUCTION_OPTIONS=['NSSF','PAYE','Absenteeism','Late Penalty','Damages','Welfare','SACCO','Loan Repayment','Uniform','Advance Recovery','Other'];
 const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 async function pagePayroll(root){
@@ -867,7 +861,7 @@ async function payStaff(staffId){
   const cur=existing&&existing[0];if(!cur){toast('Save amounts first','bad');return;}
   const advDed=Number(cur.advance_deducted||0);
   try{await rest('/rest/v1/staff_salaries?id=eq.'+cur.id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({status:'paid',paid_date:new Date().toISOString().slice(0,10)})});
-  if(advDed>0){const advances=await rest('/rest/v1/staff_advances?school_id=eq.'+_schoolId+'&staff_id=eq.'+staffId+'&status=eq.open&select=*&order=given_date');let remaining=advDed;for(const a of (advances||[])){if(remaining<=0)break;const bal=Number(a.balance||a.amount||0);const take=Math.min(bal,remaining);const newBal=bal-take;await rest('/rest/v1/staff_advances?id=eq.'+a.id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({balance:newBal,status:newBal<=0?'closed':'open'})});await rest('/rest/v1/advance_repayments',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,advance_id:a.id,amount:take,notes:'Recovered from '+MONTH_NAMES[_payMonth-1]+' '+_payYear+' salary',at:new Date().toISOString()})});remaining-=take;}}
+  if(advDed>0){const advances=await rest('/rest/v1/staff_advances?school_id=eq.'+_schoolId+'&staff_id=eq.'+staffId+'&status=eq.open&select=*&order=given_date');let remaining=advDed;for(const a of (advances||[])){if(remaining<=0)break;const bal=Number(a.balance||a.amount||0);const take=Math.min(bal,remaining);const newBal=bal-take;await rest('/rest/v1/staff_advances?id=eq.'+a.id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({balance:newBal,status:newBal<=0?'closed':'open'})});await rest('/rest/v1/advance_repayments',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,advance_id:a.id,amount:take,notes:'Recovered from '+MONTH_NAMES[_payMonth-1]+' '+_payYear,at:new Date().toISOString()})});remaining-=take;}}
   toast('Paid','ok');pagePayroll(document.getElementById('main'));}catch(e){toast(e.message,'bad');}
 }
 window.payStaff=payStaff;
@@ -992,7 +986,7 @@ async function waPayslip(staffId){
 }
 window.waPayslip=waPayslip;
 
-/* OTHER PAGES: Classes, Subjects, Exams, Debtors, Pass Outs, Staff, Staff Att, Uniforms, Expenses, Messages, Settings */
+/* CLASSES */
 async function pageClasses(root){clearClassesCache();const classes=await loadClasses();const counts={};for(const c of classes){const r=await rest('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+c.id+'&select=id');counts[c.id]=r.length;}let rows='';classes.forEach(c=>{rows+='<tr><td><b>'+esc(c.name)+'</b></td><td><span class="badge info">'+esc(c.level||'primary')+'</span></td><td>'+counts[c.id]+'</td><td><button class="btn sm danger" onclick="delClass(\''+c.id+'\')">✕</button></td></tr>';});root.innerHTML='<div class="page-head"><div><h1>🏫 Classes</h1></div></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Level</th><th>Pupils</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
 window.pageClasses=pageClasses;
 async function delClass(id){if(!confirm('Delete?'))return;try{await rest('/rest/v1/classes?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');clearClassesCache();nav('classes');}catch(e){toast(e.message,'bad');}}
@@ -1020,7 +1014,7 @@ window.savePassOut=savePassOut;
 async function returnPass(id){try{await rest('/rest/v1/pass_outs?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({status:'returned',signed_in_at:new Date().toISOString()})});toast('Returned','ok');nav('passouts');}catch(e){toast(e.message,'bad');}}
 window.returnPass=returnPass;
 
-async function pageStaff(root){const staff=await rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=*&order=full_name')||[];let rows='';staff.forEach(s=>{const tel=s.telephone||s.contact||'';const wa=waLink(tel),tl=telLink(tel);let cc='—';if(tel){cc='<div style="font-weight:600">'+esc(tel)+'</div><div style="display:flex;gap:4px;margin-top:4px">'+(wa?'<a href="https://wa.me/'+wa+'" target="_blank" class="btn sm wa" style="text-decoration:none">💬</a>':'')+(tl?'<a href="tel:'+tl+'" class="btn sm ghost" style="text-decoration:none">📞</a>':'')+'</div>';}rows+='<tr><td><b>'+esc(s.full_name)+'</b></td><td>'+esc(s.role||'')+'</td><td>'+cc+'</td><td>'+esc(s.email||'—')+'</td><td style="white-space:nowrap"><button class="btn sm ghost" onclick="editStaff(\''+s.id+'\')">✏️</button> <button class="btn sm danger" onclick="delStaff(\''+s.id+'\')">✕</button></td></tr>';});root.innerHTML='<div class="page-head"><div><h1>👨‍🏫 Staff</h1><div class="sub">'+staff.length+'</div></div><button class="btn" onclick="addStaff()">＋ Add</button></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Contact</th><th>Email</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
+async function pageStaff(root){const staff=await rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=*&order=full_name')||[];let rows='';staff.forEach(s=>{const tel=s.telephone||s.contact||'';const wa=waLink(tel),tl=telLink(tel);let cc='—';if(tel){cc='<div style="font-weight:600">'+esc(tel)+'</div><div style="display:flex;gap:4px;margin-top:4px">'+(wa?'<a href="https://wa.me/'+wa+'" target="_blank" class="btn sm wa" style="text-decoration:none">💬</a>':'')+(tl?'<a href="tel:'+tl+'" class="btn sm ghost" style="text-decoration:none">📞</a>':'')+'</div>';}rows+='<tr><td><b>'+esc(s.full_name)+'</b></td><td>'+esc(s.role||'')+'</td><td>'+cc+'</td><td>'+fmtUGX(s.monthly_salary||s.base_salary||0)+'</td><td style="white-space:nowrap"><button class="btn sm ghost" onclick="editStaff(\''+s.id+'\')">✏️</button> <button class="btn sm danger" onclick="delStaff(\''+s.id+'\')">✕</button></td></tr>';});root.innerHTML='<div class="page-head"><div><h1>👨‍🏫 Staff</h1><div class="sub">'+staff.length+'</div></div><button class="btn" onclick="addStaff()">＋ Add</button></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Contact</th><th>Salary</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
 window.pageStaff=pageStaff;
 function addStaff(){openStaffModal(null);}
 window.addStaff=addStaff;
