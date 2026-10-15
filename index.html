@@ -192,9 +192,11 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 <div id="toastRoot"></div>
 
 <script>
+/* ============================================================
+   Progressive Mothers School Management — v3 with Print & Search
+   ============================================================ */
 const SUPA_URL='https://wabeempxckdtjvrkzhpv.supabase.co';
 const SUPA_KEY='sb_publishable_n0uAm0Gcq7qR2dJM4jMZGQ_wiV__Cfp';
-const APPLY_SQL=`ALTER TABLE staff_salaries ADD COLUMN IF NOT EXISTS allowances numeric default 0, ADD COLUMN IF NOT EXISTS allowance_notes text, ADD COLUMN IF NOT EXISTS deduction_notes text, ADD COLUMN IF NOT EXISTS advance_deducted numeric default 0;`;
 
 let _memoryStore={};
 const safeStorage={getItem:k=>{try{return localStorage.getItem(k);}catch(e){return _memoryStore[k]||null;}},setItem:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){_memoryStore[k]=String(v);}},removeItem:k=>{try{localStorage.removeItem(k);}catch(e){delete _memoryStore[k];}}};
@@ -238,15 +240,79 @@ function telLink(num){if(!num)return '';return String(num).replace(/[^0-9+]/g,''
 function waLink(num){if(!num)return '';let clean=String(num).replace(/[^0-9]/g,'');if(clean.startsWith('0'))clean='256'+clean.slice(1);return clean;}
 window.toast=toast;window.modal=modal;window.closeModal=closeModal;window.esc=esc;window.fmtUGX=fmtUGX;window.fmtNum=fmtNum;window.fmtDate=fmtDate;
 
+/* ---------- PRINT HELPER (school letterhead) ---------- */
+function printSection(title,tableHTML){
+  const w=window.open('','_blank');
+  if(!w){toast('Allow popups','bad');return;}
+  const logo=_school&&(_school.logo_data||_school.logo_url);
+  const schoolName=_school?_school.name:'';
+  const schoolAddr=_school?(_school.address||''):'';
+  const schoolTel=_school?(_school.telephone||''):'';
+  const now=new Date();
+  const stamp=now.toLocaleDateString('en-GB')+' '+now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>'+esc(title)+'</title><style>'+
+    '*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;padding:20px;margin:0;font-size:13px}'+
+    '.letterhead{display:flex;align-items:center;gap:16px;padding-bottom:14px;border-bottom:2px solid #0a2540;margin-bottom:18px}'+
+    '.letterhead .logo{width:70px;height:70px;object-fit:contain;flex-shrink:0}'+
+    '.letterhead .logo-fallback{width:70px;height:70px;border-radius:50%;background:#e0e9f5;display:grid;place-items:center;font-size:32px;color:#0a2540;flex-shrink:0}'+
+    '.letterhead .info{flex:1}'+
+    '.letterhead h1{font-size:18px;margin:0 0 4px;text-transform:uppercase;color:#0a2540}'+
+    '.letterhead .meta{font-size:11.5px;color:#555;line-height:1.5}'+
+    '.doc-title{text-align:center;font-size:14px;font-weight:700;text-transform:uppercase;color:#0a2540;margin:14px 0 6px}'+
+    '.doc-stamp{text-align:center;font-size:11px;color:#666;margin-bottom:14px}'+
+    'table{width:100%;border-collapse:collapse;margin-top:10px}'+
+    'th,td{padding:7px 9px;border:1px solid #ccc;font-size:11.5px;text-align:left}'+
+    'th{background:#0a2540;color:#fff;text-transform:uppercase;font-size:10px;letter-spacing:.04em}'+
+    'tbody tr:nth-child(even){background:#f8fafc}'+
+    '.footer{text-align:center;font-size:10px;color:#888;margin-top:24px;padding-top:10px;border-top:1px solid #eee}'+
+    '@page{margin:10mm;size:A4 landscape}@media print{body{padding:0}}'+
+    '</style></head><body>'+
+    '<div class="letterhead">'+
+      (logo?'<img class="logo" src="'+esc(logo)+'">':'<div class="logo-fallback">🏛️</div>')+
+      '<div class="info">'+
+        '<h1>'+esc(schoolName)+'</h1>'+
+        '<div class="meta">'+esc(schoolAddr)+(schoolTel?' · '+esc(schoolTel):'')+'</div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="doc-title">'+esc(title)+'</div>'+
+    '<div class="doc-stamp">Generated: '+stamp+'</div>'+
+    tableHTML+
+    '<div class="footer">Powered by EUDES MEDIA</div>'+
+    '<script>setTimeout(()=>window.print(),400);<\/script>'+
+    '</body></html>');
+  w.document.close();
+}
+window.printSection=printSection;
+
+/* Snapshot the currently visible table (removes buttons/inputs) */
+function snapshotTable(){
+  const tbl=document.querySelector('#main table');
+  if(!tbl){toast('Nothing to print','bad');return null;}
+  const clone=tbl.cloneNode(true);
+  clone.querySelectorAll('button, input, select, .no-print').forEach(el=>el.remove());
+  clone.querySelectorAll('tr').forEach(tr=>{
+    const cells=tr.querySelectorAll('th,td');
+    if(cells.length>1){
+      const last=cells[cells.length-1];
+      const txt=(last.textContent||'').trim();
+      if(txt===''||/actions?/i.test(txt)){last.remove();}
+    }
+  });
+  return clone.outerHTML;
+}
+window.snapshotTable=snapshotTable;
+
+function printCurrent(title){
+  const html=snapshotTable();
+  if(!html)return;
+  printSection(title||ROUTES[activeRoute]?.label||'Report', html);
+}
+window.printCurrent=printCurrent;
+
+/* ---------- GRADES ---------- */
 function gradeOf(score){if(score==null||isNaN(score)||score==='')return{g:'—',r:'—',cls:'',agg:'—'};const s=Number(score);if(s>=90)return{g:'D1',r:'Distinction 1',cls:'d1',agg:'1'};if(s>=80)return{g:'D2',r:'Distinction 2',cls:'d2',agg:'2'};if(s>=70)return{g:'C3',r:'Credit 3',cls:'c3',agg:'3'};if(s>=60)return{g:'C4',r:'Credit 4',cls:'c4',agg:'4'};if(s>=55)return{g:'C5',r:'Credit 5',cls:'c5',agg:'5'};if(s>=50)return{g:'C6',r:'Credit 6',cls:'c6',agg:'6'};if(s>=45)return{g:'P7',r:'Pass 7',cls:'p7',agg:'7'};if(s>=40)return{g:'P8',r:'Pass 8',cls:'p8',agg:'8'};return{g:'F9',r:'Fail 9',cls:'f9',agg:'9'};}
 function posLabel(n){if(!n)return '—';if(n===1)return '1st';if(n===2)return '2nd';if(n===3)return '3rd';return n+'th';}
 window.gradeOf=gradeOf;
-
-function printHTML(title,bodyHTML){
-  const w=window.open('','_blank');if(!w){toast('Allow popups','bad');return;}
-  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>'+esc(title)+'</title><style>*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;padding:12px;margin:0}@page{margin:8mm;size:A4}@media print{body{padding:0}.no-print{display:none}}</style></head><body>'+bodyHTML+'<script>setTimeout(()=>window.print(),400);<\/script></body></html>');w.document.close();
-}
-window.printHTML=printHTML;
 
 async function doLogin(){const email=document.getElementById('loginEmail').value.trim().toLowerCase();const pass=document.getElementById('loginPass').value;const err=document.getElementById('loginErr');const btn=document.getElementById('loginBtn');err.style.display='none';if(!email||!pass){err.textContent='Enter email and password';err.style.display='block';return;}btn.disabled=true;btn.textContent='Signing in…';try{const data=await auth('/auth/v1/token?grant_type=password',{email,password:pass});setSession(data);await boot();}catch(e){err.textContent=e.message;err.style.display='block';}btn.disabled=false;btn.textContent='Sign In';}
 window.doLogin=doLogin;
@@ -291,6 +357,7 @@ function normalizeName(first,last){const f=String(first||'').trim().toLowerCase(
 function parseMoney(v){if(v==null||v==='')return 0;if(typeof v==='number')return v;let s=String(v).trim();if(s==='-'||s==='—'||s==='')return 0;const neg=s.startsWith('(')&&s.endsWith(')');s=s.replace(/[(),]/g,'').replace(/[^\d.\-]/g,'');const n=parseFloat(s);return isNaN(n)?0:(neg?-Math.abs(n):n);}
 window.normalizeClassName=normalizeClassName;window.parseMoney=parseMoney;
 
+/* ============ ROUTES ============ */
 const ROUTES={
   dashboard:{label:'Dashboard',icon:'📊',render:pageDashboard,bottom:true},
   students:{label:'Students',icon:'🎓',render:pageStudents,bottom:true},
@@ -333,9 +400,7 @@ window.nav=nav;
 function renderNav(){const entries=Object.entries(ROUTES).filter(([k])=>k!=='student_profile');document.getElementById('nav').innerHTML=entries.map(([k,r])=>'<button class="pill'+(k===activeRoute?' active':'')+'" onclick="nav(\''+k+'\')"><span>'+r.icon+'</span><span>'+esc(r.label)+'</span></button>').join('');}
 function renderBottomBar(){const entries=Object.entries(ROUTES).filter(([k,r])=>r.bottom&&k!=='student_profile');document.getElementById('bottomBar').innerHTML=entries.map(([k,r])=>'<button class="pill'+(k===activeRoute?' active':'')+'" onclick="nav(\''+k+'\')"><span>'+r.icon+'</span><span>'+esc(r.label)+'</span></button>').join('');}
 function doGlobalSearch(){const v=document.getElementById('globalSearch').value.trim();if(!v)return;window._stFilterSearch=v;nav('students');}
-window.doGlobalSearch=doGlobalSearch;
-
-/* DASHBOARD */
+window.doGlobalSearch=doGlobalSearch;/* ============ DASHBOARD ============ */
 async function pageDashboard(root){
   const cy=getCurrentYear(),ct=getCurrentTerm(),today=new Date().toISOString().slice(0,10);
   const [students,classes,payments,passOuts,staff]=await Promise.all([
@@ -349,19 +414,19 @@ async function pageDashboard(root){
   let tC=0,tP=0,debtors=0;
   active.forEach(s=>{const c=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.holiday_fee)||0)+(Number(s.academics_fee)||0)+(Number(s.functional_fee)||0)+(Number(s.transport_fee)||0);const p=(Number(s.deposit_1)||0)+(Number(s.deposit_2)||0)+(Number(s.deposit_3)||0);tC+=c;tP+=p;if(c-p>0)debtors++;});
   const todayColl=payments.filter(p=>(p.paid_at||'').slice(0,10)===today).reduce((s,p)=>s+Number(p.amount),0);
-  root.innerHTML='<div class="page-head"><div><h1>Dashboard</h1><div class="sub">'+cy+' Term '+ct+' · '+fmtLongDate(new Date())+'</div></div><div style="display:flex;gap:8px"><button class="btn" onclick="addStudent()">＋ Register Pupil</button></div></div>'+
+  root.innerHTML='<div class="page-head"><div><h1>Dashboard</h1><div class="sub">'+cy+' Term '+ct+' · '+fmtLongDate(new Date())+'</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="printCurrent(\'Dashboard\')">🖨️ Print</button><button class="btn" onclick="addStudent()">＋ Register Pupil</button></div></div>'+
   '<div class="grid grid-kpi" style="margin-bottom:14px"><div class="kpi kpi-navy"><div class="v">'+active.length+'</div><div class="l">Active Pupils</div></div><div class="kpi kpi-ok"><div class="v">'+fmtUGX(tP)+'</div><div class="l">Collected</div></div><div class="kpi kpi-bad"><div class="v">'+fmtUGX(tC-tP)+'</div><div class="l">Outstanding</div></div><div class="kpi"><div class="v">'+fmtUGX(todayColl)+'</div><div class="l">Today</div></div></div>'+
   '<div class="grid grid-2"><div class="card"><h3>🔔 Alerts</h3>'+(debtors>0?'<div class="alert-item danger"><span class="ico">⚠️</span><div class="txt"><b>'+debtors+' debtors</b><span>'+fmtUGX(tC-tP)+'</span></div></div>':'')+(passOuts.length>0?'<div class="alert-item danger"><span class="ico">🚪</span><div class="txt"><b>'+passOuts.length+' OUT</b></div></div>':'')+(debtors===0&&passOuts.length===0?'<div class="alert-item ok"><span class="ico">✅</span><div class="txt"><b>All normal</b></div></div>':'')+'</div><div class="card"><h3>🏫 Snapshot</h3><div class="grid grid-3"><div><div class="muted">Classes</div><div style="font-size:20px;font-weight:800">'+classes.length+'</div></div><div><div class="muted">Staff</div><div style="font-size:20px;font-weight:800">'+staff.length+'</div></div><div><div class="muted">Payments</div><div style="font-size:20px;font-weight:800">'+payments.length+'</div></div></div></div></div>';
 }
 window.pageDashboard=pageDashboard;
 
-/* STUDENTS */
+/* ============ STUDENTS ============ */
 async function pageStudents(root){
   clearClassesCache();
   const classes=await loadClasses();
   const students=await rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=*&order=admission_no');
   window._allStudents=students||[];
-  root.innerHTML='<div class="page-head"><div><h1>Pupils</h1><div class="sub" id="studentCount">'+(students||[]).length+'</div></div><div style="display:flex;gap:8px"><button class="btn ghost" onclick="printStudentsList()">🖨️ Print</button><button class="btn" onclick="addStudent()">＋ Register Pupil</button></div></div><div class="card"><div class="grid grid-3" style="margin-bottom:14px"><input id="studentSearchInput" placeholder="Search name, ADM, parent, location…" value="'+esc(window._stFilterSearch||'')+'" oninput="filterStudentsTable(this.value,document.getElementById(\'studentClassFilter\').value)"><select id="studentClassFilter" onchange="filterStudentsTable(document.getElementById(\'studentSearchInput\').value,this.value)"><option value="">All classes</option>'+(classes||[]).map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('')+'</select><select id="studentResFilter" onchange="filterStudentsTable(document.getElementById(\'studentSearchInput\').value,document.getElementById(\'studentClassFilter\').value)"><option value="">All</option><option value="day">Day</option><option value="boarding">Boarding</option></select></div><div id="studentsTableContainer"></div></div>';
+  root.innerHTML='<div class="page-head"><div><h1>Pupils</h1><div class="sub" id="studentCount">'+(students||[]).length+'</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="printCurrent(\'Pupil List\')">🖨️ Print</button><button class="btn" onclick="addStudent()">＋ Register Pupil</button></div></div><div class="card"><div class="grid grid-3" style="margin-bottom:14px"><input id="studentSearchInput" placeholder="Search name, ADM, parent, location…" value="'+esc(window._stFilterSearch||'')+'" oninput="filterStudentsTable(this.value,document.getElementById(\'studentClassFilter\').value)"><select id="studentClassFilter" onchange="filterStudentsTable(document.getElementById(\'studentSearchInput\').value,this.value)"><option value="">All classes</option>'+(classes||[]).map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('')+'</select><select id="studentResFilter" onchange="filterStudentsTable(document.getElementById(\'studentSearchInput\').value,document.getElementById(\'studentClassFilter\').value)"><option value="">All</option><option value="day">Day</option><option value="boarding">Boarding</option></select></div><div id="studentsTableContainer"></div></div>';
   filterStudentsTable(window._stFilterSearch||'','');
 }
 window.pageStudents=pageStudents;
@@ -418,9 +483,6 @@ function filterStudentsTable(q,fClass){
   c.innerHTML='<div class="table-wrap"><table style="font-size:12.5px"><thead><tr><th>ADM</th><th>Name</th><th>Class</th><th>Gender</th><th>LIN</th><th>Parent / Contact</th><th>Location</th><th>Type</th><th>Status</th><th style="text-align:right">Balance</th><th style="text-align:right">Actions</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 window.filterStudentsTable=filterStudentsTable;
-
-function printStudentsList(){let rows='';(window._filteredStudents||window._allStudents||[]).forEach((s,i)=>{const cls=(_classesCache||[]).find(x=>x.id===s.class_id);rows+='<tr><td>'+(i+1)+'</td><td>'+esc(s.admission_no)+'</td><td>'+esc(s.first_name+' '+(s.last_name||''))+'</td><td>'+esc(cls?cls.name:'')+'</td><td>'+esc(s.parent_name||'')+'</td><td>'+esc(s.parent_contact||'')+'</td></tr>';});printHTML('Pupil List','<table style="width:100%;border-collapse:collapse"><thead><tr><th>#</th><th>ADM</th><th>Name</th><th>Class</th><th>Parent</th><th>Contact</th></tr></thead><tbody>'+rows+'</tbody></table>');}
-window.printStudentsList=printStudentsList;
 
 async function addStudent(){openStudentModal(null);}
 window.addStudent=addStudent;
@@ -487,7 +549,7 @@ async function savePayment(studentId){
 }
 window.savePayment=savePayment;
 
-/* PROFILE */
+/* ============ STUDENT PROFILE ============ */
 async function pageStudentProfile(root){
   if(!_profileStudentId){root.innerHTML='<div class="empty">No pupil selected.</div>';return;}
   clearClassesCache();
@@ -525,18 +587,32 @@ function printStudentStatement(id){
   const charged=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.holiday_fee)||0)+(Number(s.academics_fee)||0)+(Number(s.functional_fee)||0)+(Number(s.transport_fee)||0);
   const collected=(Number(s.deposit_1)||0)+(Number(s.deposit_2)||0)+(Number(s.deposit_3)||0);
   const bal=charged-collected;
-  printHTML('Fee Statement — '+s.first_name,'<div style="text-align:center"><h2 style="margin:0">PROGRESSIVE MOTHERS NUR. & PRIMARY SCHOOL</h2><div style="font-size:11px">P.O BOX ....... KAMPALA - UGANDA</div><div style="font-size:11px">TEL: 0756 585035 / 0779 585035</div><h3 style="margin-top:14px">FEE STATEMENT</h3></div><table style="width:100%;border-collapse:collapse;margin-top:14px"><tbody><tr><td style="padding:6px;border:1px solid #ccc"><b>Name:</b> '+esc(s.first_name+' '+(s.last_name||''))+'</td><td style="padding:6px;border:1px solid #ccc"><b>ADM:</b> '+esc(s.admission_no)+'</td></tr></tbody></table><table style="width:100%;border-collapse:collapse;margin-top:14px"><thead><tr><th style="background:#6a1b9a;color:#fff;padding:6px;border:1px solid #ccc">Item</th><th style="background:#6a1b9a;color:#fff;padding:6px;border:1px solid #ccc;text-align:right">Amount</th></tr></thead><tbody><tr><td style="padding:6px;border:1px solid #ccc">Balance B/F</td><td style="padding:6px;border:1px solid #ccc;text-align:right">'+fmtNum(s.balance_bf)+'</td></tr><tr><td style="padding:6px;border:1px solid #ccc">Actual Fee</td><td style="padding:6px;border:1px solid #ccc;text-align:right">'+fmtNum(s.actual_fee)+'</td></tr><tr><td style="padding:6px;border:1px solid #ccc">Holiday Fee</td><td style="padding:6px;border:1px solid #ccc;text-align:right">'+fmtNum(s.holiday_fee)+'</td></tr><tr><td style="padding:6px;border:1px solid #ccc">Academics Fee</td><td style="padding:6px;border:1px solid #ccc;text-align:right">'+fmtNum(s.academics_fee)+'</td></tr><tr><td style="padding:6px;border:1px solid #ccc">Functional Fee</td><td style="padding:6px;border:1px solid #ccc;text-align:right">'+fmtNum(s.functional_fee)+'</td></tr><tr><td style="padding:6px;border:1px solid #ccc">Transport Fee</td><td style="padding:6px;border:1px solid #ccc;text-align:right">'+fmtNum(s.transport_fee)+'</td></tr><tr style="background:#f3e5f5"><td style="padding:6px;border:1px solid #ccc"><b>TOTAL CHARGED</b></td><td style="padding:6px;border:1px solid #ccc;text-align:right"><b>'+fmtNum(charged)+'</b></td></tr><tr><td style="padding:6px;border:1px solid #ccc">Deposit 1</td><td style="padding:6px;border:1px solid #ccc;text-align:right">'+fmtNum(s.deposit_1)+'</td></tr><tr><td style="padding:6px;border:1px solid #ccc">Deposit 2</td><td style="padding:6px;border:1px solid #ccc;text-align:right">'+fmtNum(s.deposit_2)+'</td></tr><tr><td style="padding:6px;border:1px solid #ccc">Deposit 3</td><td style="padding:6px;border:1px solid #ccc;text-align:right">'+fmtNum(s.deposit_3)+'</td></tr><tr style="background:#f3e5f5"><td style="padding:6px;border:1px solid #ccc"><b>TOTAL PAID</b></td><td style="padding:6px;border:1px solid #ccc;text-align:right"><b>'+fmtNum(collected)+'</b></td></tr><tr><td style="padding:6px;border:1px solid #ccc"><b>BALANCE DUE</b></td><td style="padding:6px;border:1px solid #ccc;text-align:right"><b>'+fmtNum(bal)+'</b></td></tr></tbody></table>');
+  printSection('Fee Statement — '+s.first_name,
+    '<table><thead><tr><th>Item</th><th style="text-align:right">Amount (UGX)</th></tr></thead><tbody>'+
+    '<tr><td>Balance B/F</td><td style="text-align:right">'+fmtNum(s.balance_bf)+'</td></tr>'+
+    '<tr><td>Actual Fee</td><td style="text-align:right">'+fmtNum(s.actual_fee)+'</td></tr>'+
+    '<tr><td>Holiday Fee</td><td style="text-align:right">'+fmtNum(s.holiday_fee)+'</td></tr>'+
+    '<tr><td>Academics Fee</td><td style="text-align:right">'+fmtNum(s.academics_fee)+'</td></tr>'+
+    '<tr><td>Functional Fee</td><td style="text-align:right">'+fmtNum(s.functional_fee)+'</td></tr>'+
+    '<tr><td>Transport Fee</td><td style="text-align:right">'+fmtNum(s.transport_fee)+'</td></tr>'+
+    '<tr style="background:#f1f5f9"><td><b>TOTAL CHARGED</b></td><td style="text-align:right"><b>'+fmtNum(charged)+'</b></td></tr>'+
+    '<tr><td>Deposit 1</td><td style="text-align:right">'+fmtNum(s.deposit_1)+'</td></tr>'+
+    '<tr><td>Deposit 2</td><td style="text-align:right">'+fmtNum(s.deposit_2)+'</td></tr>'+
+    '<tr><td>Deposit 3</td><td style="text-align:right">'+fmtNum(s.deposit_3)+'</td></tr>'+
+    '<tr style="background:#f1f5f9"><td><b>TOTAL PAID</b></td><td style="text-align:right"><b>'+fmtNum(collected)+'</b></td></tr>'+
+    '<tr><td><b>BALANCE DUE</b></td><td style="text-align:right"><b>'+fmtNum(bal)+'</b></td></tr>'+
+    '</tbody></table>');
 }
 window.printStudentStatement=printStudentStatement;
 
-/* FEES */
+/* ============ FEES ============ */
 async function pageFees(root){
   clearClassesCache();
   const classes=await loadClasses();
   const students=await rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=*&order=admission_no');
   window._allStudents=students||[];
   let tC=0,tP=0;students.forEach(s=>{const c=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.holiday_fee)||0)+(Number(s.academics_fee)||0)+(Number(s.functional_fee)||0)+(Number(s.transport_fee)||0);const p=(Number(s.deposit_1)||0)+(Number(s.deposit_2)||0)+(Number(s.deposit_3)||0);tC+=c;tP+=p;});
-  root.innerHTML='<div class="page-head"><div><h1>💰 Fees</h1><div class="sub">'+getCurrentYear()+' Term '+getCurrentTerm()+'</div></div></div><div class="grid grid-kpi" style="margin-bottom:14px"><div class="kpi kpi-navy"><div class="v">'+students.length+'</div><div class="l">Pupils</div></div><div class="kpi"><div class="v">'+fmtUGX(tC)+'</div><div class="l">Charged</div></div><div class="kpi kpi-ok"><div class="v">'+fmtUGX(tP)+'</div><div class="l">Collected</div></div><div class="kpi kpi-bad"><div class="v">'+fmtUGX(tC-tP)+'</div><div class="l">Outstanding</div></div></div><div class="card"><div class="grid grid-2" style="margin-bottom:12px"><input id="feeSearch" placeholder="Search…" oninput="renderFeesTable()"><select id="feeClassFilter" onchange="renderFeesTable()"><option value="">All classes</option>'+(classes||[]).map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('')+'</select></div><div id="feesTableContainer"></div></div>';
+  root.innerHTML='<div class="page-head"><div><h1>💰 Fees</h1><div class="sub">'+getCurrentYear()+' Term '+getCurrentTerm()+'</div></div><button class="btn ghost" onclick="printCurrent(\'Fees\')">🖨️ Print</button></div><div class="grid grid-kpi" style="margin-bottom:14px"><div class="kpi kpi-navy"><div class="v">'+students.length+'</div><div class="l">Pupils</div></div><div class="kpi"><div class="v">'+fmtUGX(tC)+'</div><div class="l">Charged</div></div><div class="kpi kpi-ok"><div class="v">'+fmtUGX(tP)+'</div><div class="l">Collected</div></div><div class="kpi kpi-bad"><div class="v">'+fmtUGX(tC-tP)+'</div><div class="l">Outstanding</div></div></div><div class="card"><div class="grid grid-2" style="margin-bottom:12px"><input id="feeSearch" placeholder="Search…" oninput="renderFeesTable()"><select id="feeClassFilter" onchange="renderFeesTable()"><option value="">All classes</option>'+(classes||[]).map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('')+'</select></div><div id="feesTableContainer"></div></div>';
   renderFeesTable();
 }
 window.pageFees=pageFees;
@@ -554,12 +630,12 @@ function renderFeesTable(){
 }
 window.renderFeesTable=renderFeesTable;
 
-/* IMPORT */
+/* ============ IMPORT ============ */
 async function pageImport(root){
   clearClassesCache();
   const students=await rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,admission_no,first_name,last_name,class_id,boarding_status');
   window._allStudents=students||[];
-  root.innerHTML='<div class="page-head"><div><h1>📥 Import Fees</h1></div></div><div class="card"><div class="alert-item info"><span class="ico">ℹ️</span><div class="txt"><b>Expected columns</b><span>Name · Class · STATUS · B/F · Actual Fee · holiday · academics · Funct · Transport · 1st deposit · 2nd deposit · 3rd deposit</span></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><input type="file" id="importFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImportFile(event)"><button class="btn" onclick="document.getElementById(\'importFile\').click()">📂 Choose File</button></div><div id="importStatus" class="muted" style="margin-top:12px">No file loaded.</div></div><div id="importPreview"></div>';
+  root.innerHTML='<div class="page-head"><div><h1>📥 Import Fees</h1></div><button class="btn ghost" onclick="printCurrent(\'Import Preview\')">🖨️ Print</button></div><div class="card"><div class="alert-item info"><span class="ico">ℹ️</span><div class="txt"><b>Expected columns</b><span>Name · Class · STATUS · B/F · Actual Fee · holiday · academics · Funct · Transport · 1st deposit · 2nd deposit · 3rd deposit</span></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><input type="file" id="importFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImportFile(event)"><button class="btn" onclick="document.getElementById(\'importFile\').click()">📂 Choose File</button></div><div id="importStatus" class="muted" style="margin-top:12px">No file loaded.</div></div><div id="importPreview"></div>';
 }
 window.pageImport=pageImport;
 
@@ -605,7 +681,7 @@ function renderImportPreview(){
   const counts={exact:0,fuzzy:0,ambiguous:0,missing:0};m.forEach(x=>counts[x.status]=(counts[x.status]||0)+1);
   let rows='';
   m.forEach((x,i)=>{const charged=x.row.balance_bf+x.row.actual_fee+x.row.holiday_fee+x.row.academics_fee+x.row.functional_fee+x.row.transport_fee;const collected=x.row.deposit_1+x.row.deposit_2+x.row.deposit_3;const bal=charged-collected;const cls=x.chosen?((_classesCache||[]).find(c=>c.id===x.chosen.class_id)||{}).name:'';const badge={exact:'✅',fuzzy:'⚠️',ambiguous:'❓',missing:'❌'}[x.status]||'';rows+='<tr><td>'+(i+1)+'</td><td><b>'+esc(x.row.rawName)+'</b><div class="muted" style="font-size:11px">'+esc(x.row.class_name||'')+'</div></td><td>'+(x.chosen?esc(x.chosen.first_name+' '+(x.chosen.last_name||'')):'—')+'</td><td>'+esc(cls||x.row.class_name||'')+'</td><td style="text-align:right">'+fmtNum(charged)+'</td><td style="text-align:right;color:#047857">'+fmtNum(collected)+'</td><td style="text-align:right;color:'+(bal>0?'#b91c1c':'#047857')+'">'+fmtNum(bal)+'</td><td>'+badge+'</td><td>'+(x.status==='ambiguous'?'<button class="btn sm" onclick="pickAmbiguous('+i+')">Pick</button>':'')+'</td></tr>';});
-  c.innerHTML='<div class="grid grid-kpi" style="margin-bottom:14px"><div class="kpi kpi-ok"><div class="v">'+counts.exact+'</div><div class="l">✅ Exact</div></div><div class="kpi kpi-warn"><div class="v">'+(counts.fuzzy||0)+'</div><div class="l">⚠️ Fuzzy</div></div><div class="kpi kpi-warn"><div class="v">'+(counts.ambiguous||0)+'</div><div class="l">❓ Ambiguous</div></div><div class="kpi kpi-bad"><div class="v">'+(counts.missing||0)+'</div><div class="l">❌ Not found</div></div></div><div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap"><h3 style="margin:0">Preview ('+m.length+')</h3><button class="btn ok" onclick="applyImport(this)">✅ Apply</button></div><div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Matched</th><th>Class</th><th style="text-align:right">Charged</th><th style="text-align:right">Paid</th><th style="text-align:right">Balance</th><th></th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+  c.innerHTML='<div class="grid grid-kpi" style="margin-bottom:14px"><div class="kpi kpi-ok"><div class="v">'+counts.exact+'</div><div class="l">✅ Exact</div></div><div class="kpi kpi-warn"><div class="v">'+(counts.fuzzy||0)+'</div><div class="l">⚠️ Fuzzy</div></div><div class="kpi kpi-warn"><div class="v">'+(counts.ambiguous||0)+'</div><div class="l">❓ Ambiguous</div></div><div class="kpi kpi-bad"><div class="v">'+(counts.missing||0)+'</div><div class="l">❌ Not found</div></div></div><div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px"><h3 style="margin:0">Preview ('+m.length+')</h3><div style="display:flex;gap:8px"><button class="btn ghost" onclick="printCurrent(\'Import Preview\')">🖨️ Print</button><button class="btn ok" onclick="applyImport(this)">✅ Apply</button></div></div><div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Matched</th><th>Class</th><th style="text-align:right">Charged</th><th style="text-align:right">Paid</th><th style="text-align:right">Balance</th><th></th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 window.renderImportPreview=renderImportPreview;
 
@@ -632,12 +708,12 @@ async function applyImport(btn){
 }
 window.applyImport=applyImport;
 
-/* ATTENDANCE */
+/* ============ ATTENDANCE ============ */
 async function pageAttendance(root){
   clearClassesCache();
   const classes=await loadClasses();
   const today=new Date().toISOString().slice(0,10);
-  root.innerHTML='<div class="page-head"><h1>📅 Attendance</h1><div class="sub">'+fmtLongDate(new Date())+'</div></div><div class="card"><div class="grid grid-3"><div><label>Class</label><select id="attClass" onchange="loadAttTable()"><option value="">— All —</option>'+(classes||[]).map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('')+'</select></div><div><label>Date</label><input id="attDate" type="date" value="'+today+'" onchange="loadAttTable()"></div><div style="display:flex;align-items:flex-end"><button class="btn ok" onclick="markAllPresent()">✓ All Present</button></div></div></div><div id="attTable"></div>';
+  root.innerHTML='<div class="page-head"><div><h1>📅 Attendance</h1><div class="sub">'+fmtLongDate(new Date())+'</div></div><button class="btn ghost" onclick="printCurrent(\'Attendance\')">🖨️ Print</button></div><div class="card"><div class="grid grid-3"><div><label>Class</label><select id="attClass" onchange="loadAttTable()"><option value="">— All —</option>'+(classes||[]).map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('')+'</select></div><div><label>Date</label><input id="attDate" type="date" value="'+today+'" onchange="loadAttTable()"></div><div style="display:flex;align-items:flex-end"><button class="btn ok" onclick="markAllPresent()">✓ All Present</button></div></div></div><div id="attTable"></div>';
   loadAttTable();
 }
 window.pageAttendance=pageAttendance;
@@ -658,7 +734,7 @@ window.setAtt=setAtt;
 async function markAllPresent(){if(!confirm('Mark all Present?'))return;const btns=document.querySelectorAll('#attTable tbody tr button');for(const b of btns){if(!b.classList.contains('ok'))b.click();await new Promise(r=>setTimeout(r,20));}toast('Done','ok');}
 window.markAllPresent=markAllPresent;
 
-/* MARKS */
+/* ============ MARKS ============ */
 async function pageMarks(root){
   clearClassesCache();
   const classes=await loadClasses();if(!_marksClass&&classes[0])_marksClass=classes[0].id;
@@ -676,7 +752,7 @@ async function pageMarks(root){
   let tableHTML='';
   if(students.length===0){tableHTML='<div class="card empty">No pupils.</div>';}
   else if(subjects.length){let hdr='';subjects.forEach(s=>{hdr+='<th style="text-align:center">'+esc(s.code)+'</th>';});let rows='';students.forEach((s,i)=>{const per=marksMap[s.id]||{};let total=0;let inputs='';subjects.forEach(sj=>{const v=per[sj.subject_id];if(v!=null&&!isNaN(v))total+=Number(v);inputs+='<td><input type="number" min="0" max="100" value="'+(v!=null?v:'')+'" data-student="'+s.id+'" data-subject="'+sj.subject_id+'" onchange="setMark(this)" class="marks-input"></td>';});rows+='<tr><td>'+(i+1)+'</td><td>'+esc(s.admission_no)+'</td><td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b></td>'+inputs+'<td style="text-align:right;font-weight:700" class="row-total" data-student="'+s.id+'">'+total.toFixed(0)+'</td></tr>';});tableHTML='<div class="card"><div class="table-wrap"><table><thead><tr><th>#</th><th>ADM</th><th>Name</th>'+hdr+'<th style="text-align:right">Total</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
-  root.innerHTML='<div class="page-head"><h1>✍️ Marks</h1></div><div class="card"><div class="grid grid-2"><div><label>Class</label><select onchange="_marksClass=this.value;pageMarks(document.getElementById(\'main\'))">'+classOpts+'</select></div><div><label>Exam</label><select onchange="_marksExam=this.value;pageMarks(document.getElementById(\'main\'))">'+examOpts+'</select></div></div>'+subjInfo+'</div>'+tableHTML;
+  root.innerHTML='<div class="page-head"><div><h1>✍️ Marks</h1></div><button class="btn ghost" onclick="printCurrent(\'Marks\')">🖨️ Print</button></div><div class="card"><div class="grid grid-2"><div><label>Class</label><select onchange="_marksClass=this.value;pageMarks(document.getElementById(\'main\'))">'+classOpts+'</select></div><div><label>Exam</label><select onchange="_marksExam=this.value;pageMarks(document.getElementById(\'main\'))">'+examOpts+'</select></div></div>'+subjInfo+'</div>'+tableHTML;
 }
 window.pageMarks=pageMarks;
 
@@ -690,7 +766,7 @@ async function setMark(inputEl){
 }
 window.setMark=setMark;
 
-/* REPORTS */
+/* ============ REPORTS ============ */
 const SCHOOL_HEADER={name:'PROGRESSIVE MOTHERS NUR. & PRIMARY SCHOOL',po:'P.O BOX ....... KAMPALA - UGANDA',tel:'TEL: 0756 585035 / 0779 585035',email:'Email: progressivemotherspri@gmail.com',website:'Website: www.progressivemothers.com'};
 const STAGE_LABELS={1:'BEGINNING OF TERM',2:'MID TERM',3:'END OF TERM'};
 function levelOfClass(c){const n=String(c||'').toLowerCase();if(n.includes('baby')||n.includes('middle')||n.includes('top'))return 'nursery';if(n.includes('primary 1')||n.includes('primary 2')||n.includes('primary 3'))return 'lower';if(n.includes('primary 4')||n.includes('primary 5')||n.includes('primary 6')||n.includes('primary 7'))return 'upper';return 'lower';}
@@ -759,7 +835,7 @@ async function pageReports(root){
   let pupilOpts='';students.forEach(s=>{pupilOpts+='<option value="'+s.id+'">'+esc(s.admission_no)+' — '+esc(s.first_name+' '+(s.last_name||''))+'</option>';});
   let allCards='';students.forEach(s=>{allCards+=reportCardBlock(s,subjects,exams,marks,false);});
   let body=students.length===0?'<div class="card empty">No pupils.</div>':'<div class="card no-print"><label>View Single Pupil</label><select onchange="showSingleReport(this.value)"><option value="">— Choose —</option>'+pupilOpts+'</select></div><div id="singleReport"></div><div class="card no-print"><h3>📊 Class Ranking</h3>'+rankingTable(students,subjects,exams,marks)+'</div><div class="no-print"><h3 style="padding:0 4px">All Report Cards ('+students.length+')</h3>'+allCards+'</div>';
-  root.innerHTML='<div class="page-head"><h1>📄 Report Cards</h1><div class="sub">'+getCurrentYear()+' Term '+getCurrentTerm()+'</div></div><div class="card no-print"><div class="grid grid-2"><div><label>Class</label><select onchange="_repClass=this.value;_repPupil=\'\';pageReports(document.getElementById(\'main\'))">'+classOpts+'</select></div><div><label>Exam Stage</label><select onchange="_repStage=parseInt(this.value);pageReports(document.getElementById(\'main\'))"><option value="1"'+(_repStage===1?' selected':'')+'>Beginning of Term only</option><option value="2"'+(_repStage===2?' selected':'')+'>Beginning + Mid Term</option><option value="3"'+(_repStage===3?' selected':'')+'>Beginning + Mid + End of Term</option></select></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn" onclick="printAllReports()">🖨️ Print All</button><button class="btn ghost" onclick="printBroadsheet()">📊 Broadsheet</button></div></div>'+body;
+  root.innerHTML='<div class="page-head"><div><h1>📄 Report Cards</h1><div class="sub">'+getCurrentYear()+' Term '+getCurrentTerm()+'</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="printCurrent(\'Report Cards\')">🖨️ Print View</button><button class="btn" onclick="printAllReports()">🖨️ Print All Cards</button></div></div><div class="card no-print"><div class="grid grid-2"><div><label>Class</label><select onchange="_repClass=this.value;_repPupil=\'\';pageReports(document.getElementById(\'main\'))">'+classOpts+'</select></div><div><label>Exam Stage</label><select onchange="_repStage=parseInt(this.value);pageReports(document.getElementById(\'main\'))"><option value="1"'+(_repStage===1?' selected':'')+'>Beginning of Term only</option><option value="2"'+(_repStage===2?' selected':'')+'>Beginning + Mid Term</option><option value="3"'+(_repStage===3?' selected':'')+'>Beginning + Mid + End of Term</option></select></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn" onclick="printAllReports()">🖨️ Print All</button><button class="btn ghost" onclick="printBroadsheet()">📊 Broadsheet</button></div></div>'+body;
 }
 window.pageReports=pageReports;
 
@@ -771,10 +847,10 @@ function reportCardBlock(s,subjects,exams,marks,isSingle){const html=buildReport
 function rankingTable(students,subjects,exams,marks){const rows=students.map(s=>{const m=marks[s.id]||{};let t=0,c=0;exams.forEach(e=>subjects.forEach(sj=>{const v=m[e.id]?.[sj.subject_id];if(v!=null&&!isNaN(v)){t+=Number(v);c++;}}));return{s,total:t,avg:c?t/c:0,cnt:c};});rows.sort((a,b)=>b.avg-a.avg);rows.forEach((r,i)=>r.pos=i+1);for(let i=1;i<rows.length;i++)if(rows[i].avg===rows[i-1].avg)rows[i].pos=rows[i-1].pos;let body='';rows.forEach(r=>{const g=gradeOf(r.avg);body+='<tr><td><b>'+posLabel(r.pos)+'</b></td><td>'+esc(r.s.admission_no)+'</td><td>'+esc(r.s.first_name+' '+(r.s.last_name||''))+'</td><td style="text-align:right">'+r.total.toFixed(0)+'</td><td><span class="badge '+g.cls+'">'+g.g+'</span></td><td><button class="btn sm ghost" onclick="showSingleReport(\''+r.s.id+'\')">View</button></td></tr>';});return '<div class="table-wrap"><table><thead><tr><th>Pos</th><th>ADM</th><th>Name</th><th style="text-align:right">Total</th><th>Grade</th><th></th></tr></thead><tbody>'+body+'</tbody></table></div>';}
 window.rankingTable=rankingTable;
 
-function printOneReport(id){const d=window._reportData;const s=d.students.find(x=>x.id===id);if(!s){toast('Not found','bad');return;}printHTML('Report — '+s.first_name,'<div style="page-break-inside:avoid">'+buildReportCardHTML(s,d.subjects,d.exams,d.marks,d.students)+'</div>');}
+function printOneReport(id){const d=window._reportData;const s=d.students.find(x=>x.id===id);if(!s){toast('Not found','bad');return;}printSection('Report Card — '+s.first_name,'<div style="page-break-inside:avoid">'+buildReportCardHTML(s,d.subjects,d.exams,d.marks,d.students)+'</div>');}
 window.printOneReport=printOneReport;
 
-function printAllReports(){const d=window._reportData;if(!d.students.length){toast('No pupils','bad');return;}let pages='';d.students.forEach((s,i)=>{pages+='<div style="page-break-inside:avoid;'+(i<d.students.length-1?'page-break-after:always':'')+'">'+buildReportCardHTML(s,d.subjects,d.exams,d.marks,d.students)+'</div>';});printHTML('All Report Cards',pages);}
+function printAllReports(){const d=window._reportData;if(!d.students.length){toast('No pupils','bad');return;}let pages='';d.students.forEach((s,i)=>{pages+='<div style="page-break-inside:avoid;'+(i<d.students.length-1?'page-break-after:always':'')+'">'+buildReportCardHTML(s,d.subjects,d.exams,d.marks,d.students)+'</div>';});printSection('All Report Cards',pages);}
 window.printAllReports=printAllReports;
 
 function printBroadsheet(){
@@ -783,7 +859,7 @@ function printBroadsheet(){
   ranked.forEach((r,i)=>r.pos=i+1);for(let i=1;i<ranked.length;i++)if(ranked[i].avg===ranked[i-1].avg)ranked[i].pos=ranked[i-1].pos;
   let head='<tr><th rowspan="2">Pos</th><th rowspan="2">ADM</th><th rowspan="2">Name</th>';d.exams.forEach(e=>{head+='<th colspan="'+(d.subjects.length+1)+'">'+esc(e.name)+'</th>';});head+='<th rowspan="2">Total</th></tr><tr>';d.exams.forEach(()=>{d.subjects.forEach(sj=>{head+='<th>'+esc(sj.code)+'</th>';});head+='<th>TOT</th>';});head+='</tr>';
   let body='';ranked.forEach(r=>{const m=d.marks[r.s.id]||{};let total=0;let cells='<td><b>'+posLabel(r.pos)+'</b></td><td>'+esc(r.s.admission_no)+'</td><td>'+esc(r.s.first_name+' '+(r.s.last_name||''))+'</td>';d.exams.forEach(e=>{let et=0,any=false;d.subjects.forEach(sj=>{const v=m[e.id]?.[sj.subject_id];if(v!=null&&!isNaN(v)){et+=Number(v);any=true;total+=Number(v);}cells+='<td>'+(v!=null?v.toFixed(0):'—')+'</td>';});cells+='<td style="background:#f3e5f5;font-weight:700">'+(any?et.toFixed(0):'—')+'</td>';});cells+='<td style="font-weight:700">'+total.toFixed(0)+'</td>';body+='<tr>'+cells+'</tr>';});
-  printHTML('Broadsheet','<div style="text-align:center"><h2>'+SCHOOL_HEADER.name+'</h2></div><table style="width:100%;border-collapse:collapse"><thead>'+head+'</thead><tbody>'+body+'</tbody></table>');
+  printSection('Broadsheet — '+esc(d.classObj?.name||''),'<table><thead>'+head+'</thead><tbody>'+body+'</tbody></table>');
 }
 window.printBroadsheet=printBroadsheet;
 
@@ -792,7 +868,7 @@ async function pageReportCardEdit(root){
   const students=_rceClass?await rest('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+_rceClass+'&select=*&order=first_name'):[];
   const classOpts=classes.map(c=>'<option value="'+c.id+'"'+(_rceClass===c.id?' selected':'')+'>'+esc(c.name)+'</option>').join('');
   let rows='';students.forEach(s=>{rows+='<tr><td>'+esc(s.admission_no)+'</td><td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b></td><td style="text-align:right">'+(s.position_manual||'—')+'</td><td>'+(s.division_manual||'—')+'</td><td>'+(s.conduct?esc(s.conduct.substring(0,25)):'—')+'</td><td><button class="btn sm" onclick="editReportCard(\''+s.id+'\')">✏️ Edit</button></td></tr>';});
-  root.innerHTML='<div class="page-head"><h1>📝 Edit Report Card</h1></div><div class="card"><label>Class</label><select onchange="_rceClass=this.value;pageReportCardEdit(document.getElementById(\'main\'))">'+classOpts+'</select></div><div class="card"><div class="table-wrap"><table><thead><tr><th>ADM</th><th>Name</th><th style="text-align:right">Pos</th><th>Div</th><th>Conduct</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+  root.innerHTML='<div class="page-head"><div><h1>📝 Edit Report Card</h1></div><button class="btn ghost" onclick="printCurrent(\'Edit Report Card\')">🖨️ Print</button></div><div class="card"><label>Class</label><select onchange="_rceClass=this.value;pageReportCardEdit(document.getElementById(\'main\'))">'+classOpts+'</select></div><div class="card"><div class="table-wrap"><table><thead><tr><th>ADM</th><th>Name</th><th style="text-align:right">Pos</th><th>Div</th><th>Conduct</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 window.pageReportCardEdit=pageReportCardEdit;
 
@@ -808,205 +884,89 @@ async function saveReportCard(id){
 }
 window.saveReportCard=saveReportCard;
 
-/* PAYROLL */
-const ALLOWANCE_OPTIONS=['House Allowance','Transport Allowance','Lunch Allowance','Overtime','Responsibility Allowance','Acting Allowance','Risk Allowance','Medical Allowance','Rent Allowance','Air time','Bonus','Holiday Pay','Other'];
-const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
-
-async function pagePayroll(root){
-  const now=new Date();if(!_payMonth)_payMonth=now.getMonth()+1;if(!_payYear)_payYear=now.getFullYear();
-  const [staff,salaries,advances]=await Promise.all([
-    rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=*&order=full_name').catch(()=>[]),
-    rest('/rest/v1/staff_salaries?school_id=eq.'+_schoolId+'&year=eq.'+_payYear+'&month=eq.'+_payMonth+'&select=*').catch(()=>[]),
-    rest('/rest/v1/staff_advances?school_id=eq.'+_schoolId+'&status=eq.open&select=*').catch(()=>[])
-  ]);
-  const salMap={};salaries.forEach(s=>{salMap[s.staff_id]=s;});
-  const advMap={};advances.forEach(a=>{if(!advMap[a.staff_id])advMap[a.staff_id]=0;advMap[a.staff_id]+=Number(a.balance||a.amount||0);});
-  let rows='';let tG=0,tA=0,tD=0,tAdv=0,tN=0;
-  staff.forEach(st=>{
-    const sal=salMap[st.id];const base=Number(st.monthly_salary||st.base_salary||0);
-    const allow=sal?Number(sal.allowances||0):0;const ded=sal?Number(sal.deductions||0):0;
-    const advOwed=advMap[st.id]||0;const advDed=sal?Number(sal.advance_deducted||0):0;
-    const net=sal?Number(sal.net||0):(base+allow-ded);const paid=sal&&sal.status==='paid';
-    tG+=base;tA+=allow;tD+=ded;tAdv+=advDed;tN+=net;
-    rows+='<tr style="'+(paid?'background:#ecfdf5':'')+'"><td><b>'+esc(st.full_name)+'</b><div class="muted" style="font-size:11px">'+esc(st.role||'')+'</div></td><td style="text-align:right">'+fmtNum(base)+'</td><td style="text-align:right"><input type="number" class="marks-input" value="'+allow+'" data-staff="'+st.id+'" data-field="allowances" onchange="saveSalaryField(this)"></td><td style="text-align:right"><input type="number" class="marks-input" value="'+ded+'" data-staff="'+st.id+'" data-field="deductions" onchange="saveSalaryField(this)"></td><td style="text-align:right">'+fmtNum(advOwed)+'</td><td style="text-align:right"><input type="number" class="marks-input" value="'+advDed+'" data-staff="'+st.id+'" data-field="advance_deducted" onchange="saveSalaryField(this)"></td><td style="text-align:right;font-weight:700;color:#047857">'+fmtNum(net)+'</td><td style="text-align:center">'+(paid?'<span class="badge ok">PAID</span> <button class="btn sm ghost" onclick="undoPay(\''+st.id+'\')">↺</button>':'<button class="btn sm ok" onclick="payStaff(\''+st.id+'\')">💵 Pay</button>')+'</td><td style="text-align:right;white-space:nowrap"><button class="btn sm ghost" onclick="printPayslip(\''+st.id+'\')">🖨️</button> <button class="btn sm wa" onclick="waPayslip(\''+st.id+'\')">💬</button></td></tr>';
-  });
-  const monthOpts=MONTH_NAMES.map((m,i)=>'<option value="'+(i+1)+'"'+(_payMonth===i+1?' selected':'')+'>'+m+'</option>').join('');
-  const years=[];for(let y=now.getFullYear()-2;y<=now.getFullYear()+1;y++)years.push(y);
-  const yearOpts=years.map(y=>'<option value="'+y+'"'+(_payYear===y?' selected':'')+'>'+y+'</option>').join('');
-  root.innerHTML='<div class="page-head"><div><h1>💼 Monthly Payroll</h1><div class="sub">'+MONTH_NAMES[_payMonth-1]+' '+_payYear+' · '+staff.length+' staff</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="batchPayAll()">💵 Pay All</button><button class="btn ghost" onclick="nav(\'payroll_summary\')">📊 Summary</button></div></div>'+
-  '<div class="card"><div class="grid grid-2"><div><label>Month</label><select onchange="_payMonth=parseInt(this.value);pagePayroll(document.getElementById(\'main\'))">'+monthOpts+'</select></div><div><label>Year</label><select onchange="_payYear=parseInt(this.value);pagePayroll(document.getElementById(\'main\'))">'+yearOpts+'</select></div></div></div>'+
-  '<div class="grid grid-kpi" style="margin-bottom:14px"><div class="kpi kpi-navy"><div class="v">'+fmtUGX(tG)+'</div><div class="l">Gross</div></div><div class="kpi"><div class="v">'+fmtUGX(tA)+'</div><div class="l">Allowances</div></div><div class="kpi kpi-warn"><div class="v">'+fmtUGX(tD)+'</div><div class="l">Deductions</div></div><div class="kpi kpi-bad"><div class="v">'+fmtUGX(tAdv)+'</div><div class="l">Advance Recovery</div></div><div class="kpi kpi-ok"><div class="v">'+fmtUGX(tN)+'</div><div class="l">Net Payroll</div></div></div>'+
-  '<div class="card"><div class="table-wrap"><table style="font-size:12.5px"><thead><tr><th>Staff</th><th style="text-align:right">Gross</th><th style="text-align:right">Allow.</th><th style="text-align:right">Deduct.</th><th style="text-align:right">Adv Owed</th><th style="text-align:right">Adv Deduct</th><th style="text-align:right">Net</th><th style="text-align:center">Status</th><th style="text-align:right">Tools</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
-}
-window.pagePayroll=pagePayroll;
-
-async function saveSalaryField(inputEl){
-  const staffId=inputEl.dataset.staff;const field=inputEl.dataset.field;const value=Number(inputEl.value)||0;
-  const st=await rest('/rest/v1/staff?id=eq.'+staffId+'&select=*');const staff=st&&st[0];
-  const base=Number(staff?.monthly_salary||staff?.base_salary||0);
-  const existing=await rest('/rest/v1/staff_salaries?school_id=eq.'+_schoolId+'&staff_id=eq.'+staffId+'&year=eq.'+_payYear+'&month=eq.'+_payMonth+'&select=*');
-  const cur=existing&&existing[0];
-  const allow=field==='allowances'?value:Number(cur?.allowances||0);
-  const ded=field==='deductions'?value:Number(cur?.deductions||0);
-  const advDed=field==='advance_deducted'?value:Number(cur?.advance_deducted||0);
-  const net=base+allow-ded-advDed;
-  try{if(cur){await rest('/rest/v1/staff_salaries?id=eq.'+cur.id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({allowances:allow,deductions:ded,advance_deducted:advDed,advance_deduction:advDed,net:net})});}
-  else{await rest('/rest/v1/staff_salaries',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,staff_id:staffId,year:_payYear,month:_payMonth,gross:base,allowances:allow,deductions:ded,advance_deducted:advDed,advance_deduction:advDed,net:net,status:'pending'})});}
-  toast('Saved','ok');pagePayroll(document.getElementById('main'));}catch(e){toast(e.message,'bad');}
-}
-window.saveSalaryField=saveSalaryField;
-
-async function payStaff(staffId){
-  const existing=await rest('/rest/v1/staff_salaries?school_id=eq.'+_schoolId+'&staff_id=eq.'+staffId+'&year=eq.'+_payYear+'&month=eq.'+_payMonth+'&select=*');
-  const cur=existing&&existing[0];if(!cur){toast('Save amounts first','bad');return;}
-  const advDed=Number(cur.advance_deducted||0);
-  try{await rest('/rest/v1/staff_salaries?id=eq.'+cur.id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({status:'paid',paid_date:new Date().toISOString().slice(0,10)})});
-  if(advDed>0){const advances=await rest('/rest/v1/staff_advances?school_id=eq.'+_schoolId+'&staff_id=eq.'+staffId+'&status=eq.open&select=*&order=given_date');let remaining=advDed;for(const a of (advances||[])){if(remaining<=0)break;const bal=Number(a.balance||a.amount||0);const take=Math.min(bal,remaining);const newBal=bal-take;await rest('/rest/v1/staff_advances?id=eq.'+a.id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({balance:newBal,status:newBal<=0?'closed':'open'})});await rest('/rest/v1/advance_repayments',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,advance_id:a.id,amount:take,notes:'Recovered from '+MONTH_NAMES[_payMonth-1]+' '+_payYear,at:new Date().toISOString()})});remaining-=take;}}
-  toast('Paid','ok');pagePayroll(document.getElementById('main'));}catch(e){toast(e.message,'bad');}
-}
-window.payStaff=payStaff;
-
-async function undoPay(staffId){const existing=await rest('/rest/v1/staff_salaries?school_id=eq.'+_schoolId+'&staff_id=eq.'+staffId+'&year=eq.'+_payYear+'&month=eq.'+_payMonth+'&select=*');const cur=existing&&existing[0];if(!cur)return;if(!confirm('Undo?'))return;try{await rest('/rest/v1/staff_salaries?id=eq.'+cur.id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({status:'pending',paid_date:null})});toast('Undone','ok');pagePayroll(document.getElementById('main'));}catch(e){toast(e.message,'bad');}}
-window.undoPay=undoPay;
-
-async function batchPayAll(){if(!confirm('Pay ALL pending staff for '+MONTH_NAMES[_payMonth-1]+' '+_payYear+'?'))return;const salaries=await rest('/rest/v1/staff_salaries?school_id=eq.'+_schoolId+'&year=eq.'+_payYear+'&month=eq.'+_payMonth+'&status=eq.pending&select=*');let done=0;for(const s of (salaries||[])){await rest('/rest/v1/staff_salaries?id=eq.'+s.id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({status:'paid',paid_date:new Date().toISOString().slice(0,10)})});const advDed=Number(s.advance_deducted||0);if(advDed>0){const advances=await rest('/rest/v1/staff_advances?school_id=eq.'+_schoolId+'&staff_id=eq.'+s.staff_id+'&status=eq.open&select=*&order=given_date');let remaining=advDed;for(const a of (advances||[])){if(remaining<=0)break;const bal=Number(a.balance||a.amount||0);const take=Math.min(bal,remaining);const newBal=bal-take;await rest('/rest/v1/staff_advances?id=eq.'+a.id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({balance:newBal,status:newBal<=0?'closed':'open'})});await rest('/rest/v1/advance_repayments',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,advance_id:a.id,amount:take,notes:'Batch '+MONTH_NAMES[_payMonth-1]+' '+_payYear,at:new Date().toISOString()})});remaining-=take;}}done++;}toast('Paid '+done,'ok');pagePayroll(document.getElementById('main'));}
-window.batchPayAll=batchPayAll;
-
-async function pageAdvances(root){
-  const [staff,advances]=await Promise.all([rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=id,full_name,role&order=full_name'),rest('/rest/v1/staff_advances?school_id=eq.'+_schoolId+'&select=*&order=given_date.desc').catch(()=>[])]);
-  const staffMap={};staff.forEach(s=>{staffMap[s.id]=s;});
-  let rows='';let totalOpen=0;
-  advances.forEach(a=>{const st=staffMap[a.staff_id];const bal=Number(a.balance||0);if(a.status==='open')totalOpen+=bal;rows+='<tr><td><b>'+esc(st?st.full_name:'—')+'</b></td><td>'+fmtDate(a.given_date)+'</td><td style="text-align:right">'+fmtNum(a.amount)+'</td><td style="text-align:right;font-weight:700;color:'+(bal>0?'#b91c1c':'#047857')+'">'+fmtNum(bal)+'</td><td>'+esc(a.reason||'')+'</td><td>'+(a.status==='closed'?'<span class="badge ok">Closed</span>':'<span class="badge warn">Open</span>')+'</td><td style="white-space:nowrap"><button class="btn sm ghost" onclick="editAdvance(\''+a.id+'\')">✏️</button> <button class="btn sm danger" onclick="delAdvance(\''+a.id+'\')">✕</button></td></tr>';});
-  root.innerHTML='<div class="page-head"><div><h1>💵 Staff Advances</h1><div class="sub">'+advances.length+' · '+fmtUGX(totalOpen)+' open</div></div><div><button class="btn" onclick="newAdvance()">＋ New Advance</button></div></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Staff</th><th>Date</th><th style="text-align:right">Amount</th><th style="text-align:right">Balance</th><th>Reason</th><th>Status</th><th></th></tr></thead><tbody>'+(rows||'<tr><td colspan="7" class="empty">No advances</td></tr>')+'</tbody></table></div></div>';
-}
-window.pageAdvances=pageAdvances;
-
-async function newAdvance(){
-  const staff=await rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=id,full_name,role&order=full_name');
-  let opts=staff.map(s=>'<option value="'+s.id+'">'+esc(s.full_name)+'</option>').join('');
-  modal('<h3>New Advance</h3><div><label>Staff *</label><select id="adv_staff">'+opts+'</select></div><div style="margin-top:12px"><label>Amount *</label><input id="adv_amount" type="number"></div><div style="margin-top:12px"><label>Date *</label><input id="adv_date" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div><div style="margin-top:12px"><label>Reason</label><input id="adv_reason"></div><div style="margin-top:12px"><label>Notes</label><textarea id="adv_notes" rows="2"></textarea></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveAdvance()">Save</button></div>');
-}
-window.newAdvance=newAdvance;
-
-async function editAdvance(id){
-  const a=await rest('/rest/v1/staff_advances?id=eq.'+id+'&select=*');const adv=a&&a[0];if(!adv)return;
-  const staff=await rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=id,full_name&order=full_name');
-  let opts=staff.map(s=>'<option value="'+s.id+'"'+(s.id===adv.staff_id?' selected':'')+'>'+esc(s.full_name)+'</option>').join('');
-  modal('<h3>Edit Advance</h3><div><label>Staff</label><select id="adv_staff">'+opts+'</select></div><div style="margin-top:12px"><label>Amount</label><input id="adv_amount" type="number" value="'+(adv.amount||0)+'"></div><div style="margin-top:12px"><label>Balance</label><input id="adv_balance" type="number" value="'+(adv.balance||0)+'"></div><div style="margin-top:12px"><label>Date</label><input id="adv_date" type="date" value="'+esc(adv.given_date||'')+'"></div><div style="margin-top:12px"><label>Reason</label><input id="adv_reason" value="'+esc(adv.reason||'')+'"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="updateAdvance(\''+id+'\')">Save</button></div>');
-}
-window.editAdvance=editAdvance;
-
-async function saveAdvance(){
-  const amount=Number(document.getElementById('adv_amount').value)||0;
-  const body={school_id:_schoolId,staff_id:document.getElementById('adv_staff').value,amount:amount,balance:amount,given_date:document.getElementById('adv_date').value,reason:document.getElementById('adv_reason').value.trim()||null,notes:document.getElementById('adv_notes').value.trim()||null,status:'open'};
-  if(!body.amount||!body.given_date){toast('Amount and date required','bad');return;}
-  try{await rest('/rest/v1/staff_advances',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify(body)});toast('Saved','ok');closeModal();nav('payroll_advances');}catch(e){toast(e.message,'bad');}
-}
-window.saveAdvance=saveAdvance;
-
-async function updateAdvance(id){
-  const body={staff_id:document.getElementById('adv_staff').value,amount:Number(document.getElementById('adv_amount').value)||0,balance:Number(document.getElementById('adv_balance').value)||0,given_date:document.getElementById('adv_date').value,reason:document.getElementById('adv_reason').value.trim()||null};
-  body.status=body.balance<=0?'closed':'open';
-  try{await rest('/rest/v1/staff_advances?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify(body)});toast('Updated','ok');closeModal();nav('payroll_advances');}catch(e){toast(e.message,'bad');}
-}
-window.updateAdvance=updateAdvance;
-
-async function delAdvance(id){if(!confirm('Delete?'))return;try{await rest('/rest/v1/staff_advances?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');nav('payroll_advances');}catch(e){toast(e.message,'bad');}}
-window.delAdvance=delAdvance;
-
-async function pageRepayments(root){
-  const rows=await rest('/rest/v1/advance_repayments?school_id=eq.'+_schoolId+'&select=*&order=at.desc&limit=200').catch(()=>[]);
-  let body='';let total=0;
-  const advanceIds=[...new Set(rows.map(r=>r.advance_id).filter(Boolean))];
-  let advMap={};let staffMap={};
-  if(advanceIds.length){const advs=await rest('/rest/v1/staff_advances?id=in.('+advanceIds.join(',')+')&select=id,staff_id');const staffIds=[...new Set(advs.map(a=>a.staff_id).filter(Boolean))];if(staffIds.length){const st=await rest('/rest/v1/staff?id=in.('+staffIds.join(',')+')&select=id,full_name');st.forEach(s=>{staffMap[s.id]=s.full_name;});}advs.forEach(a=>{advMap[a.id]=staffMap[a.staff_id]||'—';});}
-  rows.forEach(r=>{total+=Number(r.amount||0);body+='<tr><td>'+fmtDate(r.at)+'</td><td><b>'+esc(advMap[r.advance_id]||'—')+'</b></td><td style="text-align:right;color:#047857;font-weight:600">'+fmtNum(r.amount)+'</td><td>'+esc(r.notes||'')+'</td></tr>';});
-  root.innerHTML='<div class="page-head"><div><h1>↩️ Advance Repayments</h1><div class="sub">'+rows.length+' · '+fmtUGX(total)+'</div></div></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Date</th><th>Staff</th><th style="text-align:right">Amount</th><th>Notes</th></tr></thead><tbody>'+(body||'<tr><td colspan="4" class="empty">No repayments</td></tr>')+'</tbody></table></div></div>';
-}
-window.pageRepayments=pageRepayments;
-
-async function pageAllowances(root){
-  const [staff,allowances]=await Promise.all([rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=id,full_name&order=full_name'),rest('/rest/v1/allowances?school_id=eq.'+_schoolId+'&select=*&order=paid_at.desc&limit=200').catch(()=>[])]);
-  const staffMap={};staff.forEach(s=>{staffMap[s.id]=s;});
-  let rows='';let total=0;
-  allowances.forEach(a=>{const st=staffMap[a.staff_id];total+=Number(a.amount||0);rows+='<tr><td><b>'+esc(st?st.full_name:'—')+'</b></td><td>'+esc(a.type||'')+'</td><td>'+esc(a.year||'')+' T'+esc(a.term||'')+'</td><td style="text-align:right;color:#047857">'+fmtNum(a.amount)+'</td><td>'+fmtDate(a.paid_at)+'</td><td><button class="btn sm danger" onclick="delAllowance(\''+a.id+'\')">✕</button></td></tr>';});
-  root.innerHTML='<div class="page-head"><div><h1>🎁 Allowances</h1><div class="sub">'+allowances.length+' · '+fmtUGX(total)+'</div></div><button class="btn" onclick="newAllowance()">＋ New</button></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Staff</th><th>Type</th><th>Period</th><th style="text-align:right">Amount</th><th>Date</th><th></th></tr></thead><tbody>'+(rows||'<tr><td colspan="6" class="empty">None</td></tr>')+'</tbody></table></div></div>';
-}
-window.pageAllowances=pageAllowances;
-
-async function newAllowance(){
-  const staff=await rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=id,full_name&order=full_name');
-  let opts=staff.map(s=>'<option value="'+s.id+'">'+esc(s.full_name)+'</option>').join('');
-  const types=ALLOWANCE_OPTIONS.map(t=>'<option>'+t+'</option>').join('');
-  modal('<h3>New Allowance</h3><div><label>Staff *</label><select id="al_staff">'+opts+'</select></div><div class="grid grid-2" style="margin-top:12px"><div><label>Type *</label><select id="al_type" onchange="document.getElementById(\'al_type_custom\').style.display=this.value===\'Other\'?\'block\':\'none\'">'+types+'</select></div><div><label>Amount *</label><input id="al_amount" type="number"></div></div><div id="al_type_custom" style="margin-top:12px;display:none"><label>Custom Type</label><input id="al_type_text"></div><div class="grid grid-2" style="margin-top:12px"><div><label>Year</label><input id="al_year" type="number" value="'+getCurrentYear()+'"></div><div><label>Term</label><select id="al_term"><option value="1">T1</option><option value="2">T2</option><option value="3">T3</option></select></div></div><div style="margin-top:12px"><label>Notes</label><textarea id="al_notes" rows="2"></textarea></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveAllowance()">Save</button></div>');
-}
-window.newAllowance=newAllowance;
-
-async function saveAllowance(){
-  let type=document.getElementById('al_type').value;if(type==='Other')type=document.getElementById('al_type_text').value.trim()||'Other';
-  const body={school_id:_schoolId,staff_id:document.getElementById('al_staff').value,type:type,amount:Number(document.getElementById('al_amount').value)||0,year:Number(document.getElementById('al_year').value)||getCurrentYear(),term:Number(document.getElementById('al_term').value)||1,notes:document.getElementById('al_notes').value.trim()||null,paid_at:new Date().toISOString()};
-  if(!body.amount){toast('Amount required','bad');return;}
-  try{await rest('/rest/v1/allowances',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify(body)});toast('Saved','ok');closeModal();nav('payroll_allowances');}catch(e){toast(e.message,'bad');}
-}
-window.saveAllowance=saveAllowance;
-
-async function delAllowance(id){if(!confirm('Delete?'))return;try{await rest('/rest/v1/allowances?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');nav('payroll_allowances');}catch(e){toast(e.message,'bad');}}
-window.delAllowance=delAllowance;
-
-async function pagePayrollSummary(root){
-  const year=_payYear||new Date().getFullYear();
-  const rows=await rest('/rest/v1/staff_salaries?school_id=eq.'+_schoolId+'&year=eq.'+year+'&select=*').catch(()=>[]);
-  const staff=await rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=id,full_name,role&order=full_name');
-  const staffMap={};staff.forEach(s=>{staffMap[s.id]=s;});
-  const monthly={};for(let m=1;m<=12;m++)monthly[m]={gross:0,allow:0,ded:0,adv:0,net:0,count:0};
-  rows.forEach(r=>{const m=Number(r.month||0);if(monthly[m]){monthly[m].gross+=Number(r.gross||0);monthly[m].allow+=Number(r.allowances||0);monthly[m].ded+=Number(r.deductions||0);monthly[m].adv+=Number(r.advance_deducted||0);monthly[m].net+=Number(r.net||0);monthly[m].count++;}});
-  let summaryRows='';let totNet=0;
-  for(let m=1;m<=12;m++){const d=monthly[m];if(d.count===0)continue;totNet+=d.net;summaryRows+='<tr><td><b>'+MONTH_NAMES[m-1]+'</b></td><td style="text-align:center">'+d.count+'</td><td style="text-align:right">'+fmtNum(d.gross)+'</td><td style="text-align:right">'+fmtNum(d.allow)+'</td><td style="text-align:right">'+fmtNum(d.ded)+'</td><td style="text-align:right">'+fmtNum(d.adv)+'</td><td style="text-align:right;font-weight:700;color:#047857">'+fmtNum(d.net)+'</td></tr>';}
-  const byStaff={};rows.forEach(r=>{if(!byStaff[r.staff_id])byStaff[r.staff_id]={gross:0,net:0,months:0};byStaff[r.staff_id].gross+=Number(r.gross||0);byStaff[r.staff_id].net+=Number(r.net||0);byStaff[r.staff_id].months++;});
-  let staffRows='';Object.keys(byStaff).forEach(sid=>{const d=byStaff[sid];const st=staffMap[sid];staffRows+='<tr><td><b>'+esc(st?st.full_name:'—')+'</b></td><td>'+esc(st?st.role||'':'')+'</td><td style="text-align:center">'+d.months+'</td><td style="text-align:right">'+fmtNum(d.gross)+'</td><td style="text-align:right;font-weight:700;color:#047857">'+fmtNum(d.net)+'</td></tr>';});
-  root.innerHTML='<div class="page-head"><div><h1>📊 Payroll Summary</h1><div class="sub">'+year+' · Net: '+fmtUGX(totNet)+'</div></div></div><div class="card"><h3>By Month</h3><div class="table-wrap"><table><thead><tr><th>Month</th><th style="text-align:center">Staff</th><th style="text-align:right">Gross</th><th style="text-align:right">Allow.</th><th style="text-align:right">Deduct.</th><th style="text-align:right">Advance</th><th style="text-align:right">Net</th></tr></thead><tbody>'+(summaryRows||'<tr><td colspan="7" class="empty">No data</td></tr>')+'</tbody></table></div></div><div class="card"><h3>By Staff</h3><div class="table-wrap"><table><thead><tr><th>Staff</th><th>Role</th><th style="text-align:center">Months</th><th style="text-align:right">Gross YTD</th><th style="text-align:right">Net YTD</th></tr></thead><tbody>'+(staffRows||'<tr><td colspan="5" class="empty">No data</td></tr>')+'</tbody></table></div></div>';
-}
-window.pagePayrollSummary=pagePayrollSummary;
-
-async function printPayslip(staffId){
-  const existing=await rest('/rest/v1/staff_salaries?school_id=eq.'+_schoolId+'&staff_id=eq.'+staffId+'&year=eq.'+_payYear+'&month=eq.'+_payMonth+'&select=*');
-  const cur=existing&&existing[0];if(!cur){toast('Save amounts first','bad');return;}
-  const st=await rest('/rest/v1/staff?id=eq.'+staffId+'&select=*');const staff=st&&st[0];
-  printHTML('Payslip — '+(staff?.full_name||''),'<div style="text-align:center"><h2 style="margin:0">'+(_school?.name||'SCHOOL')+'</h2><h3 style="margin-top:14px">PAYSLIP — '+MONTH_NAMES[_payMonth-1]+' '+_payYear+'</h3></div><table style="width:100%;border-collapse:collapse;margin-top:14px"><tbody><tr><td style="padding:6px;border:1px solid #ccc"><b>Name:</b> '+esc(staff?.full_name||'')+'</td><td style="padding:6px;border:1px solid #ccc"><b>Role:</b> '+esc(staff?.role||'')+'</td></tr></tbody></table><table style="width:100%;border-collapse:collapse;margin-top:14px"><thead><tr><th style="background:#0a2540;color:#fff;padding:6px;border:1px solid #ccc">Item</th><th style="background:#0a2540;color:#fff;padding:6px;border:1px solid #ccc;text-align:right">Amount</th></tr></thead><tbody><tr><td style="padding:6px;border:1px solid #ccc">Gross</td><td style="padding:6px;border:1px solid #ccc;text-align:right">'+fmtNum(cur.gross)+'</td></tr><tr><td style="padding:6px;border:1px solid #ccc">Allowances</td><td style="padding:6px;border:1px solid #ccc;text-align:right">'+fmtNum(cur.allowances)+'</td></tr><tr><td style="padding:6px;border:1px solid #ccc">Deductions</td><td style="padding:6px;border:1px solid #ccc;text-align:right">-'+fmtNum(cur.deductions)+'</td></tr><tr><td style="padding:6px;border:1px solid #ccc">Advance</td><td style="padding:6px;border:1px solid #ccc;text-align:right">-'+fmtNum(cur.advance_deducted||0)+'</td></tr><tr style="background:#f3e5f5"><td style="padding:6px;border:1px solid #ccc"><b>NET PAY</b></td><td style="padding:6px;border:1px solid #ccc;text-align:right"><b>'+fmtNum(cur.net)+'</b></td></tr></tbody></table><div style="margin-top:20px;font-size:12px"><div>Paid on: <b>'+esc(cur.paid_date||'—')+'</b></div></div>');
-}
-window.printPayslip=printPayslip;
-
-async function waPayslip(staffId){
-  const existing=await rest('/rest/v1/staff_salaries?school_id=eq.'+_schoolId+'&staff_id=eq.'+staffId+'&year=eq.'+_payYear+'&month=eq.'+_payMonth+'&select=*');
-  const cur=existing&&existing[0];if(!cur){toast('Save amounts first','bad');return;}
-  const st=await rest('/rest/v1/staff?id=eq.'+staffId+'&select=*');const staff=st&&st[0];
-  const tel=staff?.telephone||staff?.contact||'';if(!tel){toast('No phone','bad');return;}
-  const msg='Dear '+staff.full_name+',%0AYour payslip for '+MONTH_NAMES[_payMonth-1]+' '+_payYear+':%0AGross: UGX '+fmtNum(cur.gross)+'%0AAllowances: UGX '+fmtNum(cur.allowances)+'%0ADeductions: UGX '+fmtNum(cur.deductions)+'%0AAdvance: UGX '+fmtNum(cur.advance_deducted||0)+'%0ANET PAY: UGX '+fmtNum(cur.net)+'%0A%0A'+(_school?.name||'');
-  window.open('https://wa.me/'+waLink(tel)+'?text='+msg,'_blank');
-}
-window.waPayslip=waPayslip;
-
-/* CLASSES */
-async function pageClasses(root){clearClassesCache();const classes=await loadClasses();const counts={};for(const c of classes){const r=await rest('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+c.id+'&select=id');counts[c.id]=r.length;}let rows='';classes.forEach(c=>{rows+='<tr><td><b>'+esc(c.name)+'</b></td><td><span class="badge info">'+esc(c.level||'primary')+'</span></td><td>'+counts[c.id]+'</td><td><button class="btn sm danger" onclick="delClass(\''+c.id+'\')">✕</button></td></tr>';});root.innerHTML='<div class="page-head"><div><h1>🏫 Classes</h1></div></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Level</th><th>Pupils</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
+/* ============ CLASSES ============ */
+async function pageClasses(root){clearClassesCache();const classes=await loadClasses();const counts={};for(const c of classes){const r=await rest('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+c.id+'&select=id');counts[c.id]=r.length;}let rows='';classes.forEach(c=>{rows+='<tr><td><b>'+esc(c.name)+'</b></td><td><span class="badge info">'+esc(c.level||'primary')+'</span></td><td>'+counts[c.id]+'</td><td><button class="btn sm danger" onclick="delClass(\''+c.id+'\')">✕</button></td></tr>';});root.innerHTML='<div class="page-head"><div><h1>🏫 Classes</h1></div><button class="btn ghost" onclick="printCurrent(\'Classes\')">🖨️ Print</button></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Level</th><th>Pupils</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
 window.pageClasses=pageClasses;
 async function delClass(id){if(!confirm('Delete?'))return;try{await rest('/rest/v1/classes?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');clearClassesCache();nav('classes');}catch(e){toast(e.message,'bad');}}
 window.delClass=delClass;
 
-async function pageSubjects(root){clearClassesCache();const classes=await loadClasses();if(!_subjClass&&classes[0])_subjClass=classes[0].id;const classObj=classes.find(c=>c.id===_subjClass);const subjects=await loadSubjectsForClass(_subjClass);const classOpts=classes.map(c=>'<option value="'+c.id+'"'+(_subjClass===c.id?' selected':'')+'>'+esc(c.name)+'</option>').join('');let rows='';if(subjects.length){subjects.forEach(s=>{rows+='<tr><td><b>'+esc(s.code)+'</b></td><td>'+esc(s.name)+'</td><td><button class="btn sm danger" onclick="delSubject(\''+s.subject_id+'\',\''+_subjClass+'\')">✕</button></td></tr>';});}else{rows='<tr><td colspan="3" class="empty">No subjects</td></tr>';}root.innerHTML='<div class="page-head"><div><h1>📚 Subjects</h1></div></div><div class="card"><label>Class</label><select onchange="_subjClass=this.value;pageSubjects(document.getElementById(\'main\'))">'+classOpts+'</select></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Code</th><th>Name</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
+async function pageSubjects(root){clearClassesCache();const classes=await loadClasses();if(!_subjClass&&classes[0])_subjClass=classes[0].id;const classObj=classes.find(c=>c.id===_subjClass);const subjects=await loadSubjectsForClass(_subjClass);const classOpts=classes.map(c=>'<option value="'+c.id+'"'+(_subjClass===c.id?' selected':'')+'>'+esc(c.name)+'</option>').join('');let rows='';if(subjects.length){subjects.forEach(s=>{rows+='<tr><td><b>'+esc(s.code)+'</b></td><td>'+esc(s.name)+'</td><td><button class="btn sm danger" onclick="delSubject(\''+s.subject_id+'\',\''+_subjClass+'\')">✕</button></td></tr>';});}else{rows='<tr><td colspan="3" class="empty">No subjects</td></tr>';}root.innerHTML='<div class="page-head"><div><h1>📚 Subjects</h1></div><button class="btn ghost" onclick="printCurrent(\'Subjects\')">🖨️ Print</button></div><div class="card"><label>Class</label><select onchange="_subjClass=this.value;pageSubjects(document.getElementById(\'main\'))">'+classOpts+'</select></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Code</th><th>Name</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
 window.pageSubjects=pageSubjects;
 async function delSubject(subjectId,classId){if(!confirm('Remove?'))return;try{await rest('/rest/v1/class_subjects?school_id=eq.'+_schoolId+'&class_id=eq.'+classId+'&subject_id=eq.'+subjectId,{method:'DELETE'});toast('Removed','ok');nav('subjects');}catch(e){toast(e.message,'bad');}}
 window.delSubject=delSubject;
 
-async function pageExams(root){_examsCache=await rest('/rest/v1/exams?school_id=eq.'+_schoolId+'&select=*&order=stage')||[];let rows='';_examsCache.forEach(e=>{rows+='<tr><td><b>'+esc(e.name)+'</b></td><td>Stage '+e.stage+'</td><td>'+e.year+'</td><td>'+e.term+'</td><td><button class="btn sm danger" onclick="delExam(\''+e.id+'\')">✕</button></td></tr>';});root.innerHTML='<div class="page-head"><h1>📝 Exams</h1></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Stage</th><th>Year</th><th>Term</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
+async function pageExams(root){_examsCache=await rest('/rest/v1/exams?school_id=eq.'+_schoolId+'&select=*&order=stage')||[];let rows='';_examsCache.forEach(e=>{rows+='<tr><td><b>'+esc(e.name)+'</b></td><td>Stage '+e.stage+'</td><td>'+e.year+'</td><td>'+e.term+'</td><td><button class="btn sm danger" onclick="delExam(\''+e.id+'\')">✕</button></td></tr>';});root.innerHTML='<div class="page-head"><div><h1>📝 Exams</h1></div><button class="btn ghost" onclick="printCurrent(\'Exams\')">🖨️ Print</button></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Stage</th><th>Year</th><th>Term</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
 window.pageExams=pageExams;
 async function delExam(id){if(!confirm('Delete?'))return;try{await rest('/rest/v1/exams?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');_examsCache=null;nav('exams');}catch(e){toast(e.message,'bad');}}
 window.delExam=delExam;
 
-async function pageDebtors(root){clearClassesCache();const students=await rest('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=*');const classes=await loadClasses();const classesById={};classes.forEach(c=>classesById[c.id]=c);const debtors=students.map(s=>{const charged=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.holiday_fee)||0)+(Number(s.academics_fee)||0)+(Number(s.functional_fee)||0)+(Number(s.transport_fee)||0);const collected=(Number(s.deposit_1)||0)+(Number(s.deposit_2)||0)+(Number(s.deposit_3)||0);return{s,bal:charged-collected,cls:classesById[s.class_id]};}).filter(x=>x.bal>0).sort((a,b)=>b.bal-a.bal);window._allStudents=debtors.map(d=>d.s);const totalOwed=debtors.reduce((t,d)=>t+d.bal,0);let rows='';debtors.forEach(d=>{rows+='<tr><td>'+esc(d.s.admission_no)+'</td><td><b>'+esc(d.s.first_name+' '+(d.s.last_name||''))+'</b></td><td>'+esc(d.cls?d.cls.name:'—')+'</td><td>'+esc(d.s.parent_name||'—')+'</td><td>'+esc(d.s.parent_contact||'—')+'</td><td style="text-align:right;color:#b91c1c;font-weight:700">'+fmtNum(d.bal)+'</td><td><button class="btn sm" onclick="recordPayment(\''+d.s.id+'\')">💵</button></td></tr>';});root.innerHTML='<div class="page-head"><div><h1>👥 Debtors</h1><div class="sub">'+debtors.length+' · '+fmtUGX(totalOwed)+'</div></div></div><div class="card"><div class="table-wrap"><table><thead><tr><th>ADM</th><th>Name</th><th>Class</th><th>Parent</th><th>Contact</th><th style="text-align:right">Balance</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
+/* ============ DEBTORS ============ */
+async function pageDebtors(root){clearClassesCache();const students=await rest('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=*');const classes=await loadClasses();const classesById={};classes.forEach(c=>classesById[c.id]=c);const debtors=students.map(s=>{const charged=(Number(s.balance_bf)||0)+(Number(s.actual_fee)||0)+(Number(s.holiday_fee)||0)+(Number(s.academics_fee)||0)+(Number(s.functional_fee)||0)+(Number(s.transport_fee)||0);const collected=(Number(s.deposit_1)||0)+(Number(s.deposit_2)||0)+(Number(s.deposit_3)||0);return{s,bal:charged-collected,cls:classesById[s.class_id]};}).filter(x=>x.bal>0).sort((a,b)=>b.bal-a.bal);window._allStudents=debtors.map(d=>d.s);const totalOwed=debtors.reduce((t,d)=>t+d.bal,0);let rows='';debtors.forEach(d=>{rows+='<tr><td>'+esc(d.s.admission_no)+'</td><td><b>'+esc(d.s.first_name+' '+(d.s.last_name||''))+'</b></td><td>'+esc(d.cls?d.cls.name:'—')+'</td><td>'+esc(d.s.parent_name||'—')+'</td><td>'+esc(d.s.parent_contact||'—')+'</td><td style="text-align:right;color:#b91c1c;font-weight:700">'+fmtNum(d.bal)+'</td><td><button class="btn sm" onclick="recordPayment(\''+d.s.id+'\')">💵</button></td></tr>';});root.innerHTML='<div class="page-head"><div><h1>👥 Debtors</h1><div class="sub">'+debtors.length+' · '+fmtUGX(totalOwed)+'</div></div><button class="btn ghost" onclick="printCurrent(\'Debtors\')">🖨️ Print</button></div><div class="card"><div class="table-wrap"><table><thead><tr><th>ADM</th><th>Name</th><th>Class</th><th>Parent</th><th>Contact</th><th style="text-align:right">Balance</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
 window.pageDebtors=pageDebtors;
 
-async function pagePassOuts(root){const [students,passes]=await Promise.all([rest('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=id,first_name,last_name,admission_no'),rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&select=*&order=signed_out_at.desc&limit=100')]);let rows='';passes.forEach(p=>{const s=students.find(x=>x.id===p.student_id);rows+='<tr><td>'+esc(s?(s.first_name+' '+(s.last_name||'')):'—')+'</td><td>'+esc(p.reason||'')+'</td><td>'+fmtDate(p.signed_out_at)+'</td><td>'+fmtDate(p.signed_in_at)+'</td><td>'+(p.status==='out'?'<span class="badge bad">OUT</span>':'<span class="badge ok">Returned</span>')+'</td><td>'+(p.status==='out'?'<button class="btn sm ok" onclick="returnPass(\''+p.id+'\')">Return</button>':'')+'</td></tr>';});root.innerHTML='<div class="page-head"><h1>🚪 Pass Outs</h1></div><div class="card"><button class="btn" onclick="addPassOut()">＋ New</button></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Pupil</th><th>Reason</th><th>Out</th><th>In</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
+/* ============ PASS OUTS with SEARCH ============ */
+async function pagePassOuts(root){
+  const [students,passes]=await Promise.all([
+    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=id,first_name,last_name,admission_no,class_id'),
+    rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&select=*&order=signed_out_at.desc&limit=200')
+  ]);
+  window._allPassOuts=passes||[];
+  window._allPOStudents=students||[];
+
+  root.innerHTML=
+  '<div class="page-head"><div><h1>🚪 Pass Outs</h1><div class="sub" id="poCount">'+passes.length+' records</div></div>'+
+  '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+  '<button class="btn ghost" onclick="printPassOuts()">🖨️ Print</button>'+
+  '<button class="btn" onclick="addPassOut()">＋ New Pass Out</button>'+
+  '</div></div>'+
+  '<div class="card"><input id="poSearch" placeholder="Search by pupil name, ADM, or reason…" oninput="filterPassOuts()" style="padding:13px 16px"></div>'+
+  '<div id="poTable"></div>';
+  filterPassOuts();
+}
 window.pagePassOuts=pagePassOuts;
+
+function filterPassOuts(){
+  const q=(document.getElementById('poSearch')?.value||'').toLowerCase();
+  const students=window._allPOStudents||[];
+  const passes=window._allPassOuts||[];
+  const filtered=passes.filter(p=>{
+    if(!q)return true;
+    const s=students.find(x=>x.id===p.student_id);
+    const hay=((s?(s.first_name+' '+(s.last_name||'')+' '+s.admission_no):'')+' '+(p.reason||'')).toLowerCase();
+    return hay.indexOf(q)!==-1;
+  });
+  document.getElementById('poCount').textContent=passes.length+' total · '+filtered.length+' shown';
+  const c=document.getElementById('poTable');
+  if(!filtered.length){c.innerHTML='<div class="card empty">No matching pass outs.</div>';return;}
+  let rows='';
+  filtered.forEach(p=>{
+    const s=students.find(x=>x.id===p.student_id);
+    rows+='<tr><td>'+esc(s?(s.first_name+' '+(s.last_name||'')):'—')+'</td><td>'+esc(s?s.admission_no:'—')+'</td><td>'+esc(p.reason||'')+'</td><td>'+fmtDate(p.signed_out_at)+'</td><td>'+fmtDate(p.signed_in_at)+'</td><td>'+(p.status==='out'?'<span class="badge bad">OUT</span>':'<span class="badge ok">Returned</span>')+'</td><td>'+(p.status==='out'?'<button class="btn sm ok" onclick="returnPass(\''+p.id+'\')">Return</button>':'')+'</td></tr>';
+  });
+  c.innerHTML='<div class="card"><div class="table-wrap"><table><thead><tr><th>Pupil</th><th>ADM</th><th>Reason</th><th>Out</th><th>In</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+}
+window.filterPassOuts=filterPassOuts;
+
+function printPassOuts(){
+  const q=(document.getElementById('poSearch')?.value||'').toLowerCase();
+  const students=window._allPOStudents||[];
+  const passes=window._allPassOuts||[];
+  const filtered=passes.filter(p=>{
+    if(!q)return true;
+    const s=students.find(x=>x.id===p.student_id);
+    const hay=((s?(s.first_name+' '+(s.last_name||'')+' '+s.admission_no):'')+' '+(p.reason||'')).toLowerCase();
+    return hay.indexOf(q)!==-1;
+  });
+  let rows='';
+  filtered.forEach(p=>{
+    const s=students.find(x=>x.id===p.student_id);
+    rows+='<tr><td>'+esc(s?(s.first_name+' '+(s.last_name||'')):'—')+'</td><td>'+esc(s?s.admission_no:'—')+'</td><td>'+esc(p.reason||'')+'</td><td>'+fmtDate(p.signed_out_at)+'</td><td>'+fmtDate(p.signed_in_at)+'</td><td>'+(p.status==='out'?'OUT':'Returned')+'</td></tr>';
+  });
+  printSection('Pass Outs'+(q?' — filtered':''),
+    '<table><thead><tr><th>Pupil</th><th>ADM</th><th>Reason</th><th>Out</th><th>In</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table>');
+}
+window.printPassOuts=printPassOuts;
+
 async function addPassOut(){const students=await rest('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=id,first_name,last_name,admission_no&order=first_name');let opts='';students.forEach(s=>{opts+='<option value="'+s.id+'">'+esc(s.admission_no+' — '+s.first_name+' '+(s.last_name||''))+'</option>';});modal('<h3>New Pass Out</h3><div><label>Pupil</label><select id="po_s">'+opts+'</select></div><div style="margin-top:12px"><label>Reason</label><input id="po_r"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="savePassOut()">Save</button></div>');}
 window.addPassOut=addPassOut;
 async function savePassOut(){const student_id=document.getElementById('po_s').value;const reason=document.getElementById('po_r').value.trim();try{await rest('/rest/v1/pass_outs',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,student_id,reason,status:'out'})});toast('Saved','ok');closeModal();nav('passouts');}catch(e){toast(e.message,'bad');}}
@@ -1014,7 +974,8 @@ window.savePassOut=savePassOut;
 async function returnPass(id){try{await rest('/rest/v1/pass_outs?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify({status:'returned',signed_in_at:new Date().toISOString()})});toast('Returned','ok');nav('passouts');}catch(e){toast(e.message,'bad');}}
 window.returnPass=returnPass;
 
-async function pageStaff(root){const staff=await rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=*&order=full_name')||[];let rows='';staff.forEach(s=>{const tel=s.telephone||s.contact||'';const wa=waLink(tel),tl=telLink(tel);let cc='—';if(tel){cc='<div style="font-weight:600">'+esc(tel)+'</div><div style="display:flex;gap:4px;margin-top:4px">'+(wa?'<a href="https://wa.me/'+wa+'" target="_blank" class="btn sm wa" style="text-decoration:none">💬</a>':'')+(tl?'<a href="tel:'+tl+'" class="btn sm ghost" style="text-decoration:none">📞</a>':'')+'</div>';}rows+='<tr><td><b>'+esc(s.full_name)+'</b></td><td>'+esc(s.role||'')+'</td><td>'+cc+'</td><td>'+fmtUGX(s.monthly_salary||s.base_salary||0)+'</td><td style="white-space:nowrap"><button class="btn sm ghost" onclick="editStaff(\''+s.id+'\')">✏️</button> <button class="btn sm danger" onclick="delStaff(\''+s.id+'\')">✕</button></td></tr>';});root.innerHTML='<div class="page-head"><div><h1>👨‍🏫 Staff</h1><div class="sub">'+staff.length+'</div></div><button class="btn" onclick="addStaff()">＋ Add</button></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Contact</th><th>Salary</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
+/* ============ STAFF ============ */
+async function pageStaff(root){const staff=await rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=*&order=full_name')||[];let rows='';staff.forEach(s=>{const tel=s.telephone||s.contact||'';const wa=waLink(tel),tl=telLink(tel);let cc='—';if(tel){cc='<div style="font-weight:600">'+esc(tel)+'</div><div style="display:flex;gap:4px;margin-top:4px">'+(wa?'<a href="https://wa.me/'+wa+'" target="_blank" class="btn sm wa" style="text-decoration:none">💬</a>':'')+(tl?'<a href="tel:'+tl+'" class="btn sm ghost" style="text-decoration:none">📞</a>':'')+'</div>';}rows+='<tr><td><b>'+esc(s.full_name)+'</b></td><td>'+esc(s.role||'')+'</td><td>'+cc+'</td><td>'+fmtUGX(s.monthly_salary||s.base_salary||0)+'</td><td style="white-space:nowrap"><button class="btn sm ghost" onclick="editStaff(\''+s.id+'\')">✏️</button> <button class="btn sm danger" onclick="delStaff(\''+s.id+'\')">✕</button></td></tr>';});root.innerHTML='<div class="page-head"><div><h1>👨‍🏫 Staff</h1><div class="sub">'+staff.length+'</div></div><div style="display:flex;gap:8px"><button class="btn ghost" onclick="printCurrent(\'Staff List\')">🖨️ Print</button><button class="btn" onclick="addStaff()">＋ Add</button></div></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Contact</th><th>Salary</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
 window.pageStaff=pageStaff;
 function addStaff(){openStaffModal(null);}
 window.addStaff=addStaff;
@@ -1027,39 +988,45 @@ window.saveStaff=saveStaff;
 async function delStaff(id){if(!confirm('Delete?'))return;try{await rest('/rest/v1/staff?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');nav('staff');}catch(e){toast(e.message,'bad');}}
 window.delStaff=delStaff;
 
-async function pageStaffAttendance(root){const today=new Date().toISOString().slice(0,10);root.innerHTML='<div class="page-head"><h1>⏰ Staff Attendance</h1></div><div class="card"><label>Date</label><input type="date" id="sa_date" value="'+today+'" onchange="loadStaffAtt()"></div><div id="saTable"></div>';loadStaffAtt();}
+/* ============ STAFF ATT ============ */
+async function pageStaffAttendance(root){const today=new Date().toISOString().slice(0,10);root.innerHTML='<div class="page-head"><div><h1>⏰ Staff Attendance</h1></div><button class="btn ghost" onclick="printCurrent(\'Staff Attendance\')">🖨️ Print</button></div><div class="card"><label>Date</label><input type="date" id="sa_date" value="'+today+'" onchange="loadStaffAtt()"></div><div id="saTable"></div>';loadStaffAtt();}
 window.pageStaffAttendance=pageStaffAttendance;
 async function loadStaffAtt(){const date=document.getElementById('sa_date').value;const [staff,existing]=await Promise.all([rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=*&order=full_name'),rest('/rest/v1/staff_attendance?school_id=eq.'+_schoolId+'&date=eq.'+date+'&select=staff_id,status')]);const map={};existing.forEach(a=>map[a.staff_id]=a.status);const c=document.getElementById('saTable');if(!staff.length){c.innerHTML='<div class="card empty">No staff.</div>';return;}let rows='';staff.forEach(s=>{const st=map[s.id]||'';rows+='<tr><td><b>'+esc(s.full_name)+'</b></td><td>'+esc(s.role||'')+'</td><td>'+esc(s.telephone||s.contact||'')+'</td><td style="text-align:center"><button class="btn sm '+(st==='present'?'ok':'ghost')+'" onclick="setStaffAtt(\''+s.id+'\',\''+date+'\',\'present\')">✓</button> <button class="btn sm '+(st==='absent'?'danger':'ghost')+'" onclick="setStaffAtt(\''+s.id+'\',\''+date+'\',\'absent\')">✗</button></td></tr>';});c.innerHTML='<div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Tel</th><th style="text-align:center">Status</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
 window.loadStaffAtt=loadStaffAtt;
 async function setStaffAtt(staffId,date,status){try{await rest('/rest/v1/staff_attendance?school_id=eq.'+_schoolId+'&staff_id=eq.'+staffId+'&date=eq.'+date,{method:'DELETE'});await rest('/rest/v1/staff_attendance',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,staff_id:staffId,date,status})});loadStaffAtt();}catch(e){toast(e.message,'bad');}}
 window.setStaffAtt=setStaffAtt;
 
-async function pageUniforms(root){const sales=await rest('/rest/v1/uniform_sales?school_id=eq.'+_schoolId+'&select=*&order=sold_at.desc&limit=100')||[];const total=sales.reduce((s,x)=>s+Number(x.total_amount||0),0);let rows='';sales.forEach(s=>{rows+='<tr><td>'+fmtDate(s.sold_at)+'</td><td>'+esc(s.item||'')+'</td><td>'+(s.quantity||1)+'</td><td>'+fmtUGX(s.unit_price||0)+'</td><td style="text-align:right">'+fmtUGX(s.total_amount||0)+'</td></tr>';});root.innerHTML='<div class="page-head"><div><h1>👕 Uniforms</h1><div class="sub">'+sales.length+' · '+fmtUGX(total)+'</div></div><button class="btn" onclick="addUniform()">＋ New</button></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Unit</th><th style="text-align:right">Total</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
+/* ============ UNIFORMS ============ */
+async function pageUniforms(root){const sales=await rest('/rest/v1/uniform_sales?school_id=eq.'+_schoolId+'&select=*&order=sold_at.desc&limit=100')||[];const total=sales.reduce((s,x)=>s+Number(x.total_amount||0),0);let rows='';sales.forEach(s=>{rows+='<tr><td>'+fmtDate(s.sold_at)+'</td><td>'+esc(s.item||'')+'</td><td>'+(s.quantity||1)+'</td><td>'+fmtUGX(s.unit_price||0)+'</td><td style="text-align:right">'+fmtUGX(s.total_amount||0)+'</td></tr>';});root.innerHTML='<div class="page-head"><div><h1>👕 Uniforms</h1><div class="sub">'+sales.length+' · '+fmtUGX(total)+'</div></div><div style="display:flex;gap:8px"><button class="btn ghost" onclick="printCurrent(\'Uniform Sales\')">🖨️ Print</button><button class="btn" onclick="addUniform()">＋ New</button></div></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Unit</th><th style="text-align:right">Total</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
 window.pageUniforms=pageUniforms;
 function addUniform(){modal('<h3>New Uniform Sale</h3><div><label>Item</label><input id="u_i"></div><div class="grid grid-2" style="margin-top:12px"><div><label>Qty</label><input id="u_q" type="number" value="1"></div><div><label>Unit Price</label><input id="u_p" type="number" value="0"></div></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveUniform()">Save</button></div>');}
 window.addUniform=addUniform;
 async function saveUniform(){const item=document.getElementById('u_i').value.trim();const quantity=Number(document.getElementById('u_q').value)||1;const unit_price=Number(document.getElementById('u_p').value)||0;if(!item){toast('Enter item','bad');return;}try{await rest('/rest/v1/uniform_sales',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,item,quantity,unit_price,total_amount:quantity*unit_price})});toast('Saved','ok');closeModal();nav('uniforms');}catch(e){toast(e.message,'bad');}}
 window.saveUniform=saveUniform;
 
-async function pageExpenses(root){const cy=getCurrentYear();let rows=await rest('/rest/v1/expenses?school_id=eq.'+_schoolId+'&select=*&order=spent_at.desc').catch(()=>[]);rows=rows.filter(e=>(e.year===cy||e.academic_year===cy));const total=rows.reduce((s,x)=>s+Number(x.amount),0);let body='';rows.forEach(e=>{body+='<tr><td>'+fmtDate(e.spent_at)+'</td><td>'+esc(e.description)+'</td><td>'+esc(e.category||'')+'</td><td style="text-align:right;color:#b91c1c">'+fmtUGX(e.amount)+'</td></tr>';});root.innerHTML='<div class="page-head"><div><h1>💸 Expenses</h1><div class="sub">'+fmtUGX(total)+'</div></div><button class="btn" onclick="addExpense()">＋ Add</button></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+body+'</tbody></table></div></div>';}
+/* ============ EXPENSES ============ */
+async function pageExpenses(root){const cy=getCurrentYear();let rows=await rest('/rest/v1/expenses?school_id=eq.'+_schoolId+'&select=*&order=spent_at.desc').catch(()=>[]);rows=rows.filter(e=>(e.year===cy||e.academic_year===cy));const total=rows.reduce((s,x)=>s+Number(x.amount),0);let body='';rows.forEach(e=>{body+='<tr><td>'+fmtDate(e.spent_at)+'</td><td>'+esc(e.description)+'</td><td>'+esc(e.category||'')+'</td><td style="text-align:right;color:#b91c1c">'+fmtUGX(e.amount)+'</td></tr>';});root.innerHTML='<div class="page-head"><div><h1>💸 Expenses</h1><div class="sub">'+fmtUGX(total)+'</div></div><div style="display:flex;gap:8px"><button class="btn ghost" onclick="printCurrent(\'Expenses\')">🖨️ Print</button><button class="btn" onclick="addExpense()">＋ Add</button></div></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+body+'</tbody></table></div></div>';}
 window.pageExpenses=pageExpenses;
 function addExpense(){modal('<h3>Add Expense</h3><div><label>Description *</label><input id="x_d"></div><div style="margin-top:12px"><label>Amount *</label><input id="x_a" type="number"></div><div style="margin-top:12px"><label>Category</label><input id="x_c"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveExpense()">Save</button></div>');}
 window.addExpense=addExpense;
 async function saveExpense(){const description=document.getElementById('x_d').value.trim();const amount=Number(document.getElementById('x_a').value);const category=document.getElementById('x_c').value.trim();if(!description||!amount){toast('Fill required','bad');return;}const body={school_id:_schoolId,description,amount,category,year:getCurrentYear(),term:getCurrentTerm()};try{try{await rest('/rest/v1/expenses',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify(body)});}catch(e){body.academic_year=body.year;delete body.year;await rest('/rest/v1/expenses',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify(body)});}toast('Saved','ok');closeModal();nav('expenses');}catch(e){toast(e.message,'bad');}}
 window.saveExpense=saveExpense;
 
-async function pageMessages(root){const msgs=await rest('/rest/v1/messages?school_id=eq.'+_schoolId+'&select=*&order=sent_at.desc&limit=100')||[];let rows='';msgs.forEach(m=>{const wa=waLink(m.parent_contact);rows+='<tr><td>'+fmtDate(m.sent_at)+'</td><td>'+esc(m.parent_contact||'—')+'</td><td>'+esc(m.body)+'</td><td>'+(wa?'<a href="https://wa.me/'+wa+'" target="_blank" class="btn sm wa" style="text-decoration:none">💬</a>':'')+'</td></tr>';});root.innerHTML='<div class="page-head"><h1>💬 Messages</h1></div><div class="card"><button class="btn" onclick="addMessage()">＋ New</button></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Date</th><th>To</th><th>Body</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
+/* ============ MESSAGES ============ */
+async function pageMessages(root){const msgs=await rest('/rest/v1/messages?school_id=eq.'+_schoolId+'&select=*&order=sent_at.desc&limit=100')||[];let rows='';msgs.forEach(m=>{const wa=waLink(m.parent_contact);rows+='<tr><td>'+fmtDate(m.sent_at)+'</td><td>'+esc(m.parent_contact||'—')+'</td><td>'+esc(m.body)+'</td><td>'+(wa?'<a href="https://wa.me/'+wa+'" target="_blank" class="btn sm wa" style="text-decoration:none">💬</a>':'')+'</td></tr>';});root.innerHTML='<div class="page-head"><div><h1>💬 Messages</h1></div><button class="btn ghost" onclick="printCurrent(\'Messages\')">🖨️ Print</button></div><div class="card"><button class="btn" onclick="addMessage()">＋ New</button></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Date</th><th>To</th><th>Body</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
 window.pageMessages=pageMessages;
 function addMessage(){modal('<h3>New Message</h3><div><label>Parent Contact</label><input id="m_c"></div><div style="margin-top:12px"><label>Body</label><textarea id="m_b" rows="4"></textarea></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveMessage()">Save</button></div>');}
 window.addMessage=addMessage;
 async function saveMessage(){const parent_contact=document.getElementById('m_c').value.trim();const body=document.getElementById('m_b').value.trim();if(!body){toast('Enter body','bad');return;}try{await rest('/rest/v1/messages',{method:'POST',headers:{'Prefer':'return:minimal'},body:JSON.stringify({school_id:_schoolId,parent_contact,body})});toast('Saved','ok');closeModal();nav('messages');}catch(e){toast(e.message,'bad');}}
 window.saveMessage=saveMessage;
 
+/* ============ SETTINGS ============ */
 async function pageSettings(root){root.innerHTML='<div class="page-head"><h1>⚙️ Settings</h1></div><div class="card"><h3>School Info</h3><div class="grid grid-2"><div><label>Name</label><input id="s_name" value="'+esc(_school?.name||'')+'"></div><div><label>Telephone</label><input id="s_phone" value="'+esc(_school?.telephone||'')+'"></div><div><label>Address</label><input id="s_addr" value="'+esc(_school?.address||'')+'"></div><div><label>Head Teacher</label><input id="s_head" value="'+esc(_school?.head_teacher||'')+'"></div></div><div style="margin-top:12px"><label>Logo URL</label><input id="s_logo" value="'+esc(_school?.logo_url||'')+'" placeholder="https://..."></div><button class="btn" style="margin-top:14px" onclick="saveSchool()">💾 Save</button></div><div class="card"><h3>Account</h3><div class="muted">Signed in as <b>'+esc(_profile?.full_name||'')+'</b></div><button class="btn danger" style="margin-top:12px" onclick="doLogout()">Sign Out</button></div>';}
 window.pageSettings=pageSettings;
 async function saveSchool(){const body={name:document.getElementById('s_name').value.trim(),telephone:document.getElementById('s_phone').value.trim(),address:document.getElementById('s_addr').value.trim(),head_teacher:document.getElementById('s_head').value.trim(),logo_url:document.getElementById('s_logo').value.trim()};try{await rest('/rest/v1/schools?id=eq.'+_schoolId,{method:'PATCH',headers:{'Prefer':'return:minimal'},body:JSON.stringify(body)});_school=Object.assign(_school,body);renderHeader();renderAuthLogo();toast('Saved','ok');}catch(e){toast(e.message,'bad');}}
 window.saveSchool=saveSchool;
 
+/* ============ INIT ============ */
 if(getUser()&&getToken()){boot();}
 </script>
 </body>
