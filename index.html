@@ -192,10 +192,11 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 
 <script>
 /* ============================================================
-   Progressive Mothers School Management — Complete v12
+   Progressive Mothers School Management — Complete v13
+   Auto token refresh + enum detection + everything
    ============================================================ */
 const SUPA_URL='https://wabeempxckdtjvrkzhpv.supabase.co';
-const SUPA_KEY='sb_publishable_n0uAm0Gcq7qR2dJM4jMZGQ_wiV__Cfp'; /* ⚠️ REPLACE with eyJ... */
+const SUPA_KEY='sb_publishable_n0uAm0Gcq7qR2dJM4jMZGQ_wiV__Cfp'; /* ⚠️ REPLACE with eyJ... anon key */
 
 let _mem={};
 function lsGet(k){try{if(typeof localStorage!=='undefined'&&localStorage)return localStorage.getItem(k);}catch(e){}return _mem[k]!==undefined?_mem[k]:null;}
@@ -211,14 +212,69 @@ function getToken(){return _session?_session.access_token:null;}
 function getUser(){return _session?_session.user:null;}
 function setSession(d){_session=d;if(d)lsSet('pm_session',JSON.stringify(d));else lsDel('pm_session');}
 
+/* ============================================================
+   TOKEN AUTO-REFRESH
+   ============================================================ */
+let _refreshing=null;
+async function refreshSession(){
+  if(!_session||!_session.refresh_token)throw new Error('No refresh token');
+  if(_refreshing)return _refreshing;
+  _refreshing=(async()=>{
+    try{
+      const res=await fetch(SUPA_URL+'/auth/v1/token?grant_type=refresh_token',{
+        method:'POST',
+        headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
+        body:JSON.stringify({refresh_token:_session.refresh_token})
+      });
+      const text=await res.text();
+      let data=null;try{data=text?JSON.parse(text):null;}catch(e){}
+      if(!res.ok||!data||!data.access_token){
+        throw new Error((data&&(data.error_description||data.msg||data.error))||'Refresh failed');
+      }
+      setSession({
+        access_token:data.access_token,
+        refresh_token:data.refresh_token||_session.refresh_token,
+        user:data.user||_session.user
+      });
+      return true;
+    }finally{
+      _refreshing=null;
+    }
+  })();
+  return _refreshing;
+}
+window.refreshSession=refreshSession;
+
 async function rest(path,options){
   options=options||{};
-  const headers=Object.assign({'apikey':SUPA_KEY,'Content-Type':'application/json'},options.headers||{});
-  const t=getToken();headers['Authorization']='Bearer '+(t||SUPA_KEY);
-  const res=await fetch(SUPA_URL+path,Object.assign({},options,{headers}));
-  const text=await res.text();let data=null;try{data=text?JSON.parse(text):null;}catch(e){data=text;}
-  if(!res.ok){if(res.status===401){setSession(null);throw new Error('Session expired');}
-    throw new Error((data&&(data.message||data.msg||data.error_description||data.error||data.hint))||text||('HTTP '+res.status));}
+  const buildHeaders=()=>{
+    const h=Object.assign({'apikey':SUPA_KEY,'Content-Type':'application/json'},options.headers||{});
+    const t=getToken();h['Authorization']='Bearer '+(t||SUPA_KEY);
+    return h;
+  };
+  let res=await fetch(SUPA_URL+path,Object.assign({},options,{headers:buildHeaders()}));
+  let text=await res.text();
+
+  /* Auto-refresh on 401 and retry once */
+  if(res.status===401&&_session&&_session.refresh_token){
+    try{
+      await refreshSession();
+      res=await fetch(SUPA_URL+path,Object.assign({},options,{headers:buildHeaders()}));
+      text=await res.text();
+    }catch(e){
+      setSession(null);
+      document.getElementById('app').style.display='none';
+      document.getElementById('authScreen').style.display='flex';
+      const errEl=document.getElementById('loginErr');
+      if(errEl){errEl.textContent='Session expired. Please sign in again.';errEl.style.display='block';}
+      throw new Error('Session expired — please sign in again');
+    }
+  }
+
+  let data=null;try{data=text?JSON.parse(text):null;}catch(e){data=text;}
+  if(!res.ok){
+    throw new Error((data&&(data.message||data.msg||data.error_description||data.error||data.hint))||text||('HTTP '+res.status));
+  }
   return data;
 }
 async function auth(path,body){
@@ -234,43 +290,35 @@ let _profileStudentId=null,_profileTab='overview';
 let _cachedStudents=[],_cachedPayments=[],_cachedPassOuts=[],_cachedPOStudents=[];
 let _passOutLookup={};
 
-/* ENUM DETECTION — resolves "invalid input value for enum" errors */
+/* ENUM AUTO-DETECTION */
 let _enumPaymentMethod=[];
 let _enumPaymentProvider=[];
 let _enumAttendanceStatus=['present','absent','late','excused'];
 
 async function detectEnums(){
-  /* Payment method */
   try{
     const r=await rest('/rest/v1/rpc/get_enum_values',{method:'POST',body:JSON.stringify({p_type:'payment_method'})});
     if(Array.isArray(r)&&r.length){_enumPaymentMethod=r.map(x=>x.enumlabel||x);}
   }catch(e){}
   if(!_enumPaymentMethod.length){
-    /* Fallback: try common spellings by querying distinct values already in payments */
     try{
       const r=await rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=method&limit=100');
       const set=new Set();(r||[]).forEach(x=>{if(x.method)set.add(x.method);});
       _enumPaymentMethod=[...set];
     }catch(e){}
   }
-  if(!_enumPaymentMethod.length){
-    /* Absolute fallback */
-    _enumPaymentMethod=['Cash','Mobile Money','Bank','Cheque','Bank Transfer'];
-  }
-  /* Provider */
+  if(!_enumPaymentMethod.length){_enumPaymentMethod=['Cash','Mobile Money','Bank','Cheque','Bank Transfer'];}
   try{
     const r=await rest('/rest/v1/rpc/get_enum_values',{method:'POST',body:JSON.stringify({p_type:'payment_provider'})});
     if(Array.isArray(r)&&r.length){_enumPaymentProvider=r.map(x=>x.enumlabel||x);}
   }catch(e){}
   if(!_enumPaymentProvider.length)_enumPaymentProvider=['MTN','Airtel','Other'];
-  /* Attendance */
   try{
     const r=await rest('/rest/v1/rpc/get_enum_values',{method:'POST',body:JSON.stringify({p_type:'attendance_status'})});
     if(Array.isArray(r)&&r.length){_enumAttendanceStatus=r.map(x=>x.enumlabel||x);}
   }catch(e){}
 }
 
-/* Smart enum matcher: finds the closest value that exists in the enum */
 function matchEnum(input,list){
   if(!list||!list.length)return input;
   const raw=String(input||'').trim();
@@ -346,7 +394,7 @@ async function doLogin(){
   btn.disabled=true;btn.textContent='Signing in…';
   try{
     const data=await auth('/auth/v1/token?grant_type=password',{email,password:pass});
-    setSession({access_token:data.access_token,user:data.user});
+    setSession({access_token:data.access_token,refresh_token:data.refresh_token,user:data.user});
     await boot();
   }catch(e){err.textContent=e.message;err.style.display='block';}
   btn.disabled=false;btn.textContent='Sign In';
@@ -694,7 +742,7 @@ async function deleteStudent(id){
 window.deleteStudent=deleteStudent;
 
 /* ============================================================
-   PAYMENT (with enum-safe values)
+   PAYMENT
    ============================================================ */
 async function nextReceiptNo(){
   const y=getYear();
@@ -708,7 +756,6 @@ async function recordPayment(studentId){
   const cls=(_classesCache||[]).find(c=>c.id===s.class_id);
   const charged=Number(s.total_charged)||0;const paid=Number(s.total_paid)||0;const bal=charged-paid;
   const rno=await nextReceiptNo();
-  /* Build dropdown using ACTUAL enum values from the database */
   const methodOpts=_enumPaymentMethod.map(m=>'<option value="'+esc(m)+'">'+esc(m)+'</option>').join('');
   const provOpts='<option value="">—</option>'+(_enumPaymentProvider||[]).map(p=>'<option value="'+esc(p)+'">'+esc(p)+'</option>').join('');
   modal('<h3>💰 Record Payment</h3>'+
@@ -729,7 +776,6 @@ async function savePayment(studentId){
   const rno=document.getElementById('p_rno').value.trim()||('RCP-'+Date.now());
   if(!amount||amount<=0){toast('Enter amount','bad');return;}
   const s=_cachedStudents.find(x=>x.id===studentId);if(!s){toast('Not found','bad');return;}
-  /* Match the dropdown value to a valid enum value */
   const rawMethod=document.getElementById('p_method').value;
   const method=matchEnum(rawMethod,_enumPaymentMethod);
   const rawProvider=document.getElementById('p_provider').value;
@@ -879,7 +925,7 @@ async function pageProfile(root){
         const amt=Number(p.promised_amount||0);tot+=amt;
         rows+='<tr><td>'+fmtDate(p.promise_date)+'</td><td style="text-align:right">'+fmtNum(amt)+'</td><td>'+esc(p.promised_by||'')+'</td><td><span class="badge '+bCls+'">'+st+'</span></td></tr>';
       });
-      content='<div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><h3 style="margin:0">🔔 Promises ('+promises.length+')</h3></div><div style="margin-bottom:12px"><span class="mini-stat">Total promised: '+fmtUGX(tot)+'</span></div><div class="table-wrap"><table><thead><tr><th>Due</th><th style="text-align:right">Amount</th><th>Promised By</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+      content='<div class="card"><h3>🔔 Promises ('+promises.length+')</h3><div style="margin-bottom:12px"><span class="mini-stat">Total promised: '+fmtUGX(tot)+'</span></div><div class="table-wrap"><table><thead><tr><th>Due</th><th style="text-align:right">Amount</th><th>Promised By</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
     }
   } else if(_profileTab==='passouts'){
     if(!passouts.length)content='<div class="card empty">No pass-outs recorded.</div>';
