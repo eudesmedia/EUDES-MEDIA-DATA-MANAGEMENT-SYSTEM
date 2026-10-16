@@ -192,7 +192,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 
 <script>
 /* ============================================================
-   Progressive Mothers School Management — Advanced v11 (Complete)
+   Progressive Mothers School Management — Complete v12
    ============================================================ */
 const SUPA_URL='https://wabeempxckdtjvrkzhpv.supabase.co';
 const SUPA_KEY='sb_publishable_n0uAm0Gcq7qR2dJM4jMZGQ_wiV__Cfp'; /* ⚠️ REPLACE with eyJ... */
@@ -234,6 +234,63 @@ let _profileStudentId=null,_profileTab='overview';
 let _cachedStudents=[],_cachedPayments=[],_cachedPassOuts=[],_cachedPOStudents=[];
 let _passOutLookup={};
 
+/* ENUM DETECTION — resolves "invalid input value for enum" errors */
+let _enumPaymentMethod=[];
+let _enumPaymentProvider=[];
+let _enumAttendanceStatus=['present','absent','late','excused'];
+
+async function detectEnums(){
+  /* Payment method */
+  try{
+    const r=await rest('/rest/v1/rpc/get_enum_values',{method:'POST',body:JSON.stringify({p_type:'payment_method'})});
+    if(Array.isArray(r)&&r.length){_enumPaymentMethod=r.map(x=>x.enumlabel||x);}
+  }catch(e){}
+  if(!_enumPaymentMethod.length){
+    /* Fallback: try common spellings by querying distinct values already in payments */
+    try{
+      const r=await rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=method&limit=100');
+      const set=new Set();(r||[]).forEach(x=>{if(x.method)set.add(x.method);});
+      _enumPaymentMethod=[...set];
+    }catch(e){}
+  }
+  if(!_enumPaymentMethod.length){
+    /* Absolute fallback */
+    _enumPaymentMethod=['Cash','Mobile Money','Bank','Cheque','Bank Transfer'];
+  }
+  /* Provider */
+  try{
+    const r=await rest('/rest/v1/rpc/get_enum_values',{method:'POST',body:JSON.stringify({p_type:'payment_provider'})});
+    if(Array.isArray(r)&&r.length){_enumPaymentProvider=r.map(x=>x.enumlabel||x);}
+  }catch(e){}
+  if(!_enumPaymentProvider.length)_enumPaymentProvider=['MTN','Airtel','Other'];
+  /* Attendance */
+  try{
+    const r=await rest('/rest/v1/rpc/get_enum_values',{method:'POST',body:JSON.stringify({p_type:'attendance_status'})});
+    if(Array.isArray(r)&&r.length){_enumAttendanceStatus=r.map(x=>x.enumlabel||x);}
+  }catch(e){}
+}
+
+/* Smart enum matcher: finds the closest value that exists in the enum */
+function matchEnum(input,list){
+  if(!list||!list.length)return input;
+  const raw=String(input||'').trim();
+  if(!raw)return list[0];
+  if(list.includes(raw))return raw;
+  const lower=raw.toLowerCase();
+  const l2=list.find(x=>String(x).toLowerCase()===lower);
+  if(l2)return l2;
+  const underscored=lower.replace(/\s+/g,'_');
+  const l3=list.find(x=>String(x).toLowerCase().replace(/\s+/g,'_')===underscored);
+  if(l3)return l3;
+  const noSpace=lower.replace(/[\s_-]+/g,'');
+  const l4=list.find(x=>String(x).toLowerCase().replace(/[\s_-]+/g,'')===noSpace);
+  if(l4)return l4;
+  const noHyphen=lower.replace(/[\s_]/g,'_');
+  const l5=list.find(x=>String(x).toLowerCase().replace(/[\s]/g,'_')===noHyphen);
+  if(l5)return l5;
+  return list[0];
+}
+
 function toast(msg,type){const el=document.createElement('div');el.className='toast'+(type==='bad'?' bad':(type==='ok'?' ok':''));el.textContent=msg;document.getElementById('toastRoot').appendChild(el);setTimeout(()=>el.remove(),3500);}
 function modal(html){const r=document.getElementById('modalRoot');r.innerHTML='<div class="modal-bg"><div class="modal">'+html+'</div></div>';r.querySelector('.modal-bg').addEventListener('click',e=>{if(e.target.classList.contains('modal-bg'))closeModal();});}
 function closeModal(){document.getElementById('modalRoot').innerHTML='';}
@@ -247,13 +304,11 @@ function telLink(num){if(!num)return '';return String(num).replace(/[^0-9+]/g,''
 function waLink(num){if(!num)return '';let c=String(num).replace(/[^0-9]/g,'');if(c.startsWith('0'))c='256'+c.slice(1);return c;}
 function genderLabel(g){return g==='M'?'Male':(g==='F'?'Female':'—');}
 function gradeOf(score){if(score==null||isNaN(score))return{g:'—',r:'—',cls:''};const s=Number(score);if(s>=90)return{g:'D1',r:'Distinction 1',cls:'d1'};if(s>=80)return{g:'D2',r:'Distinction 2',cls:'d2'};if(s>=70)return{g:'C3',r:'Credit 3',cls:'c3'};if(s>=60)return{g:'C4',r:'Credit 4',cls:'c4'};if(s>=55)return{g:'C5',r:'Credit 5',cls:'c5'};if(s>=50)return{g:'C6',r:'Credit 6',cls:'c6'};if(s>=45)return{g:'P7',r:'Pass 7',cls:'p7'};if(s>=40)return{g:'P8',r:'Pass 8',cls:'p8'};return{g:'F9',r:'Fail 9',cls:'f9'};}
-function posLabel(n){if(!n)return '—';if(n===1)return '1st';if(n===2)return '2nd';if(n===3)return '3rd';return n+'th';}
 
 function printSection(title,tableHTML){
   const w=window.open('','_blank');
   if(!w){toast('Allow popups','bad');return;}
   const logo=_school&&(_school.logo_url||_school.logo_data);
-  const now=new Date();
   w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>'+esc(title)+'</title><style>'+
     '*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;padding:20px;margin:0;font-size:13px}'+
     '.letterhead{display:flex;align-items:center;gap:16px;padding-bottom:14px;border-bottom:2px solid #0a2540;margin-bottom:18px}'+
@@ -272,7 +327,7 @@ function printSection(title,tableHTML){
     '<div class="letterhead">'+(logo?'<img src="'+esc(logo)+'">':'')+
       '<div><h1>'+esc(_school?.name||'')+'</h1><div class="meta">'+esc(_school?.address||'')+(_school?.telephone?' · '+esc(_school.telephone):'')+'</div></div></div>'+
     '<div class="doc-title">'+esc(title)+'</div>'+
-    '<div class="doc-stamp">Generated: '+now.toLocaleString()+'</div>'+
+    '<div class="doc-stamp">Generated: '+new Date().toLocaleString()+'</div>'+
     tableHTML+
     '<div class="footer">Powered by EUDES MEDIA</div>'+
     '<script>setTimeout(()=>window.print(),400);<\/script></body></html>');
@@ -319,6 +374,7 @@ async function boot(){
   try{const sc=await rest('/rest/v1/schools?id=eq.'+_schoolId+'&select=*');_school=sc&&sc[0];}catch(e){}
   if(!_school){errEl.textContent='School not found.';errEl.style.display='block';return;}
   if(_school.current_year)setPeriod(_school.current_year,_school.current_term||1);
+  await detectEnums();
   document.getElementById('authScreen').style.display='none';
   document.getElementById('app').style.display='block';
   populateTermSelector();renderHeader();renderAuthLogo();renderNav();renderBottomBar();tickClock();
@@ -382,7 +438,6 @@ async function loadExams(){
   return _examsCache;
 }
 
-/* ROUTES */
 const ROUTES={
   dashboard:{label:'Dashboard',icon:'📊',render:pageDashboard,bottom:true},
   students:{label:'Students',icon:'🎓',render:pageStudents,bottom:true},
@@ -427,13 +482,14 @@ window.doGlobalSearch=doGlobalSearch;
    ============================================================ */
 async function pageDashboard(root){
   const cy=getYear(),ct=getTerm(),today=new Date().toISOString().slice(0,10);
-  const [students,classes,payments,passOuts,staff]=await Promise.all([
+  const results=await Promise.all([
     rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=*').catch(()=>[]),
     rest('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=id,name').catch(()=>[]),
     rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=amount,paid_at').catch(()=>[]),
     rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&status=eq.out&select=id').catch(()=>[]),
     rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=id').catch(()=>[])
   ]);
+  const students=results[0],classes=results[1],payments=results[2],passOuts=results[3],staff=results[4];
   _cachedStudents=students;
   const active=students.filter(s=>s.status==='active'||!s.status);
   let tC=0,tP=0,debtors=0;
@@ -459,7 +515,7 @@ async function pageDashboard(root){
   '<div><div class="muted">Staff</div><div style="font-size:20px;font-weight:800">'+staff.length+'</div></div>'+
   '<div><div class="muted">Payments</div><div style="font-size:20px;font-weight:800">'+payments.length+'</div></div>'+
   '</div></div></div>'+
-  (students.length===0?'<div class="card"><div class="alert-item info"><span class="ico">💡</span><div class="txt"><b>Welcome!</b><span>Start with Classes → Students → Staff → Exams. Every module is ready.</span></div></div></div>':'');
+  (students.length===0?'<div class="card"><div class="alert-item info"><span class="ico">💡</span><div class="txt"><b>Welcome!</b><span>Start with Classes → Students → Staff → Exams.</span></div></div></div>':'');
 }
 window.pageDashboard=pageDashboard;
 
@@ -484,12 +540,12 @@ window.printDashboard=printDashboard;
 async function pageStudents(root){
   clearClassesCache();
   const classes=await loadClasses();
-  const [students,activePasses]=await Promise.all([
+  const results=await Promise.all([
     rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=*&order=admission_no'),
     rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&status=eq.out&select=student_id').catch(()=>[])
   ]);
-  _cachedStudents=students||[];
-  window._activePassIds=new Set((activePasses||[]).map(p=>p.student_id));
+  _cachedStudents=results[0]||[];
+  window._activePassIds=new Set((results[1]||[]).map(p=>p.student_id));
   root.innerHTML=
   '<div class="page-head"><div><h1>Pupils</h1><div class="sub" id="stCount">'+_cachedStudents.length+'</div></div>'+
   '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
@@ -573,9 +629,7 @@ async function openStudentModal(existing){
   clearClassesCache();
   const classes=await loadClasses();
   const s=existing||{};
-  const isNew=!existing;
   modal('<h3>'+(existing?'Edit Pupil':'Register Pupil')+'</h3>'+
-    '<h4 style="font-size:12px;text-transform:uppercase;color:#64748b;margin:12px 0 6px">Identity</h4>'+
     '<div class="grid grid-2"><div><label>Admission No *</label><input id="m_adm" value="'+esc(s.admission_no||('ADM-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4)))+'"></div>'+
     '<div><label>Class *</label><select id="m_class"><option value="">— Select —</option>'+classes.map(c=>'<option value="'+c.id+'"'+(s.class_id===c.id?' selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></div></div>'+
     '<div class="grid grid-2" style="margin-top:12px"><div><label>First Name *</label><input id="m_fn" value="'+esc(s.first_name||'')+'"></div>'+
@@ -640,7 +694,7 @@ async function deleteStudent(id){
 window.deleteStudent=deleteStudent;
 
 /* ============================================================
-   PAYMENT
+   PAYMENT (with enum-safe values)
    ============================================================ */
 async function nextReceiptNo(){
   const y=getYear();
@@ -654,15 +708,18 @@ async function recordPayment(studentId){
   const cls=(_classesCache||[]).find(c=>c.id===s.class_id);
   const charged=Number(s.total_charged)||0;const paid=Number(s.total_paid)||0;const bal=charged-paid;
   const rno=await nextReceiptNo();
+  /* Build dropdown using ACTUAL enum values from the database */
+  const methodOpts=_enumPaymentMethod.map(m=>'<option value="'+esc(m)+'">'+esc(m)+'</option>').join('');
+  const provOpts='<option value="">—</option>'+(_enumPaymentProvider||[]).map(p=>'<option value="'+esc(p)+'">'+esc(p)+'</option>').join('');
   modal('<h3>💰 Record Payment</h3>'+
     '<div style="background:#f8fafc;border-radius:10px;padding:12px;margin-bottom:12px"><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b><div class="muted">'+esc(cls?cls.name:'')+' · '+esc(s.admission_no)+' · '+esc(genderLabel(s.gender))+'</div>'+
     '<div style="margin-top:8px"><span class="mini-stat">Charged: '+fmtUGX(charged)+'</span><span class="mini-stat" style="background:#ecfdf5;color:#047857">Paid: '+fmtUGX(paid)+'</span><span class="mini-stat" style="background:#fef2f2;color:#b91c1c">Balance: '+fmtUGX(bal)+'</span></div></div>'+
     '<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 14px;margin-bottom:12px"><label style="margin:0;color:#92400e">Receipt No</label><input id="p_rno" value="'+esc(rno)+'" style="font-weight:700;font-family:monospace"></div>'+
     '<div><label>Payment For</label><select id="p_for"><option>School Fees</option><option>Functional Fees</option><option>Transport</option><option>Holiday</option><option>Academics</option><option>Uniform</option><option>Other</option></select></div>'+
     '<div style="margin-top:12px"><label>Amount *</label><input id="p_amount" type="number" value="'+Math.max(0,bal)+'"></div>'+
-    '<div class="grid grid-2" style="margin-top:12px"><div><label>Method</label><select id="p_method"><option value="cash">Cash</option><option value="mobile_money">Mobile Money</option><option value="bank">Bank</option><option value="cheque">Cheque</option></select></div>'+
-    '<div><label>MoMo / Ref</label><input id="p_ref"></div></div>'+
-    '<div style="margin-top:12px"><label>Notes</label><input id="p_notes"></div>'+
+    '<div class="grid grid-2" style="margin-top:12px"><div><label>Method</label><select id="p_method">'+methodOpts+'</select></div>'+
+    '<div><label>Provider</label><select id="p_provider">'+provOpts+'</select></div></div>'+
+    '<div class="grid grid-2" style="margin-top:12px"><div><label>MoMo / Ref</label><input id="p_ref"></div><div><label>Notes</label><input id="p_notes"></div></div>'+
     '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn ok" onclick="savePayment(\''+s.id+'\')">Save & Print</button></div>');
 }
 window.recordPayment=recordPayment;
@@ -672,19 +729,25 @@ async function savePayment(studentId){
   const rno=document.getElementById('p_rno').value.trim()||('RCP-'+Date.now());
   if(!amount||amount<=0){toast('Enter amount','bad');return;}
   const s=_cachedStudents.find(x=>x.id===studentId);if(!s){toast('Not found','bad');return;}
-  const method=document.getElementById('p_method').value;
+  /* Match the dropdown value to a valid enum value */
+  const rawMethod=document.getElementById('p_method').value;
+  const method=matchEnum(rawMethod,_enumPaymentMethod);
+  const rawProvider=document.getElementById('p_provider').value;
+  const provider=rawProvider?matchEnum(rawProvider,_enumPaymentProvider):null;
   const payment_for=document.getElementById('p_for').value;
   const notes=document.getElementById('p_notes').value.trim();
   const ref=document.getElementById('p_ref').value.trim();
-  const body={school_id:_schoolId,student_id:studentId,receipt_no:rno,year:getYear(),term:getTerm(),academic_year:getYear(),amount:amount,method:method,payment_for:payment_for,payment_method:method,received_by:_profile?_profile.id:null};
-  if(notes)body.notes=notes;if(ref)body.reference=ref;
+  const body={school_id:_schoolId,student_id:studentId,receipt_no:rno,year:getYear(),term:getTerm(),academic_year:getYear(),amount:amount,method:method,payment_for:payment_for,payment_method:rawMethod,received_by:_profile?_profile.id:null};
+  if(provider)body.provider=provider;
+  if(notes)body.notes=notes;
+  if(ref)body.reference=ref;
   try{
     await rest('/rest/v1/payments',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(body)});
     const newPaid=(Number(s.total_paid)||0)+amount;
     const charged=Number(s.total_charged)||0;
     await rest('/rest/v1/students?id=eq.'+studentId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({total_paid:newPaid,current_balance:Math.max(0,charged-newPaid)})});
     toast('Receipt: '+rno,'ok');
-    printReceipt(s,{receipt_no:rno,amount:amount,payment_for:payment_for,method:method,notes:notes,date:new Date().toISOString(),ref:ref});
+    printReceipt(s,{receipt_no:rno,amount:amount,payment_for:payment_for,method:rawMethod,notes:notes,date:new Date().toISOString(),ref:ref});
     closeModal();nav(activeRoute);
   }catch(e){toast(e.message,'bad');}
 }
@@ -743,21 +806,22 @@ async function pageProfile(root){
   if(!_profileStudentId){root.innerHTML='<div class="empty">No pupil selected</div>';return;}
   clearClassesCache();
   const classes=await loadClasses();
-  const [students,payments,promises,passouts,attendance]=await Promise.all([
+  const results=await Promise.all([
     rest('/rest/v1/students?id=eq.'+_profileStudentId+'&select=*'),
     rest('/rest/v1/payments?student_id=eq.'+_profileStudentId+'&select=*&order=paid_at.desc').catch(()=>[]),
     rest('/rest/v1/fee_reminders?student_id=eq.'+_profileStudentId+'&select=*&order=promise_date.desc').catch(()=>[]),
     rest('/rest/v1/pass_outs?student_id=eq.'+_profileStudentId+'&select=*&order=signed_out_at.desc').catch(()=>[]),
     rest('/rest/v1/attendance?student_id=eq.'+_profileStudentId+'&select=*&order=date.desc&limit=60').catch(()=>[])
   ]);
-  const s=students&&students[0];
+  const s=results[0]&&results[0][0];
   if(!s){root.innerHTML='<div class="empty">Not found</div>';return;}
+  const payments=results[1],promises=results[2],passouts=results[3],attendance=results[4];
   window._profileStudent=s;window._profilePromises=promises;window._profilePassOuts=passouts;window._profileAttendance=attendance;
   const cls=classes.find(c=>c.id===s.class_id);
   const charged=Number(s.total_charged)||0;const paid=Number(s.total_paid)||0;const bal=charged-paid;
   const initials=(s.first_name||'?').charAt(0).toUpperCase()+(s.last_name?' '+s.last_name.charAt(0).toUpperCase():'');
   const gl=genderLabel(s.gender);
-  const hero='<div class="profile-hero no-print"><div class="avatar">'+esc(initials)+'</div><div class="info"><h1>'+esc(s.first_name+' '+(s.last_name||''))+'</h1><div class="meta">📋 '+esc(s.admission_no)+' · '+(cls?'🏫 '+esc(cls.name):'No class')+' · '+(gl!=='—'?'👤 '+gl+' · ':'')+esc(String(s.boarding_status||'Day'))+'</div>'+(s.parent_name||s.parent_contact?'<div class="meta">👤 '+esc(s.parent_name||'')+(s.parent_contact?' · 📞 '+esc(s.parent_contact):'')+'</div>':'')+'</div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn gold" onclick="recordPayment(\''+s.id+'\')">💵 Pay</button><button class="btn ghost" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.3)" onclick="openStudentModalById(\''+s.id+'\')">✏️ Edit</button><button class="btn ghost" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.3)" onclick="window._profileTab=\'passouts\';pageProfile(document.getElementById(\'main\'))">🚪 Pass Outs ('+passouts.length+')</button></div></div>';
+  const hero='<div class="profile-hero no-print"><div class="avatar">'+esc(initials)+'</div><div class="info"><h1>'+esc(s.first_name+' '+(s.last_name||''))+'</h1><div class="meta">📋 '+esc(s.admission_no)+' · '+(cls?'🏫 '+esc(cls.name):'No class')+' · '+(gl!=='—'?'👤 '+gl+' · ':'')+esc(String(s.boarding_status||'Day'))+'</div>'+(s.parent_name||s.parent_contact?'<div class="meta">👤 '+esc(s.parent_name||'')+(s.parent_contact?' · 📞 '+esc(s.parent_contact):'')+'</div>':'')+'</div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn gold" onclick="recordPayment(\''+s.id+'\')">💵 Pay</button><button class="btn ghost" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.3)" onclick="openStudentModalById(\''+s.id+'\')">✏️ Edit</button></div></div>';
   const kpis='<div class="grid grid-kpi no-print" style="margin-bottom:14px"><div class="kpi"><div class="v">'+fmtUGX(charged)+'</div><div class="l">Charged</div></div><div class="kpi kpi-ok"><div class="v">'+fmtUGX(paid)+'</div><div class="l">Paid</div></div><div class="kpi '+(bal>0?'kpi-bad':'kpi-ok')+'"><div class="v">'+fmtUGX(bal)+'</div><div class="l">Balance</div></div><div class="kpi kpi-warn"><div class="v">'+passouts.length+'</div><div class="l">Pass Outs</div></div></div>';
   const tabs=[
     {id:'overview',label:'📋 Overview'},
@@ -787,7 +851,7 @@ async function pageProfile(root){
       (s.parent_contact?'<div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap"><a href="https://wa.me/'+waLink(s.parent_contact)+'" target="_blank" class="btn wa">💬 WhatsApp</a><a href="tel:'+telLink(s.parent_contact)+'" class="btn ghost">📞 Call</a></div>':'')+
       '</div></div>';
   } else if(_profileTab==='fees'){
-    content='<div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><h3 style="margin:0">Fee Breakdown</h3></div><div class="table-wrap"><table><thead><tr><th>Item</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
+    content='<div class="card"><h3>Fee Breakdown</h3><div class="table-wrap"><table><thead><tr><th>Item</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
       '<tr><td>Balance B/F</td><td style="text-align:right">'+fmtNum(s.balance_bf)+'</td></tr>'+
       '<tr><td>School Fee</td><td style="text-align:right">'+fmtNum(s.actual_fee)+'</td></tr>'+
       '<tr><td>Functional Fee</td><td style="text-align:right">'+fmtNum(s.functional_fee)+'</td></tr>'+
@@ -802,25 +866,24 @@ async function pageProfile(root){
     if(!payments.length)content='<div class="card empty">No payments yet.</div>';
     else{
       let running=0;let rows='';
-      [...payments].reverse().forEach(p=>{running+=Number(p.amount);rows='<tr><td>'+fmtDateTime(p.paid_at)+'</td><td><b style="font-family:monospace">'+esc(p.receipt_no||'')+'</b></td><td>'+esc(p.payment_for||'')+'</td><td>'+esc(p.method||'')+'</td><td style="text-align:right;color:#047857">'+fmtNum(p.amount)+'</td><td style="text-align:right">'+fmtNum(running)+'</td></tr>'+rows;});
-      content='<div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><h3 style="margin:0">Payment History</h3><button class="btn gold sm" onclick="recordPayment(\''+s.id+'\')">＋ Payment</button></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Receipt</th><th>For</th><th>Method</th><th style="text-align:right">Amount</th><th style="text-align:right">Running</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+      [...payments].reverse().forEach(p=>{running+=Number(p.amount);rows='<tr><td>'+fmtDateTime(p.paid_at)+'</td><td><b style="font-family:monospace">'+esc(p.receipt_no||'')+'</b></td><td>'+esc(p.payment_for||'')+'</td><td style="text-align:right;color:#047857">'+fmtNum(p.amount)+'</td><td style="text-align:right">'+fmtNum(running)+'</td></tr>'+rows;});
+      content='<div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><h3 style="margin:0">Payment History</h3><button class="btn gold sm" onclick="recordPayment(\''+s.id+'\')">＋ Payment</button></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Receipt</th><th>For</th><th style="text-align:right">Amount</th><th style="text-align:right">Running</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
     }
   } else if(_profileTab==='promises'){
-    if(!promises.length)content='<div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><h3 style="margin:0">🔔 Promises</h3><button class="btn gold sm" onclick="openPromiseForStudent(\''+s.id+'\')">＋ New</button></div><div class="empty">No promises.</div></div>';
+    if(!promises.length)content='<div class="card empty">No promises.</div>';
     else{
       let rows='';let tot=0;
       promises.forEach(p=>{
         const st=promiseStatusOf(p);
         const bCls={overdue:'bad',today:'warn',upcoming:'info',future:'info',cleared:'ok'}[st]||'info';
         const amt=Number(p.promised_amount||0);tot+=amt;
-        rows+='<tr><td>'+fmtDate(p.promise_date)+'</td><td style="text-align:right">'+fmtNum(amt)+'</td><td>'+esc(p.promised_by||'')+'</td><td><span class="badge '+bCls+'">'+st+'</span></td><td style="text-align:right;white-space:nowrap">'+(st!=='cleared'?'<button class="btn sm ok" onclick="clearPromise(\''+p.id+'\')">✓</button> ':'')+'<button class="btn sm gold" onclick="recordPayment(\''+s.id+'\')">💵</button> <button class="btn sm danger" onclick="deletePromise(\''+p.id+'\')">✕</button></td></tr>';
+        rows+='<tr><td>'+fmtDate(p.promise_date)+'</td><td style="text-align:right">'+fmtNum(amt)+'</td><td>'+esc(p.promised_by||'')+'</td><td><span class="badge '+bCls+'">'+st+'</span></td></tr>';
       });
-      content='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">🔔 Promises ('+promises.length+')</h3><div style="display:flex;gap:6px"><button class="btn ok sm" onclick="clearAllPromisesForStudent(\''+s.id+'\')">✓ Clear All</button><button class="btn gold sm" onclick="openPromiseForStudent(\''+s.id+'\')">＋</button></div></div><div style="margin-bottom:12px"><span class="mini-stat">Total promised: '+fmtUGX(tot)+'</span></div><div class="table-wrap"><table><thead><tr><th>Due</th><th style="text-align:right">Amount</th><th>Promised By</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+      content='<div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><h3 style="margin:0">🔔 Promises ('+promises.length+')</h3></div><div style="margin-bottom:12px"><span class="mini-stat">Total promised: '+fmtUGX(tot)+'</span></div><div class="table-wrap"><table><thead><tr><th>Due</th><th style="text-align:right">Amount</th><th>Promised By</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
     }
   } else if(_profileTab==='passouts'){
-    if(!passouts.length){
-      content='<div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><h3 style="margin:0">🚪 Pass Out History</h3><button class="btn sm" onclick="printProfilePassOuts()">🖨️ Print</button></div><div class="empty">No pass-outs recorded for this pupil.</div></div>';
-    } else {
+    if(!passouts.length)content='<div class="card empty">No pass-outs recorded.</div>';
+    else{
       const totalOut=passouts.length;
       const stillOut=passouts.filter(p=>p.status==='out').length;
       const now=Date.now();
@@ -841,7 +904,7 @@ async function pageProfile(root){
           '<td onclick="event.stopPropagation()">'+(p.status==='out'?'<button class="btn sm ok" onclick="returnPass(\''+p.id+'\')">Return</button>':'')+'</td></tr>';
       });
       content='<div class="card">'+
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px"><h3 style="margin:0">🚪 Pass Out History ('+totalOut+')</h3><button class="btn ghost sm" onclick="printProfilePassOuts()">🖨️ Print</button></div>'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px"><h3 style="margin:0">🚪 Pass Out History ('+totalOut+')</h3></div>'+
         '<div class="grid grid-kpi" style="margin-bottom:14px">'+
         '<div class="kpi"><div class="v">'+totalOut+'</div><div class="l">Total Times Out</div></div>'+
         '<div class="kpi '+(stillOut?'kpi-warn':'kpi-ok')+'"><div class="v">'+stillOut+'</div><div class="l">Currently Out</div></div>'+
@@ -868,32 +931,6 @@ async function pageProfile(root){
   root.innerHTML=hero+kpis+tabsHtml+content;
 }
 window.pageProfile=pageProfile;
-
-function printProfilePassOuts(){
-  const s=window._profileStudent;const list=window._profilePassOuts||[];
-  if(!list.length){toast('Nothing','bad');return;}
-  const now=Date.now();
-  const total=list.length;
-  const stillOut=list.filter(p=>p.status==='out').length;
-  const overdue=list.filter(p=>p.status==='out'&&p.expected_return_at&&new Date(p.expected_return_at).getTime()<now).length;
-  const header='<table style="margin-bottom:14px;border:none"><tbody>'+
-    '<tr><td style="border:none"><b>Pupil:</b></td><td style="border:none;font-weight:700">'+esc(s.first_name+' '+(s.last_name||''))+'</td><td style="border:none"><b>ADM:</b></td><td style="border:none">'+esc(s.admission_no)+'</td></tr>'+
-    '<tr><td style="border:none"><b>Gender:</b></td><td style="border:none">'+esc(genderLabel(s.gender))+'</td><td style="border:none"><b>Total:</b></td><td style="border:none">'+total+'</td></tr>'+
-    '<tr><td style="border:none"><b>Currently Out:</b></td><td style="border:none;color:'+(stillOut?'#dc2626':'#047857')+'"><b>'+stillOut+'</b></td><td style="border:none"><b>Overdue:</b></td><td style="border:none;color:'+(overdue?'#dc2626':'#047857')+'"><b>'+overdue+'</b></td></tr>'+
-    '</tbody></table>';
-  let rows='';
-  list.forEach((p,i)=>{
-    const outDate=new Date(p.signed_out_at);const inDate=p.signed_in_at?new Date(p.signed_in_at):null;
-    let dur='—';
-    if(inDate){const d=Math.round((inDate-outDate)/60000);dur=d<60?d+' min':(d/60).toFixed(1)+' hrs';}
-    else if(p.status==='out'){const d=Math.round((now-outDate)/60000);dur=d<60?d+' min (ongoing)':(d/60).toFixed(1)+' hrs (ongoing)';}
-    const isOverdue=p.status==='out'&&p.expected_return_at&&new Date(p.expected_return_at).getTime()<now;
-    const statusLabel=p.status==='out'?(isOverdue?'OVERDUE':'OUT'):'Returned';
-    rows+='<tr><td>'+(i+1)+'</td><td>'+fmtDate(p.signed_out_at)+' '+String(outDate.getHours()).padStart(2,'0')+':'+String(outDate.getMinutes()).padStart(2,'0')+'</td><td>'+(p.signed_in_at?fmtDate(p.signed_in_at)+' '+String(inDate.getHours()).padStart(2,'0')+':'+String(inDate.getMinutes()).padStart(2,'0'):'—')+'</td><td>'+dur+'</td><td>'+esc(p.reason||'')+'</td><td>'+esc(p.picked_up_by||'')+'</td><td>'+esc(p.authorized_by||'')+'</td><td>'+statusLabel+'</td><td>'+esc(p.signed_in_notes||'')+'</td></tr>';
-  });
-  printSection('Pass Out History — '+s.first_name+' '+(s.last_name||''),header+'<table><thead><tr><th>#</th><th>Out</th><th>Return</th><th>Duration</th><th>Reason</th><th>Picked By</th><th>Authorized By</th><th>Status</th><th>Notes</th></tr></thead><tbody>'+rows+'</tbody></table>');
-}
-window.printProfilePassOuts=printProfilePassOuts;
 
 function openPassOutDetail(passId){
   const p=(window._allPassOuts||[]).find(x=>x.id===passId)||(window._profilePassOuts||[]).find(x=>x.id===passId);
@@ -931,6 +968,16 @@ function openPassOutDetail(passId){
       '<button class="btn gold" onclick="closeModal();window._profileStudentId=\''+s.id+'\';window._profileTab=\'passouts\';nav(\'student_profile\')">👤 View Pupil</button></div>');
 }
 window.openPassOutDetail=openPassOutDetail;
+
+function promiseStatusOf(p){
+  if(p.status==='cleared'||p.status_override==='cleared')return 'cleared';
+  if(!p.promise_date)return 'future';
+  const today=new Date();today.setHours(0,0,0,0);
+  const d=new Date(p.promise_date);d.setHours(0,0,0,0);
+  if(d.getTime()===today.getTime())return 'today';
+  if(d<today)return 'overdue';
+  const diff=(d-today)/(1000*60*60*24);return diff<=7?'upcoming':'future';
+}
 
 /* ============================================================
    FEES
@@ -986,13 +1033,13 @@ window.printFees=printFees;
    PAYMENTS LIST
    ============================================================ */
 async function pagePayments(root){
-  const [payments,students]=await Promise.all([
+  const results=await Promise.all([
     rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=*&order=paid_at.desc&limit=500'),
     rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,admission_no,first_name,last_name')
   ]);
-  _cachedPayments=payments||[];window._pmStudents=students||[];
-  const total=payments.reduce((s,p)=>s+Number(p.amount||0),0);
-  root.innerHTML='<div class="page-head"><div><h1>💳 Payments</h1><div class="sub" id="pmCount">'+payments.length+' · '+fmtUGX(total)+'</div></div></div>'+
+  _cachedPayments=results[0]||[];window._pmStudents=results[1]||[];
+  const total=_cachedPayments.reduce((s,p)=>s+Number(p.amount||0),0);
+  root.innerHTML='<div class="page-head"><div><h1>💳 Payments</h1><div class="sub" id="pmCount">'+_cachedPayments.length+' · '+fmtUGX(total)+'</div></div></div>'+
   '<div class="card"><input id="pmSearch" placeholder="🔍 Search receipt, name…" oninput="filterPayments()" style="margin-bottom:12px"><div id="pmTable"></div></div>';
   filterPayments();
 }
@@ -1014,30 +1061,19 @@ window.filterPayments=filterPayments;
 /* ============================================================
    PROMISES
    ============================================================ */
-function promiseStatusOf(p){
-  if(p.status==='cleared'||p.status_override==='cleared')return 'cleared';
-  if(!p.promise_date)return 'future';
-  const today=new Date();today.setHours(0,0,0,0);
-  const d=new Date(p.promise_date);d.setHours(0,0,0,0);
-  if(d.getTime()===today.getTime())return 'today';
-  if(d<today)return 'overdue';
-  const diff=(d-today)/(1000*60*60*24);return diff<=7?'upcoming':'future';
-}
-
 async function pagePromises(root){
   clearClassesCache();
   const classes=await loadClasses();
-  const [students,promises]=await Promise.all([
+  const results=await Promise.all([
     rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,admission_no,first_name,last_name,class_id,parent_name,parent_contact'),
     rest('/rest/v1/fee_reminders?school_id=eq.'+_schoolId+'&select=*&order=promise_date.asc').catch(()=>[])
   ]);
-  window._promiseStudents=students;
+  const students=results[0];const promises=results[1];
+  window._promiseStudents=students;window._allPromises=promises;
   const sById={};students.forEach(s=>sById[s.id]=s);
-  const cById={};classes.forEach(c=>cById[c.id]=c);
   let overdue=0,dueToday=0,upcoming=0,cleared=0,total=0;
   promises.forEach(p=>{const st=promiseStatusOf(p);if(st==='overdue')overdue++;else if(st==='today')dueToday++;else if(st==='upcoming')upcoming++;else if(st==='cleared')cleared++;total+=Number(p.promised_amount||0);});
-  window._allPromises=promises;
-  root.innerHTML='<div class="page-head"><div><h1>🔔 Fee Promises</h1><div class="sub">'+promises.length+' · '+fmtUGX(total)+'</div></div><button class="btn" onclick="openPromiseModal(null)">＋ New Promise</button></div>'+
+  root.innerHTML='<div class="page-head"><div><h1>🔔 Fee Promises</h1><div class="sub">'+promises.length+' · '+fmtUGX(total)+'</div></div><button class="btn" onclick="openPromiseModal()">＋ New Promise</button></div>'+
   '<div class="grid grid-kpi" style="margin-bottom:14px">'+
   '<div class="kpi kpi-bad"><div class="v">'+overdue+'</div><div class="l">Overdue</div></div>'+
   '<div class="kpi kpi-warn"><div class="v">'+dueToday+'</div><div class="l">Due Today</div></div>'+
@@ -1052,7 +1088,6 @@ function filterPromises(){
   const q=(document.getElementById('promSearch').value||'').toLowerCase();
   const sById={};(window._promiseStudents||[]).forEach(s=>sById[s.id]=s);
   const list=(window._allPromises||[]).filter(p=>{if(!q)return true;const s=sById[p.student_id]||{};const h=((s.first_name||'')+' '+(s.last_name||'')+' '+(s.admission_no||'')+' '+(p.promised_by||'')).toLowerCase();return h.indexOf(q)!==-1;});
-  window._filteredProm=list;
   const c=document.getElementById('promTable');
   if(!list.length){c.innerHTML='<div class="empty">'+( (window._allPromises||[]).length===0?'No promises yet.':'No match.')+'</div>';return;}
   let rows='';
@@ -1066,19 +1101,6 @@ function filterPromises(){
   c.innerHTML='<div class="table-wrap"><table><thead><tr><th>ADM</th><th>Pupil</th><th style="text-align:right">Amount</th><th>Due</th><th>Promised By</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 window.filterPromises=filterPromises;
-
-function openPromiseForStudent(sid){
-  const students=window._promiseStudents||[];
-  const s=students.find(x=>x.id===sid);
-  modal('<h3>🔔 Record Promise</h3>'+
-    '<div style="background:#f8fafc;border-radius:10px;padding:10px;margin-bottom:12px"><b>'+esc(s?s.first_name+' '+(s.last_name||''):'')+'</b><div class="muted">'+esc(s?s.admission_no:'')+'</div></div>'+
-    '<input type="hidden" id="pr_s" value="'+esc(sid)+'">'+
-    '<div class="grid grid-2"><div><label>Amount *</label><input id="pr_amt" type="number"></div><div><label>Date *</label><input id="pr_date" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div></div>'+
-    '<div style="margin-top:12px"><label>Promised By</label><input id="pr_by" value="'+esc(s?s.parent_name||'':'')+'"></div>'+
-    '<div style="margin-top:12px"><label>Remarks</label><input id="pr_rem"></div>'+
-    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="savePromise()">💾 Save</button></div>');
-}
-window.openPromiseForStudent=openPromiseForStudent;
 
 function openPromiseModal(){
   const students=window._promiseStudents||[];
@@ -1115,9 +1137,6 @@ window.clearPromise=clearPromise;
 
 async function deletePromise(id){if(!confirm('Delete?'))return;try{await rest('/rest/v1/fee_reminders?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');nav('promises');}catch(e){toast(e.message,'bad');}}
 window.deletePromise=deletePromise;
-
-async function clearAllPromisesForStudent(sid){if(!confirm('Clear ALL promises?'))return;try{await rest('/rest/v1/fee_reminders?student_id=eq.'+sid,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'cleared',status_override:'cleared'})});toast('Cleared','ok');nav('student_profile');}catch(e){toast(e.message,'bad');}}
-window.clearAllPromisesForStudent=clearAllPromisesForStudent;
 
 /* ============================================================
    DEBTORS
@@ -1186,7 +1205,7 @@ function filterMissing(){
   const q=(document.getElementById('msSearch').value||'').toLowerCase();
   const list=(window._missing||[]).filter(x=>{if(!q)return true;const h=(x.s.first_name+' '+(x.s.last_name||'')+' '+x.s.admission_no).toLowerCase();return h.indexOf(q)!==-1;});
   const c=document.getElementById('msTable');
-  if(!list.length){c.innerHTML='<div class="empty">✅ No missing info — great job!</div>';return;}
+  if(!list.length){c.innerHTML='<div class="empty">✅ No missing info!</div>';return;}
   let rows='';
   list.forEach(x=>{
     const s=x.s;
@@ -1207,16 +1226,16 @@ function printMissing(){
 window.printMissing=printMissing;
 
 /* ============================================================
-   PASS OUTS (main page)
+   PASS OUTS PAGE
    ============================================================ */
 async function pagePassOuts(root){
-  const [students,passes]=await Promise.all([
+  const results=await Promise.all([
     rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,admission_no,first_name,last_name,class_id,parent_name,parent_contact,total_charged,total_paid,gender'),
     rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&select=*&order=signed_out_at.desc&limit=300')
   ]);
-  _cachedPOStudents=students||[];
-  window._allPassOuts=passes||[];
-  root.innerHTML='<div class="page-head"><div><h1>🚪 Pass Outs</h1><div class="sub" id="poCount">'+passes.length+'</div></div>'+
+  _cachedPOStudents=results[0]||[];
+  window._allPassOuts=results[1]||[];
+  root.innerHTML='<div class="page-head"><div><h1>🚪 Pass Outs</h1><div class="sub" id="poCount">'+window._allPassOuts.length+'</div></div>'+
   '<div style="display:flex;gap:8px"><button class="btn ghost" onclick="printPassOuts()">🖨️ Print</button><button class="btn" onclick="addPassOut()">＋ New</button></div></div>'+
   '<div id="outPanel"></div>'+
   '<div class="card"><input id="poSearch" placeholder="🔍 Search name, ADM…" oninput="filterPassOuts()" style="margin-bottom:12px"><div id="poTable"></div></div>';
@@ -1235,7 +1254,7 @@ function renderOutPanel(){
   out.forEach(p=>{
     const s=sById[p.student_id]||{};
     const overdue=p.expected_return_at&&new Date(p.expected_return_at).getTime()<now;
-    rows+='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;border-left:4px solid '+(overdue?'#dc2626':'#d97706')+';background:#fff;border-radius:8px;margin-bottom:6px"><div><b>'+esc((s.first_name||'')+' '+(s.last_name||''))+'</b> <span class="muted">· '+esc(s.admission_no||'')+'</span><div class="muted" style="font-size:11.5px">'+esc(p.reason||'')+(p.picked_up_by?' — '+esc(p.picked_up_by):'')+'</div><div class="muted" style="font-size:11px">Out '+fmtDateTime(p.signed_out_at)+'</div></div><div style="display:flex;gap:6px;align-items:center">'+(overdue?'<span class="badge bad">⚠️</span>':'<span class="badge warn">OUT</span>')+'<button class="btn sm ghost" onclick="openPassOutDetail(\''+p.id+'\')">👁️</button><button class="btn sm ok" onclick="returnPass(\''+p.id+'\')">✓ Return</button></div></div>';
+    rows+='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;border-left:4px solid '+(overdue?'#dc2626':'#d97706')+';background:#fff;border-radius:8px;margin-bottom:6px"><div><b>'+esc((s.first_name||'')+' '+(s.last_name||''))+'</b> <span class="muted">· '+esc(s.admission_no||'')+'</span><div class="muted" style="font-size:11.5px">'+esc(p.reason||'')+(p.picked_up_by?' — '+esc(p.picked_up_by):'')+'</div></div><div style="display:flex;gap:6px"><button class="btn sm ghost" onclick="openPassOutDetail(\''+p.id+'\')">👁️</button><button class="btn sm ok" onclick="returnPass(\''+p.id+'\')">✓</button></div></div>';
   });
   panel.innerHTML='<div class="card" style="border-left:4px solid #d97706"><h3>🚪 Currently OUT ('+out.length+')</h3>'+rows+'</div>';
 }
@@ -1284,15 +1303,14 @@ window.printPassOuts=printPassOuts;
 const PASSOUT_REASONS=['Sick','Medical appointment','Family emergency','Funeral','Parent request','School activity','Discipline','Other'];
 
 async function addPassOut(){
-  const [students,outIds]=await Promise.all([
+  const results=await Promise.all([
     rest('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=id,first_name,last_name,admission_no,parent_name,parent_contact&order=first_name'),
     rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&status=eq.out&select=student_id')
   ]);
-  const outSet=new Set((outIds||[]).map(p=>p.student_id));
-  _passOutLookup={};
-  students.forEach(s=>_passOutLookup[s.id]=s);
+  const students=results[0]||[];const outIds=new Set((results[1]||[]).map(p=>p.student_id));
+  _passOutLookup={};students.forEach(s=>_passOutLookup[s.id]=s);
   let opts='<option value="">— Select Pupil —</option>';
-  students.forEach(s=>{const isOut=outSet.has(s.id);opts+='<option value="'+s.id+'"'+(isOut?' data-out="1"':'')+'>'+esc(s.admission_no+' — '+s.first_name+' '+(s.last_name||''))+(isOut?' ⚠️ OUT':'')+'</option>';});
+  students.forEach(s=>{const isOut=outIds.has(s.id);opts+='<option value="'+s.id+'"'+(isOut?' data-out="1"':'')+'>'+esc(s.admission_no+' — '+s.first_name+' '+(s.last_name||''))+(isOut?' ⚠️ OUT':'')+'</option>';});
   const rOpts=PASSOUT_REASONS.map(r=>'<option>'+r+'</option>').join('');
   modal('<h3>🚪 New Pass Out</h3>'+
     '<div id="pblock" style="display:none" class="alert-item danger"><span class="ico">🚫</span><div class="txt"><b>Already signed out</b><span>Return first</span></div></div>'+
@@ -1406,7 +1424,7 @@ async function loadAtt(){
   const map={};existing.forEach(a=>map[a.student_id]=a.status);
   window._attMap=map;window._attDate=dt;window._attStudents=students;
   const c=document.getElementById('aTable');
-  if(!students.length){c.innerHTML='<div class="card empty">No pupils'+(cid?' in this class':'')+'.</div>';return;}
+  if(!students.length){c.innerHTML='<div class="card empty">No pupils.</div>';return;}
   c.innerHTML='<div class="card"><div class="table-wrap"><table><thead><tr><th>ADM</th><th>Name</th><th>Class</th><th style="text-align:center">Status</th></tr></thead><tbody id="attBody"></tbody></table></div></div>';
   filterAttRows();
 }
@@ -1424,9 +1442,10 @@ window.filterAttRows=filterAttRows;
 
 async function setAtt(id,cid,status){
   const dt=window._attDate;
+  const st=matchEnum(status,_enumAttendanceStatus);
   try{
     await rest('/rest/v1/attendance?school_id=eq.'+_schoolId+'&student_id=eq.'+id+'&date=eq.'+dt,{method:'DELETE'});
-    await rest('/rest/v1/attendance',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,student_id:id,class_id:cid,date:dt,status:status,academic_year:getYear(),term:getTerm()})});
+    await rest('/rest/v1/attendance',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,student_id:id,class_id:cid,date:dt,status:st,academic_year:getYear(),term:getTerm()})});
     loadAtt();
   }catch(e){toast(e.message,'bad');}
 }
@@ -1501,7 +1520,7 @@ async function pageReports(root){
   const subjects=await loadSubjectsForClass(_marksClass);
   const exams=await loadExams();
   const examId=_marksExam||(exams[0]&&exams[0].id);
-  if(!examId){root.innerHTML='<div class="card empty">No exams yet. Add one in Exams.</div>';return;}
+  if(!examId){root.innerHTML='<div class="card empty">No exams yet.</div>';return;}
   _marksExam=examId;
   const students=await rest('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+_marksClass+'&status=eq.active&select=*&order=first_name')||[];
   let marksRows=[];
@@ -1518,7 +1537,7 @@ async function pageReports(root){
   '<div><label>Class</label><select onchange="_marksClass=this.value;pageReports(document.getElementById(\'main\'))">'+cOpts+'</select></div>'+
   '<div><label>Exam</label><select onchange="_marksExam=this.value;pageReports(document.getElementById(\'main\'))">'+eOpts+'</select></div></div></div>'+
   (students.length===0?'<div class="card empty">No pupils.</div>':
-   (subjects.length===0?'<div class="card empty">No subjects for this class. Go to Subjects.</div>':'<div id="reportCards">'+cards+'</div>'));
+   (subjects.length===0?'<div class="card empty">No subjects for this class.</div>':'<div id="reportCards">'+cards+'</div>'));
 }
 window.pageReports=pageReports;
 
@@ -1596,7 +1615,7 @@ async function pageClasses(root){
   classes.forEach(c=>{rows+='<tr><td><b>'+esc(c.name)+'</b></td><td>'+esc(c.level||'')+'</td><td>'+counts[c.id]+'</td><td><button class="btn sm danger" onclick="delClass(\''+c.id+'\')">✕</button></td></tr>';});
   root.innerHTML='<div class="page-head"><div><h1>🏫 Classes</h1><div class="sub">'+classes.length+'</div></div><button class="btn" onclick="addClass()">＋ Add</button></div>'+
   (classes.length?'<div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Level</th><th>Pupils</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>':
-  '<div class="card"><div class="alert-item info"><span class="ico">💡</span><div class="txt"><b>No classes yet</b><span>Click "+ Add" to create your first class</span></div></div></div>');
+  '<div class="card"><div class="alert-item info"><span class="ico">💡</span><div class="txt"><b>No classes yet</b></div></div></div>');
 }
 window.pageClasses=pageClasses;
 function addClass(){modal('<h3>Add Class</h3><div><label>Name *</label><input id="cn" placeholder="Primary 1"></div><div style="margin-top:12px"><label>Level</label><select id="cl"><option value="nursery">Nursery</option><option value="lower">Lower Primary</option><option value="upper" selected>Upper Primary</option></select></div><div style="margin-top:12px"><label>Sort</label><input id="cs" type="number" value="99"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveClass()">Save</button></div>');}
