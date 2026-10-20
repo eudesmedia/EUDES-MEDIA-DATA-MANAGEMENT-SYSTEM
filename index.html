@@ -175,7 +175,7 @@ const SUPA_URL='https://wabeempxckdtjvrkzhpv.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndhYmVlbXB4Y2tkdGp2cmt6aHB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1NTQyODcsImV4cCI6MjEwMDEzMDI4N30.5IDNbrip0nLDF9pN2fXHWVB7w-lYNxPIbTaTO-s1PaM';
 
 const JUKILA_BASE = 'https://jukila-api.elastictech.biz';
-const JUKILA_TOKEN = 'juk_live_3a6243920f1c322127ca4ae3b54f0fcfefac9b83df36c1d8'; 
+const JUKILA_TOKEN = 'juk_live_3a6243920f1c322127ca4ae3b54f0fcfefac9b83df36c1d8';
 const JUKILA_SENDER = 'eudesmedia';
 
 /* ============================================================
@@ -265,14 +265,14 @@ async function jukilaRequest(path, method, body) {
 }
 
 async function sendJukilaSMS(phone, message, studentId) {
-  if (!phone) { alert('No phone number provided.'); return; }
+  if (!phone) { toast('No phone number provided.', 'bad'); return; }
   let cleanPhone = String(phone).replace(/[^0-9]/g, '');
   if (cleanPhone.startsWith('0')) cleanPhone = '256' + cleanPhone.slice(1);
 
   try {
     const contact = await jukilaRequest('/api/v1/contacts', 'POST', { name: 'Parent ' + cleanPhone, phone_number: cleanPhone });
     const campaign = await jukilaRequest('/api/v1/campaigns', 'POST', {
-      name: 'SMS ' + Date.now(), type: 'sms', message: message, sender_id: JUKILA_SENDER, contacts: [contact.id || cleanPhone] 
+      name: 'SMS ' + Date.now(), type: 'sms', message: message, sender_id: JUKILA_SENDER, contacts: [contact.id || cleanPhone]
     });
     await jukilaRequest('/api/v1/campaigns/' + campaign.id + '/activate', 'POST');
 
@@ -283,16 +283,16 @@ async function sendJukilaSMS(phone, message, studentId) {
     toast('SMS sent to ' + cleanPhone, 'ok');
   } catch (e) {
     console.error('Jukila SMS Error:', e);
-    alert('JUJILA ERROR: ' + e.message); 
+    toast('SMS failed: ' + e.message, 'bad');
     await api('/rest/v1/sms_log', {
       method: 'POST', headers: { 'Prefer': 'return=minimal' },
       body: JSON.stringify({ school_id: _schoolId, student_id: studentId, recipient_phone: cleanPhone, message_type: 'sms', message: message, status: 'failed', provider: 'jukila', error_message: e.message })
-    });
+    }).catch(()=>{});
   }
 }
 
 async function sendJukilaVoice(phone, message, studentId) {
-  if (!phone) { alert('No phone number provided.'); return; }
+  if (!phone) { toast('No phone number provided.', 'bad'); return; }
   let cleanPhone = String(phone).replace(/[^0-9]/g, '');
   if (cleanPhone.startsWith('0')) cleanPhone = '256' + cleanPhone.slice(1);
 
@@ -310,11 +310,11 @@ async function sendJukilaVoice(phone, message, studentId) {
     toast('Voice Call sent to ' + cleanPhone, 'ok');
   } catch (e) {
     console.error('Jukila Voice Error:', e);
-    alert('JUJILA VOICE ERROR: ' + e.message);
+    toast('Voice failed: ' + e.message, 'bad');
     await api('/rest/v1/sms_log', {
       method: 'POST', headers: { 'Prefer': 'return=minimal' },
       body: JSON.stringify({ school_id: _schoolId, student_id: studentId, recipient_phone: cleanPhone, message_type: 'voice', message: message, status: 'failed', provider: 'jukila', error_message: e.message })
-    });
+    }).catch(()=>{});
   }
 }
 
@@ -326,7 +326,7 @@ window.jukilaVoice = sendJukilaVoice;
    ============================================================ */
 async function triggerSMS(studentId) {
   const s = _cachedStudents.find(x => x.id === studentId) || (window._remAll || []).find(r => r.s.id === studentId)?.s;
-  if (!s || !s.parent_contact) return alert('No parent phone number saved for this pupil.');
+  if (!s || !s.parent_contact) { toast('No parent phone number saved for this pupil.', 'bad'); return; }
   const bal = (Number(s.total_charged)||0) - (Number(s.total_paid)||0);
   const msg = 'Dear ' + (s.parent_name || 'Parent') + ', reminder for ' + s.first_name + '. Balance: UGX ' + bal.toLocaleString() + '. Pay via School Pay Code: ' + (s.school_pay_code || 'N/A') + '. Thank you.';
   if (!confirm('Send this SMS to ' + s.parent_contact + '?\n\n' + msg)) return;
@@ -335,21 +335,22 @@ async function triggerSMS(studentId) {
 
 async function triggerVoice(studentId) {
   const s = _cachedStudents.find(x => x.id === studentId) || (window._remAll || []).find(r => r.s.id === studentId)?.s;
-  if (!s || !s.parent_contact) return alert('No parent phone number saved for this pupil.');
+  if (!s || !s.parent_contact) { toast('No parent phone number saved for this pupil.', 'bad'); return; }
   const bal = (Number(s.total_charged)||0) - (Number(s.total_paid)||0);
   const msg = 'Hello ' + (s.parent_name || 'Parent') + '. This is a reminder from ' + (_school ? _school.name : 'School') + ' regarding fees for ' + s.first_name + '. The balance is ' + bal + ' shillings. Please visit the office. Thank you.';
   if (!confirm('Place Voice Call to ' + s.parent_contact + '?\n\n' + msg)) return;
   await sendJukilaVoice(s.parent_contact, msg, s.id);
 }
+window.triggerSMS=triggerSMS;window.triggerVoice=triggerVoice;
 
 async function bulkSMSReminders() {
   const list = (window._remFiltered || window._remAll || []).filter(r => r.bal > 0.5 && r.s.parent_contact);
-  if (!list.length) return toast('No debtors with phone numbers to send to.', 'bad');
+  if (!list.length) { toast('No debtors with phone numbers to send to.', 'bad'); return; }
   if (!confirm(`Send SMS to ${list.length} parents?\n\nThis will cost money on your Jukila account.`)) return;
-  
+
   let ok = 0, fail = 0;
   toast('Sending bulk SMS... please wait.', 'info');
-  
+
   for (const r of list) {
     const bal = r.bal;
     const msg = 'Dear ' + (r.s.parent_name || 'Parent') + ', reminder for ' + r.s.first_name + '. Balance: UGX ' + bal.toLocaleString() + '. Pay via School Pay Code: ' + (r.s.school_pay_code || 'N/A') + '. Thank you.';
@@ -364,6 +365,7 @@ async function bulkSMSReminders() {
   alert(`Bulk SMS Complete!\n\nSent: ${ok}\nFailed: ${fail}`);
   toast('Bulk SMS Complete', 'ok');
 }
+window.bulkSMSReminders=bulkSMSReminders;
 
 /* ============================================================
    AUTH
@@ -735,8 +737,8 @@ function filterFees(){
   const list=_cachedStudents.filter(s=>{if(cf&&s.class_id!==cf)return false;if(q){const h=(s.first_name+' '+(s.last_name||'')+' '+s.admission_no).toLowerCase();if(h.indexOf(q)===-1)return false}return true});
   const c=document.getElementById('feeTable');
   if(!list.length){c.innerHTML='<div class="empty">No pupils.</div>';return}
-  let rows='',tC=0,tP=0;
-  list.forEach(s=>{const charged=Number(s.total_charged)||0,paid=Number(s.total_paid)||0,bal=charged-paid;tC+=charged;tP+=paid;rows+='<tr><td>'+esc(s.admission_no)+'</td><td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b></td><td>'+esc(cById[s.class_id]?cById[s.class_id].name:'')+'</td><td style="text-align:right">'+fmtNum(charged)+'</td><td style="text-align:right;color:#047857">'+fmtNum(paid)+'</td><td style="text-align:right;font-weight:700;color:'+(bal>0?'#b91c1c':'#047857')+'">'+fmtNum(bal)+'</td><td><button class="btn sm" onclick="recordPayment(\''+s.id+'\')">💵</button></td></tr>'});
+  let rows='';
+  list.forEach(s=>{const charged=Number(s.total_charged)||0,paid=Number(s.total_paid)||0,bal=charged-paid;rows+='<tr><td>'+esc(s.admission_no)+'</td><td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b></td><td>'+esc(cById[s.class_id]?cById[s.class_id].name:'')+'</td><td style="text-align:right">'+fmtNum(charged)+'</td><td style="text-align:right;color:#047857">'+fmtNum(paid)+'</td><td style="text-align:right;font-weight:700;color:'+(bal>0?'#b91c1c':'#047857')+'">'+fmtNum(bal)+'</td><td><button class="btn sm" onclick="recordPayment(\''+s.id+'\')">💵</button></td></tr>'});
   c.innerHTML='<div class="table-wrap"><table><thead><tr><th>ADM</th><th>Name</th><th>Class</th><th style="text-align:right">Charged</th><th style="text-align:right">Paid</th><th style="text-align:right">Balance</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 window.filterFees=filterFees;
@@ -798,7 +800,7 @@ function renderReminders(){
     const s=r.s;const pc=(s.parent_contact||'').trim();
     const waLink_=pc?'https://wa.me/'+waLink(pc)+'?text='+encodeURIComponent(buildReminderMessage(r)):'';
     const stBadge={cleared:'<span class="badge ok">Cleared</span>',partial:'<span class="badge warn">Partial</span>',unpaid:'<span class="badge bad">Unpaid</span>','no-fees':'<span class="badge info">No fees</span>'}[r.status]||'';
-    rows+='<tr><td><b>'+esc(s.admission_no||'—')+'</b></td><td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b></td><td>'+esc(s.parent_name||'—')+'<div style="font-size:10.5px;color:#64748b">'+esc(pc||'')+'</div></td><td style="text-align:right">'+fmtNum(r.charged)+'</td><td style="text-align:right;color:#047857">'+fmtNum(r.paid)+'</td><td style="text-align:right;font-weight:700;color:'+(r.bal>0?'#b91c1c':'#047857')+'">'+fmtNum(r.bal)+'</td><td>'+stBadge+'</td><td style="text-align:right;white-space:nowrap"><button class="btn sm gold" onclick="recordPayment(\''+s.id+'\')" title="Pay">💵</button> <button class="btn sm ok" onclick="triggerSMS(\''+s.id+'\')" title="Send SMS">📨</button> <button class="btn sm navy" onclick="triggerVoice(\''+s.id+'\')" title="Voice Call">🔊</button> '+(pc?'<a class="btn sm wa" style="text-decoration:none" target="_blank" href="'+waLink_+'">💬</a> ':'')+(pc?'<a class="btn sm ghost" style="text-decoration:none" href="tel:'+telLink(pc)+'">📞</a>':'')+'</td></tr>';
+    rows+='<tr><td><b>'+esc(s.admission_no||'—')+'</b></td><td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b></td><td>'+esc(s.parent_name||'—')+'<div style="font-size:10.5px;color:#64748b">'+esc(pc||'')+'</div></td><td style="text-align:right">'+fmtNum(r.charged)+'</td><td style="text-align:right;color:#047857">'+fmtNum(r.paid)+'</td><td style="text-align:right;font-weight:700;color:'+(r.bal>0?'#b91c1c':'#047857')+'">'+fmtNum(r.bal)+'</td><td>'+stBadge+'</td><td style="text-align:right;white-space:nowrap"><button class="btn sm gold" onclick="recordPayment(\''+s.id+'\')" title="Pay">💵</button> <button class="btn sm ok" onclick="triggerSMS(\''+s.id+'\')" title="Send SMS">📨</button> <button class="btn sm" onclick="triggerVoice(\''+s.id+'\')" title="Voice Call">🔊</button> '+(pc?'<a class="btn sm wa" style="text-decoration:none" target="_blank" href="'+waLink_+'">💬</a> ':'')+(pc?'<a class="btn sm ghost" style="text-decoration:none" href="tel:'+telLink(pc)+'">📞</a>':'')+'</td></tr>';
   });
   t.innerHTML='<div class="table-wrap"><table><thead><tr><th>ADM</th><th>Pupil</th><th>Parent</th><th style="text-align:right">Charged</th><th style="text-align:right">Paid</th><th style="text-align:right">Balance</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
@@ -844,7 +846,8 @@ async function pageContacts(root){
   const withPhone=rows.filter(r=>r.phone).length;
   root.innerHTML='<div class="page-head"><div><h1>📞 Parents Contacts</h1><div class="sub" id="ctSub">'+rows.length+' pupils · '+withPhone+' with phone</div></div><div style="display:flex;gap:8px;flex-wrap:wrap">'+
   '<button class="btn wa" onclick="copyContactNumbers()">📋 Copy Selected</button>'+
-  '<button class="btn ghost" onclick="downloadCSV()">📥 CSV</button>'+
+  '<button class="btn gold" onclick="downloadJukilaCSV()">📨 Jukila CSV</button>'+
+  '<button class="btn ghost" onclick="downloadCSV()">📥 Full CSV</button>'+
   '<button class="btn ghost" onclick="downloadVCF()">📇 vCard</button>'+
   '<button class="btn ghost" onclick="printContacts()">🖨️ Print</button></div></div>'+
   '<div class="grid grid-kpi" style="margin-bottom:14px"><div class="kpi kpi-navy"><div class="v">'+rows.length+'</div><div class="l">Pupils</div></div><div class="kpi kpi-ok"><div class="v">'+withPhone+'</div><div class="l">With Phone</div></div><div class="kpi kpi-bad"><div class="v">'+(rows.length-withPhone)+'</div><div class="l">Missing Phone</div></div></div>'+
@@ -928,6 +931,71 @@ function fallbackCopy(str, count){
   document.body.removeChild(ta);
 }
 
+/* ============================================================
+   JUKILA CSV EXPORT — matches: name,phone,language,nokPhone
+   ============================================================ */
+function downloadJukilaCSV(){
+  const list = window._contactsFiltered || window._contactsAll || [];
+  const withPhone = list.filter(r => r.phone && String(r.phone).trim() !== '');
+  
+  if(!withPhone.length){
+    toast('No contacts with phone numbers to export.', 'bad');
+    return;
+  }
+
+  const head = ['name','phone','language','nokPhone'];
+  const rows = [head.join(',')];
+  const seenPhones = new Set();
+
+  withPhone.forEach(r => {
+    const s = r.s;
+    // Contact name: parent name preferred, fallback to pupil
+    let contactName = '';
+    if (s.parent_name && String(s.parent_name).trim()) {
+      contactName = String(s.parent_name).trim();
+    } else {
+      contactName = 'Parent of ' + (s.first_name || '') + ' ' + (s.last_name || '');
+    }
+    contactName = contactName.replace(/[\r\n,;"]/g, ' ').replace(/\s+/g, ' ').trim();
+    if(!contactName) contactName = 'Parent';
+
+    // Phone: digits only, strip leading + (Jukila sample uses no +)
+    let phone = String(r.phone).replace(/[^0-9]/g, '');
+    if (!phone) return;
+    // De-duplicate by phone
+    if (seenPhones.has(phone)) return;
+    seenPhones.add(phone);
+
+    // Language: always English as requested
+    const language = 'English';
+    // nokPhone: optional, left empty
+    const nokPhone = '';
+
+    const safe = (v) => {
+      const str = String(v == null ? '' : v);
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return '"' + str.replace(/"/g, '""') + '"';
+      }
+      return str;
+    };
+
+    rows.push([safe(contactName), safe(phone), safe(language), safe(nokPhone)].join(','));
+  });
+
+  const blob = new Blob(['\ufeff' + rows.join('\r\n')], {type: 'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'jukila_contacts_' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  toast('✅ Jukila CSV downloaded (' + seenPhones.size + ' contacts, English)', 'ok');
+}
+window.downloadJukilaCSV = downloadJukilaCSV;
+
 function downloadCSV(){
   const list=window._contactsFiltered||window._contactsAll||[];
   if(!list.length){toast('Nothing to download','bad');return}
@@ -943,7 +1011,7 @@ function downloadCSV(){
     rows.push(row.join(','));
   });
   const blob=new Blob(['\ufeff'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'});
-  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='parents_'+new Date().toISOString().slice(0,10)+'.csv';
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='parents_full_'+new Date().toISOString().slice(0,10)+'.csv';
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
   toast('CSV downloaded ('+list.length+' rows)','ok');
 }
