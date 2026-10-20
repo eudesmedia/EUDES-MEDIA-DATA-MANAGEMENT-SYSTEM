@@ -3,104 +3,188 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
-<title>Progressive Mothers School</title>
+<meta name="theme-color" content="#0a2540"/>
+<title>Progressive Mothers School Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,-apple-system,sans-serif;background:#eef2f7;color:#0a2540;font-size:14px;line-height:1.5}
-input,select,button{font-family:inherit;font-size:14px}
-input,select{width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;color:#0a2540}
-input:focus,select:focus{outline:none;border-color:#0a2540;box-shadow:0 0 0 3px rgba(10,37,64,.1)}
-label{display:block;font-size:12px;color:#64748b;margin-bottom:5px;font-weight:600}
-button{cursor:pointer;border:none;background:none;color:inherit}
-.btn{background:#0a2540;color:#fff;padding:10px 16px;border-radius:999px;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:6px}
-.btn:hover{background:#1e3a5c}
-.btn.ghost{background:#fff;border:1.5px solid #e2e8f0;color:#0a2540}
-.btn.ok{background:#059669}
-.btn.bad{background:#dc2626}
-.btn.gold{background:#d4a017}
-.btn.wa{background:#25D366}
-.btn.sm{padding:6px 10px;font-size:11px}
+:root{--navy:#0a2540;--navy3:#1e3a5c;--gold:#d4a017;--bg:#eef2f7;--line:#e2e8f0;--line2:#eef1f6;--text:#0a2540;--text2:#334155;--muted:#64748b;--ok:#059669;--oksoft:#ecfdf5;--warn:#d97706;--warnsoft:#fffbeb;--bad:#dc2626;--badsoft:#fef2f2;--brandsoft:#e0e9f5;--radius:14px}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%;font-family:'Inter',system-ui,sans-serif}
+body{background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;transition:all .15s}
+input,select,textarea{font-family:inherit;width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid var(--line);background:#fff;color:var(--text);font-size:14px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 4px rgba(10,37,64,.1)}
+label{display:block;font-size:12.5px;color:var(--text2);margin-bottom:6px;font-weight:600}
+table{width:100%;border-collapse:collapse}
+th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line2);font-size:13.5px}
+th{color:#fff;font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;background:var(--navy)}
+tbody tr:hover{background:#f9fafb}
+h1{font-size:20px;font-weight:700;margin:0 0 4px;color:var(--navy)}
+h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
+.muted{color:var(--muted);font-size:12.5px}
+.topbar{position:fixed;top:0;left:0;right:0;height:48px;background:var(--navy);color:#fff;display:flex;align-items:center;padding:0 12px;z-index:100;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.topbar .title{flex:1;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase}
+.topbar .icon-btn{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:#fff;font-size:16px}
+.topbar .icon-btn:hover{background:rgba(255,255,255,.1)}
+#app{min-height:100vh;padding-top:48px;padding-bottom:90px;background:var(--bg);display:none}
+.container{max-width:1100px;margin:0 auto;padding:0 12px}
+.header-wrap{padding:12px}
+.header-card{background:linear-gradient(135deg,var(--navy),var(--navy3));color:#fff;border-radius:20px;padding:18px;box-shadow:0 8px 24px -8px rgba(10,37,64,.4)}
+.header-top{display:flex;justify-content:flex-end;gap:6px;margin-bottom:8px}
+.admin-chip{background:rgba(255,255,255,.15);color:#fff;font-size:10.5px;font-weight:700;padding:4px 12px;border-radius:999px;text-transform:uppercase;border:1px solid rgba(255,255,255,.2)}
+.exit-chip{background:#dc2626;color:#fff;font-size:10.5px;font-weight:700;padding:4px 12px;border-radius:999px;text-transform:uppercase;cursor:pointer}
+.header-school{display:flex;align-items:flex-start;gap:10px;font-size:16px;font-weight:800;margin-bottom:8px;text-transform:uppercase}
+.header-school .logo{width:44px;height:44px;border-radius:10px;background:var(--gold);display:grid;place-items:center;font-size:20px;flex-shrink:0;color:var(--navy);overflow:hidden}
+.header-school .logo img{width:100%;height:100%;object-fit:cover}
+.header-meta{font-size:12.5px;color:#cbd5e1;display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.header-meta .sep{opacity:.5}
+.header-datetime{font-size:12.5px;color:#cbd5e1;display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.header-periods{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.header-period{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:600;color:#fff}
+.header-period select{background:transparent;color:#fff;border:none;padding:0 4px;font-size:12px;font-weight:700;width:auto;cursor:pointer}
+.header-period select option{color:var(--navy)}
+.header-search{position:relative}
+.header-search input{background:#fff;border:none;border-radius:999px;padding:13px 20px 13px 46px;font-size:13.5px;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.header-search .si{position:absolute;left:18px;top:50%;transform:translateY(-50%);color:#94a3b8;pointer-events:none}
+.nav-pills{display:flex;gap:8px;padding:12px 0 4px;overflow-x:auto;scrollbar-width:none}
+.nav-pills::-webkit-scrollbar{display:none}
+.pill{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:9px 15px;border-radius:999px;background:#fff;color:var(--navy);font-size:12.5px;font-weight:600;border:1.5px solid var(--line);white-space:nowrap;cursor:pointer}
+.pill.active{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:700}
+.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.page-head .sub{color:var(--muted);font-size:13px;margin-top:3px}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:0 1px 3px rgba(15,23,42,.04);margin-bottom:14px}
+.grid{display:grid;gap:12px}
+.grid-kpi{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.grid-2{grid-template-columns:1fr 1fr}
+.grid-3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+@media(max-width:640px){.grid-2,.grid-3{grid-template-columns:1fr}.grid-kpi{grid-template-columns:1fr 1fr}}
+.kpi{background:#fff;border-radius:var(--radius);padding:18px 14px;box-shadow:0 2px 8px rgba(15,23,42,.05);border-top:3px solid var(--gold);text-align:center}
+.kpi .v{font-size:22px;font-weight:800;color:var(--navy);line-height:1.15;word-break:break-word}
+.kpi .l{color:var(--muted);font-size:11.5px;margin-top:6px;font-weight:500}
+.kpi.kpi-ok{border-top-color:var(--ok)}.kpi.kpi-ok .v{color:#065f46}
+.kpi.kpi-bad{border-top-color:var(--bad)}.kpi.kpi-bad .v{color:#7f1d1d}
+.kpi.kpi-warn{border-top-color:var(--warn)}.kpi.kpi-warn .v{color:#78350f}
+.kpi.kpi-navy{border-top-color:var(--navy)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge.ok{background:var(--oksoft);color:#047857;border:1px solid #a7f3d0}
+.badge.bad{background:var(--badsoft);color:#b91c1c;border:1px solid #fecaca}
+.badge.info{background:var(--brandsoft);color:var(--navy);border:1px solid #c7d2fe}
+.badge.warn{background:var(--warnsoft);color:#92400e;border:1px solid #fde68a}
+.badge.d1{background:#d1fae5;color:#065f46}
+.badge.d2{background:#a7f3d0;color:#047857}
+.badge.c3{background:#dbeafe;color:#1e40af}
+.badge.c4{background:#bfdbfe;color:#1e3a8a}
+.badge.c5{background:#fef3c7;color:#92400e}
+.badge.c6{background:#fed7aa;color:#9a3412}
+.badge.p7{background:#fecaca;color:#991b1b}
+.badge.p8{background:#fca5a5;color:#7f1d1d}
+.badge.f9{background:#dc2626;color:#fff}
+.btn{background:var(--navy);color:#fff;padding:10px 16px;border-radius:999px;font-weight:600;font-size:13px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn:hover{background:var(--navy3)}
 .btn:disabled{opacity:.5;cursor:not-allowed}
-.card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.h1{font-size:20px;font-weight:700;margin-bottom:4px}
-.sub{font-size:12.5px;color:#64748b}
-.grid{display:grid;gap:10px}
-.g2{grid-template-columns:1fr 1fr}
-.g3{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
-.g4{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
-@media(max-width:600px){.g2{grid-template-columns:1fr}}
-.kpi{background:#fff;border-radius:12px;padding:14px;border-top:3px solid #d4a017;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.kpi .v{font-size:18px;font-weight:800;color:#0a2540;line-height:1.2;word-break:break-word}
-.kpi .l{font-size:11px;color:#64748b;margin-top:4px}
-.kpi.ok{border-top-color:#059669}.kpi.ok .v{color:#065f46}
-.kpi.bad{border-top-color:#dc2626}.kpi.bad .v{color:#7f1d1d}
-.kpi.navy{border-top-color:#0a2540}
-.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:600}
-.badge.ok{background:#ecfdf5;color:#047857}
-.badge.bad{background:#fef2f2;color:#b91c1c}
-.badge.warn{background:#fffbeb;color:#92400e}
-.badge.info{background:#e0e9f5;color:#0a2540}
-table{width:100%;border-collapse:collapse;background:#fff}
-th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #eef1f6;font-size:12.5px}
-th{background:#0a2540;color:#fff;font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em}
-tr:hover{background:#f9fafb}
-.tbl-wrap{overflow-x:auto;border:1px solid #e2e8f0;border-radius:10px}
-.nav{display:flex;gap:6px;padding:10px 0;overflow-x:auto;scrollbar-width:none;margin-bottom:12px}
-.nav::-webkit-scrollbar{display:none}
-.nav button{flex:0 0 auto;padding:8px 14px;border-radius:999px;background:#fff;color:#0a2540;font-size:12px;font-weight:600;border:1.5px solid #e2e8f0}
-.nav button.active{background:#0a2540;color:#fff;border-color:#0a2540}
-.top{background:#0a2540;color:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
-.top .title{flex:1;font-size:13px;font-weight:700;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.top button{color:#fff;font-size:16px;padding:6px}
-.wrap{max-width:1100px;margin:0 auto;padding:12px}
-.header{background:linear-gradient(135deg,#0a2540,#1e3a5c);color:#fff;border-radius:16px;padding:16px;margin-bottom:12px}
-.header h2{font-size:16px;text-transform:uppercase;margin-bottom:6px}
-.header .meta{font-size:12px;color:#cbd5e1}
-.auth{position:fixed;inset:0;background:linear-gradient(135deg,#0a2540,#2c5282);display:flex;align-items:center;justify-content:center;padding:20px;z-index:500}
-.auth-card{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:400px}
-.auth-card h1{text-align:center;font-size:18px;margin-bottom:4px}
-.auth-card .sub{text-align:center;margin-bottom:20px}
-.err{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;padding:10px;border-radius:8px;margin-top:10px;font-size:12px}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0a2540;color:#fff;padding:10px 20px;border-radius:999px;z-index:1000;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
-.toast.ok{background:#065f46}.toast.bad{background:#7f1d1d}
-.mbg{position:fixed;inset:0;background:rgba(10,37,64,.6);display:flex;align-items:flex-end;justify-content:center;z-index:100;overflow:auto}
-@media(min-width:640px){.mbg{align-items:center;padding:16px}}
-.modal{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:700px;max-height:92vh;overflow:auto;padding:20px}
-@media(min-width:640px){.modal{border-radius:16px}}
-.modal h3{font-size:16px;margin-bottom:14px}
-.modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid #eef1f6;flex-wrap:wrap}
-.empty{text-align:center;padding:30px;color:#94a3b8}
-.mini{display:inline-block;padding:5px 10px;background:#f1f5f9;border-radius:6px;font-size:11px;font-weight:600;color:#0a2540;margin:2px}
-.hint{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 12px;font-size:11px;color:#92400e;margin-top:8px}
+.btn.ghost{background:#fff;border:1.5px solid var(--line);color:var(--navy)}
+.btn.ghost:hover{background:#f8fafc;border-color:var(--navy)}
+.btn.danger{background:var(--bad)}
+.btn.ok{background:var(--ok)}
+.btn.gold{background:var(--gold)}
+.btn.wa{background:#25D366;color:#fff}
+.btn.sm{padding:6px 12px;font-size:11.5px;border-radius:999px}
+.btn.block{width:100%}
+.table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--line);background:#fff;margin-bottom:6px}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 20px;border-radius:999px;z-index:1000;font-size:13px;font-weight:500;box-shadow:0 20px 40px -12px rgba(10,37,64,.5);max-width:90vw;text-align:center}
+.toast.bad{background:#7f1d1d}.toast.ok{background:#065f46}
+.auth-bg{position:fixed;inset:0;background:linear-gradient(135deg,var(--navy),#2c5282);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;overflow:auto}
+.auth-card{background:#fff;border-radius:20px;padding:30px 26px;width:100%;max-width:440px;box-shadow:0 40px 80px -20px rgba(0,0,0,.5);margin:auto}
+.auth-card .logo{width:66px;height:66px;border-radius:16px;background:linear-gradient(135deg,var(--navy),#2c5282);display:grid;place-items:center;color:var(--gold);font-weight:800;font-size:26px;margin:0 auto 14px;overflow:hidden}
+.auth-card .logo img{width:100%;height:100%;object-fit:cover}
+.auth-card h1{text-align:center;font-size:19px;margin:0 0 6px}
+.auth-card .sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:22px}
+.err{background:var(--badsoft);border:1px solid #fecaca;color:#b91c1c;padding:11px 14px;border-radius:10px;margin-top:14px;font-size:13px}
+.loading{padding:60px;text-align:center;color:var(--muted)}
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.modal-bg{position:fixed;inset:0;background:rgba(10,37,64,.6);display:flex;align-items:flex-end;justify-content:center;z-index:50;backdrop-filter:blur(2px)}
+@media(min-width:640px){.modal-bg{align-items:center;padding:16px}}
+.modal{background:#fff;border-radius:20px 20px 0 0;max-width:680px;width:100%;max-height:92vh;overflow:auto;padding:22px}
+@media(min-width:640px){.modal{border-radius:20px}}
+.modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--line2);flex-wrap:wrap}
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:8px 12px calc(8px + env(safe-area-inset-bottom));z-index:90;box-shadow:0 -4px 16px rgba(10,37,64,.08)}
+.bottom-bar-inner{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;max-width:1100px;margin:0 auto}
+.bottom-bar-inner::-webkit-scrollbar{display:none}
+.bottom-bar .pill{background:var(--navy);color:#fff;border-color:var(--navy);padding:9px 14px;font-size:12px}
+.bottom-bar .pill.active{background:var(--gold);border-color:var(--gold);color:#fff}
+.wa-float{position:fixed;bottom:96px;right:16px;background:#25D366;color:#fff;width:52px;height:52px;border-radius:50%;z-index:99;text-decoration:none;box-shadow:0 10px 20px rgba(0,0,0,.25);display:grid;place-items:center;font-size:22px}
+.mini-stat{display:inline-block;padding:6px 12px;background:#f1f5f9;border-radius:8px;font-size:12px;font-weight:600;color:var(--navy);margin:2px 4px 2px 0}
+.alert-item{display:flex;gap:10px;align-items:center;padding:12px;border-radius:10px;background:#fff;border-left:4px solid var(--gold);margin-bottom:8px;font-size:13px;box-shadow:0 1px 3px rgba(15,23,42,.04)}
+.alert-item.danger{border-left-color:var(--bad)}
+.alert-item.ok{border-left-color:var(--ok)}
+.alert-item.info{border-left-color:#2c5282}
+.alert-item .ico{font-size:20px}
+.alert-item .txt{flex:1}
+.alert-item .txt b{display:block;color:var(--navy)}
+.alert-item .txt span{color:var(--muted);font-size:12px;display:block}
+.profile-hero{background:linear-gradient(135deg,var(--navy),var(--navy3));color:#fff;border-radius:16px;padding:20px;margin-bottom:14px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.profile-hero .avatar{width:72px;height:72px;border-radius:50%;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-size:28px;font-weight:800;flex-shrink:0}
+.profile-hero .info{flex:1;min-width:200px}
+.profile-hero .info h1{color:#fff;font-size:20px;margin:0 0 4px}
+.profile-hero .info .meta{color:#cbd5e1;font-size:12.5px;line-height:1.7}
+.tabs-bar{display:flex;gap:6px;overflow-x:auto;padding:4px 0;border-bottom:2px solid var(--line);margin-bottom:14px;scrollbar-width:none}
+.tabs-bar::-webkit-scrollbar{display:none}
+.tabs-bar button{flex:0 0 auto;padding:9px 14px;font-size:12.5px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px}
+.tabs-bar button.active{color:var(--navy);border-bottom-color:var(--gold)}
+.marks-input{width:70px;padding:6px;text-align:center;border:2px solid var(--line);border-radius:8px;font-weight:700}
+.marks-input:focus{border-color:var(--navy);background:#f8fafc}
+@media print{.no-print{display:none!important}.container{padding:0;max-width:none}}
 </style>
 </head>
 <body>
 
-<div class="auth" id="authScreen">
+<a href="https://wa.me/254757208077" target="_blank" class="wa-float no-print">💬</a>
+
+<div class="auth-bg" id="authScreen">
   <div class="auth-card">
+    <div class="logo" id="authLogo">P</div>
     <h1>Progressive Mothers School</h1>
     <div class="sub">Powered by Eudes Media</div>
-    <div style="margin-bottom:12px"><label>Email</label><input id="loginEmail" type="email" placeholder="you@example.com"></div>
-    <div style="margin-bottom:12px"><label>Password</label><input id="loginPass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <div id="loginErr" class="err" style="display:none"></div>
-    <button class="btn" style="width:100%;justify-content:center;padding:12px;margin-top:14px" id="loginBtn" onclick="doLogin()">Sign In</button>
+    <div id="loginForm">
+      <div><label>Email</label><input id="loginEmail" type="email" placeholder="you@example.com"></div>
+      <div style="margin-top:12px"><label>Password</label><input id="loginPass" type="password" placeholder="••••••••"></div>
+      <div id="loginErr" class="err" style="display:none"></div>
+      <button class="btn block" id="loginBtn" style="padding:13px;margin-top:18px" onclick="doLogin()">Sign In</button>
+    </div>
   </div>
 </div>
 
-<div id="app" style="display:none">
-  <div class="top">
-    <button onclick="doLogout()">⎋</button>
-    <div class="title" id="topTitle">SCHOOL</div>
-    <button onclick="nav('settings')">⚙️</button>
+<div id="app">
+  <div class="topbar no-print">
+    <button class="icon-btn" onclick="doLogout()">⎋</button>
+    <div class="title" id="topbarTitle">SCHOOL</div>
+    <button class="icon-btn" onclick="nav('settings')">⚙️</button>
   </div>
-  <div class="wrap">
-    <div class="header">
-      <h2 id="hdrName">SCHOOL</h2>
-      <div class="meta" id="hdrMeta">—</div>
+  <div class="header-wrap no-print">
+    <div class="header-card">
+      <div class="header-top">
+        <span class="admin-chip" id="roleChip">ADMIN</span>
+        <button class="exit-chip" onclick="doLogout()">Exit</button>
+      </div>
+      <div class="header-school">
+        <div class="logo" id="headerLogo">🏛️</div>
+        <div class="name" id="headerSchoolName">SCHOOL NAME</div>
+      </div>
+      <div class="header-meta" id="headerMeta">—</div>
+      <div class="header-datetime"><span id="headerDate">📅 —</span><span class="sep">·</span><span id="headerTime">🕐 —</span></div>
+      <div class="header-periods">
+        <span class="header-period">📅 <select id="termYearSelect" onchange="changePeriod()"></select></span>
+        <span class="header-period">📆 <select id="termTermSelect" onchange="changePeriod()"><option value="1">Term 1</option><option value="2">Term 2</option><option value="3">Term 3</option></select></span>
+      </div>
+      <div class="header-search"><span class="si">🔍</span><input id="globalSearch" placeholder="Search pupils..." onkeydown="if(event.key==='Enter')doGlobalSearch()"></div>
     </div>
-    <div class="nav" id="navBar"></div>
-    <div id="main"></div>
   </div>
+  <div class="container">
+    <div class="nav-pills no-print" id="nav"></div>
+    <main id="main"></main>
+  </div>
+  <div class="bottom-bar no-print"><div class="bottom-bar-inner" id="bottomBar"></div></div>
 </div>
 
 <div id="modalRoot"></div>
@@ -108,1233 +192,728 @@ tr:hover{background:#f9fafb}
 
 <script>
 /* ============================================================
-   CONFIG — REPLACE THIS LINE
+   Progressive Mothers School Management — Complete v13
+   Auto token refresh + enum detection + everything
    ============================================================ */
 const SUPA_URL='https://wabeempxckdtjvrkzhpv.supabase.co';
-const SUPA_KEY='PASTE_YOUR_ANON_KEY_HERE';
+const SUPA_KEY='sb_publishable_n0uAm0Gcq7qR2dJM4jMZGQ_wiV__Cfp'; /* ⚠️ REPLACE with eyJ... anon key */
+
+let _mem={};
+function lsGet(k){try{if(typeof localStorage!=='undefined'&&localStorage)return localStorage.getItem(k);}catch(e){}return _mem[k]!==undefined?_mem[k]:null;}
+function lsSet(k,v){try{if(typeof localStorage!=='undefined'&&localStorage){localStorage.setItem(k,v);return;}}catch(e){}_mem[k]=String(v);}
+function lsDel(k){try{if(typeof localStorage!=='undefined'&&localStorage){localStorage.removeItem(k);return;}}catch(e){}delete _mem[k];}
+
+function getYear(){return parseInt(lsGet('pm_year'))||new Date().getFullYear();}
+function getTerm(){return parseInt(lsGet('pm_term'))||1;}
+function setPeriod(y,t){lsSet('pm_year',String(y));lsSet('pm_term',String(t));}
+
+let _session=null;
+function getToken(){return _session?_session.access_token:null;}
+function getUser(){return _session?_session.user:null;}
+function setSession(d){_session=d;if(d)lsSet('pm_session',JSON.stringify(d));else lsDel('pm_session');}
 
 /* ============================================================
-   STATE
+   TOKEN AUTO-REFRESH
    ============================================================ */
-let _sess=null,_prof=null,_school=null,_schoolId=null,_classes=[],_students=[];
-let _route='dashboard';
-
-/* ============================================================
-   STORAGE
-   ============================================================ */
-const store={
-  get:(k)=>{try{return localStorage.getItem(k)}catch(e){return null}},
-  set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},
-  del:(k)=>{try{localStorage.removeItem(k)}catch(e){}}
-};
-
-/* ============================================================
-   HELPERS
-   ============================================================ */
-function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function ugx(n){if(n==null||isNaN(n))return'UGX 0';return'UGX '+(Number(n)||0).toLocaleString()}
-function num(n){if(n==null||isNaN(n))return'0';return(Number(n)||0).toLocaleString()}
-function dt(ts){if(!ts)return'—';const d=new Date(ts);return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()}
-function gender(g){if(!g)return'—';const x=String(g).toLowerCase();if(x==='m'||x==='male')return'Male';if(x==='f'||x==='female')return'Female';return'—'}
-function isBoard(v){if(!v)return false;const x=String(v).toLowerCase();return x==='boarding'||x==='boarder'}
-function tel(p){if(!p)return'';return String(p).replace(/[^0-9+]/g,'')}
-function wa(p){if(!p)return'';let c=String(p).replace(/[^0-9]/g,'');if(c.startsWith('0'))c='256'+c.slice(1);return c}
-
-function toast(msg,type){
-  const el=document.createElement('div');
-  el.className='toast'+(type==='bad'?' bad':(type==='ok'?' ok':''));
-  el.textContent=msg;
-  document.getElementById('toastRoot').appendChild(el);
-  setTimeout(()=>el.remove(),3500);
+let _refreshing=null;
+async function refreshSession(){
+  if(!_session||!_session.refresh_token)throw new Error('No refresh token');
+  if(_refreshing)return _refreshing;
+  _refreshing=(async()=>{
+    try{
+      const res=await fetch(SUPA_URL+'/auth/v1/token?grant_type=refresh_token',{
+        method:'POST',
+        headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
+        body:JSON.stringify({refresh_token:_session.refresh_token})
+      });
+      const text=await res.text();
+      let data=null;try{data=text?JSON.parse(text):null;}catch(e){}
+      if(!res.ok||!data||!data.access_token){
+        throw new Error((data&&(data.error_description||data.msg||data.error))||'Refresh failed');
+      }
+      setSession({
+        access_token:data.access_token,
+        refresh_token:data.refresh_token||_session.refresh_token,
+        user:data.user||_session.user
+      });
+      return true;
+    }finally{
+      _refreshing=null;
+    }
+  })();
+  return _refreshing;
 }
-function modal(html){
-  const r=document.getElementById('modalRoot');
-  r.innerHTML='<div class="mbg"><div class="modal">'+html+'</div></div>';
-  r.querySelector('.mbg').addEventListener('click',e=>{if(e.target.classList.contains('mbg'))closeModal()});
-}
-function closeModal(){document.getElementById('modalRoot').innerHTML=''}
+window.refreshSession=refreshSession;
 
-/* ============================================================
-   API
-   ============================================================ */
-function getToken(){return _sess?_sess.access_token:null}
-async function api(path,opt){
-  opt=opt||{};
-  const h=Object.assign({'apikey':SUPA_KEY,'Content-Type':'application/json'},opt.headers||{});
-  h['Authorization']='Bearer '+(getToken()||SUPA_KEY);
-  const res=await fetch(SUPA_URL+path,Object.assign({},opt,{headers:h}));
-  const txt=await res.text();
-  let data=null;try{data=txt?JSON.parse(txt):null}catch(e){data=txt}
+async function rest(path,options){
+  options=options||{};
+  const buildHeaders=()=>{
+    const h=Object.assign({'apikey':SUPA_KEY,'Content-Type':'application/json'},options.headers||{});
+    const t=getToken();h['Authorization']='Bearer '+(t||SUPA_KEY);
+    return h;
+  };
+  let res=await fetch(SUPA_URL+path,Object.assign({},options,{headers:buildHeaders()}));
+  let text=await res.text();
+
+  /* Auto-refresh on 401 and retry once */
+  if(res.status===401&&_session&&_session.refresh_token){
+    try{
+      await refreshSession();
+      res=await fetch(SUPA_URL+path,Object.assign({},options,{headers:buildHeaders()}));
+      text=await res.text();
+    }catch(e){
+      setSession(null);
+      document.getElementById('app').style.display='none';
+      document.getElementById('authScreen').style.display='flex';
+      const errEl=document.getElementById('loginErr');
+      if(errEl){errEl.textContent='Session expired. Please sign in again.';errEl.style.display='block';}
+      throw new Error('Session expired — please sign in again');
+    }
+  }
+
+  let data=null;try{data=text?JSON.parse(text):null;}catch(e){data=text;}
   if(!res.ok){
-    const msg=(data&&(data.message||data.msg||data.error_description||data.error))||txt||('HTTP '+res.status);
-    throw new Error(msg);
+    throw new Error((data&&(data.message||data.msg||data.error_description||data.error||data.hint))||text||('HTTP '+res.status));
   }
   return data;
 }
+async function auth(path,body){
+  const res=await fetch(SUPA_URL+path,{method:'POST',headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const text=await res.text();let data=null;try{data=text?JSON.parse(text):null;}catch(e){data=text;}
+  if(!res.ok)throw new Error((data&&(data.message||data.msg||data.error_description||data.error))||text||('HTTP '+res.status));
+  return data;
+}
 
-/* ============================================================
-   AUTH
-   ============================================================ */
+let _profile=null,_school=null,_schoolId=null,_role=null,_classesCache=null,_examsCache=null;
+let _marksClass=null,_marksExam=null,_subjClass=null;
+let _profileStudentId=null,_profileTab='overview';
+let _cachedStudents=[],_cachedPayments=[],_cachedPassOuts=[],_cachedPOStudents=[];
+let _passOutLookup={};
+
+/* ENUM AUTO-DETECTION */
+let _enumPaymentMethod=[];
+let _enumPaymentProvider=[];
+let _enumAttendanceStatus=['present','absent','late','excused'];
+
+async function detectEnums(){
+  try{
+    const r=await rest('/rest/v1/rpc/get_enum_values',{method:'POST',body:JSON.stringify({p_type:'payment_method'})});
+    if(Array.isArray(r)&&r.length){_enumPaymentMethod=r.map(x=>x.enumlabel||x);}
+  }catch(e){}
+  if(!_enumPaymentMethod.length){
+    try{
+      const r=await rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=method&limit=100');
+      const set=new Set();(r||[]).forEach(x=>{if(x.method)set.add(x.method);});
+      _enumPaymentMethod=[...set];
+    }catch(e){}
+  }
+  if(!_enumPaymentMethod.length){_enumPaymentMethod=['Cash','Mobile Money','Bank','Cheque','Bank Transfer'];}
+  try{
+    const r=await rest('/rest/v1/rpc/get_enum_values',{method:'POST',body:JSON.stringify({p_type:'payment_provider'})});
+    if(Array.isArray(r)&&r.length){_enumPaymentProvider=r.map(x=>x.enumlabel||x);}
+  }catch(e){}
+  if(!_enumPaymentProvider.length)_enumPaymentProvider=['MTN','Airtel','Other'];
+  try{
+    const r=await rest('/rest/v1/rpc/get_enum_values',{method:'POST',body:JSON.stringify({p_type:'attendance_status'})});
+    if(Array.isArray(r)&&r.length){_enumAttendanceStatus=r.map(x=>x.enumlabel||x);}
+  }catch(e){}
+}
+
+function matchEnum(input,list){
+  if(!list||!list.length)return input;
+  const raw=String(input||'').trim();
+  if(!raw)return list[0];
+  if(list.includes(raw))return raw;
+  const lower=raw.toLowerCase();
+  const l2=list.find(x=>String(x).toLowerCase()===lower);
+  if(l2)return l2;
+  const underscored=lower.replace(/\s+/g,'_');
+  const l3=list.find(x=>String(x).toLowerCase().replace(/\s+/g,'_')===underscored);
+  if(l3)return l3;
+  const noSpace=lower.replace(/[\s_-]+/g,'');
+  const l4=list.find(x=>String(x).toLowerCase().replace(/[\s_-]+/g,'')===noSpace);
+  if(l4)return l4;
+  const noHyphen=lower.replace(/[\s_]/g,'_');
+  const l5=list.find(x=>String(x).toLowerCase().replace(/[\s]/g,'_')===noHyphen);
+  if(l5)return l5;
+  return list[0];
+}
+
+function toast(msg,type){const el=document.createElement('div');el.className='toast'+(type==='bad'?' bad':(type==='ok'?' ok':''));el.textContent=msg;document.getElementById('toastRoot').appendChild(el);setTimeout(()=>el.remove(),3500);}
+function modal(html){const r=document.getElementById('modalRoot');r.innerHTML='<div class="modal-bg"><div class="modal">'+html+'</div></div>';r.querySelector('.modal-bg').addEventListener('click',e=>{if(e.target.classList.contains('modal-bg'))closeModal();});}
+function closeModal(){document.getElementById('modalRoot').innerHTML='';}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function fmtUGX(n){if(n==null||isNaN(n))return 'UGX 0';return 'UGX '+(Number(n)||0).toLocaleString();}
+function fmtNum(n){if(n==null||isNaN(n))return '0';return (Number(n)||0).toLocaleString();}
+function fmtDate(ts){if(!ts)return '—';const d=new Date(ts);return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();}
+function fmtLongDate(d){return d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});}
+function fmtDateTime(ts){if(!ts)return '—';const d=new Date(ts);return fmtDate(ts)+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+function telLink(num){if(!num)return '';return String(num).replace(/[^0-9+]/g,'');}
+function waLink(num){if(!num)return '';let c=String(num).replace(/[^0-9]/g,'');if(c.startsWith('0'))c='256'+c.slice(1);return c;}
+function genderLabel(g){return g==='M'?'Male':(g==='F'?'Female':'—');}
+function gradeOf(score){if(score==null||isNaN(score))return{g:'—',r:'—',cls:''};const s=Number(score);if(s>=90)return{g:'D1',r:'Distinction 1',cls:'d1'};if(s>=80)return{g:'D2',r:'Distinction 2',cls:'d2'};if(s>=70)return{g:'C3',r:'Credit 3',cls:'c3'};if(s>=60)return{g:'C4',r:'Credit 4',cls:'c4'};if(s>=55)return{g:'C5',r:'Credit 5',cls:'c5'};if(s>=50)return{g:'C6',r:'Credit 6',cls:'c6'};if(s>=45)return{g:'P7',r:'Pass 7',cls:'p7'};if(s>=40)return{g:'P8',r:'Pass 8',cls:'p8'};return{g:'F9',r:'Fail 9',cls:'f9'};}
+
+function printSection(title,tableHTML){
+  const w=window.open('','_blank');
+  if(!w){toast('Allow popups','bad');return;}
+  const logo=_school&&(_school.logo_url||_school.logo_data);
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>'+esc(title)+'</title><style>'+
+    '*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;padding:20px;margin:0;font-size:13px}'+
+    '.letterhead{display:flex;align-items:center;gap:16px;padding-bottom:14px;border-bottom:2px solid #0a2540;margin-bottom:18px}'+
+    '.letterhead img{width:70px;height:70px;object-fit:contain;flex-shrink:0}'+
+    '.letterhead h1{font-size:18px;margin:0 0 4px;text-transform:uppercase;color:#0a2540}'+
+    '.letterhead .meta{font-size:11.5px;color:#555}'+
+    '.doc-title{text-align:center;font-size:14px;font-weight:700;text-transform:uppercase;color:#0a2540;margin:14px 0 6px}'+
+    '.doc-stamp{text-align:center;font-size:11px;color:#666;margin-bottom:14px}'+
+    'table{width:100%;border-collapse:collapse;margin-top:10px}'+
+    'th,td{padding:7px 9px;border:1px solid #ccc;font-size:11.5px;text-align:left}'+
+    'th{background:#0a2540;color:#fff;text-transform:uppercase;font-size:10px}'+
+    'tbody tr:nth-child(even){background:#f8fafc}'+
+    '.footer{text-align:center;font-size:10px;color:#888;margin-top:24px;padding-top:10px;border-top:1px solid #eee}'+
+    '@page{margin:10mm;size:A4 landscape}@media print{body{padding:0}}'+
+    '</style></head><body>'+
+    '<div class="letterhead">'+(logo?'<img src="'+esc(logo)+'">':'')+
+      '<div><h1>'+esc(_school?.name||'')+'</h1><div class="meta">'+esc(_school?.address||'')+(_school?.telephone?' · '+esc(_school.telephone):'')+'</div></div></div>'+
+    '<div class="doc-title">'+esc(title)+'</div>'+
+    '<div class="doc-stamp">Generated: '+new Date().toLocaleString()+'</div>'+
+    tableHTML+
+    '<div class="footer">Powered by EUDES MEDIA</div>'+
+    '<script>setTimeout(()=>window.print(),400);<\/script></body></html>');
+  w.document.close();
+}
+window.toast=toast;window.modal=modal;window.closeModal=closeModal;window.esc=esc;
+
+/* AUTH */
 async function doLogin(){
   const email=document.getElementById('loginEmail').value.trim().toLowerCase();
   const pass=document.getElementById('loginPass').value;
   const err=document.getElementById('loginErr');
   const btn=document.getElementById('loginBtn');
   err.style.display='none';
-  if(!email||!pass){err.textContent='Enter email and password';err.style.display='block';return}
+  if(!email||!pass){err.textContent='Enter email and password';err.style.display='block';return;}
   btn.disabled=true;btn.textContent='Signing in…';
   try{
-    const res=await fetch(SUPA_URL+'/auth/v1/token?grant_type=password',{
-      method:'POST',headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({email,password:pass})
-    });
-    const txt=await res.text();
-    const data=txt?JSON.parse(txt):null;
-    if(!res.ok)throw new Error((data&&(data.error_description||data.msg||data.error))||'Login failed');
-    _sess={access_token:data.access_token,refresh_token:data.refresh_token,user:data.user};
-    store.set('pm_sess',JSON.stringify(_sess));
+    const data=await auth('/auth/v1/token?grant_type=password',{email,password:pass});
+    setSession({access_token:data.access_token,refresh_token:data.refresh_token,user:data.user});
     await boot();
-  }catch(e){
-    err.textContent=e.message||String(e);
-    err.style.display='block';
-  }
+  }catch(e){err.textContent=e.message;err.style.display='block';}
   btn.disabled=false;btn.textContent='Sign In';
 }
+window.doLogin=doLogin;
 
 async function doLogout(){
   if(!confirm('Sign out?'))return;
-  try{
-    const t=getToken();
-    if(t)await fetch(SUPA_URL+'/auth/v1/logout',{method:'POST',headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+t}});
-  }catch(e){}
-  _sess=null;_prof=null;_school=null;_schoolId=null;
-  store.del('pm_sess');
+  try{const t=getToken();if(t)await fetch(SUPA_URL+'/auth/v1/logout',{method:'POST',headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+t}});}catch(e){}
+  setSession(null);_profile=null;_school=null;_schoolId=null;_classesCache=null;
   document.getElementById('app').style.display='none';
   document.getElementById('authScreen').style.display='flex';
 }
+window.doLogout=doLogout;
 
 async function boot(){
-  if(!_sess||!_sess.user){document.getElementById('authScreen').style.display='flex';return}
+  const user=getUser(),token=getToken();
+  if(!user||!token){document.getElementById('authScreen').style.display='flex';document.getElementById('app').style.display='none';return;}
   const errEl=document.getElementById('loginErr');
-  try{
-    const p=await api('/rest/v1/profiles?id=eq.'+_sess.user.id+'&select=*');
-    _prof=p&&p[0];
-  }catch(e){errEl.textContent='Profile error: '+e.message;errEl.style.display='block';return}
-  if(!_prof){errEl.textContent='Profile not found.';errEl.style.display='block';return}
-  _schoolId=_prof.school_id;
-  if(!_schoolId){errEl.textContent='No school linked.';errEl.style.display='block';return}
-  try{
-    const sc=await api('/rest/v1/schools?id=eq.'+_schoolId+'&select=*');
-    _school=sc&&sc[0];
-  }catch(e){}
-  if(!_school){errEl.textContent='School not found.';errEl.style.display='block';return}
+  try{const p=await rest('/rest/v1/profiles?id=eq.'+user.id+'&select=*');_profile=p&&p[0];}
+  catch(e){errEl.textContent='Profile error: '+e.message;errEl.style.display='block';return;}
+  if(!_profile){errEl.textContent='Profile not found.';errEl.style.display='block';return;}
+  _schoolId=_profile.school_id;_role=_profile.role;
+  if(!_schoolId){errEl.innerHTML='Account not linked to a school.';errEl.style.display='block';return;}
+  try{const sc=await rest('/rest/v1/schools?id=eq.'+_schoolId+'&select=*');_school=sc&&sc[0];}catch(e){}
+  if(!_school){errEl.textContent='School not found.';errEl.style.display='block';return;}
+  if(_school.current_year)setPeriod(_school.current_year,_school.current_term||1);
+  await detectEnums();
   document.getElementById('authScreen').style.display='none';
   document.getElementById('app').style.display='block';
-  document.getElementById('hdrName').textContent=_school.name||'SCHOOL';
-  document.getElementById('topTitle').textContent=_school.name||'SCHOOL';
-  const meta=[];
-  if(_school.address)meta.push('📍 '+_school.address);
-  if(_school.telephone)meta.push('📞 '+_school.telephone);
-  document.getElementById('hdrMeta').textContent=meta.length?meta.join(' · '):'—';
-  renderNav();
+  populateTermSelector();renderHeader();renderAuthLogo();renderNav();renderBottomBar();tickClock();
+  setInterval(tickClock,30000);
   await nav('dashboard');
 }
+window.boot=boot;
 
-/* ============================================================
-   NAV
-   ============================================================ */
-const ROUTES=[
-  {id:'dashboard',label:'📊 Dashboard'},
-  {id:'students',label:'🎓 Students'},
-  {id:'payments',label:'💳 Payments'},
-  {id:'reminders',label:'📨 Reminders'},
-  {id:'contacts',label:'📞 Parents'},
-  {id:'settings',label:'⚙️ Settings'}
-];
+function renderAuthLogo(){const el=document.getElementById('authLogo');if(!el)return;const src=_school&&(_school.logo_data||_school.logo_url);if(src){el.innerHTML='<img src="'+esc(src)+'">';el.style.background='#fff';}else{el.innerHTML='P';el.style.background='';}}
+function tickClock(){const now=new Date();const d=document.getElementById('headerDate');const t=document.getElementById('headerTime');if(d)d.textContent='📅 '+fmtLongDate(now);if(t)t.textContent='🕐 '+now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
 
-function renderNav(){
-  document.getElementById('navBar').innerHTML=ROUTES.map(r=>
-    '<button class="'+(r.id===_route?'active':'')+'" onclick="nav(\''+r.id+'\')">'+r.label+'</button>'
-  ).join('');
+function renderHeader(){
+  const nameEl=document.getElementById('headerSchoolName');
+  const metaEl=document.getElementById('headerMeta');
+  const roleEl=document.getElementById('roleChip');
+  const titleEl=document.getElementById('topbarTitle');
+  if(!_school)return;
+  nameEl.textContent=_school.name||'SCHOOL';
+  const parts=[];
+  if(_school.address)parts.push('📍 '+esc(_school.address));
+  if(_school.telephone)parts.push('📞 '+esc(_school.telephone));
+  metaEl.innerHTML=parts.length?parts.join('<span class="sep">·</span>'):'—';
+  if(_role)roleEl.textContent=String(_role).replace(/_/g,' ').toUpperCase();
+  titleEl.textContent=_school.name||'SCHOOL';
+  const logoEl=document.getElementById('headerLogo');
+  if(logoEl){const src=_school.logo_data||_school.logo_url||'';if(src){logoEl.innerHTML='<img src="'+esc(src)+'">';logoEl.style.background='#fff';logoEl.style.padding='2px';}else{logoEl.innerHTML='🏛️';logoEl.style.background='';logoEl.style.padding='';}}
+}
+window.renderHeader=renderHeader;
+
+function populateTermSelector(){
+  const ySel=document.getElementById('termYearSelect');const tSel=document.getElementById('termTermSelect');if(!ySel||!tSel)return;
+  const cy=getYear(),ct=getTerm();const currentYear=new Date().getFullYear();
+  const years=[];for(let y=currentYear-2;y<=currentYear+1;y++)years.push(y);
+  if(!years.includes(cy))years.push(cy);years.sort((a,b)=>b-a);
+  ySel.innerHTML=years.map(y=>'<option value="'+y+'"'+(y===cy?' selected':'')+'>'+y+'</option>').join('');
+  tSel.value=ct;
+}
+async function changePeriod(){
+  const y=parseInt(document.getElementById('termYearSelect').value);
+  const t=parseInt(document.getElementById('termTermSelect').value);
+  setPeriod(y,t);
+  try{await rest('/rest/v1/schools?id=eq.'+_schoolId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({current_year:y,current_term:t})});_school.current_year=y;_school.current_term=t;}catch(e){}
+  toast('Switched to '+y+' Term '+t,'ok');nav(activeRoute);
+}
+window.changePeriod=changePeriod;
+
+async function loadClasses(){
+  if(_classesCache)return _classesCache;
+  _classesCache=await rest('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=id,name,level,sort_order&order=sort_order')||[];
+  return _classesCache;
+}
+function clearClassesCache(){_classesCache=null;}
+async function loadSubjectsForClass(classId){
+  if(!classId)return [];
+  const rows=await rest('/rest/v1/class_subjects?school_id=eq.'+_schoolId+'&class_id=eq.'+classId+'&select=subject_id,subjects:subject_id(id,code,name,is_compulsory)')||[];
+  return rows.map(r=>({subject_id:r.subject_id,code:r.subjects?.code||'',name:r.subjects?.name||'',graded:r.subjects?.is_compulsory!==false}));
+}
+async function loadExams(){
+  if(_examsCache)return _examsCache;
+  _examsCache=await rest('/rest/v1/exams?school_id=eq.'+_schoolId+'&select=*&order=stage')||[];
+  return _examsCache;
+}
+
+const ROUTES={
+  dashboard:{label:'Dashboard',icon:'📊',render:pageDashboard,bottom:true},
+  students:{label:'Students',icon:'🎓',render:pageStudents,bottom:true},
+  student_profile:{label:'Profile',icon:'👤',render:pageProfile},
+  fees:{label:'Fees',icon:'💰',render:pageFees,bottom:true},
+  payments:{label:'Payments',icon:'💳',render:pagePayments},
+  promises:{label:'Promises',icon:'🔔',render:pagePromises},
+  debtors:{label:'Debtors',icon:'👥',render:pageDebtors},
+  missing:{label:'Missing',icon:'⚠️',render:pageMissing},
+  passouts:{label:'Pass Outs',icon:'🚪',render:pagePassOuts,bottom:true},
+  attendance:{label:'Attendance',icon:'📅',render:pageAttendance,bottom:true},
+  marks:{label:'Marks',icon:'✍️',render:pageMarks,bottom:true},
+  reports:{label:'Reports',icon:'📄',render:pageReports,bottom:true},
+  classes:{label:'Classes',icon:'🏫',render:pageClasses},
+  subjects:{label:'Subjects',icon:'📚',render:pageSubjects},
+  exams:{label:'Exams',icon:'📝',render:pageExams},
+  staff:{label:'Staff',icon:'👨‍🏫',render:pageStaff},
+  staff_att:{label:'Staff Att.',icon:'⏰',render:pageStaffAttendance},
+  payroll:{label:'Payroll',icon:'💼',render:pagePayroll},
+  uniforms:{label:'Uniforms',icon:'👕',render:pageUniforms},
+  expenses:{label:'Expenses',icon:'💸',render:pageExpenses},
+  settings:{label:'Settings',icon:'⚙️',render:pageSettings}
+};
+let activeRoute='dashboard';
+
+async function nav(route){
+  if(!ROUTES[route])return;
+  activeRoute=route;renderNav();renderBottomBar();
+  const main=document.getElementById('main');main.innerHTML='<div class="loading">Loading…</div>';
+  window.scrollTo({top:0,behavior:'smooth'});
+  try{await ROUTES[route].render(main);}
+  catch(e){console.error(e);main.innerHTML='<div class="card"><h3>Error</h3><p class="muted">'+esc(e.message)+'</p><button class="btn ghost" onclick="nav(\''+route+'\')">Retry</button></div>';}
 }
 window.nav=nav;
-async function nav(route){
-  _route=route;
-  renderNav();
-  const m=document.getElementById('main');
-  m.innerHTML='<div class="card empty">Loading…</div>';
-  try{
-    if(route==='dashboard')await pageDashboard(m);
-    else if(route==='students')await pageStudents(m);
-    else if(route==='payments')await pagePayments(m);
-    else if(route==='reminders')await pageReminders(m);
-    else if(route==='contacts')await pageContacts(m);
-    else if(route==='settings')await pageSettings(m);
-  }catch(e){
-    console.error('Route error:',e);
-    m.innerHTML='<div class="card"><h3 class="h1">⚠️ Error</h3><div class="sub">'+esc(e.message||String(e))+'</div><button class="btn" style="margin-top:12px" onclick="nav(\''+route+'\')">Retry</button></div>';
-  }
-}
-
-/* ============================================================
-   LOAD HELPERS
-   ============================================================ */
-async function loadClasses(){
-  if(_classes.length)return _classes;
-  _classes=await api('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=id,name,level,sort_order&order=sort_order')||[];
-  return _classes;
-}
-function clearClassCache(){_classes=[]}
-
-async function loadStudents(){
-  _students=await api('/rest/v1/students?school_id=eq.'+_schoolId+'&select=*&order=admission_no')||[];
-  return _students;
-}
+function renderNav(){const entries=Object.entries(ROUTES).filter(([k])=>k!=='student_profile');document.getElementById('nav').innerHTML=entries.map(([k,r])=>'<button class="pill'+(k===activeRoute?' active':'')+'" onclick="nav(\''+k+'\')"><span>'+r.icon+'</span><span>'+esc(r.label)+'</span></button>').join('');}
+function renderBottomBar(){const entries=Object.entries(ROUTES).filter(([k,r])=>r.bottom&&k!=='student_profile');document.getElementById('bottomBar').innerHTML=entries.map(([k,r])=>'<button class="pill'+(k===activeRoute?' active':'')+'" onclick="nav(\''+k+'\')"><span>'+r.icon+'</span><span>'+esc(r.label)+'</span></button>').join('');}
+function doGlobalSearch(){const v=document.getElementById('globalSearch').value.trim();if(!v)return;window._stFilterSearch=v;nav('students');}
+window.doGlobalSearch=doGlobalSearch;
 
 /* ============================================================
    DASHBOARD
    ============================================================ */
 async function pageDashboard(root){
-  const students=await loadStudents();
-  const active=students.filter(s=>s.status!=='inactive');
-  let tc=0,tp=0,debt=0;
-  active.forEach(s=>{
-    const c=Number(s.total_charged)||0,p=Number(s.total_paid)||0;
-    tc+=c;tp+=p;if(c-p>0)debt++;
-  });
-  const bal=tc-tp;
+  const cy=getYear(),ct=getTerm(),today=new Date().toISOString().slice(0,10);
+  const results=await Promise.all([
+    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=*').catch(()=>[]),
+    rest('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=id,name').catch(()=>[]),
+    rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=amount,paid_at').catch(()=>[]),
+    rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&status=eq.out&select=id').catch(()=>[]),
+    rest('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=id').catch(()=>[])
+  ]);
+  const students=results[0],classes=results[1],payments=results[2],passOuts=results[3],staff=results[4];
+  _cachedStudents=students;
+  const active=students.filter(s=>s.status==='active'||!s.status);
+  let tC=0,tP=0,debtors=0;
+  active.forEach(s=>{const c=Number(s.total_charged)||0;const p=Number(s.total_paid)||0;tC+=c;tP+=p;if(c-p>0)debtors++;});
+  const todayColl=payments.filter(p=>(p.paid_at||'').slice(0,10)===today).reduce((s,p)=>s+Number(p.amount),0);
   root.innerHTML=
-    '<div class="grid g4" style="margin-bottom:12px">'+
-    '<div class="kpi navy"><div class="v">'+active.length+'</div><div class="l">Active Pupils</div></div>'+
-    '<div class="kpi ok"><div class="v">'+ugx(tp)+'</div><div class="l">Collected</div></div>'+
-    '<div class="kpi bad"><div class="v">'+ugx(bal)+'</div><div class="l">Outstanding</div></div>'+
-    '<div class="kpi"><div class="v">'+debt+'</div><div class="l">Debtors</div></div>'+
-    '</div>'+
-    '<div class="card"><h3 class="h1">Welcome to '+(esc(_school.name)||'School')+'</h3>'+
-    '<div class="sub" style="margin-bottom:12px">Signed in as '+esc(_prof.full_name||_prof.email||'—')+'</div>'+
-    '<div class="grid g2">'+
-    '<button class="btn" onclick="nav(\'students\')">🎓 View Students</button>'+
-    '<button class="btn gold" onclick="openStudentModal()">＋ Register Pupil</button>'+
-    '<button class="btn ok" onclick="nav(\'payments\')">💳 Record Payment</button>'+
-    '<button class="btn wa" onclick="nav(\'reminders\')">📨 Send Reminders</button>'+
-    '</div></div>';
+  '<div class="page-head"><div><h1>Dashboard</h1><div class="sub">'+cy+' Term '+ct+' · '+fmtLongDate(new Date())+'</div></div>'+
+  '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="printDashboard()">🖨️ Print</button>'+
+  '<button class="btn" onclick="openStudentModal(null)">＋ Register Pupil</button></div></div>'+
+  '<div class="grid grid-kpi" style="margin-bottom:14px">'+
+  '<div class="kpi kpi-navy"><div class="v">'+active.length+'</div><div class="l">Active Pupils</div></div>'+
+  '<div class="kpi kpi-ok"><div class="v">'+fmtUGX(tP)+'</div><div class="l">Collected</div></div>'+
+  '<div class="kpi kpi-bad"><div class="v">'+fmtUGX(tC-tP)+'</div><div class="l">Outstanding</div></div>'+
+  '<div class="kpi"><div class="v">'+fmtUGX(todayColl)+'</div><div class="l">Today</div></div></div>'+
+  '<div class="grid grid-2">'+
+  '<div class="card"><h3>🔔 Alerts</h3>'+
+  (debtors>0?'<div class="alert-item danger" onclick="nav(\'debtors\')" style="cursor:pointer"><span class="ico">⚠️</span><div class="txt"><b>'+debtors+' debtors</b><span>'+fmtUGX(tC-tP)+'</span></div></div>':'')+
+  (passOuts.length>0?'<div class="alert-item danger" onclick="nav(\'passouts\')" style="cursor:pointer"><span class="ico">🚪</span><div class="txt"><b>'+passOuts.length+' pupil(s) OUT</b></div></div>':'')+
+  (debtors===0&&passOuts.length===0?'<div class="alert-item ok"><span class="ico">✅</span><div class="txt"><b>All normal</b></div></div>':'')+
+  '</div>'+
+  '<div class="card"><h3>🏫 Snapshot</h3><div class="grid grid-3">'+
+  '<div><div class="muted">Classes</div><div style="font-size:20px;font-weight:800">'+classes.length+'</div></div>'+
+  '<div><div class="muted">Staff</div><div style="font-size:20px;font-weight:800">'+staff.length+'</div></div>'+
+  '<div><div class="muted">Payments</div><div style="font-size:20px;font-weight:800">'+payments.length+'</div></div>'+
+  '</div></div></div>'+
+  (students.length===0?'<div class="card"><div class="alert-item info"><span class="ico">💡</span><div class="txt"><b>Welcome!</b><span>Start with Classes → Students → Staff → Exams.</span></div></div></div>':'');
 }
+window.pageDashboard=pageDashboard;
+
+function printDashboard(){
+  const students=_cachedStudents||[];
+  const active=students.filter(s=>s.status==='active'||!s.status);
+  let tC=0,tP=0;active.forEach(s=>{tC+=Number(s.total_charged)||0;tP+=Number(s.total_paid)||0;});
+  printSection('Dashboard Summary','<table><tbody>'+
+    '<tr><td><b>Year</b></td><td>'+getYear()+'</td></tr>'+
+    '<tr><td><b>Term</b></td><td>'+getTerm()+'</td></tr>'+
+    '<tr><td><b>Active Pupils</b></td><td>'+active.length+'</td></tr>'+
+    '<tr><td><b>Charged</b></td><td>'+fmtUGX(tC)+'</td></tr>'+
+    '<tr><td><b>Collected</b></td><td>'+fmtUGX(tP)+'</td></tr>'+
+    '<tr><td><b>Outstanding</b></td><td>'+fmtUGX(tC-tP)+'</td></tr>'+
+    '</tbody></table>');
+}
+window.printDashboard=printDashboard;
 
 /* ============================================================
    STUDENTS
    ============================================================ */
 async function pageStudents(root){
-  clearClassCache();
+  clearClassesCache();
   const classes=await loadClasses();
-  const students=await loadStudents();
+  const results=await Promise.all([
+    rest('/rest/v1/students?school_id=eq.'+_schoolId+'&select=*&order=admission_no'),
+    rest('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&status=eq.out&select=student_id').catch(()=>[])
+  ]);
+  _cachedStudents=results[0]||[];
+  window._activePassIds=new Set((results[1]||[]).map(p=>p.student_id));
   root.innerHTML=
-    '<div class="card"><div class="grid g3" style="margin-bottom:12px">'+
-    '<input id="sSearch" placeholder="🔍 Search name, ADM, parent…" oninput="renderStudents()">'+
-    '<select id="sClass" onchange="renderStudents()"><option value="">All classes</option>'+
-      classes.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('')+'</select>'+
-    '<select id="sType" onchange="renderStudents()"><option value="">All</option><option value="Day">Day</option><option value="Boarding">Boarding</option></select>'+
-    '</div>'+
-    '<div style="margin-bottom:12px"><button class="btn" onclick="openStudentModal()">＋ Register Pupil</button></div>'+
-    '<div id="stuTable"></div></div>';
-  renderStudents();
+  '<div class="page-head"><div><h1>Pupils</h1><div class="sub" id="stCount">'+_cachedStudents.length+'</div></div>'+
+  '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+  '<button class="btn ghost" onclick="printStudents()">🖨️ Print</button>'+
+  '<button class="btn" onclick="openStudentModal(null)">＋ Register</button></div></div>'+
+  '<div class="card"><div class="grid grid-3" style="margin-bottom:14px">'+
+  '<input id="stSearch" placeholder="🔍 Search name, ADM, parent…" oninput="filterStudents()">'+
+  '<select id="stClass" onchange="filterStudents()"><option value="">All classes</option>'+
+  (classes||[]).map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('')+'</select>'+
+  '<select id="stRes" onchange="filterStudents()"><option value="">All types</option><option value="Day">Day</option><option value="Boarding">Boarding</option></select>'+
+  '</div><div id="stTable"></div></div>';
+  filterStudents();
 }
+window.pageStudents=pageStudents;
 
-function renderStudents(){
-  const q=(document.getElementById('sSearch').value||'').toLowerCase();
-  const cf=document.getElementById('sClass').value||'';
-  const tf=document.getElementById('sType').value||'';
-  const cBy={};_classes.forEach(c=>cBy[c.id]=c);
-  const list=_students.filter(s=>{
+function filterStudents(){
+  const q=(document.getElementById('stSearch').value||'').toLowerCase();
+  const cf=document.getElementById('stClass').value||'';
+  const rf=document.getElementById('stRes').value||'';
+  const classes=_classesCache||[];const cById={};classes.forEach(c=>cById[c.id]=c);
+  const activeIds=window._activePassIds||new Set();
+  const list=_cachedStudents.filter(s=>{
     if(cf&&s.class_id!==cf)return false;
-    if(tf){const wb=tf==='Boarding';if(wb!==isBoard(s.boarding_status))return false}
-    if(q){
-      const h=(s.first_name+' '+(s.last_name||'')+' '+(s.admission_no||'')+' '+(s.parent_name||'')+' '+(s.parent_contact||'')).toLowerCase();
-      if(h.indexOf(q)===-1)return false;
-    }
+    if(rf&&(s.boarding_status||'Day')!==rf)return false;
+    if(q){const h=(s.first_name+' '+(s.last_name||'')+' '+s.admission_no+' '+(s.parent_name||'')+' '+(s.parent_contact||'')+' '+(s.lin||'')).toLowerCase();if(h.indexOf(q)===-1)return false;}
     return true;
   });
-  window._stuFiltered=list;
-  const t=document.getElementById('stuTable');
-  if(!list.length){t.innerHTML='<div class="empty">No pupils found.</div>';return}
+  window._filteredSt=list;
+  document.getElementById('stCount').textContent=_cachedStudents.length+' total · '+list.length+' shown';
+  const c=document.getElementById('stTable');
+  if(!list.length){c.innerHTML='<div class="empty">'+( _cachedStudents.length===0?'No pupils yet. Click "Register".':'No pupils match.')+'</div>';return;}
   let rows='';
   list.forEach(s=>{
-    const cls=cBy[s.class_id];
+    const cls=cById[s.class_id];
     const bal=(Number(s.total_charged)||0)-(Number(s.total_paid)||0);
     const pc=(s.parent_contact||'').trim();
+    const wa=pc?waLink(pc):'';const tl=pc?telLink(pc):'';
+    let contact='—';
+    if(s.parent_name||pc){contact='';if(s.parent_name)contact+='<b>'+esc(s.parent_name)+'</b>';if(pc){contact+='<div style="font-weight:600;margin-top:2px">'+esc(pc)+'</div><div style="display:flex;gap:4px;margin-top:4px">'+(wa?'<a href="https://wa.me/'+wa+'" target="_blank" class="btn sm wa" style="text-decoration:none">💬</a>':'')+(tl?'<a href="tel:'+tl+'" class="btn sm ghost" style="text-decoration:none">📞</a>':'')+'</div>';}}
     rows+='<tr>'+
       '<td><b>'+esc(s.admission_no||'—')+'</b></td>'+
-      '<td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b><div style="font-size:10.5px;color:#64748b">'+(cls?esc(cls.name):'')+' · '+esc(gender(s.gender))+'</div></td>'+
+      '<td><a href="javascript:void(0)" onclick="openProfile(\''+s.id+'\')" style="color:var(--navy);font-weight:600;text-decoration:none">'+esc(s.first_name+' '+(s.last_name||''))+'</a></td>'+
+      '<td>'+(cls?'<span class="badge info">'+esc(cls.name)+'</span>':'—')+'</td>'+
+      '<td>'+esc(genderLabel(s.gender))+'</td>'+
       '<td>'+esc(s.lin||'—')+'</td>'+
-      '<td>'+esc(s.parent_name||'—')+'</td>'+
-      '<td>'+esc(pc||'—')+'</td>'+
-      '<td>'+(isBoard(s.boarding_status)?'<span class="badge warn">Board</span>':'<span class="badge ok">Day</span>')+'</td>'+
-      '<td style="text-align:right"><b class="badge '+(bal>0?'bad':'ok')+'">'+num(bal)+'</b></td>'+
+      '<td>'+contact+'</td>'+
+      '<td>'+(String(s.boarding_status||'Day')==='Boarding'?'<span class="badge warn">Board</span>':'<span class="badge ok">Day</span>')+'</td>'+
+      '<td>'+(activeIds.has(s.id)?'<span class="badge bad">OUT</span>':'')+'</td>'+
+      '<td style="text-align:right"><span class="badge '+(bal>0?'bad':'ok')+'">'+fmtNum(bal)+'</span></td>'+
       '<td style="text-align:right;white-space:nowrap">'+
-        '<button class="btn sm gold" onclick="openPaymentModal(\''+s.id+'\')" title="Pay">💵</button> '+
-        '<button class="btn sm ghost" onclick="openStudentModal(\''+s.id+'\')" title="Edit">✏️</button> '+
-        '<button class="btn sm bad" onclick="deleteStudent(\''+s.id+'\')" title="Delete">✕</button>'+
+      '<button class="btn sm" onclick="openProfile(\''+s.id+'\')" title="View">👤</button> '+
+      '<button class="btn sm gold" onclick="recordPayment(\''+s.id+'\')" title="Pay">💵</button> '+
+      '<button class="btn sm ghost" onclick="openStudentModalById(\''+s.id+'\')" title="Edit">✏️</button> '+
+      '<button class="btn sm danger" onclick="deleteStudent(\''+s.id+'\')" title="Delete">✕</button>'+
       '</td></tr>';
   });
-  t.innerHTML='<div class="tbl-wrap"><table><thead><tr><th>ADM</th><th>Name</th><th>LIN</th><th>Parent</th><th>Phone</th><th>Type</th><th style="text-align:right">Balance</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  c.innerHTML='<div class="table-wrap"><table style="font-size:12.5px"><thead><tr><th>ADM</th><th>Name</th><th>Class</th><th>Gender</th><th>LIN</th><th>Parent</th><th>Type</th><th>OUT</th><th style="text-align:right">Balance</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
+window.filterStudents=filterStudents;
 
-function openStudentModal(id){
-  const s=id?_students.find(x=>x.id===id):{};
-  if(!s)s={};
-  window._editStudent=s;
-  const isB=isBoard(s.boarding_status);
-  const g=String(s.gender||'').toUpperCase();
-  modal('<h3>'+(id?'Edit Pupil':'Register Pupil')+'</h3>'+
-    '<div class="grid g2" style="margin-bottom:10px">'+
-      '<div><label>Admission No *</label><input id="m_adm" value="'+esc(s.admission_no||('ADM-'+Date.now().toString().slice(-6)))+'"></div>'+
-      '<div><label>Class *</label><select id="m_class"><option value="">— Select —</option>'+_classes.map(c=>'<option value="'+c.id+'"'+(s.class_id===c.id?' selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></div>'+
-    '</div>'+
-    '<div class="grid g2" style="margin-bottom:10px">'+
-      '<div><label>First Name *</label><input id="m_fn" value="'+esc(s.first_name||'')+'"></div>'+
-      '<div><label>Second Name</label><input id="m_ln" value="'+esc(s.last_name||'')+'"></div>'+
-    '</div>'+
-    '<div class="grid g3" style="margin-bottom:10px">'+
-      '<div><label>Gender</label><select id="m_gender"><option value="">—</option><option value="M"'+(g==='M'||g==='MALE'?' selected':'')+'>Male</option><option value="F"'+(g==='F'||g==='FEMALE'?' selected':'')+'>Female</option></select></div>'+
-      '<div><label>DOB</label><input id="m_dob" type="date" value="'+esc(s.date_of_birth||'')+'"></div>'+
-      '<div><label>LIN</label><input id="m_lin" value="'+esc(s.lin||'')+'"></div>'+
-    '</div>'+
-    '<div class="grid g3" style="margin-bottom:10px">'+
-      '<div><label>Boarding</label><select id="m_res"><option value="Day"'+(isB?'':' selected')+'>Day</option><option value="Boarding"'+(isB?' selected':'')+'>Boarding</option></select></div>'+
-      '<div><label>Location</label><input id="m_loc" value="'+esc(s.location||'')+'"></div>'+
-      '<div><label>Status</label><select id="m_status"><option value="active"'+(s.status!=='inactive'?' selected':'')+'>Active</option><option value="inactive"'+(s.status==='inactive'?' selected':'')+'>Inactive</option></select></div>'+
-    '</div>'+
-    '<div class="grid g2" style="margin-bottom:10px">'+
-      '<div><label>Parent Name</label><input id="m_par" value="'+esc(s.parent_name||'')+'"></div>'+
-      '<div><label>Parent Phone</label><input id="m_pc" value="'+esc(s.parent_contact||'')+'" placeholder="+256..."></div>'+
-    '</div>'+
-    '<h4 style="font-size:12px;text-transform:uppercase;color:#64748b;margin:14px 0 8px">School Fees (UGX)</h4>'+
-    '<div class="grid g3" style="margin-bottom:10px">'+
-      '<div><label>Balance B/F</label><input id="m_bf" type="number" value="'+(Number(s.balance_bf)||0)+'" oninput="recalcFees()"></div>'+
-      '<div><label>School Fee</label><input id="m_fee" type="number" value="'+(Number(s.actual_fee)||0)+'" oninput="recalcFees()"></div>'+
-      '<div><label>Functional</label><input id="m_func" type="number" value="'+(Number(s.functional_fee)||0)+'" oninput="recalcFees()"></div>'+
-      '<div><label>Transport</label><input id="m_trans" type="number" value="'+(Number(s.transport_fee)||0)+'" oninput="recalcFees()"></div>'+
-      '<div><label>Holiday</label><input id="m_hol" type="number" value="'+(Number(s.holiday_fee)||0)+'" oninput="recalcFees()"></div>'+
-      '<div><label>Academics</label><input id="m_acad" type="number" value="'+(Number(s.academics_fee)||0)+'" oninput="recalcFees()"></div>'+
-    '</div>'+
-    '<h4 style="font-size:12px;text-transform:uppercase;color:#64748b;margin:14px 0 8px">Totals (editable)</h4>'+
-    '<div class="grid g3">'+
-      '<div><label>Total Charged</label><input id="m_tc" type="number" value="'+(Number(s.total_charged)||0)+'" oninput="recalcBal()"></div>'+
-      '<div><label>Amount Paid</label><input id="m_tp" type="number" value="'+(Number(s.total_paid)||0)+'" oninput="recalcBal()"></div>'+
-      '<div><label>Balance</label><input id="m_bal" type="number" value="'+(Number(s.current_balance)||0)+'" oninput="manualBal()"></div>'+
-    '</div>'+
-    '<div class="hint">💡 Changing fee items updates Total Charged. Changing Paid updates Balance. Changing Balance directly overrides it.</div>'+
-    '<div style="margin-top:10px"><label>School Pay Code</label><input id="m_code" value="'+esc(s.school_pay_code||'')+'" placeholder="e.g. PMS-ADM202600123"></div>'+
-    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveStudent(\''+(id||'')+'\')">💾 Save</button></div>');
-  setTimeout(recalcFees,80);
+function printStudents(){
+  const list=window._filteredSt||_cachedStudents;
+  if(!list.length){toast('Nothing','bad');return;}
+  const classes=_classesCache||[];const cById={};classes.forEach(c=>cById[c.id]=c);
+  let rows='';
+  list.forEach((s,i)=>{
+    const charged=Number(s.total_charged)||0;const paid=Number(s.total_paid)||0;
+    rows+='<tr><td>'+(i+1)+'</td><td>'+esc(s.admission_no||'')+'</td><td>'+esc(s.first_name+' '+(s.last_name||''))+'</td><td>'+esc(cById[s.class_id]?.name||'')+'</td><td>'+esc(genderLabel(s.gender))+'</td><td>'+esc(s.lin||'')+'</td><td>'+esc(s.parent_name||'')+'</td><td>'+esc(s.parent_contact||'')+'</td><td>'+esc(String(s.boarding_status||'Day'))+'</td><td style="text-align:right">'+fmtNum(charged-paid)+'</td></tr>';
+  });
+  printSection('Pupil List ('+list.length+')','<table><thead><tr><th>#</th><th>ADM</th><th>Name</th><th>Class</th><th>Gender</th><th>LIN</th><th>Parent</th><th>Contact</th><th>Type</th><th style="text-align:right">Balance</th></tr></thead><tbody>'+rows+'</tbody></table>');
 }
+window.printStudents=printStudents;
 
-function recalcFees(){
-  const n=f=>Number(document.getElementById(f)?.value)||0;
-  const sum=n('m_bf')+n('m_fee')+n('m_func')+n('m_trans')+n('m_hol')+n('m_acad');
-  const tc=document.getElementById('m_tc');
-  if(tc){tc.value=sum;recalcBal()}
-}
+function openProfile(id){_profileStudentId=id;_profileTab='overview';nav('student_profile');}
+window.openProfile=openProfile;
 
-function recalcBal(){
-  const n=f=>Number(document.getElementById(f)?.value)||0;
-  const bal=document.getElementById('m_bal');
-  if(bal)bal.value=n('m_tc')-n('m_tp');
-}
+function openStudentModalById(id){const s=_cachedStudents.find(x=>x.id===id);openStudentModal(s);}
+window.openStudentModalById=openStudentModalById;
 
-function manualBal(){
-  recalcBal(); // simplest: always sync balance = tc - tp
+async function openStudentModal(existing){
+  clearClassesCache();
+  const classes=await loadClasses();
+  const s=existing||{};
+  modal('<h3>'+(existing?'Edit Pupil':'Register Pupil')+'</h3>'+
+    '<div class="grid grid-2"><div><label>Admission No *</label><input id="m_adm" value="'+esc(s.admission_no||('ADM-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4)))+'"></div>'+
+    '<div><label>Class *</label><select id="m_class"><option value="">— Select —</option>'+classes.map(c=>'<option value="'+c.id+'"'+(s.class_id===c.id?' selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></div></div>'+
+    '<div class="grid grid-2" style="margin-top:12px"><div><label>First Name *</label><input id="m_fn" value="'+esc(s.first_name||'')+'"></div>'+
+    '<div><label>Second Name</label><input id="m_ln" value="'+esc(s.last_name||'')+'"></div></div>'+
+    '<div class="grid grid-3" style="margin-top:12px"><div><label>Gender</label><select id="m_gender"><option value="">—</option><option value="M"'+(s.gender==='M'?' selected':'')+'>Male</option><option value="F"'+(s.gender==='F'?' selected':'')+'>Female</option></select></div>'+
+    '<div><label>DOB</label><input id="m_dob" type="date" value="'+esc(s.date_of_birth||'')+'"></div>'+
+    '<div><label>LIN</label><input id="m_lin" value="'+esc(s.lin||'')+'"></div></div>'+
+    '<div class="grid grid-3" style="margin-top:12px"><div><label>Boarding</label><select id="m_res"><option value="Day"'+(String(s.boarding_status||'Day')!=='Boarding'?' selected':'')+'>Day</option><option value="Boarding"'+(String(s.boarding_status||'Day')==='Boarding'?' selected':'')+'>Boarding</option></select></div>'+
+    '<div><label>Location</label><input id="m_loc" value="'+esc(s.location||'')+'"></div>'+
+    '<div><label>Status</label><select id="m_status"><option value="active"'+(s.status!=='inactive'?' selected':'')+'>Active</option><option value="inactive"'+(s.status==='inactive'?' selected':'')+'>Inactive</option></select></div></div>'+
+    '<h4 style="font-size:12px;text-transform:uppercase;color:#64748b;margin:16px 0 6px">Parent / Guardian</h4>'+
+    '<div class="grid grid-2"><div><label>Parent Name</label><input id="m_par" value="'+esc(s.parent_name||'')+'"></div>'+
+    '<div><label>Parent Phone</label><input id="m_pc" type="tel" value="'+esc(s.parent_contact||'')+'" placeholder="+256..."></div></div>'+
+    '<h4 style="font-size:12px;text-transform:uppercase;color:#64748b;margin:16px 0 6px">Fees (UGX)</h4>'+
+    '<div class="grid grid-3"><div><label>B/F</label><input id="m_bf" type="number" value="'+(s.balance_bf||0)+'"></div>'+
+    '<div><label>School Fee</label><input id="m_fee" type="number" value="'+(s.actual_fee||0)+'"></div>'+
+    '<div><label>Functional</label><input id="m_func" type="number" value="'+(s.functional_fee||70000)+'"></div>'+
+    '<div><label>Transport</label><input id="m_trans" type="number" value="'+(s.transport_fee||0)+'"></div>'+
+    '<div><label>Holiday</label><input id="m_hol" type="number" value="'+(s.holiday_fee||0)+'"></div>'+
+    '<div><label>Academics</label><input id="m_acad" type="number" value="'+(s.academics_fee||0)+'"></div></div>'+
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveStudent(\''+(existing?existing.id:'')+'\')">Save</button></div>');
 }
+window.openStudentModal=openStudentModal;
 
 async function saveStudent(id){
-  const n=f=>{const el=document.getElementById(f);if(!el)return 0;const v=el.value.trim();return v===''?0:(Number(v)||0)};
-  const v=f=>{const el=document.getElementById(f);return el?el.value.trim():''};
-
-  const adm=v('m_adm'),fn=v('m_fn'),cid=v('m_class');
-  if(!adm||!fn||!cid){toast('Fill ADM, First Name and Class','bad');return}
-
-  const bf=n('m_bf'),fee=n('m_fee'),func=n('m_func'),trans=n('m_trans'),hol=n('m_hol'),acad=n('m_acad');
-  const tc=n('m_tc')||(bf+fee+func+trans+hol+acad);
-  const tp=n('m_tp');
-  const bal=tc-tp;
-
+  const n=f=>Number(document.getElementById(f).value)||0;
   const body={
     school_id:_schoolId,
-    admission_no:adm,first_name:fn,last_name:v('m_ln')||null,
-    class_id:cid,gender:v('m_gender')||null,
-    date_of_birth:v('m_dob')||null,lin:v('m_lin')||null,
-    school_pay_code:v('m_code')||null,
-    boarding_status:v('m_res')||'Day',location:v('m_loc')||null,
-    parent_name:v('m_par')||null,parent_contact:v('m_pc')||null,
-    status:v('m_status')||'active',
-    balance_bf:bf,actual_fee:fee,functional_fee:func,
-    transport_fee:trans,holiday_fee:hol,academics_fee:acad,
-    total_charged:tc,total_paid:tp,current_balance:bal
+    admission_no:document.getElementById('m_adm').value.trim(),
+    class_id:document.getElementById('m_class').value||null,
+    first_name:document.getElementById('m_fn').value.trim(),
+    last_name:document.getElementById('m_ln').value.trim()||null,
+    gender:document.getElementById('m_gender').value||null,
+    date_of_birth:document.getElementById('m_dob').value||null,
+    lin:document.getElementById('m_lin').value.trim()||null,
+    boarding_status:document.getElementById('m_res').value,
+    location:document.getElementById('m_loc').value.trim()||null,
+    parent_name:document.getElementById('m_par').value.trim()||null,
+    parent_contact:document.getElementById('m_pc').value.trim()||null,
+    status:document.getElementById('m_status').value,
+    balance_bf:n('m_bf'),actual_fee:n('m_fee'),functional_fee:n('m_func'),
+    transport_fee:n('m_trans'),holiday_fee:n('m_hol'),academics_fee:n('m_acad')
   };
+  body.total_charged=body.balance_bf+body.actual_fee+body.functional_fee+body.transport_fee+body.holiday_fee+body.academics_fee;
+  const old=id?_cachedStudents.find(x=>x.id===id):null;
+  body.total_paid=old?Number(old.total_paid)||0:0;
+  body.current_balance=body.total_charged-body.total_paid;
+  if(!body.admission_no||!body.first_name||!body.class_id){toast('Fill ADM, name, class','bad');return;}
   try{
-    if(id)await api('/rest/v1/students?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(body)});
-    else await api('/rest/v1/students',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(body)});
-    toast('Saved ✓ Charged: '+ugx(tc)+' · Paid: '+ugx(tp)+' · Balance: '+ugx(bal),'ok');
-    closeModal();
-    await loadStudents();
-    nav(_route);
-  }catch(e){toast('Save failed: '+e.message,'bad')}
+    if(id)await rest('/rest/v1/students?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(body)});
+    else await rest('/rest/v1/students',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(body)});
+    toast('Saved','ok');closeModal();nav(activeRoute);
+  }catch(e){toast(e.message,'bad');}
 }
+window.saveStudent=saveStudent;
 
 async function deleteStudent(id){
-  if(!confirm('Delete this pupil permanently?'))return;
-  try{await api('/rest/v1/students?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');await loadStudents();nav('students')}
-  catch(e){toast('Delete failed: '+e.message,'bad')}
+  if(!confirm('Delete this pupil?'))return;
+  try{await rest('/rest/v1/students?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');nav('students');}
+  catch(e){toast(e.message,'bad');}
 }
+window.deleteStudent=deleteStudent;
 
 /* ============================================================
-   PAYMENTS
+   PAYMENT
    ============================================================ */
-async function pagePayments(root){
-  const students=await loadStudents();
-  const payments=await api('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=*&order=paid_at.desc&limit=200')||[];
-  const sBy={};students.forEach(s=>sBy[s.id]=s);
-  const total=payments.reduce((a,p)=>a+Number(p.amount||0),0);
-  root.innerHTML=
-    '<div class="grid g4" style="margin-bottom:12px">'+
-    '<div class="kpi navy"><div class="v">'+payments.length+'</div><div class="l">Payments</div></div>'+
-    '<div class="kpi ok"><div class="v">'+ugx(total)+'</div><div class="l">Total Collected</div></div>'+
-    '</div>'+
-    '<div class="card"><input id="pSearch" placeholder="🔍 Search receipt or pupil name…" oninput="renderPayments()" style="margin-bottom:12px"><div id="payTable"></div></div>';
-  window._payments=payments;
-  window._studentsBy=sBy;
-  renderPayments();
+async function nextReceiptNo(){
+  const y=getYear();
+  try{const rows=await rest('/rest/v1/payments?school_id=eq.'+_schoolId+'&year=eq.'+y+'&select=id');return 'RCP-'+y+'-'+String((rows.length||0)+1).padStart(5,'0');}
+  catch(e){return 'RCP-'+y+'-'+String(Date.now()).slice(-5);}
 }
 
-function renderPayments(){
-  const q=(document.getElementById('pSearch').value||'').toLowerCase();
-  const list=(window._payments||[]).filter(p=>{
-    if(!q)return true;
-    const s=(window._studentsBy||{})[p.student_id]||{};
-    const h=((p.receipt_no||'')+' '+(s.first_name||'')+' '+(s.last_name||'')+' '+(s.admission_no||'')).toLowerCase();
-    return h.indexOf(q)!==-1;
-  });
-  const t=document.getElementById('payTable');
-  if(!list.length){t.innerHTML='<div class="empty">No payments yet.</div>';return}
-  let rows='';
-  list.forEach(p=>{
-    const s=(window._studentsBy||{})[p.student_id]||{};
-    rows+='<tr>'+
-      '<td>'+dt(p.paid_at)+'</td>'+
-      '<td><b style="font-family:monospace">'+esc(p.receipt_no||'')+'</b></td>'+
-      '<td><b>'+esc((s.first_name||'')+' '+(s.last_name||''))+'</b></td>'+
-      '<td>'+esc(s.admission_no||'')+'</td>'+
-      '<td>'+esc(p.payment_for||'')+'</td>'+
-      '<td>'+esc(p.method||'')+'</td>'+
-      '<td style="text-align:right;font-weight:700;color:#047857">'+num(p.amount)+'</td>'+
-    '</tr>';
-  });
-  t.innerHTML='<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Receipt</th><th>Pupil</th><th>ADM</th><th>For</th><th>Method</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
-}
-
-function openPaymentModal(studentId){
-  const s=_students.find(x=>x.id===studentId);
-  if(!s){toast('Open Students page first','bad');return}
-  const charged=Number(s.total_charged)||0;
-  const paid=Number(s.total_paid)||0;
-  const bal=charged-paid;
-  const rno='RCP-'+new Date().getFullYear()+'-'+Date.now().toString().slice(-5);
+async function recordPayment(studentId){
+  const s=_cachedStudents.find(x=>x.id===studentId);
+  if(!s){toast('Open Students page first','bad');return;}
+  const cls=(_classesCache||[]).find(c=>c.id===s.class_id);
+  const charged=Number(s.total_charged)||0;const paid=Number(s.total_paid)||0;const bal=charged-paid;
+  const rno=await nextReceiptNo();
+  const methodOpts=_enumPaymentMethod.map(m=>'<option value="'+esc(m)+'">'+esc(m)+'</option>').join('');
+  const provOpts='<option value="">—</option>'+(_enumPaymentProvider||[]).map(p=>'<option value="'+esc(p)+'">'+esc(p)+'</option>').join('');
   modal('<h3>💰 Record Payment</h3>'+
-    '<div style="background:#f8fafc;border-radius:10px;padding:12px;margin-bottom:12px">'+
-      '<b>'+esc(s.first_name+' '+(s.last_name||''))+'</b>'+
-      '<div class="sub">'+esc(s.admission_no)+'</div>'+
-      '<div style="margin-top:8px">'+
-      '<span class="mini">Charged: '+ugx(charged)+'</span>'+
-      '<span class="mini" style="background:#ecfdf5;color:#047857">Paid: '+ugx(paid)+'</span>'+
-      '<span class="mini" style="background:#fef2f2;color:#b91c1c">Balance: '+ugx(bal)+'</span>'+
-      '</div>'+
-    '</div>'+
-    '<div style="margin-bottom:10px"><label>Receipt No</label><input id="pay_rno" value="'+esc(rno)+'"></div>'+
-    '<div style="margin-bottom:10px"><label>Payment For</label><select id="pay_for"><option>School Fees</option><option>Functional Fees</option><option>Transport</option><option>Holiday</option><option>Academics</option><option>Uniform</option><option>Other</option></select></div>'+
-    '<div style="margin-bottom:10px"><label>Amount *</label><input id="pay_amt" type="number" value="'+Math.max(0,bal)+'"></div>'+
-    '<div style="margin-bottom:10px"><label>Method</label><select id="pay_method"><option>Cash</option><option>Mobile Money</option><option>Bank</option><option>Cheque</option></select></div>'+
-    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn ok" onclick="savePayment(\''+s.id+'\')">Save & Print Receipt</button></div>');
+    '<div style="background:#f8fafc;border-radius:10px;padding:12px;margin-bottom:12px"><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b><div class="muted">'+esc(cls?cls.name:'')+' · '+esc(s.admission_no)+' · '+esc(genderLabel(s.gender))+'</div>'+
+    '<div style="margin-top:8px"><span class="mini-stat">Charged: '+fmtUGX(charged)+'</span><span class="mini-stat" style="background:#ecfdf5;color:#047857">Paid: '+fmtUGX(paid)+'</span><span class="mini-stat" style="background:#fef2f2;color:#b91c1c">Balance: '+fmtUGX(bal)+'</span></div></div>'+
+    '<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 14px;margin-bottom:12px"><label style="margin:0;color:#92400e">Receipt No</label><input id="p_rno" value="'+esc(rno)+'" style="font-weight:700;font-family:monospace"></div>'+
+    '<div><label>Payment For</label><select id="p_for"><option>School Fees</option><option>Functional Fees</option><option>Transport</option><option>Holiday</option><option>Academics</option><option>Uniform</option><option>Other</option></select></div>'+
+    '<div style="margin-top:12px"><label>Amount *</label><input id="p_amount" type="number" value="'+Math.max(0,bal)+'"></div>'+
+    '<div class="grid grid-2" style="margin-top:12px"><div><label>Method</label><select id="p_method">'+methodOpts+'</select></div>'+
+    '<div><label>Provider</label><select id="p_provider">'+provOpts+'</select></div></div>'+
+    '<div class="grid grid-2" style="margin-top:12px"><div><label>MoMo / Ref</label><input id="p_ref"></div><div><label>Notes</label><input id="p_notes"></div></div>'+
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn ok" onclick="savePayment(\''+s.id+'\')">Save & Print</button></div>');
 }
+window.recordPayment=recordPayment;
 
 async function savePayment(studentId){
-  const amount=Number(document.getElementById('pay_amt').value);
-  const rno=document.getElementById('pay_rno').value.trim()||('RCP-'+Date.now());
-  if(!amount||amount<=0){toast('Enter amount','bad');return}
-  const s=_students.find(x=>x.id===studentId);
-  if(!s){toast('Not found','bad');return}
-  const forWhat=document.getElementById('pay_for').value;
-  const method=document.getElementById('pay_method').value;
-  const body={
-    school_id:_schoolId,student_id:studentId,receipt_no:rno,
-    year:new Date().getFullYear(),term:1,academic_year:new Date().getFullYear(),
-    amount:amount,method:method,payment_for:forWhat,
-    received_by:_prof?_prof.id:null
-  };
+  const amount=Number(document.getElementById('p_amount').value);
+  const rno=document.getElementById('p_rno').value.trim()||('RCP-'+Date.now());
+  if(!amount||amount<=0){toast('Enter amount','bad');return;}
+  const s=_cachedStudents.find(x=>x.id===studentId);if(!s){toast('Not found','bad');return;}
+  const rawMethod=document.getElementById('p_method').value;
+  const method=matchEnum(rawMethod,_enumPaymentMethod);
+  const rawProvider=document.getElementById('p_provider').value;
+  const provider=rawProvider?matchEnum(rawProvider,_enumPaymentProvider):null;
+  const payment_for=document.getElementById('p_for').value;
+  const notes=document.getElementById('p_notes').value.trim();
+  const ref=document.getElementById('p_ref').value.trim();
+  const body={school_id:_schoolId,student_id:studentId,receipt_no:rno,year:getYear(),term:getTerm(),academic_year:getYear(),amount:amount,method:method,payment_for:payment_for,payment_method:rawMethod,received_by:_profile?_profile.id:null};
+  if(provider)body.provider=provider;
+  if(notes)body.notes=notes;
+  if(ref)body.reference=ref;
   try{
-    await api('/rest/v1/payments',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(body)});
+    await rest('/rest/v1/payments',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(body)});
     const newPaid=(Number(s.total_paid)||0)+amount;
     const charged=Number(s.total_charged)||0;
-    await api('/rest/v1/students?id=eq.'+studentId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({total_paid:newPaid,current_balance:Math.max(0,charged-newPaid)})});
-    toast('Payment recorded ✓ '+rno,'ok');
-    printReceipt(s,{receipt_no:rno,amount:amount,payment_for:forWhat,method:method,date:new Date().toISOString()});
-    closeModal();
-    await loadStudents();
-    nav(_route);
-  }catch(e){toast('Save failed: '+e.message,'bad')}
+    await rest('/rest/v1/students?id=eq.'+studentId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({total_paid:newPaid,current_balance:Math.max(0,charged-newPaid)})});
+    toast('Receipt: '+rno,'ok');
+    printReceipt(s,{receipt_no:rno,amount:amount,payment_for:payment_for,method:rawMethod,notes:notes,date:new Date().toISOString(),ref:ref});
+    closeModal();nav(activeRoute);
+  }catch(e){toast(e.message,'bad');}
 }
+window.savePayment=savePayment;
 
 function printReceipt(student,pay){
-  const charged=Number(student.total_charged)||0;
-  const before=Number(student.total_paid)||0;
+  const cls=(_classesCache||[]).find(c=>c.id===student.class_id);
+  const charged=Number(student.total_charged)||0;const before=Number(student.total_paid)||0;
   const bal=charged-(before+Number(pay.amount));
+  const logo=_school?.logo_url||_school?.logo_data||'';
   const w=window.open('','_blank');
-  if(!w){toast('Allow popups','bad');return}
-  let h='<!DOCTYPE html><html><head><title>Receipt</title><style>';
-  h+='body{font-family:Arial;padding:20px;margin:0;font-size:13px}';
-  h+='.r{max-width:520px;margin:0 auto;border:2px solid #0a2540;padding:20px;border-radius:8px}';
-  h+='.h{text-align:center;border-bottom:2px dashed #0a2540;padding-bottom:10px;margin-bottom:12px}';
-  h+='.h h1{font-size:16px;margin:0;color:#0a2540}';
-  h+='.rno{text-align:center;font-family:monospace;font-size:15px;font-weight:800;background:#f1f5f9;padding:6px;border-radius:6px;margin-bottom:10px}';
-  h+='table{width:100%;border-collapse:collapse;font-size:12px}';
-  h+='td{padding:6px 4px;border-bottom:1px solid #eee}';
-  h+='td:first-child{color:#666;width:40%}';
-  h+='td:last-child{text-align:right;font-weight:600}';
-  h+='.amt{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:12px;margin:12px 0;text-align:center}';
-  h+='.amt .v{font-size:22px;font-weight:900;color:#047857}';
-  h+='.sign{margin-top:20px;display:flex;justify-content:space-between;font-size:11px;color:#666}';
-  h+='.sign div{width:40%;padding-top:16px;border-top:1px solid #999;text-align:center}';
-  h+='@media print{body{padding:0}}';
-  h+='</style></head><body><div class="r">';
-  h+='<div class="h"><h1>'+esc(_school.name||'School')+'</h1><div style="font-size:11px;color:#666">'+esc(_school.address||'')+'</div></div>';
-  h+='<div class="rno">RECEIPT: '+esc(pay.receipt_no)+'</div>';
-  h+='<table>';
-  h+='<tr><td>Date</td><td>'+dt(pay.date)+'</td></tr>';
-  h+='<tr><td>Pupil</td><td>'+esc(student.first_name+' '+(student.last_name||''))+'</td></tr>';
-  h+='<tr><td>ADM</td><td>'+esc(student.admission_no||'')+'</td></tr>';
-  h+='<tr><td>For</td><td>'+esc(pay.payment_for)+'</td></tr>';
-  h+='<tr><td>Method</td><td>'+esc(pay.method)+'</td></tr>';
-  h+='<tr><td>Received By</td><td>'+esc(_prof.full_name||'')+'</td></tr>';
-  h+='</table>';
-  h+='<div class="amt"><div style="font-size:10px;color:#047857">AMOUNT RECEIVED</div><div class="v">'+ugx(pay.amount)+'</div></div>';
-  h+='<table><tr><td>New Balance</td><td>'+ugx(bal)+'</td></tr></table>';
-  h+='<div class="sign"><div>Parent</div><div>Cashier</div></div>';
-  h+='<div style="text-align:center;font-size:10px;color:#888;margin-top:12px">Powered by EUDES MEDIA</div>';
-  h+='</div><script>setTimeout(function(){window.print();},400);</'+'script></body></html>';
-  w.document.write(h);
+  if(!w){toast('Allow popups','bad');return;}
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Receipt '+esc(pay.receipt_no)+'</title><style>'+
+  '*{box-sizing:border-box}body{font-family:Arial;padding:20px;margin:0;font-size:13px}'+
+  '.r{max-width:580px;margin:0 auto;border:2px solid #0a2540;padding:20px;border-radius:8px}'+
+  '.h{text-align:center;border-bottom:2px dashed #0a2540;padding-bottom:12px;margin-bottom:14px}'+
+  '.h img{width:60px;height:60px;object-fit:contain}'+
+  '.h h1{font-size:18px;margin:6px 0 4px;color:#0a2540;text-transform:uppercase}'+
+  '.h .m{font-size:11px;color:#666}'+
+  '.rno{text-align:center;font-family:monospace;font-size:16px;font-weight:800;color:#0a2540;background:#f1f5f9;padding:8px;border-radius:6px;margin-bottom:12px}'+
+  'table{width:100%;border-collapse:collapse;font-size:12px}'+
+  'td{padding:6px 4px;border-bottom:1px solid #eee}'+
+  'td:first-child{color:#666;width:40%}'+
+  'td:last-child{text-align:right;font-weight:600}'+
+  '.amt{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:12px;margin:12px 0;text-align:center}'+
+  '.amt .v{font-size:24px;font-weight:900;color:#047857}'+
+  '.sign{margin-top:24px;display:flex;justify-content:space-between;font-size:11px;color:#666}'+
+  '.sign div{width:40%;padding-top:20px;border-top:1px solid #999;text-align:center}'+
+  '@page{margin:10mm;size:A5}@media print{body{padding:0}}'+
+  '</style></head><body><div class="r">'+
+  '<div class="h">'+(logo?'<img src="'+esc(logo)+'">':'')+'<h1>'+esc(_school?.name||'')+'</h1><div class="m">'+esc(_school?.address||'')+'</div></div>'+
+  '<div class="rno">NO: '+esc(pay.receipt_no)+'</div>'+
+  '<table>'+
+  '<tr><td>Date</td><td>'+fmtDateTime(pay.date)+'</td></tr>'+
+  '<tr><td>Pupil</td><td>'+esc(student.first_name+' '+(student.last_name||''))+'</td></tr>'+
+  '<tr><td>ADM</td><td>'+esc(student.admission_no)+'</td></tr>'+
+  '<tr><td>Class</td><td>'+esc(cls?cls.name:'')+'</td></tr>'+
+  '<tr><td>Payment For</td><td>'+esc(pay.payment_for)+'</td></tr>'+
+  '<tr><td>Method</td><td>'+esc(pay.method||'')+'</td></tr>'+
+  (pay.ref?'<tr><td>Reference</td><td>'+esc(pay.ref)+'</td></tr>':'')+
+  '<tr><td>Received By</td><td>'+esc(_profile?.full_name||'')+'</td></tr>'+
+  '</table>'+
+  '<div class="amt"><div style="font-size:10px;color:#047857">AMOUNT RECEIVED</div><div class="v">'+fmtUGX(pay.amount)+'</div></div>'+
+  '<table><tr><td>Balance</td><td>'+fmtUGX(bal)+'</td></tr></table>'+
+  '<div class="sign"><div>Parent</div><div>Cashier</div></div>'+
+  '<div style="text-align:center;font-size:10px;color:#888;margin-top:14px">Powered by EUDES MEDIA</div></div>'+
+  '<script>setTimeout(()=>window.print(),400);<\/script></body></html>');
   w.document.close();
 }
+window.printReceipt=printReceipt;
 
 /* ============================================================
-   REMINDERS
+   STUDENT PROFILE — 6 tabs
    ============================================================ */
-async function pageReminders(root){
-  const students=await loadStudents();
-  const active=students.filter(s=>s.status!=='inactive');
-  const rows=active.map(s=>{
-    const charged=Number(s.total_charged)||0;
-    const paid=Number(s.total_paid)||0;
-    const bal=charged-paid;
-    let status='unpaid';
-    if(charged<=0)status='no-fees';
-    else if(bal<=0)status='cleared';
-    else if(paid>0)status='partial';
-    return {s,charged,paid,bal,status};
-  });
-  window._remAll=rows;
-
-  let tc=0,tp=0,tb=0,debt=0,cl=0,pa=0,un=0;
-  rows.forEach(r=>{
-    tc+=r.charged;tp+=r.paid;tb+=r.bal;
-    if(r.bal>0.5)debt++;
-    if(r.status==='cleared')cl++;
-    else if(r.status==='partial')pa++;
-    else if(r.status==='unpaid')un++;
-  });
-
-  root.innerHTML=
-    '<div class="grid g4" style="margin-bottom:12px">'+
-    '<div class="kpi navy"><div class="v">'+ugx(tc)+'</div><div class="l">Total Charged</div></div>'+
-    '<div class="kpi ok"><div class="v">'+ugx(tp)+'</div><div class="l">Collected</div></div>'+
-    '<div class="kpi bad"><div class="v">'+ugx(tb)+'</div><div class="l">Outstanding</div></div>'+
-    '<div class="kpi"><div class="v">'+debt+'</div><div class="l">Debtors</div></div>'+
-    '</div>'+
-    '<div class="card">'+
-    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'+
-    '<button class="btn wa" onclick="bulkWhatsApp()">💬 Bulk WhatsApp</button>'+
-    '<button class="btn ghost" onclick="copyPhones()">📋 Copy Phones</button>'+
-    '</div>'+
-    '<input id="remSearch" placeholder="🔍 Search…" oninput="renderReminders()" style="margin-bottom:12px">'+
-    '<div id="remTable"></div></div>';
-  renderReminders();
-}
-
-function renderReminders(){
-  const q=(document.getElementById('remSearch').value||'').toLowerCase();
-  const list=(window._remAll||[]).filter(r=>{
-    if(!q)return true;
-    const h=(r.s.first_name+' '+(r.s.last_name||'')+' '+(r.s.admission_no||'')+' '+(r.s.parent_name||'')).toLowerCase();
-    return h.indexOf(q)!==-1;
-  });
-  window._remFiltered=list;
-  const t=document.getElementById('remTable');
-  if(!list.length){t.innerHTML='<div class="empty">No pupils.</div>';return}
-  let rows='';
-  list.forEach(r=>{
-    const s=r.s;
-    const pct=r.charged>0?Math.min(100,Math.round(r.paid/r.charged*100)):0;
-    const stBadge={cleared:'<span class="badge ok">Cleared</span>',partial:'<span class="badge warn">Partial</span>',unpaid:'<span class="badge bad">Unpaid</span>','no-fees':'<span class="badge info">No fees</span>'}[r.status]||'';
-    const pc=(s.parent_contact||'').trim();
-    const waLinkStr=pc?'https://wa.me/'+wa(pc)+'?text='+encodeURIComponent(buildReminderMessage(r)):'';
-    rows+='<tr>'+
-      '<td><b>'+esc(s.admission_no||'—')+'</b></td>'+
-      '<td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b><div style="font-size:10.5px;color:#64748b">'+esc(gender(s.gender))+'</div></td>'+
-      '<td>'+esc(s.parent_name||'—')+'<div style="font-size:10.5px;color:#64748b">'+esc(pc||'')+'</div></td>'+
-      '<td style="text-align:right">'+num(r.charged)+'</td>'+
-      '<td style="text-align:right;color:#047857">'+num(r.paid)+'</td>'+
-      '<td style="text-align:right;font-weight:700;color:'+(r.bal>0?'#b91c1c':'#047857')+'">'+num(r.bal)+'</td>'+
-      '<td style="text-align:center;min-width:70px"><div style="background:#e2e8f0;border-radius:99px;height:6px;overflow:hidden"><div style="background:'+(pct>=100?'#059669':pct>=50?'#d97706':'#dc2626')+';height:100%;width:'+pct+'%"></div></div><div style="font-size:10px;color:#64748b;margin-top:2px">'+pct+'%</div></td>'+
-      '<td>'+stBadge+'</td>'+
-      '<td style="text-align:right;white-space:nowrap">'+
-        '<button class="btn sm gold" onclick="openPaymentModal(\''+s.id+'\')" title="Pay">💵</button> '+
-        (pc?'<a class="btn sm wa" style="text-decoration:none" target="_blank" href="'+waLinkStr+'">💬</a> ':'')+
-        (pc?'<a class="btn sm ghost" style="text-decoration:none" href="tel:'+tel(pc)+'">📞</a>':'')+
-      '</td></tr>';
-  });
-  t.innerHTML='<div class="tbl-wrap"><table><thead><tr><th>ADM</th><th>Pupil</th><th>Parent</th><th style="text-align:right">Charged</th><th style="text-align:right">Paid</th><th style="text-align:right">Balance</th><th>Progress</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
-}
-
-function buildReminderMessage(r){
-  const school=_school?.name||'School';
-  const phone=_school?.telephone||'';
-  const parent=r.s.parent_name||'Parent';
-  const pupil=(r.s.first_name||'')+' '+(r.s.last_name||'');
-  const cls='—';
-  const lin=r.s.lin||'—';
-  const code=r.s.school_pay_code||'—';
-  let msg='Dear '+parent+',\n\n';
-  msg+='Greetings and blessings from all of us at '+school+'. 🌸\n\n';
-  msg+='We hope this message finds you and your family in good health and happiness.\n\n';
-  msg+='We are writing with love and respect to gently remind you about the school fees for your dear child.\n\n';
-  msg+='👤 Pupil:            '+pupil+'\n';
-  msg+='🏫 Class:            '+cls+'\n';
-  msg+='🔢 LIN:              '+lin+'\n';
-  msg+='💳 School Pay Code:  '+code+'\n\n';
-  msg+='There are two easy ways to make payment:\n\n';
-  msg+='  1️⃣ Visit our school office — our bursar will be happy to assist you personally.\n\n';
-  msg+='  2️⃣ Pay using your child\'s School Pay Code: '+code+'\n\n';
-  msg+='Please do not feel pressured — we simply want to walk this journey together with you. Whenever you are able, kindly make payment through either option above.\n\n';
-  msg+='Your child is precious to us, and we are committed to giving them the very best education in a loving environment.\n\n';
-  msg+='If you are facing any challenges or need help with the payment process, please do not hesitate to speak with us. We are here to listen, to help, and to support you.\n\n';
-  msg+='Thank you for being part of our school family.\n\n';
-  msg+='With warmth, love and prayers,\n'+school+(phone?'\n📞 '+phone:'');
-  return msg;
-}
-
-function bulkWhatsApp(){
-  const list=(window._remFiltered||window._remAll||[]).filter(r=>r.bal>0.5&&r.s.parent_contact);
-  if(!list.length){toast('No debtors with phone numbers','bad');return}
-  let inner='';
-  list.forEach(r=>{
-    const pc=r.s.parent_contact;
-    const link='https://wa.me/'+wa(pc)+'?text='+encodeURIComponent(buildReminderMessage(r));
-    inner+='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px;border-bottom:1px solid #eef1f6"><div><b style="font-size:13px">'+esc(r.s.first_name+' '+(r.s.last_name||''))+'</b><div class="sub" style="font-size:11px">'+esc(pc)+' · Bal: '+ugx(r.bal)+'</div></div><a class="btn sm wa" style="text-decoration:none" target="_blank" href="'+link+'">💬 Open</a></div>';
-  });
-  modal('<h3>💬 Bulk WhatsApp</h3><div class="hint" style="margin-bottom:12px">'+list.length+' contact(s) ready. Tap each — opens WhatsApp with pre-filled message.</div><div style="max-height:60vh;overflow:auto">'+inner+'</div><div class="actions"><button class="btn ghost" onclick="closeModal()">Close</button></div>');
-}
-
-async function copyPhones(){
-  const list=(window._remFiltered||window._remAll||[]).filter(r=>r.s.parent_contact);
-  if(!list.length){toast('No phones','bad');return}
-  const phones=list.map(r=>r.s.parent_contact).join('; ');
-  try{await navigator.clipboard.writeText(phones);toast('Copied '+list.length+' phone numbers','ok')}
-  catch(e){toast('Copy failed','bad')}
-}
-
-/* ============================================================
-   CONTACTS
-   ============================================================ */
-async function pageContacts(root){
-  const students=await loadStudents();
-  const rows=students.map(s=>{
-    const phone=(s.parent_contact||'').trim();
-    const bal=(Number(s.total_charged)||0)-(Number(s.total_paid)||0);
-    return {s,phone,bal,wa:phone?wa(phone):'',tel:phone?tel(phone):''};
-  });
-  window._contactsAll=rows;
-  const withPhone=rows.filter(r=>r.phone).length;
-  root.innerHTML=
-    '<div class="grid g4" style="margin-bottom:12px">'+
-    '<div class="kpi navy"><div class="v">'+rows.length+'</div><div class="l">Pupils</div></div>'+
-    '<div class="kpi ok"><div class="v">'+withPhone+'</div><div class="l">With Phone</div></div>'+
-    '<div class="kpi bad"><div class="v">'+(rows.length-withPhone)+'</div><div class="l">Missing Phone</div></div>'+
-    '<div class="kpi"><div class="v">'+new Set(rows.filter(r=>r.phone).map(r=>r.phone)).size+'</div><div class="l">Unique Parents</div></div>'+
-    '</div>'+
-    '<div class="card">'+
-    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'+
-    '<button class="btn ghost" onclick="downloadCSV()">📥 Download CSV</button>'+
-    '<button class="btn ghost" onclick="downloadVCF()">📇 Download vCard</button>'+
-    '<button class="btn ghost" onclick="printContacts()">🖨️ Print</button>'+
-    '</div>'+
-    '<input id="cSearch" placeholder="🔍 Search parent, pupil, phone…" oninput="renderContacts()" style="margin-bottom:12px">'+
-    '<div id="conTable"></div></div>';
-  renderContacts();
-}
-
-function renderContacts(){
-  const q=(document.getElementById('cSearch').value||'').toLowerCase();
-  const list=(window._contactsAll||[]).filter(r=>{
-    if(!q)return true;
-    const h=((r.s.parent_name||'')+' '+(r.phone||'')+' '+(r.s.first_name||'')+' '+(r.s.last_name||'')+' '+(r.s.admission_no||'')).toLowerCase();
-    return h.indexOf(q)!==-1;
-  });
-  window._contactsFiltered=list;
-  const t=document.getElementById('conTable');
-  if(!list.length){t.innerHTML='<div class="empty">No contacts.</div>';return}
-  let rows='';
-  list.forEach(r=>{
-    const s=r.s;
-    const actions=r.phone
-      ?'<a class="btn sm ghost" style="text-decoration:none" href="tel:'+r.tel+'">📞</a> <a class="btn sm wa" style="text-decoration:none" target="_blank" href="https://wa.me/'+r.wa+'">💬</a>'
-      :'<span class="sub">—</span>';
-    rows+='<tr>'+
-      '<td><b>'+esc(s.admission_no||'—')+'</b></td>'+
-      '<td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b></td>'+
-      '<td>'+esc(s.lin||'—')+'</td>'+
-      '<td>'+esc(s.parent_name||'—')+'</td>'+
-      '<td>'+(r.phone?'<b>'+esc(r.phone)+'</b>':'<span class="badge bad">No phone</span>')+'</td>'+
-      '<td style="text-align:right">'+num(r.bal)+'</td>'+
-      '<td style="text-align:right;white-space:nowrap">'+actions+'</td>'+
-    '</tr>';
-  });
-  t.innerHTML='<div class="tbl-wrap"><table><thead><tr><th>ADM</th><th>Pupil</th><th>LIN</th><th>Parent</th><th>Phone</th><th style="text-align:right">Balance</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
-}
-
-function downloadCSV(){
-  const list=window._contactsFiltered||window._contactsAll||[];
-  if(!list.length){toast('Nothing to download','bad');return}
-  const head=['ADM','LIN','First Name','Last Name','Gender','Boarding','Parent Name','Parent Phone','Balance'];
-  const rows=[head.join(',')];
-  list.forEach(r=>{
-    const s=r.s;
-    const row=[s.admission_no||'',s.lin||'',s.first_name||'',s.last_name||'',gender(s.gender),isBoard(s.boarding_status)?'Boarding':'Day',s.parent_name||'',r.phone||'',r.bal]
-      .map(v=>{const str=String(v==null?'':v);if(str.includes(',')||str.includes('"')||str.includes('\n'))return'"'+str.replace(/"/g,'""')+'"';return str});
-    rows.push(row.join(','));
-  });
-  const blob=new Blob(['\ufeff'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;a.download='parents_'+new Date().toISOString().slice(0,10)+'.csv';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  toast('CSV downloaded ('+list.length+' rows)','ok');
-}
-
-function downloadVCF(){
-  const list=(window._contactsFiltered||window._contactsAll||[]).filter(r=>r.phone);
-  if(!list.length){toast('No phones','bad');return}
-  let vcf='';
-  list.forEach(r=>{
-    const s=r.s;
-    const name=(s.parent_name||'Parent of '+(s.first_name||'')).replace(/[\n;]/g,' ');
-    vcf+='BEGIN:VCARD\nVERSION:3.0\nFN:'+name+'\nTEL;TYPE=CELL:'+r.phone+'\nNOTE:Parent of '+s.first_name+' '+(s.last_name||'')+' — ADM '+(s.admission_no||'')+'\nEND:VCARD\n';
-  });
-  const blob=new Blob([vcf],{type:'text/vcard;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;a.download='parents_'+new Date().toISOString().slice(0,10)+'.vcf';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  toast('vCard downloaded ('+list.length+' contacts)','ok');
-}
-
-function printContacts(){
-  const list=window._contactsFiltered||window._contactsAll||[];
-  if(!list.length){toast('Nothing','bad');return}
-  const w=window.open('','_blank');
-  if(!w){toast('Allow popups','bad');return}
-  let h='<!DOCTYPE html><html><head><title>Parents Contacts</title><style>';
-  h+='body{font-family:Arial;padding:20px;margin:0;font-size:12px}';
-  h+='h1{font-size:16px;color:#0a2540;text-align:center;margin-bottom:4px}';
-  h+='table{width:100%;border-collapse:collapse;margin-top:12px}';
-  h+='th,td{border:1px solid #ccc;padding:6px;text-align:left;font-size:11px}';
-  h+='th{background:#0a2540;color:#fff}';
-  h+='</style></head><body><h1>'+esc(_school.name||'')+'</h1><div style="text-align:center;color:#666;font-size:11px">Parents Contact Directory</div><table><thead><tr><th>#</th><th>ADM</th><th>Pupil</th><th>LIN</th><th>Parent</th><th>Phone</th><th style="text-align:right">Balance</th></tr></thead><tbody>';
-  list.forEach((r,i)=>{
-    const s=r.s;
-    h+='<tr><td>'+(i+1)+'</td><td>'+esc(s.admission_no||'')+'</td><td>'+esc(s.first_name+' '+(s.last_name||''))+'</td><td>'+esc(s.lin||'')+'</td><td>'+esc(s.parent_name||'')+'</td><td>'+esc(r.phone||'')+'</td><td style="text-align:right">'+num(r.bal)+'</td></tr>';
-  });
-  h+='</tbody></table><div style="text-align:center;font-size:10px;color:#888;margin-top:16px">Powered by EUDES MEDIA</div>';
-  h+='<script>setTimeout(function(){window.print();},400);</'+'script></body></html>';
-  w.document.write(h);
-  w.document.close();
-}
-
-/* ============================================================
-   SETTINGS
-   ============================================================ */
-async function pageSettings(root){
-  root.innerHTML=
-    '<div class="card"><h3 class="h1">School Info</h3><div class="grid g2" style="margin-top:12px">'+
-    '<div><label>Name</label><input id="st_name" value="'+esc(_school.name||'')+'"></div>'+
-    '<div><label>Telephone</label><input id="st_phone" value="'+esc(_school.telephone||'')+'"></div>'+
-    '<div><label>Address</label><input id="st_addr" value="'+esc(_school.address||'')+'"></div>'+
-    '<div><label>Head Teacher</label><input id="st_head" value="'+esc(_school.head_teacher||'')+'"></div>'+
-    '<div><label>Motto</label><input id="st_motto" value="'+esc(_school.motto||'')+'"></div>'+
-    '<div><label>Logo URL</label><input id="st_logo" value="'+esc(_school.logo_url||'')+'"></div>'+
-    '</div><button class="btn" style="margin-top:14px" onclick="saveSchoolInfo()">💾 Save</button></div>'+
-    '<div class="card"><h3 class="h1">Account</h3>'+
-    '<div class="sub" style="margin-top:6px">'+esc(_prof.full_name||'')+'</div>'+
-    '<div class="sub">'+esc(_prof.email||'')+'</div>'+
-    '<button class="btn bad" style="margin-top:12px" onclick="doLogout()">Sign Out</button></div>';
-}
-
-async function saveSchoolInfo(){
-  const b={
-    name:document.getElementById('st_name').value.trim(),
-    telephone:document.getElementById('st_phone').value.trim(),
-    address:document.getElementById('st_addr').value.trim(),
-    head_teacher:document.getElementById('st_head').value.trim(),
-    motto:document.getElementById('st_motto').value.trim(),
-    logo_url:document.getElementById('st_logo').value.trim()
-  };
-  try{
-    await api('/rest/v1/schools?id=eq.'+_schoolId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(b)});
-    Object.assign(_school,b);
-    document.getElementById('hdrName').textContent=_school.name||'SCHOOL';
-    toast('Saved ✓','ok');
-  }catch(e){toast('Save failed: '+e.message,'bad')}
-}
-
-/* ============================================================
-   BOOT
-   ============================================================ */
-try{
-  const s=store.get('pm_sess');
-  if(s){_sess=JSON.parse(s);boot();}
-}catch(e){}
-</script>
-</body>
-</html>
-/* ============================================================
-   PAYMENTS
-   ============================================================ */
-async function pagePayments(root){
-  const students=await loadStudents();
-  const payments=await api('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=*&order=paid_at.desc&limit=200')||[];
-  const sBy={};students.forEach(s=>sBy[s.id]=s);
-  const total=payments.reduce((a,p)=>a+Number(p.amount||0),0);
-  root.innerHTML=
-    '<div class="grid g4" style="margin-bottom:12px">'+
-    '<div class="kpi navy"><div class="v">'+payments.length+'</div><div class="l">Payments</div></div>'+
-    '<div class="kpi ok"><div class="v">'+ugx(total)+'</div><div class="l">Total Collected</div></div>'+
-    '</div>'+
-    '<div class="card"><input id="pSearch" placeholder="🔍 Search receipt or pupil name…" oninput="renderPayments()" style="margin-bottom:12px"><div id="payTable"></div></div>';
-  window._payments=payments;
-  window._studentsBy=sBy;
-  renderPayments();
-}
-
-function renderPayments(){
-  const q=(document.getElementById('pSearch').value||'').toLowerCase();
-  const list=(window._payments||[]).filter(p=>{
-    if(!q)return true;
-    const s=(window._studentsBy||{})[p.student_id]||{};
-    const h=((p.receipt_no||'')+' '+(s.first_name||'')+' '+(s.last_name||'')+' '+(s.admission_no||'')).toLowerCase();
-    return h.indexOf(q)!==-1;
-  });
-  const t=document.getElementById('payTable');
-  if(!list.length){t.innerHTML='<div class="empty">No payments yet.</div>';return}
-  let rows='';
-  list.forEach(p=>{
-    const s=(window._studentsBy||{})[p.student_id]||{};
-    rows+='<tr>'+
-      '<td>'+dt(p.paid_at)+'</td>'+
-      '<td><b style="font-family:monospace">'+esc(p.receipt_no||'')+'</b></td>'+
-      '<td><b>'+esc((s.first_name||'')+' '+(s.last_name||''))+'</b></td>'+
-      '<td>'+esc(s.admission_no||'')+'</td>'+
-      '<td>'+esc(p.payment_for||'')+'</td>'+
-      '<td>'+esc(p.method||'')+'</td>'+
-      '<td style="text-align:right;font-weight:700;color:#047857">'+num(p.amount)+'</td>'+
-    '</tr>';
-  });
-  t.innerHTML='<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Receipt</th><th>Pupil</th><th>ADM</th><th>For</th><th>Method</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
-}
-
-function openPaymentModal(studentId){
-  const s=_students.find(x=>x.id===studentId);
-  if(!s){toast('Open Students page first','bad');return}
-  const charged=Number(s.total_charged)||0;
-  const paid=Number(s.total_paid)||0;
-  const bal=charged-paid;
-  const rno='RCP-'+new Date().getFullYear()+'-'+Date.now().toString().slice(-5);
-  modal('<h3>💰 Record Payment</h3>'+
-    '<div style="background:#f8fafc;border-radius:10px;padding:12px;margin-bottom:12px">'+
-      '<b>'+esc(s.first_name+' '+(s.last_name||''))+'</b>'+
-      '<div class="sub">'+esc(s.admission_no)+'</div>'+
-      '<div style="margin-top:8px">'+
-      '<span class="mini">Charged: '+ugx(charged)+'</span>'+
-      '<span class="mini" style="background:#ecfdf5;color:#047857">Paid: '+ugx(paid)+'</span>'+
-      '<span class="mini" style="background:#fef2f2;color:#b91c1c">Balance: '+ugx(bal)+'</span>'+
-      '</div>'+
-    '</div>'+
-    '<div style="margin-bottom:10px"><label>Receipt No</label><input id="pay_rno" value="'+esc(rno)+'"></div>'+
-    '<div style="margin-bottom:10px"><label>Payment For</label><select id="pay_for"><option>School Fees</option><option>Functional Fees</option><option>Transport</option><option>Holiday</option><option>Academics</option><option>Uniform</option><option>Other</option></select></div>'+
-    '<div style="margin-bottom:10px"><label>Amount *</label><input id="pay_amt" type="number" value="'+Math.max(0,bal)+'"></div>'+
-    '<div style="margin-bottom:10px"><label>Method</label><select id="pay_method"><option>Cash</option><option>Mobile Money</option><option>Bank</option><option>Cheque</option></select></div>'+
-    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn ok" onclick="savePayment(\''+s.id+'\')">Save & Print Receipt</button></div>');
-}
-
-async function savePayment(studentId){
-  const amount=Number(document.getElementById('pay_amt').value);
-  const rno=document.getElementById('pay_rno').value.trim()||('RCP-'+Date.now());
-  if(!amount||amount<=0){toast('Enter amount','bad');return}
-  const s=_students.find(x=>x.id===studentId);
-  if(!s){toast('Not found','bad');return}
-  const forWhat=document.getElementById('pay_for').value;
-  const method=document.getElementById('pay_method').value;
-  const body={
-    school_id:_schoolId,student_id:studentId,receipt_no:rno,
-    year:new Date().getFullYear(),term:1,academic_year:new Date().getFullYear(),
-    amount:amount,method:method,payment_for:forWhat,
-    received_by:_prof?_prof.id:null
-  };
-  try{
-    await api('/rest/v1/payments',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(body)});
-    const newPaid=(Number(s.total_paid)||0)+amount;
-    const charged=Number(s.total_charged)||0;
-    await api('/rest/v1/students?id=eq.'+studentId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({total_paid:newPaid,current_balance:Math.max(0,charged-newPaid)})});
-    toast('Payment recorded ✓ '+rno,'ok');
-    printReceipt(s,{receipt_no:rno,amount:amount,payment_for:forWhat,method:method,date:new Date().toISOString()});
-    closeModal();
-    await loadStudents();
-    nav(_route);
-  }catch(e){toast('Save failed: '+e.message,'bad')}
-}
-
-function printReceipt(student,pay){
-  const charged=Number(student.total_charged)||0;
-  const before=Number(student.total_paid)||0;
-  const bal=charged-(before+Number(pay.amount));
-  const w=window.open('','_blank');
-  if(!w){toast('Allow popups','bad');return}
-  let h='<!DOCTYPE html><html><head><title>Receipt</title><style>';
-  h+='body{font-family:Arial;padding:20px;margin:0;font-size:13px}';
-  h+='.r{max-width:520px;margin:0 auto;border:2px solid #0a2540;padding:20px;border-radius:8px}';
-  h+='.h{text-align:center;border-bottom:2px dashed #0a2540;padding-bottom:10px;margin-bottom:12px}';
-  h+='.h h1{font-size:16px;margin:0;color:#0a2540}';
-  h+='.rno{text-align:center;font-family:monospace;font-size:15px;font-weight:800;background:#f1f5f9;padding:6px;border-radius:6px;margin-bottom:10px}';
-  h+='table{width:100%;border-collapse:collapse;font-size:12px}';
-  h+='td{padding:6px 4px;border-bottom:1px solid #eee}';
-  h+='td:first-child{color:#666;width:40%}';
-  h+='td:last-child{text-align:right;font-weight:600}';
-  h+='.amt{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:12px;margin:12px 0;text-align:center}';
-  h+='.amt .v{font-size:22px;font-weight:900;color:#047857}';
-  h+='.sign{margin-top:20px;display:flex;justify-content:space-between;font-size:11px;color:#666}';
-  h+='.sign div{width:40%;padding-top:16px;border-top:1px solid #999;text-align:center}';
-  h+='@media print{body{padding:0}}';
-  h+='</style></head><body><div class="r">';
-  h+='<div class="h"><h1>'+esc(_school.name||'School')+'</h1><div style="font-size:11px;color:#666">'+esc(_school.address||'')+'</div></div>';
-  h+='<div class="rno">RECEIPT: '+esc(pay.receipt_no)+'</div>';
-  h+='<table>';
-  h+='<tr><td>Date</td><td>'+dt(pay.date)+'</td></tr>';
-  h+='<tr><td>Pupil</td><td>'+esc(student.first_name+' '+(student.last_name||''))+'</td></tr>';
-  h+='<tr><td>ADM</td><td>'+esc(student.admission_no||'')+'</td></tr>';
-  h+='<tr><td>For</td><td>'+esc(pay.payment_for)+'</td></tr>';
-  h+='<tr><td>Method</td><td>'+esc(pay.method)+'</td></tr>';
-  h+='<tr><td>Received By</td><td>'+esc(_prof.full_name||'')+'</td></tr>';
-  h+='</table>';
-  h+='<div class="amt"><div style="font-size:10px;color:#047857">AMOUNT RECEIVED</div><div class="v">'+ugx(pay.amount)+'</div></div>';
-  h+='<table><tr><td>New Balance</td><td>'+ugx(bal)+'</td></tr></table>';
-  h+='<div class="sign"><div>Parent</div><div>Cashier</div></div>';
-  h+='<div style="text-align:center;font-size:10px;color:#888;margin-top:12px">Powered by EUDES MEDIA</div>';
-  h+='</div><script>setTimeout(function(){window.print();},400);</'+'script></body></html>';
-  w.document.write(h);
-  w.document.close();
-}
-
-/* ============================================================
-   REMINDERS
-   ============================================================ */
-async function pageReminders(root){
-  const students=await loadStudents();
-  const active=students.filter(s=>s.status!=='inactive');
-  const rows=active.map(s=>{
-    const charged=Number(s.total_charged)||0;
-    const paid=Number(s.total_paid)||0;
-    const bal=charged-paid;
-    let status='unpaid';
-    if(charged<=0)status='no-fees';
-    else if(bal<=0)status='cleared';
-    else if(paid>0)status='partial';
-    return {s,charged,paid,bal,status};
-  });
-  window._remAll=rows;
-
-  let tc=0,tp=0,tb=0,debt=0;
-  rows.forEach(r=>{
-    tc+=r.charged;tp+=r.paid;tb+=r.bal;
-    if(r.bal>0.5)debt++;
-  });
-
-  root.innerHTML=
-    '<div class="grid g4" style="margin-bottom:12px">'+
-    '<div class="kpi navy"><div class="v">'+ugx(tc)+'</div><div class="l">Total Charged</div></div>'+
-    '<div class="kpi ok"><div class="v">'+ugx(tp)+'</div><div class="l">Collected</div></div>'+
-    '<div class="kpi bad"><div class="v">'+ugx(tb)+'</div><div class="l">Outstanding</div></div>'+
-    '<div class="kpi"><div class="v">'+debt+'</div><div class="l">Debtors</div></div>'+
-    '</div>'+
-    '<div class="card">'+
-    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'+
-    '<button class="btn wa" onclick="bulkWhatsApp()">💬 Bulk WhatsApp</button>'+
-    '<button class="btn ghost" onclick="copyPhones()">📋 Copy Phones</button>'+
-    '</div>'+
-    '<input id="remSearch" placeholder="🔍 Search…" oninput="renderReminders()" style="margin-bottom:12px">'+
-    '<div id="remTable"></div></div>';
-  renderReminders();
-}
-
-function renderReminders(){
-  const q=(document.getElementById('remSearch').value||'').toLowerCase();
-  const list=(window._remAll||[]).filter(r=>{
-    if(!q)return true;
-    const h=(r.s.first_name+' '+(r.s.last_name||'')+' '+(r.s.admission_no||'')+' '+(r.s.parent_name||'')).toLowerCase();
-    return h.indexOf(q)!==-1;
-  });
-  window._remFiltered=list;
-  const t=document.getElementById('remTable');
-  if(!list.length){t.innerHTML='<div class="empty">No pupils.</div>';return}
-  let rows='';
-  list.forEach(r=>{
-    const s=r.s;
-    const pct=r.charged>0?Math.min(100,Math.round(r.paid/r.charged*100)):0;
-    const stBadge={cleared:'<span class="badge ok">Cleared</span>',partial:'<span class="badge warn">Partial</span>',unpaid:'<span class="badge bad">Unpaid</span>','no-fees':'<span class="badge info">No fees</span>'}[r.status]||'';
-    const pc=(s.parent_contact||'').trim();
-    const waLinkStr=pc?'https://wa.me/'+wa(pc)+'?text='+encodeURIComponent(buildReminderMessage(r)):'';
-    rows+='<tr>'+
-      '<td><b>'+esc(s.admission_no||'—')+'</b></td>'+
-      '<td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b><div style="font-size:10.5px;color:#64748b">'+esc(gender(s.gender))+'</div></td>'+
-      '<td>'+esc(s.parent_name||'—')+'<div style="font-size:10.5px;color:#64748b">'+esc(pc||'')+'</div></td>'+
-      '<td style="text-align:right">'+num(r.charged)+'</td>'+
-      '<td style="text-align:right;color:#047857">'+num(r.paid)+'</td>'+
-      '<td style="text-align:right;font-weight:700;color:'+(r.bal>0?'#b91c1c':'#047857')+'">'+num(r.bal)+'</td>'+
-      '<td style="text-align:center;min-width:70px"><div style="background:#e2e8f0;border-radius:99px;height:6px;overflow:hidden"><div style="background:'+(pct>=100?'#059669':pct>=50?'#d97706':'#dc2626')+';height:100%;width:'+pct+'%"></div></div><div style="font-size:10px;color:#64748b;margin-top:2px">'+pct+'%</div></td>'+
-      '<td>'+stBadge+'</td>'+
-      '<td style="text-align:right;white-space:nowrap">'+
-        '<button class="btn sm gold" onclick="openPaymentModal(\''+s.id+'\')" title="Pay">💵</button> '+
-        (pc?'<a class="btn sm wa" style="text-decoration:none" target="_blank" href="'+waLinkStr+'">💬</a> ':'')+
-        (pc?'<a class="btn sm ghost" style="text-decoration:none" href="tel:'+tel(pc)+'">📞</a>':'')+
-      '</td></tr>';
-  });
-  t.innerHTML='<div class="tbl-wrap"><table><thead><tr><th>ADM</th><th>Pupil</th><th>Parent</th><th style="text-align:right">Charged</th><th style="text-align:right">Paid</th><th style="text-align:right">Balance</th><th>Progress</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
-}
-
-function buildReminderMessage(r){
-  const school=_school?.name||'School';
-  const phone=_school?.telephone||'';
-  const parent=r.s.parent_name||'Parent';
-  const pupil=(r.s.first_name||'')+' '+(r.s.last_name||'');
-  const lin=r.s.lin||'—';
-  const code=r.s.school_pay_code||'—';
-  let msg='Dear '+parent+',\n\n';
-  msg+='Greetings and blessings from all of us at '+school+'. 🌸\n\n';
-  msg+='We hope this message finds you and your family in good health and happiness.\n\n';
-  msg+='We are writing with love and respect to gently remind you about the school fees for your dear child.\n\n';
-  msg+='👤 Pupil:            '+pupil+'\n';
-  msg+='🔢 LIN:              '+lin+'\n';
-  msg+='💳 School Pay Code:  '+code+'\n\n';
-  msg+='There are two easy ways to make payment:\n\n';
-  msg+='  1️⃣ Visit our school office — our bursar will be happy to assist you personally.\n\n';
-  msg+='  2️⃣ Pay using your child\'s School Pay Code: '+code+'\n\n';
-  msg+='Please do not feel pressured — we simply want to walk this journey together with you. Whenever you are able, kindly make payment through either option above.\n\n';
-  msg+='Your child is precious to us, and we are committed to giving them the very best education in a loving environment.\n\n';
-  msg+='If you are facing any challenges or need help with the payment process, please do not hesitate to speak with us. We are here to listen, to help, and to support you.\n\n';
-  msg+='Thank you for being part of our school family.\n\n';
-  msg+='With warmth, love and prayers,\n'+school+(phone?'\n📞 '+phone:'');
-  return msg;
-}
-
-function bulkWhatsApp(){
-  const list=(window._remFiltered||window._remAll||[]).filter(r=>r.bal>0.5&&r.s.parent_contact);
-  if(!list.length){toast('No debtors with phone numbers','bad');return}
-  let inner='';
-  list.forEach(r=>{
-    const pc=r.s.parent_contact;
-    const link='https://wa.me/'+wa(pc)+'?text='+encodeURIComponent(buildReminderMessage(r));
-    inner+='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px;border-bottom:1px solid #eef1f6"><div><b style="font-size:13px">'+esc(r.s.first_name+' '+(r.s.last_name||''))+'</b><div class="sub" style="font-size:11px">'+esc(pc)+' · Bal: '+ugx(r.bal)+'</div></div><a class="btn sm wa" style="text-decoration:none" target="_blank" href="'+link+'">💬 Open</a></div>';
-  });
-  modal('<h3>💬 Bulk WhatsApp</h3><div class="hint" style="margin-bottom:12px">'+list.length+' contact(s) ready. Tap each — opens WhatsApp with pre-filled message.</div><div style="max-height:60vh;overflow:auto">'+inner+'</div><div class="actions"><button class="btn ghost" onclick="closeModal()">Close</button></div>');
-}
-
-async function copyPhones(){
-  const list=(window._remFiltered||window._remAll||[]).filter(r=>r.s.parent_contact);
-  if(!list.length){toast('No phones','bad');return}
-  const phones=list.map(r=>r.s.parent_contact).join('; ');
-  try{await navigator.clipboard.writeText(phones);toast('Copied '+list.length+' phone numbers','ok')}
-  catch(e){toast('Copy failed','bad')}
-}
-
-/* ============================================================
-   CONTACTS
-   ============================================================ */
-async function pageContacts(root){
-  const students=await loadStudents();
-  const rows=students.map(s=>{
-    const phone=(s.parent_contact||'').trim();
-    const bal=(Number(s.total_charged)||0)-(Number(s.total_paid)||0);
-    return {s,phone,bal,wa:phone?wa(phone):'',tel:phone?tel(phone):''};
-  });
-  window._contactsAll=rows;
-  const withPhone=rows.filter(r=>r.phone).length;
-  root.innerHTML=
-    '<div class="grid g4" style="margin-bottom:12px">'+
-    '<div class="kpi navy"><div class="v">'+rows.length+'</div><div class="l">Pupils</div></div>'+
-    '<div class="kpi ok"><div class="v">'+withPhone+'</div><div class="l">With Phone</div></div>'+
-    '<div class="kpi bad"><div class="v">'+(rows.length-withPhone)+'</div><div class="l">Missing Phone</div></div>'+
-    '<div class="kpi"><div class="v">'+new Set(rows.filter(r=>r.phone).map(r=>r.phone)).size+'</div><div class="l">Unique Parents</div></div>'+
-    '</div>'+
-    '<div class="card">'+
-    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'+
-    '<button class="btn ghost" onclick="downloadCSV()">📥 Download CSV</button>'+
-    '<button class="btn ghost" onclick="downloadVCF()">📇 Download vCard</button>'+
-    '<button class="btn ghost" onclick="printContacts()">🖨️ Print</button>'+
-    '</div>'+
-    '<input id="cSearch" placeholder="🔍 Search parent, pupil, phone…" oninput="renderContacts()" style="margin-bottom:12px">'+
-    '<div id="conTable"></div></div>';
-  renderContacts();
-}
-
-function renderContacts(){
-  const q=(document.getElementById('cSearch').value||'').toLowerCase();
-  const list=(window._contactsAll||[]).filter(r=>{
-    if(!q)return true;
-    const h=((r.s.parent_name||'')+' '+(r.phone||'')+' '+(r.s.first_name||'')+' '+(r.s.last_name||'')+' '+(r.s.admission_no||'')).toLowerCase();
-    return h.indexOf(q)!==-1;
-  });
-  window._contactsFiltered=list;
-  const t=document.getElementById('conTable');
-  if(!list.length){t.innerHTML='<div class="empty">No contacts.</div>';return}
-  let rows='';
-  list.forEach(r=>{
-    const s=r.s;
-    const actions=r.phone
-      ?'<a class="btn sm ghost" style="text-decoration:none" href="tel:'+r.tel+'">📞</a> <a class="btn sm wa" style="text-decoration:none" target="_blank" href="https://wa.me/'+r.wa+'">💬</a>'
-      :'<span class="sub">—</span>';
-    rows+='<tr>'+
-      '<td><b>'+esc(s.admission_no||'—')+'</b></td>'+
-      '<td><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b></td>'+
-      '<td>'+esc(s.lin||'—')+'</td>'+
-      '<td>'+esc(s.parent_name||'—')+'</td>'+
-      '<td>'+(r.phone?'<b>'+esc(r.phone)+'</b>':'<span class="badge bad">No phone</span>')+'</td>'+
-      '<td style="text-align:right">'+num(r.bal)+'</td>'+
-      '<td style="text-align:right;white-space:nowrap">'+actions+'</td>'+
-    '</tr>';
-  });
-  t.innerHTML='<div class="tbl-wrap"><table><thead><tr><th>ADM</th><th>Pupil</th><th>LIN</th><th>Parent</th><th>Phone</th><th style="text-align:right">Balance</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
-}
-
-function downloadCSV(){
-  const list=window._contactsFiltered||window._contactsAll||[];
-  if(!list.length){toast('Nothing to download','bad');return}
-  const head=['ADM','LIN','First Name','Last Name','Gender','Boarding','Parent Name','Parent Phone','Balance'];
-  const rows=[head.join(',')];
-  list.forEach(r=>{
-    const s=r.s;
-    const row=[s.admission_no||'',s.lin||'',s.first_name||'',s.last_name||'',gender(s.gender),isBoard(s.boarding_status)?'Boarding':'Day',s.parent_name||'',r.phone||'',r.bal]
-      .map(v=>{const str=String(v==null?'':v);if(str.includes(',')||str.includes('"')||str.includes('\n'))return'"'+str.replace(/"/g,'""')+'"';return str});
-    rows.push(row.join(','));
-  });
-  const blob=new Blob(['\ufeff'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;a.download='parents_'+new Date().toISOString().slice(0,10)+'.csv';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  toast('CSV downloaded ('+list.length+' rows)','ok');
-}
-
-function downloadVCF(){
-  const list=(window._contactsFiltered||window._contactsAll||[]).filter(r=>r.phone);
-  if(!list.length){toast('No phones','bad');return}
-  let vcf='';
-  list.forEach(r=>{
-    const s=r.s;
-    const name=(s.parent_name||'Parent of '+(s.first_name||'')).replace(/[\n;]/g,' ');
-    vcf+='BEGIN:VCARD\nVERSION:3.0\nFN:'+name+'\nTEL;TYPE=CELL:'+r.phone+'\nNOTE:Parent of '+s.first_name+' '+(s.last_name||'')+' — ADM '+(s.admission_no||'')+'\nEND:VCARD\n';
-  });
-  const blob=new Blob([vcf],{type:'text/vcard;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;a.download='parents_'+new Date().toISOString().slice(0,10)+'.vcf';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  toast('vCard downloaded ('+list.length+' contacts)','ok');
-}
-
-function printContacts(){
-  const list=window._contactsFiltered||window._contactsAll||[];
-  if(!list.length){toast('Nothing','bad');return}
-  const w=window.open('','_blank');
-  if(!w){toast('Allow popups','bad');return}
-  let h='<!DOCTYPE html><html><head><title>Parents Contacts</title><style>';
-  h+='body{font-family:Arial;padding:20px;margin:0;font-size:12px}';
-  h+='h1{font-size:16px;color:#0a2540;text-align:center;margin-bottom:4px}';
-  h+='table{width:100%;border-collapse:collapse;margin-top:12px}';
-  h+='th,td{border:1px solid #ccc;padding:6px;text-align:left;font-size:11px}';
-  h+='th{background:#0a2540;color:#fff}';
-  h+='</style></head><body><h1>'+esc(_school.name||'')+'</h1><div style="text-align:center;color:#666;font-size:11px">Parents Contact Directory</div><table><thead><tr><th>#</th><th>ADM</th><th>Pupil</th><th>LIN</th><th>Parent</th><th>Phone</th><th style="text-align:right">Balance</th></tr></thead><tbody>';
-  list.forEach((r,i)=>{
-    const s=r.s;
-    h+='<tr><td>'+(i+1)+'</td><td>'+esc(s.admission_no||'')+'</td><td>'+esc(s.first_name+' '+(s.last_name||''))+'</td><td>'+esc(s.lin||'')+'</td><td>'+esc(s.parent_name||'')+'</td><td>'+esc(r.phone||'')+'</td><td style="text-align:right">'+num(r.bal)+'</td></tr>';
-  });
-  h+='</tbody></table><div style="text-align:center;font-size:10px;color:#888;margin-top:16px">Powered by EUDES MEDIA</div>';
-  h+='<script>setTimeout(function(){window.print();},400);</'+'script></body></html>';
-  w.document.write(h);
-  w.document.close();
-}
-
-/* ============================================================
-   SETTINGS
-   ============================================================ */
-async function pageSettings(root){
-  root.innerHTML=
-    '<div class="card"><h3 class="h1">School Info</h3><div class="grid g2" style="margin-top:12px">'+
-    '<div><label>Name</label><input id="st_name" value="'+esc(_school.name||'')+'"></div>'+
-    '<div><label>Telephone</label><input id="st_phone" value="'+esc(_school.telephone||'')+'"></div>'+
-    '<div><label>Address</label><input id="st_addr" value="'+esc(_school.address||'')+'"></div>'+
-    '<div><label>Head Teacher</label><input id="st_head" value="'+esc(_school.head_teacher||'')+'"></div>'+
-    '<div><label>Motto</label><input id="st_motto" value="'+esc(_school.motto||'')+'"></div>'+
-    '<div><label>Logo URL</label><input id="st_logo" value="'+esc(_school.logo_url||'')+'"></div>'+
-    '</div><button class="btn" style="margin-top:14px" onclick="saveSchoolInfo()">💾 Save</button></div>'+
-    '<div class="card"><h3 class="h1">Account</h3>'+
-    '<div class="sub" style="margin-top:6px">'+esc(_prof.full_name||'')+'</div>'+
-    '<div class="sub">'+esc(_prof.email||'')+'</div>'+
-    '<button class="btn bad" style="margin-top:12px" onclick="doLogout()">Sign Out</button></div>';
-}
-
-async function saveSchoolInfo(){
-  const b={
-    name:document.getElementById('st_name').value.trim(),
-    telephone:document.getElementById('st_phone').value.trim(),
-    address:document.getElementById('st_addr').value.trim(),
-    head_teacher:document.getElementById('st_head').value.trim(),
-    motto:document.getElementById('st_motto').value.trim(),
-    logo_url:document.getElementById('st_logo').value.trim()
-  };
-  try{
-    await api('/rest/v1/schools?id=eq.'+_schoolId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(b)});
-    Object.assign(_school,b);
-    document.getElementById('hdrName').textContent=_school.name||'SCHOOL';
-    toast('Saved ✓','ok');
-  }catch(e){toast('Save failed: '+e.message,'bad')}
-}
-
-/* ============================================================
-   BOOT
-   ============================================================ */
-try{
-  const s=store.get('pm_sess');
-  if(s){_sess=JSON.parse(s);boot();}
-}catch(e){}
-
-</script>
-</body>
-</html>
+async function pageProfile(root){
+  if(!_profileStudentId){root.innerHTML='<div class="empty">No pupil selected</div>';return;}
+  clearClassesCache();
+  const classes=await loadClasses();
+  const results=await Promise.all([
+    rest('/rest/v1/students?id=eq.'+_profileStudentId+'&select=*'),
+    rest('/rest/v1/payments?student_id=eq.'+_profileStudentId+'&select=*&order=paid_at.desc').catch(()=>[]),
+    rest('/rest/v1/fee_reminders?student_id=eq.'+_profileStudentId+'&select=*&order=promise_date.desc').catch(()=>[]),
+    rest('/rest/v1/pass_outs?student_id=eq.'+_profileStudentId+'&select=*&order=signed_out_at.desc').catch(()=>[]),
+    rest('/rest/v1/attendance?student_id=eq.'+_profileStudentId+'&select=*&order=date.desc&limit=60').catch(()=>[])
+  ]);
+  const s=results[0]&&results[0][0];
+  if(!s){root.innerHTML='<div class="empty">Not found</div>';return;}
+  const payments=results[1],promises=results[2],passouts=results[3],attendance=results[4];
+  window._profileStudent=s;window._profilePromises=promises;window._profilePassOuts=passouts;window._profileAttendance=attendance;
+  const cls=classes.find(c=>c.id===s.class_id);
+  const charged=Number(s.total_charged)||0;const paid=Number(s.total_paid)||0;const bal=charged-paid;
+  const initials=(s.first_name||'?').charAt(0).toUpperCase()+(s.last_name?' '+s.last_name.charAt(0).toUpperCase():'');
+  const gl=genderLabel(s.gender);
+  const hero='<div class="profile-hero no-print"><div class="avatar">'+esc(initials)+'</div><div class="info"><h1>'+esc(s.first_name+' '+(s.last_name||''))+'</h1><div class="meta">📋 '+esc(s.admission_no)+' · '+(cls?'🏫 '+esc(cls.name):'No class')+' · '+(gl!=='—'?'👤 '+gl+' · ':'')+esc(String(s.boarding_status||'Day'))+'</div>'+(s.parent_name||s.parent_contact?'<div class="meta">👤 '+esc(s.parent_name||'')+(s.parent_contact?' · 📞 '+esc(s.parent_contact):'')+'</div>':'')+'</div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn gold" onclick="recordPayment(\''+s.id+'\')">💵 Pay</button><button class="btn ghost" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.3)" onclick="openStudentModalById(\''+s.id+'\')">✏️ Edit</button></div></div>';
+  const kpis='<div class="grid grid-kpi no-print" style="margin-bottom:14px"><div class="kpi"><div class="v">'+fmtUGX(charged)+'</div><div class="l">Charged</div></div><div class="kpi kpi-ok"><div class="v">'+fmtUGX(paid)+'</div><div class="l">Paid</div></div><div class="kpi '+(bal>0?'kpi-bad':'kpi-ok')+'"><div class="v">'+fmtUGX(bal)+'</div><div class="l">Balance</div></div><div class="kpi kpi-warn"><div class="v">'+passouts.length+'</div><div class="l">Pass Outs</div></div></div>';
+  const tabs=[
+    {id:'overview',label:'📋 Overview'},
+    {id:'fees',label:'💰 Fees'},
+    {id:'payments',label:'💳 Payments ('+payments.length+')'},
+    {id:'promises',label:'🔔 Promises ('+promises.length+')'},
+    {id:'passouts',label:'🚪 Pass Outs ('+passouts.length+')'},
+    {id:'attendance',label:'📅 Attendance ('+attendance.length+')'}
+  ];
+  const tabsHtml='<div class="tabs-bar no-print">'+tabs.map(t=>'<button class="'+(_profileTab===t.id?'active':'')+'" onclick="_profileTab=\''+t.id+'\';pageProfile(document.getElementById(\'main\'))">'+t.label+'</button>').join('')+'</div>';
+  let content='';
+  if(_profileTab==='overview'){
+    content='<div class="grid grid-2"><div class="card"><h3>Personal</h3><table><tbody>'+
+      '<tr><td style="color:var(--muted)">ADM</td><td><b>'+esc(s.admission_no)+'</b></td></tr>'+
+      '<tr><td style="color:var(--muted)">Class</td><td>'+esc(cls?cls.name:'—')+'</td></tr>'+
+      '<tr><td style="color:var(--muted)">Gender</td><td><b>'+esc(gl)+'</b></td></tr>'+
+      '<tr><td style="color:var(--muted)">Boarding</td><td>'+esc(String(s.boarding_status||'Day'))+'</td></tr>'+
+      '<tr><td style="color:var(--muted)">DOB</td><td>'+fmtDate(s.date_of_birth)+'</td></tr>'+
+      '<tr><td style="color:var(--muted)">LIN</td><td>'+esc(s.lin||'—')+'</td></tr>'+
+      '<tr><td style="color:var(--muted)">Location</td><td>'+esc(s.location||'—')+'</td></tr>'+
+      '<tr><td style="color:var(--muted)">Status</td><td>'+(s.status==='inactive'?'<span class="badge warn">Inactive</span>':'<span class="badge ok">Active</span>')+'</td></tr>'+
+      '</tbody></table></div>'+
+      '<div class="card"><h3>Parent / Guardian</h3><table><tbody>'+
+      '<tr><td style="color:var(--muted)">Name</td><td><b>'+esc(s.parent_name||'—')+'</b></td></tr>'+
+      '<tr><td style="color:var(--muted)">Phone</td><td><b>'+(s.parent_contact?esc(s.parent_contact):'—')+'</b></td></tr>'+
+      '</tbody></table>'+
+      (s.parent_contact?'<div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap"><a href="https://wa.me/'+waLink(s.parent_contact)+'" target="_blank" class="btn wa">💬 WhatsApp</a><a href="tel:'+telLink(s.parent_contact)+'" class="btn ghost">📞 Call</a></div>':'')+
+      '</div></div>';
+  } else if(_profileTab==='fees'){
+    content='<div class="card"><h3>Fee Breakdown</h3><div class="table-wrap"><table><thead><tr><th>Item</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
+      '<tr><td>Balance B/F</td><td style="text-align:right">'+fmtNum(s.balance_bf)+'</td></tr>'+
+      '<tr><td>School Fee</td><td style="text-align:right">'+fmtNum(s.actual_fee)+'</td></tr>'+
+      '<tr><td>Functional Fee</td><td style="text-align:right">'+fmtNum(s.functional_fee)+'</td></tr>'+
+      '<tr><td>Transport Fee</td><td style="text-align:right">'+fmtNum(s.transport_fee)+'</td></tr>'+
+      '<tr><td>Holiday Fee</td><td style="text-align:right">'+fmtNum(s.holiday_fee)+'</td></tr>'+
+      '<tr><td>Academics Fee</td><td style="text-align:right">'+fmtNum(s.academics_fee)+'</td></tr>'+
+      '<tr style="background:#f1f5f9"><td><b>Total Charged</b></td><td style="text-align:right"><b>'+fmtNum(charged)+'</b></td></tr>'+
+      '<tr><td>Paid</td><td style="text-align:right;color:#047857">'+fmtNum(paid)+'</td></tr>'+
+      '<tr style="background:'+(bal>0?'#fef2f2':'#ecfdf5')+'"><td><b>Balance</b></td><td style="text-align:right;font-weight:700;color:'+(bal>0?'#b91c1c':'#047857')+'"><b>'+fmtNum(bal)+'</b></td></tr>'+
+      '</tbody></table></div></div>';
+  } else if(_profileTab==='payments'){
+    if(!payments.length)content='<div class="card empty">No payments yet.</div>';
+    else{
+      let running=0;let rows='';
+      [...payments].reverse().forEach(p=>{running+=Number(p.amount);rows='<tr><td>'+fmtDateTime(p.paid_at)+'</td><td><b style="font-family:monospace">'+esc(p.receipt_no||'')+'</b></td><td>'+esc(p.payment_for||'')+'</td><td style="text-align:right;color:#047857">'+fmtNum(p.amount)+'</td><td style="text-align:right">'+fmtNum(running)+'</td></tr>'+rows;});
+      content='<div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><h3 style="margin:0">Payment History</h3><button class="btn gold sm" onclick="recordPayment(\''+s.id+'\')">＋ Payment</button></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Receipt</th><th>For</th><th style="text-align:right">Amount</th><th style="text-align:right">Running</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+    }
+  } else if(_profileTab==='promises'){
+    if(!promises.length)content='<div class="c
