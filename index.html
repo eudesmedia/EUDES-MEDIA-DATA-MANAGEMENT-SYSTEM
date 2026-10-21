@@ -118,166 +118,42 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .marks-input:focus{border-color:var(--navy);background:#f8fafc}
 
 /* ============================================================
-   EXACT PHYSICAL REPORT CARD MATCH (A4 PORTRAIT)
+   REPORT CARD (A4 PORTRAIT)
    ============================================================ */
-.rc-stage{
-  background:#e2e8f0;
-  padding:20px;
-  border-radius:12px;
-  display:flex;
-  justify-content:center;
-  margin-bottom:20px;
-  overflow-x:auto;
-}
-.rc-page{
-  width:210mm;
-  min-height:297mm;
-  background:#fff;
-  padding:10mm 12mm;
-  font-family:'Times New Roman', Times, serif;
-  color:#000;
-  box-shadow:0 4px 20px rgba(10,37,64,.15);
-  position:relative;
-  display:flex;
-  flex-direction:column;
-  page-break-after:always;
-  font-size:11pt;
-  line-height:1.3;
-  border: 3px solid #800080;
-}
-.rc-inner{
-  border: 2px solid #800080;
-  padding: 10px;
-  flex:1;
-  display:flex;
-  flex-direction:column;
-}
-
-/* Header */
-.rc-head{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  border-bottom:2px solid #800080;
-  padding-bottom:10px;
-  margin-bottom:10px;
-  text-align:center;
-}
-.rc-head .side-logo{
-  width:75px;height:75px;flex-shrink:0;
-  border-radius:50%;border:1px solid #800080;
-  display:grid;place-items:center;font-size:9pt;color:#800080;text-align:center;overflow:hidden;
-}
+.rc-stage{background:#e2e8f0;padding:20px;border-radius:12px;display:flex;justify-content:center;margin-bottom:20px;overflow-x:auto}
+.rc-page{width:210mm;min-height:297mm;background:#fff;padding:10mm 12mm;font-family:'Times New Roman',Times,serif;color:#000;box-shadow:0 4px 20px rgba(10,37,64,.15);position:relative;display:flex;flex-direction:column;page-break-after:always;font-size:11pt;line-height:1.3;border:3px solid #800080}
+.rc-inner{border:2px solid #800080;padding:10px;flex:1;display:flex;flex-direction:column}
+.rc-head{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #800080;padding-bottom:10px;margin-bottom:10px;text-align:center}
+.rc-head .side-logo{width:75px;height:75px;flex-shrink:0;border-radius:50%;border:1px solid #800080;display:grid;place-items:center;font-size:9pt;color:#800080;text-align:center;overflow:hidden}
 .rc-head .side-logo img{width:100%;height:100%;object-fit:cover}
 .rc-head .title-block{flex:1;padding:0 10px}
 .rc-head .title-block h1{font-size:22pt;margin:0 0 2px;text-transform:uppercase;color:#800080;font-weight:bold;font-family:Arial,sans-serif}
 .rc-head .title-block .addr{font-size:10pt;margin:0;font-weight:bold}
 .rc-head .title-block .contact{font-size:10pt;margin:2px 0 0;font-weight:bold;color:#000080}
 .rc-head .title-block .doctype{font-size:13pt;font-weight:bold;letter-spacing:2px;color:#000080;margin-top:6px;text-transform:uppercase;text-decoration:underline}
-.rc-head .photo{
-  width:70px;height:85px;flex-shrink:0;
-  border:1.5px solid #800080;
-}
-
-/* Pupil info */
-.rc-pupil{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px 16px;
-  margin-bottom:10px;
-  font-size:11pt;
-  font-weight:bold;
-}
+.rc-head .photo{width:70px;height:85px;flex-shrink:0;border:1.5px solid #800080}
+.rc-pupil{display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:10px;font-size:11pt;font-weight:bold}
 .rc-pupil .cell{display:flex;align-items:flex-end;gap:4px}
 .rc-pupil .lbl{white-space:nowrap}
 .rc-pupil .val{border-bottom:1px dotted #000;min-width:80px;padding:0 4px;text-align:center;color:#000080}
 .rc-pupil .cell.w-50{width:calc(50% - 8px)}
 .rc-pupil .cell.w-full{width:100%}
-
-/* Tables */
-.rc-section-title{
-  text-align:center;
-  font-weight:bold;
-  font-size:10pt;
-  color:#800080;
-  background:#f8f8f8;
-  border:1px solid #800080;
-  border-bottom:none;
-  padding:3px;
-  text-transform:uppercase;
-}
-.rc-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-bottom:10px;
-  font-size:10pt;
-}
-.rc-table th, .rc-table td{
-  border:1px solid #800080;
-  padding:3px 6px;
-  text-align:center;
-  color:#000;
-}
-.rc-table th{
-  font-weight:bold;
-  text-transform:uppercase;
-  background:#fff;
-}
+.rc-section-title{text-align:center;font-weight:bold;font-size:10pt;color:#800080;background:#f8f8f8;border:1px solid #800080;border-bottom:none;padding:3px;text-transform:uppercase}
+.rc-table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10pt}
+.rc-table th,.rc-table td{border:1px solid #800080;padding:3px 6px;text-align:center;color:#000}
+.rc-table th{font-weight:bold;text-transform:uppercase;background:#fff}
 .rc-table td.subname{text-align:left;font-weight:bold}
 .rc-table td.sc{color:#000080;font-weight:bold}
-.rc-table td.grade{color:#800080;font-weight:bold}
-.rc-table td.agg{color:#800080;font-weight:bold}
-
-/* Grading Scale Table */
-.rc-scale{
-  width:100%;
-  border-collapse:collapse;
-  margin-bottom:12px;
-  font-size:9pt;
-}
-.rc-scale th, .rc-scale td{
-  border:1px solid #800080;
-  text-align:center;
-  padding:3px;
-}
+.rc-table td.grade,.rc-table td.agg{color:#800080;font-weight:bold}
+.rc-scale{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9pt}
+.rc-scale th,.rc-scale td{border:1px solid #800080;text-align:center;padding:3px}
 .rc-scale th{font-weight:normal;font-size:8pt}
-
-/* Remarks */
-.rc-lines{
-  font-size:10pt;
-  margin-bottom:8px;
-  line-height:1.8;
-}
+.rc-lines{font-size:10pt;margin-bottom:8px;line-height:1.8}
 .rc-lines .lbl{font-weight:bold;display:block;margin-bottom:2px}
 .rc-lines .line{border-bottom:1px dotted #000;display:block;min-height:20px}
-.rc-lines .line.handwriting{font-family:'Comic Sans MS', cursive;color:#000080;font-size:12pt;padding-left:5px}
-
-/* Signatures */
-.rc-signs-row{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:20px;
-  margin-top:10px;
-  font-size:10pt;
-  font-weight:bold;
-}
-.rc-signs-row .s{
-  display:flex;
-  align-items:flex-end;
-  gap:8px;
-}
-.rc-signs-row .s .line{border-bottom:1px dotted #000;flex:1;min-height:18px}
-
-/* Footer Stamp Removed */
-.rc-footer{
-  margin-top:auto;
-  display:flex;
-  justify-content:center;
-  align-items:flex-end;
-  padding-top:10px;
-}
+.rc-lines .line.handwriting{font-family:'Comic Sans MS',cursive;color:#000080;font-size:12pt;padding-left:5px}
+.rc-footer{margin-top:auto;display:flex;justify-content:center;align-items:flex-end;padding-top:10px}
 .rc-illustration{font-size:10pt;font-weight:bold;color:#800080;display:flex;gap:10px}
-
 @media(max-width:800px){.rc-stage{padding:8px;justify-content:flex-start}}
 @media print{
   @page{size:A4 portrait;margin:0}
@@ -286,7 +162,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
   #app{padding:0 !important}
   .container{max-width:none;padding:0}
   .rc-stage{background:#fff;padding:0;margin:0;border:none;display:block}
-  .rc-page{width:210mm;height:297mm;box-shadow:none;padding:10mm 12mm;margin:0;page-break-after:always;}
+  .rc-page{width:210mm;height:297mm;box-shadow:none;padding:10mm 12mm;margin:0;page-break-after:always}
 }
 </style>
 </head>
@@ -297,7 +173,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
     <div class="logo" id="authLogo">P</div>
     <h1>Progressive Mothers School</h1>
     <div class="sub">Powered by Eudes Media</div>
-    <div><label>Email</label><input id="loginEmail" type="email" value="eudesprince078@gmail.com"></div>
+    <div><label>Email</label><input id="loginEmail" type="email"></div>
     <div style="margin-top:12px"><label>Password</label><input id="loginPass" type="password" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <div id="loginErr" class="err" style="display:none"></div>
     <button class="btn block" id="loginBtn" style="padding:13px;margin-top:18px" onclick="doLogin()">Sign In</button>
@@ -379,7 +255,7 @@ function setSession(d){
 
 function scheduleTokenRefresh(expiresInSeconds){
   if(refreshTimer) clearTimeout(refreshTimer);
-  const refreshInMs = (expiresInSeconds - 120) * 1000; 
+  const refreshInMs = (expiresInSeconds - 120) * 1000;
   if(refreshInMs > 0){
     refreshTimer = setTimeout(async () => {
       try{
@@ -467,7 +343,7 @@ async function doLogin(){
   btn.disabled=true;btn.textContent='Signing in…';
   try{
     const res=await fetch(SUPA_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
-    const txt=await res.text();const data=txt?JSON.parse(txt):null;
+    const txt=await res.text();let data=null;try{data=txt?JSON.parse(txt):null}catch(e){data=null}
     if(!res.ok)throw new Error((data&&(data.error_description||data.msg||data.error))||'Login failed');
     setSession({access_token:data.access_token,refresh_token:data.refresh_token,user:data.user,expires_in:data.expires_in});
     await boot();
@@ -780,7 +656,6 @@ async function savePayment(studentId){
 window.savePayment=savePayment;
 
 function printReceipt(student,pay){
-  const cls=(_classesCache||[]).find(c=>c.id===student.class_id);
   const charged=Number(student.total_charged)||0,before=Number(student.total_paid)||0;
   const bal=charged-(before+Number(pay.amount));
   const w=window.open('','_blank');if(!w){toast('Allow popups','bad');return}
@@ -912,6 +787,13 @@ function bulkWhatsApp(){
 }
 window.bulkWhatsApp=bulkWhatsApp;
 
+function bulkSMSReminders(){toast('SMS gateway not configured — use WhatsApp or call buttons','bad')}
+window.bulkSMSReminders=bulkSMSReminders;
+function triggerSMS(id){toast('SMS gateway not configured','bad')}
+window.triggerSMS=triggerSMS;
+function triggerVoice(id){toast('Voice gateway not configured','bad')}
+window.triggerVoice=triggerVoice;
+
 async function copyPhones(){
   const list=(window._remFiltered||window._remAll||[]).filter(r=>r.s.parent_contact);
   if(!list.length){toast('No phones','bad');return}
@@ -951,27 +833,22 @@ function renderContacts(){
   const q=(document.getElementById('cSearch').value||'').toLowerCase();
   const cf=document.getElementById('cClass').value||'';
   const ff=document.getElementById('cFilter').value||'';
-  
   const list=(window._contactsAll||[]).filter(r=>{
     if(cf && r.s.class_id!==cf) return false;
     if(ff==='has-phone' && !r.phone) return false;
     if(ff==='debtors' && r.bal<=0.5) return false;
     if(ff==='cleared' && r.bal>0.5) return false;
-    
     if(q){
       const h=((r.s.parent_name||'')+' '+(r.phone||'')+' '+(r.s.first_name||'')+' '+(r.s.last_name||'')+' '+(r.s.admission_no||'')).toLowerCase();
       return h.indexOf(q)!==-1;
     }
     return true;
   });
-  
   window._contactsFiltered=list;
   const sub=document.getElementById('ctSub');
   if(sub) sub.textContent = (window._contactsAll.length) + ' total · ' + list.length + ' shown';
-  
   const t=document.getElementById('conTable');
   if(!list.length){t.innerHTML='<div class="empty">No contacts match your filter.</div>';return}
-  
   let rows='';
   list.forEach(r=>{
     const s=r.s;
@@ -985,11 +862,8 @@ window.renderContacts=renderContacts;
 function copyContactNumbers(){
   const list = window._contactsFiltered || window._contactsAll || [];
   const phones = list.map(r => r.phone).filter(p => p && p.trim() !== '');
-  
   if(!phones.length){ toast('No phone numbers in this list to copy.', 'bad'); return; }
-  
   const str = phones.join('; ');
-  
   if (navigator.clipboard && window.isSecureContext) {
     navigator.clipboard.writeText(str).then(() => {
       toast('✅ Copied ' + phones.length + ' numbers!', 'ok');
@@ -1002,78 +876,49 @@ window.copyContactNumbers=copyContactNumbers;
 
 function fallbackCopy(str, count){
   const ta = document.createElement('textarea');
-  ta.value = str;
-  ta.style.position = 'fixed';
-  ta.style.left = '-999999px';
-  document.body.appendChild(ta);
-  ta.focus();
-  ta.select();
+  ta.value = str; ta.style.position = 'fixed'; ta.style.left = '-999999px';
+  document.body.appendChild(ta); ta.focus(); ta.select();
   try {
     const successful = document.execCommand('copy');
     if(successful) toast('✅ Copied ' + count + ' numbers!', 'ok');
     else toast('Could not copy. Please try Download CSV.', 'bad');
-  } catch (err) {
-    toast('Could not copy. Please try Download CSV.', 'bad');
-  }
+  } catch (err) { toast('Could not copy. Please try Download CSV.', 'bad'); }
   document.body.removeChild(ta);
 }
 
-/* ============================================================
-   JUKILA CSV EXPORT
-   ============================================================ */
 function downloadJukilaCSV(){
   const list = window._contactsFiltered || window._contactsAll || [];
   const withPhone = list.filter(r => r.phone && String(r.phone).trim() !== '');
-  
-  if(!withPhone.length){
-    toast('No contacts with phone numbers to export.', 'bad');
-    return;
-  }
-
+  if(!withPhone.length){ toast('No contacts with phone numbers to export.', 'bad'); return; }
   const head = ['name','phone','language','nokPhone'];
   const rows = [head.join(',')];
   const seenPhones = new Set();
-
   withPhone.forEach(r => {
     const s = r.s;
     let contactName = '';
-    if (s.parent_name && String(s.parent_name).trim()) {
-      contactName = String(s.parent_name).trim();
-    } else {
-      contactName = 'Parent of ' + (s.first_name || '') + ' ' + (s.last_name || '');
-    }
+    if (s.parent_name && String(s.parent_name).trim()) contactName = String(s.parent_name).trim();
+    else contactName = 'Parent of ' + (s.first_name || '') + ' ' + (s.last_name || '');
     contactName = contactName.replace(/[\r\n,;"]/g, ' ').replace(/\s+/g, ' ').trim();
     if(!contactName) contactName = 'Parent';
-
     let phone = String(r.phone).replace(/[^0-9]/g, '');
     if (!phone) return;
     if (seenPhones.has(phone)) return;
     seenPhones.add(phone);
-
     const language = 'English';
     const nokPhone = '';
-
     const safe = (v) => {
       const str = String(v == null ? '' : v);
-      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-        return '"' + str.replace(/"/g, '""') + '"';
-      }
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) return '"' + str.replace(/"/g, '""') + '"';
       return str;
     };
-
     rows.push([safe(contactName), safe(phone), safe(language), safe(nokPhone)].join(','));
   });
-
   const blob = new Blob(['\ufeff' + rows.join('\r\n')], {type: 'text/csv;charset=utf-8'});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
+  const a = document.createElement('a'); a.href = url;
   a.download = 'jukila_contacts_' + new Date().toISOString().slice(0,10) + '.csv';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
-
   toast('✅ Jukila CSV downloaded (' + seenPhones.size + ' contacts, English)', 'ok');
 }
 window.downloadJukilaCSV = downloadJukilaCSV;
@@ -1128,6 +973,22 @@ function printContacts(){
 window.printContacts=printContacts;
 
 /* ============================================================
+   PRINT SECTION (generic)
+   ============================================================ */
+function printSection(title,tableHTML){
+  const w=window.open('','_blank');
+  if(!w){toast('Allow popups','bad');return}
+  const logo=_school&&(_school.logo_url||_school.logo_data);
+  let h='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+esc(title)+'</title><style>*{box-sizing:border-box}body{font-family:Arial;padding:20px;margin:0;font-size:13px}.letterhead{display:flex;align-items:center;gap:16px;padding-bottom:14px;border-bottom:2px solid #0a2540;margin-bottom:18px}.letterhead img{width:70px;height:70px;object-fit:contain}.letterhead h1{font-size:18px;margin:0 0 4px;text-transform:uppercase;color:#0a2540}.doc-title{text-align:center;font-size:14px;font-weight:700;text-transform:uppercase;color:#0a2540;margin:14px 0 6px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{padding:7px 9px;border:1px solid #ccc;font-size:11.5px;text-align:left}th{background:#0a2540;color:#fff}@media print{body{padding:0}}</style></head><body>';
+  h+='<div class="letterhead">'+(logo?'<img src="'+esc(logo)+'">':'')+'<div><h1>'+esc(_school?.name||'')+'</h1><div style="font-size:11px;color:#555">'+esc(_school?.address||'')+'</div></div></div>';
+  h+='<div class="doc-title">'+esc(title)+'</div>'+tableHTML;
+  h+='<div style="text-align:center;font-size:10px;color:#888;margin-top:24px">Powered by EUDES MEDIA</div>';
+  h+='<script>setTimeout(function(){window.print()},400)</'+'script></body></html>';
+  w.document.write(h);w.document.close();
+}
+window.printSection=printSection;
+
+/* ============================================================
    PROMISES
    ============================================================ */
 function promiseStatusOf(p){
@@ -1162,7 +1023,7 @@ function filterPromises(){
   const sById={};(window._promiseStudents||[]).forEach(s=>sById[s.id]=s);
   const list=(window._allPromises||[]).filter(p=>{if(!q)return true;const s=sById[p.student_id]||{};const h=((s.first_name||'')+' '+(s.last_name||'')+' '+(s.admission_no||'')+' '+(p.promised_by||'')).toLowerCase();return h.indexOf(q)!==-1});
   const c=document.getElementById('promTable');
-  if(!list.length){c.innerHTML='<div class="empty">'+( (window._allPromises||[]).length===0?'No promises yet.':'No match.')+'</div>';return}
+  if(!list.length){c.innerHTML='<div class="empty">'+((window._allPromises||[]).length===0?'No promises yet.':'No match.')+'</div>';return}
   let rows='';
   list.forEach(p=>{
     const s=sById[p.student_id]||{};
@@ -1284,20 +1145,17 @@ async function addPassOut(){
   const students=await api('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=id,first_name,last_name,admission_no,parent_name,parent_contact&order=first_name')||[];
   const outRows=await api('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&status=eq.out&select=student_id')||[];
   const outIds=new Set(outRows.map(p=>p.student_id));
-  
   window._passOutLookup={};
   let innerRows='';
-  
   students.forEach(s=>{
     const isOut=outIds.has(s.id);
     window._passOutLookup[s.id]=s;
     innerRows+='<div style="padding:10px;border-bottom:1px solid #eef1f6;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="selectPassOutPupil(\''+s.id+'\')"><div><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b><div style="font-size:11px;color:#64748b">'+esc(s.admission_no)+'</div></div><div>'+(isOut?'<span class="badge bad">OUT</span>':'<span class="badge info">Select</span>')+'</div></div>';
   });
-
   const rOpts=PASSOUT_REASONS.map(r=>'<option>'+r+'</option>').join('');
   modal('<h3>🚪 New Pass Out</h3>'+
     '<div id="poStep1">'+
-      '<div style="position:relative;margin-bottom:12px"><input type="text" id="poSearchInput" placeholder="🔍 Search pupil name or ADM..." oninput="filterPassOutSearch(this.value)" style="padding:14px"><span style="position:absolute;left:12px;top:14px">🔍</span></div>'+
+      '<div style="position:relative;margin-bottom:12px"><input type="text" id="poSearchInput" placeholder="🔍 Search pupil name or ADM..." oninput="filterPassOutSearch(this.value)" style="padding:14px"></div>'+
       '<div id="poList" style="max-height:35vh;overflow:auto;border:1px solid var(--line);border-radius:10px">'+innerRows+'</div>'+
       '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button></div>'+
     '</div>'+
@@ -1422,7 +1280,6 @@ async function pageMarks(root){
   const exams=await loadExams();
   if(!_marksExam&&exams[0])_marksExam=exams[0].id;
   if(!_marksClass||!_marksExam){root.innerHTML='<div class="card empty">Select Class/Exam or create them first.</div>';return}
-
   const subjects=await loadSubjectsForClass(_marksClass);
   const results=await Promise.all([
     api('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+_marksClass+'&status=eq.active&select=id,admission_no,first_name,last_name&order=first_name'),
@@ -1431,7 +1288,6 @@ async function pageMarks(root){
   const students=results[0]||[],marksRows=results[1]||[];
   const mm={};marksRows.forEach(m=>{if(!mm[m.student_id])mm[m.student_id]={};mm[m.student_id][m.subject_id]=m.score});
   window._marksMap=mm;window._marksSubjects=subjects;
-  
   const cOpts=classes.map(c=>'<option value="'+c.id+'"'+(_marksClass===c.id?' selected':'')+'>'+esc(c.name)+'</option>').join('');
   const eOpts=exams.map(e=>'<option value="'+e.id+'"'+(_marksExam===e.id?' selected':'')+'>'+esc(e.name)+'</option>').join('');
   let table='';
@@ -1469,9 +1325,8 @@ async function setMark(inp){
 window.setMark=setMark;
 
 /* ============================================================
-   BUILDERS (REPORTS)
+   BUILDERS (REPORTS) — FIXED
    ============================================================ */
-
 function buildHeader(){
   const logoSrc=_school?(_school.logo_data||_school.logo_url||''):'';
   return '<div class="rc-head">'+
@@ -1489,9 +1344,7 @@ function buildHeader(){
 }
 
 function buildFooter(isMidTerm){
-  return '<div class="rc-footer">'+
-    '<div class="rc-illustration">🎒 🎨 📚</div>'+
-  '</div>';
+  return '<div class="rc-footer"><div class="rc-illustration">🎒 🎨 📚</div></div>';
 }
 
 function buildReportDates(isMidTerm){
@@ -1504,36 +1357,31 @@ function buildReportDates(isMidTerm){
   '</div>';
 }
 
-function buildPrimaryReportCard(s,subjects,marks,positions,totalInClass,isUpperPrimary,isMidTerm){
-  const cls=(_classesCache||[]).find(c=>c.id===s.class_id);
-  const per=marks[s.id]||{};
-  let sRows='';let grand=0,cnt=0;let aggTotal=0;
-  
-  subjects.forEach(sj=>{
-    const v=per[sj.subject_id];
-    const sc=(v!=null&&!isNaN(v))?Number(v):null;
-    let g={g:'',agg:''};
-    let isRE = sj.name.toUpperCase().includes('R.E') || sj.name.toUpperCase().includes('RE ') || sj.code.toUpperCase() === 'RE';
+function buildPrimaryReportCard(s,subjects,marks,positions,totalInClass,isUpperPrimary,isMidTerm,classes){
+  const list = classes || _classesCache || [];
+  const cls = list.find(c=>c.id===s.class_id);
+  const per = marks[s.id]||{};
+  let sRows=''; let grand=0,cnt=0,aggTotal=0;
 
+  subjects.forEach(sj=>{
+    const v = per[sj.subject_id];
+    const sc = (v!=null && !isNaN(v)) ? Number(v) : null;
+    let g = {g:'',agg:''};
+    const isRE = sj.name.toUpperCase().includes('R.E') || sj.name.toUpperCase().includes('RE ') || sj.code.toUpperCase()==='RE';
     if(sc!=null){
-      if(!isRE) {
-        grand+=sc;cnt++;g=gradePrimary(sc);aggTotal+=Number(g.agg)||0;
-      } else {
-        g = {g:'-',agg:'-'};
-      }
+      if(!isRE){ grand+=sc; cnt++; g=gradePrimary(sc); aggTotal+=Number(g.agg)||0; }
+      else      { g={g:'-',agg:'-'}; }
     }
-    
     sRows+='<tr><td class="subname">'+esc(sj.name)+'</td><td>100</td><td class="sc">'+(sc!=null?sc:'')+'</td><td class="agg">'+g.g+'</td><td></td></tr>';
   });
-  
-  const avg=cnt?grand/cnt:0;const pos=positions[s.id]||'—';
-  
+
+  const avg = cnt ? grand/cnt : 0;
+  const pos = positions[s.id]||'—';
   const midTermCols = isUpperPrimary ? ['ENG','MATH','SCI','SST'] : ['ENG','MATH','LIT 1','LIT 2'];
 
-  let ctComment = _school && _school.teacher_comment ? _school.teacher_comment : "";
+  let ctComment = _school && _school.teacher_comment ? _school.teacher_comment : '';
   if(!ctComment) ctComment = cnt===0 ? '' : avg>=70 ? 'Excellent performance. Keep it up.' : 'Good progress. Aim higher.';
-  
-  let htComment = _school && _school.head_comment ? _school.head_comment : "";
+  let htComment = _school && _school.head_comment ? _school.head_comment : '';
   if(!htComment) htComment = cnt===0 ? '' : avg>=70 ? 'Promoted to next class.' : 'Needs improvement.';
 
   return '<div class="rc-page"><div class="rc-inner">'+
@@ -1544,32 +1392,26 @@ function buildPrimaryReportCard(s,subjects,marks,positions,totalInClass,isUpperP
       '<div class="cell w-50"><span class="lbl">TERM:</span><span class="val">'+getTerm()+'</span></div>'+
       '<div class="cell w-50"><span class="lbl">YEAR:</span><span class="val">'+getYear()+'</span></div>'+
       '<div class="cell w-50"><span class="lbl">POSITION:</span><span class="val">'+pos+' OUT OF '+totalInClass+'</span></div>'+
-      '<div class="cell w-50"><span class="lbl">DIV:</span><span class="val">'+ (avg>=70?'I':avg>=60?'II':avg>=50?'III':avg>=40?'IV':'U') +'</span></div>'+
+      '<div class="cell w-50"><span class="lbl">DIV:</span><span class="val">'+(avg>=70?'I':avg>=60?'II':avg>=50?'III':avg>=40?'IV':'U')+'</span></div>'+
     '</div>'+
-    
     '<div class="rc-section-title">MIDTERM EXAMINATIONS RECORD</div>'+
-    '<table class="rc-table">'+
-      '<thead><tr><th style="width:20%">SUBJECTS</th>'+
+    '<table class="rc-table"><thead><tr><th style="width:20%">SUBJECTS</th>'+
       midTermCols.map(ms=>'<th>'+ms+'</th>').join('')+
-      '<th style="width:15%">TOTAL</th></tr></thead>'+
-      '<tbody><tr><td class="subname">SCORE</td>'+ midTermCols.map(()=>'<td></td>').join('') +'<td></td></tr>'+
-      '<tr><td class="subname">AGGREGATES</td>'+ midTermCols.map(()=>'<td></td>').join('') +'<td></td></tr></tbody>'+
-    '</table>'+
-
+      '<th style="width:15%">TOTAL</th></tr></thead><tbody>'+
+      '<tr><td class="subname">SCORE</td>'+midTermCols.map(()=>'<td></td>').join('')+'<td></td></tr>'+
+      '<tr><td class="subname">AGGREGATES</td>'+midTermCols.map(()=>'<td></td>').join('')+'<td></td></tr>'+
+    '</tbody></table>'+
     '<div class="rc-section-title">END OF TERM PERFORMANCE</div>'+
-    '<table class="rc-table">'+
-      '<thead><tr><th style="text-align:left;padding-left:10px">SUBJECT</th><th style="width:20%">SCORE</th><th style="width:20%">MARKS OBTAINED</th><th style="width:15%">AGG.</th><th style="width:20%">INITIALS</th></tr></thead>'+
-      '<tbody>'+sRows+
-        '<tr><td class="subname">TOTAL</td><td>'+ (subjects.length*100) +'</td><td class="sc" style="font-size:12pt">'+grand.toFixed(0)+'</td><td class="agg" style="font-size:12pt">'+aggTotal+'</td><td></td></tr>'+
-      '</tbody>'+
-    '</table>'+
-    
+    '<table class="rc-table"><thead><tr>'+
+      '<th style="text-align:left;padding-left:10px">SUBJECT</th><th style="width:20%">SCORE</th><th style="width:20%">MARKS OBTAINED</th><th style="width:15%">AGG.</th><th style="width:20%">INITIALS</th>'+
+    '</tr></thead><tbody>'+sRows+
+      '<tr><td class="subname">TOTAL</td><td>'+(subjects.length*100)+'</td><td class="sc" style="font-size:12pt">'+grand.toFixed(0)+'</td><td class="agg" style="font-size:12pt">'+aggTotal+'</td><td></td></tr>'+
+    '</tbody></table>'+
     '<div style="text-align:center;font-size:9pt;color:#800080;margin-bottom:2px;font-weight:bold">GRADING SCALE %</div>'+
     '<table class="rc-scale"><tr><th>90-100</th><th>80-89</th><th>70-79</th><th>60-69</th><th>55-59</th><th>50-54</th><th>45-49</th><th>40-44</th><th>0-39</th></tr>'+
     '<tr><td style="font-weight:bold">D1</td><td style="font-weight:bold">D2</td><td style="font-weight:bold">C3</td><td style="font-weight:bold">C4</td><td style="font-weight:bold">C5</td><td style="font-weight:bold">C6</td><td style="font-weight:bold">P7</td><td style="font-weight:bold">P8</td><td style="font-weight:bold">F9</td></tr></table>'+
-    
     '<div class="rc-lines">'+
-      '<span class="lbl">Conduct:</span><span class="line handwriting" style="min-height:22px">'+esc(s.conduct || '')+'</span>'+
+      '<span class="lbl">Conduct:</span><span class="line handwriting" style="min-height:22px">'+esc(s.conduct||'')+'</span>'+
       '<span class="lbl" style="margin-top:8px">Class Teacher\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(ctComment)+'</span>'+
       '<div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div>'+
     '</div>'+
@@ -1577,32 +1419,31 @@ function buildPrimaryReportCard(s,subjects,marks,positions,totalInClass,isUpperP
       '<span class="lbl">Head Teacher\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(htComment)+'</span>'+
       '<div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div>'+
     '</div>'+
-    
     buildReportDates(isMidTerm)+
     buildFooter(isMidTerm)+
   '</div></div>';
 }
 
-function buildBabyReportCard(s,subjects,marks,isMidTerm){
-  const cls=(_classesCache||[]).find(c=>c.id===s.class_id);
-  const per=marks[s.id]||{};
-  
-  let sRows='';let grand=0,cnt=0;
+function buildBabyReportCard(s,subjects,marks,isMidTerm,classes){
+  const list = classes || _classesCache || [];
+  const cls = list.find(c=>c.id===s.class_id);
+  const per = marks[s.id]||{};
+  let sRows=''; let grand=0,cnt=0;
+
   subjects.forEach(sj=>{
-    const v=per[sj.subject_id];
-    const sc=(v!=null&&!isNaN(v))?Number(v):null;
-    let g={g:'',r:''};
-    if(sc!=null) { g=gradeBaby(sc); grand+=sc; cnt++; }
-    sRows+='<tr><td class="subname" style="text-align:center">'+esc(sj.name)+'</td><td class="sc" style="font-size:14pt">'+(g.g||'')+'</td><td class="handwriting" style="font-family:\'Comic Sans MS\', cursive; font-size:14pt; text-align:center">'+(g.r||'')+'</td><td></td></tr>';
+    const v = per[sj.subject_id];
+    const sc = (v!=null && !isNaN(v)) ? Number(v) : null;
+    let g = {g:'',r:''};
+    if(sc!=null){ g=gradeBaby(sc); grand+=sc; cnt++; }
+    sRows+='<tr><td class="subname" style="text-align:center">'+esc(sj.name)+'</td><td class="sc" style="font-size:14pt">'+(g.g||'')+'</td><td class="handwriting" style="font-family:\'Comic Sans MS\',cursive;font-size:14pt;text-align:center">'+(g.r||'')+'</td><td></td></tr>';
   });
 
-  const midTermCols=['ENGLISH','ENVIRONMENT','HEALTH HABITS','READING','WRITING','NUMBERS'];
-  const avg=cnt?grand/cnt:0;
-  
-  let ctComment = _school && _school.teacher_comment ? _school.teacher_comment : "";
+  const midTermCols = ['ENGLISH','ENVIRONMENT','HEALTH HABITS','READING','WRITING','NUMBERS'];
+  const avg = cnt ? grand/cnt : 0;
+
+  let ctComment = _school && _school.teacher_comment ? _school.teacher_comment : '';
   if(!ctComment) ctComment = cnt===0 ? '' : avg>=70 ? 'Promising report.' : 'Good progress.';
-  
-  let htComment = _school && _school.head_comment ? _school.head_comment : "";
+  let htComment = _school && _school.head_comment ? _school.head_comment : '';
   if(!htComment) htComment = cnt===0 ? '' : avg>=70 ? 'Good marks. More effort needed.' : 'Needs improvement.';
 
   return '<div class="rc-page"><div class="rc-inner">'+
@@ -1615,25 +1456,19 @@ function buildBabyReportCard(s,subjects,marks,isMidTerm){
       '<div class="cell w-50"><span class="lbl">YEAR:</span><span class="val">'+getYear()+'</span></div>'+
       '<div class="cell w-full"><span class="lbl">SCHOOL PAY CODE:</span><span class="val" style="border-bottom:none">'+esc(s.school_pay_code||'—')+'</span></div>'+
     '</div>'+
-
     '<div class="rc-section-title" style="background:#fff;border:none;color:#000">PROGRESSIVE ASSESSMENT RECORD</div>'+
-    '<table class="rc-table">'+
-      '<thead><tr><th style="width:15%">SUBJECTS</th>'+ midTermCols.map(ms=>'<th>'+ms+'</th>').join('') +'</tr></thead>'+
-      '<tbody><tr><td class="subname">SCORE</td>'+ midTermCols.map(()=>'<td></td>').join('') +'</tr></tbody>'+
-    '</table>'+
-
+    '<table class="rc-table"><thead><tr><th style="width:15%">SUBJECTS</th>'+midTermCols.map(ms=>'<th>'+ms+'</th>').join('')+'</tr></thead><tbody>'+
+      '<tr><td class="subname">SCORE</td>'+midTermCols.map(()=>'<td></td>').join('')+'</tr>'+
+    '</tbody></table>'+
     '<div class="rc-section-title">END OF TERM PERFORMANCE</div>'+
-    '<table class="rc-table">'+
-      '<thead><tr><th style="width:40%;text-align:left;padding-left:10px">SUBJECT</th><th style="width:20%">SCORE</th><th style="width:25%">REMARK</th><th style="width:15%">INITIALS</th></tr></thead>'+
-      '<tbody>'+sRows+'</tbody>'+
-    '</table>'+
-
+    '<table class="rc-table"><thead><tr>'+
+      '<th style="width:40%;text-align:left;padding-left:10px">SUBJECT</th><th style="width:20%">SCORE</th><th style="width:25%">REMARK</th><th style="width:15%">INITIALS</th>'+
+    '</tr></thead><tbody>'+sRows+'</tbody></table>'+
     '<div style="text-align:center;font-size:9pt;color:#800080;margin-bottom:2px;font-weight:bold">GRADING SCALE %</div>'+
     '<table class="rc-scale"><tr><th>90-100</th><th>80-89</th><th>70-79</th><th>50-69</th><th>0-49</th></tr>'+
     '<tr><td style="font-weight:bold;font-size:11pt">A</td><td style="font-weight:bold;font-size:11pt">B</td><td style="font-weight:bold;font-size:11pt">C</td><td style="font-weight:bold;font-size:11pt">D</td><td style="font-weight:bold;font-size:11pt">E</td></tr></table>'+
-
     '<div class="rc-lines">'+
-      '<span class="lbl">Conduct:</span><span class="line handwriting" style="min-height:22px">'+esc(s.conduct || '')+'</span>'+
+      '<span class="lbl">Conduct:</span><span class="line handwriting" style="min-height:22px">'+esc(s.conduct||'')+'</span>'+
       '<span class="lbl" style="margin-top:8px">Class Teacher\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(ctComment)+'</span>'+
       '<div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div>'+
     '</div>'+
@@ -1641,88 +1476,104 @@ function buildBabyReportCard(s,subjects,marks,isMidTerm){
       '<span class="lbl">Head Teacher\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(htComment)+'</span>'+
       '<div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div>'+
     '</div>'+
-
     buildReportDates(isMidTerm)+
     buildFooter(isMidTerm)+
   '</div></div>';
 }
 
 function printAllReports(){
-  const d=window._reportData;
-  if(!d||!d.students.length){toast('Nothing to print','bad');return}
-  const w=window.open('','_blank');
-  if(!w){toast('Allow popups to print','bad');return}
-  let styles='';document.querySelectorAll('style').forEach(st=>{styles+=st.innerHTML});
-  
+  const d = window._reportData;
+  if(!d||!d.students.length){ toast('Nothing to print','bad'); return; }
+  const w = window.open('','_blank');
+  if(!w){ toast('Allow popups to print','bad'); return; }
+  let styles=''; document.querySelectorAll('style').forEach(st=>{ styles+=st.innerHTML; });
   let h='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Report Cards — '+esc(_school?(_school.name||''):'')+'</title><style>'+styles+'</style></head><body>';
-  
   d.students.forEach(s=>{
-    h+='<div class="rc-stage">'+(d.isBaby ? buildBabyReportCard(s,d.subjects,d.marks,d.isMidTerm) : buildPrimaryReportCard(s,d.subjects,d.marks,d.positions,d.students.length,d.isUpperPrimary,d.isMidTerm))+'</div>';
+    h+='<div class="rc-stage">'+
+      (d.isBaby
+        ? buildBabyReportCard(s,d.subjects,d.marks,d.isMidTerm,d.classes)
+        : buildPrimaryReportCard(s,d.subjects,d.marks,d.positions,d.students.length,d.isUpperPrimary,d.isMidTerm,d.classes))
+    +'</div>';
   });
-  
   h+='<script>setTimeout(function(){window.print()},700)</'+'script></body></html>';
-  w.document.write(h);w.document.close();
+  w.document.write(h); w.document.close();
 }
-window.printAllReports=printAllReports;
+window.printAllReports = printAllReports;
 
 /* ============================================================
    REPORT VIEW (ADMIN)
    ============================================================ */
 async function pageReports(root){
   clearClassesCache();
-  const classes=await loadClasses();
-  if(!_marksClass&&classes[0])_marksClass=classes[0].id;
-  const classObj=classes.find(c=>c.id===_marksClass);
-  const subjects=await loadSubjectsForClass(_marksClass);
-  const exams=await loadExams();
-  const examId=_marksExam||(exams[0]&&exams[0].id);
-  if(!examId){root.innerHTML='<div class="card empty">No exams yet.</div>';return}
-  _marksExam=examId;
-  const students=await api('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+_marksClass+'&status=eq.active&select=*&order=first_name')||[];
-  let marksRows=[];
-  if(students.length){const ids=students.map(s=>s.id).join(',');marksRows=await api('/rest/v1/marks?school_id=eq.'+_schoolId+'&student_id=in.('+ids+')&exam_id=eq.'+examId+'&select=student_id,subject_id,score')||[]}
-  const marks={};marksRows.forEach(m=>{if(!marks[m.student_id])marks[m.student_id]={};marks[m.student_id][m.subject_id]=Number(m.score)});
+  const classes = await loadClasses();
+  if(!_marksClass && classes[0]) _marksClass = classes[0].id;
+  const classObj = classes.find(c=>c.id===_marksClass);
+  let subjects = await loadSubjectsForClass(_marksClass);
+  const exams = await loadExams();
+  const examId = _marksExam || (exams[0] && exams[0].id);
+  if(!examId){ root.innerHTML='<div class="card empty">No exams yet.</div>'; return; }
+  _marksExam = examId;
 
-  const positions={};
-  const totals=students.map(s=>{
-    const per=marks[s.id]||{};let total=0;
-    subjects.forEach(sj=>{const v=per[sj.subject_id];if(v!=null&&!isNaN(v))total+=Number(v)});
-    return{id:s.id,total};
+  const students = await api('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+_marksClass+'&status=eq.active&select=*&order=first_name') || [];
+  let marksRows = [];
+  if(students.length){
+    const ids = students.map(s=>s.id).join(',');
+    marksRows = await api('/rest/v1/marks?school_id=eq.'+_schoolId+'&student_id=in.('+ids+')&exam_id=eq.'+examId+'&select=student_id,subject_id,score') || [];
+  }
+  const marks = {};
+  marksRows.forEach(m=>{ if(!marks[m.student_id]) marks[m.student_id]={}; marks[m.student_id][m.subject_id]=Number(m.score); });
+
+  const positions = {};
+  const totals = students.map(s=>{
+    const per = marks[s.id]||{}; let total=0;
+    subjects.forEach(sj=>{ const v=per[sj.subject_id]; if(v!=null&&!isNaN(v)) total+=Number(v); });
+    return { id:s.id, total };
   });
-  totals.slice().sort((a,b)=>b.total-a.total).forEach((t,i)=>{positions[t.id]=i+1});
+  totals.slice().sort((a,b)=>b.total-a.total).forEach((t,i)=>{ positions[t.id]=i+1; });
 
-  const clsName=classObj?classObj.name.toLowerCase():'';
-  const examName=(exams.find(e=>e.id===examId)||{name:''}).name.toLowerCase();
-  
-  const isBaby = clsName.includes('baby') || clsName.includes('middle') || clsName.includes('top') || clsName.includes('nur');
-  const isUpperPrimary = clsName.match(/p\.?\s*[4-7]/) || clsName.includes('p4') || clsName.includes('p5') || clsName.includes('p6') || clsName.includes('p7');
-  const isLowerPrimary = !isBaby && !isUpperPrimary;
-  const isMidTerm = examName.includes('mid') || examName.includes('bot') || examName.includes('beginning') || examName.includes('half');
+  const clsName  = classObj ? classObj.name.toLowerCase() : '';
+  const examName = (exams.find(e=>e.id===examId)||{name:''}).name.toLowerCase();
+
+  const isBaby         = clsName.includes('baby')||clsName.includes('middle')||clsName.includes('top')||clsName.includes('nur');
+  const isUpperPrimary = /p\.?\s*[4-7]/.test(clsName) || clsName.includes('p4')||clsName.includes('p5')||clsName.includes('p6')||clsName.includes('p7');
+  const isMidTerm      = examName.includes('mid')||examName.includes('bot')||examName.includes('beginning')||examName.includes('half');
 
   if(isUpperPrimary){
-    const reqKeys = ['ENG', 'MAT', 'SCI', 'SST'];
-    const filtered = subjects.filter(sj => reqKeys.some(k => sj.code.toUpperCase().includes(k) || sj.name.toUpperCase().includes(k)));
-    if(filtered.length > 0) subjects = filtered;
-  } else if (isLowerPrimary) {
-    const reqKeys = ['ENG', 'MAT', 'LIT', 'RE', 'R.E'];
-    const filtered = subjects.filter(sj => reqKeys.some(k => sj.code.toUpperCase().includes(k) || sj.name.toUpperCase().includes(k)));
-    if(filtered.length > 0) subjects = filtered;
+    const req=['ENG','MAT','SCI','SST'];
+    const f=subjects.filter(sj=>req.some(k=>sj.code.toUpperCase().includes(k)||sj.name.toUpperCase().includes(k)));
+    if(f.length) subjects=f;
+  } else if(!isBaby){
+    const req=['ENG','MAT','LIT','RE','R.E'];
+    const f=subjects.filter(sj=>req.some(k=>sj.code.toUpperCase().includes(k)||sj.name.toUpperCase().includes(k)));
+    if(f.length) subjects=f;
   }
 
-  window._reportData={students,subjects,marks,positions,examId,isBaby,isUpperPrimary,isMidTerm};
+  window._reportData = { students, subjects, marks, positions, examId, isBaby, isUpperPrimary, isMidTerm, classes };
 
-  const cOpts=classes.map(c=>'<option value="'+c.id+'"'+(c.id===_marksClass?' selected':'')+'>'+esc(c.name)+'</option>').join('');
-  const eOpts=exams.map(e=>'<option value="'+e.id+'"'+(e.id===examId?' selected':'')+'>'+esc(e.name)+'</option>').join('');
+  const cOpts = classes.map(c=>'<option value="'+c.id+'"'+(c.id===_marksClass?' selected':'')+'>'+esc(c.name)+'</option>').join('');
+  const eOpts = exams.map(e=>'<option value="'+e.id+'"'+(e.id===examId?' selected':'')+'>'+esc(e.name)+'</option>').join('');
+
   let cards='';
-  if(students.length&&subjects.length){
-    cards=students.map(s=>'<div class="rc-stage">'+(isBaby?buildBabyReportCard(s,subjects,marks,isMidTerm):buildPrimaryReportCard(s,subjects,marks,positions,students.length,isUpperPrimary,isMidTerm))+'</div>').join('');
+  if(students.length && subjects.length){
+    cards = students.map(s=>'<div class="rc-stage">'+
+      (isBaby
+        ? buildBabyReportCard(s,subjects,marks,isMidTerm,classes)
+        : buildPrimaryReportCard(s,subjects,marks,positions,students.length,isUpperPrimary,isMidTerm,classes))
+    +'</div>').join('');
   }
 
-  root.innerHTML='<div class="page-head"><div><h1>📄 Report Cards</h1><div class="sub">'+(isMidTerm?'Mid-Term':'End of Term')+' · '+(isBaby?'Baby Format':(isUpperPrimary?'Upper Primary':'Lower Primary'))+'</div></div><button class="btn gold" onclick="printAllReports()">🖨️ Print All</button></div>'+
-  '<div class="card"><div class="grid grid-2"><div><label>Class</label><select onchange="_marksClass=this.value;pageReports(document.getElementById(\'main\'))">'+cOpts+'</select></div><div><label>Exam</label><select onchange="_marksExam=this.value;pageReports(document.getElementById(\'main\'))">'+eOpts+'</select></div></div></div>'+
-  (students.length===0?'<div class="card empty">No pupils.</div>':(subjects.length===0?'<div class="card empty">No subjects.</div>':cards));
+  root.innerHTML =
+    '<div class="page-head"><div><h1>📄 Report Cards</h1>'+
+    '<div class="sub">'+(isMidTerm?'Mid-Term':'End of Term')+' · '+(isBaby?'Baby Format':(isUpperPrimary?'Upper Primary':'Lower Primary'))+'</div></div>'+
+    '<button class="btn gold" onclick="printAllReports()">🖨️ Print All</button></div>'+
+    '<div class="card"><div class="grid grid-2">'+
+      '<div><label>Class</label><select onchange="_marksClass=this.value;pageReports(document.getElementById(\'main\'))">'+cOpts+'</select></div>'+
+      '<div><label>Exam</label><select onchange="_marksExam=this.value;pageReports(document.getElementById(\'main\'))">'+eOpts+'</select></div>'+
+    '</div></div>'+
+    (students.length===0?'<div class="card empty">No pupils.</div>'
+      :(subjects.length===0?'<div class="card empty">No subjects.</div>':cards));
 }
-window.pageReports=pageReports;
+window.pageReports = pageReports;
 
 /* ============================================================
    CLASSES & SUBJECTS
