@@ -116,6 +116,173 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .profile-hero .info .meta{color:#cbd5e1;font-size:12.5px;line-height:1.7}
 .marks-input{width:70px;padding:6px;text-align:center;border:2px solid var(--line);border-radius:8px;font-weight:700}
 .marks-input:focus{border-color:var(--navy);background:#f8fafc}
+
+/* ============================================================
+   EXACT PHYSICAL REPORT CARD MATCH (A4 PORTRAIT)
+   ============================================================ */
+.rc-stage{
+  background:#e2e8f0;
+  padding:20px;
+  border-radius:12px;
+  display:flex;
+  justify-content:center;
+  margin-bottom:20px;
+  overflow-x:auto;
+}
+.rc-page{
+  width:210mm;
+  min-height:297mm;
+  background:#fff;
+  padding:10mm 12mm;
+  font-family:'Times New Roman', Times, serif;
+  color:#000;
+  box-shadow:0 4px 20px rgba(10,37,64,.15);
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  page-break-after:always;
+  font-size:11pt;
+  line-height:1.3;
+  border: 3px solid #800080;
+}
+.rc-inner{
+  border: 2px solid #800080;
+  padding: 10px;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+
+/* Header */
+.rc-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:2px solid #800080;
+  padding-bottom:10px;
+  margin-bottom:10px;
+  text-align:center;
+}
+.rc-head .side-logo{
+  width:75px;height:75px;flex-shrink:0;
+  border-radius:50%;border:1px solid #800080;
+  display:grid;place-items:center;font-size:9pt;color:#800080;text-align:center;overflow:hidden;
+}
+.rc-head .side-logo img{width:100%;height:100%;object-fit:cover}
+.rc-head .title-block{flex:1;padding:0 10px}
+.rc-head .title-block h1{font-size:22pt;margin:0 0 2px;text-transform:uppercase;color:#800080;font-weight:bold;font-family:Arial,sans-serif}
+.rc-head .title-block .addr{font-size:10pt;margin:0;font-weight:bold}
+.rc-head .title-block .contact{font-size:10pt;margin:2px 0 0;font-weight:bold;color:#000080}
+.rc-head .title-block .doctype{font-size:13pt;font-weight:bold;letter-spacing:2px;color:#000080;margin-top:6px;text-transform:uppercase;text-decoration:underline}
+.rc-head .photo{
+  width:70px;height:85px;flex-shrink:0;
+  border:1.5px solid #800080;
+}
+
+/* Pupil info */
+.rc-pupil{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px 16px;
+  margin-bottom:10px;
+  font-size:11pt;
+  font-weight:bold;
+}
+.rc-pupil .cell{display:flex;align-items:flex-end;gap:4px}
+.rc-pupil .lbl{white-space:nowrap}
+.rc-pupil .val{border-bottom:1px dotted #000;min-width:80px;padding:0 4px;text-align:center;color:#000080}
+.rc-pupil .cell.w-50{width:calc(50% - 8px)}
+.rc-pupil .cell.w-full{width:100%}
+
+/* Tables */
+.rc-section-title{
+  text-align:center;
+  font-weight:bold;
+  font-size:10pt;
+  color:#800080;
+  background:#f8f8f8;
+  border:1px solid #800080;
+  border-bottom:none;
+  padding:3px;
+  text-transform:uppercase;
+}
+.rc-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-bottom:10px;
+  font-size:10pt;
+}
+.rc-table th, .rc-table td{
+  border:1px solid #800080;
+  padding:3px 6px;
+  text-align:center;
+  color:#000;
+}
+.rc-table th{
+  font-weight:bold;
+  text-transform:uppercase;
+  background:#fff;
+}
+.rc-table td.subname{text-align:left;font-weight:bold}
+.rc-table td.sc{color:#000080;font-weight:bold}
+.rc-table td.grade{color:#800080;font-weight:bold}
+.rc-table td.agg{color:#800080;font-weight:bold}
+
+/* Grading Scale Table */
+.rc-scale{
+  width:100%;
+  border-collapse:collapse;
+  margin-bottom:12px;
+  font-size:9pt;
+}
+.rc-scale th, .rc-scale td{
+  border:1px solid #800080;
+  text-align:center;
+  padding:3px;
+}
+.rc-scale th{font-weight:normal;font-size:8pt}
+
+/* Remarks */
+.rc-lines{
+  font-size:10pt;
+  margin-bottom:8px;
+  line-height:1.8;
+}
+.rc-lines .lbl{font-weight:bold;display:block;margin-bottom:2px}
+.rc-lines .line{border-bottom:1px dotted #000;display:block;min-height:20px}
+.rc-lines .line.handwriting{font-family:'Comic Sans MS', cursive;color:#000080;font-size:12pt;padding-left:5px}
+
+/* Footer Stamp */
+.rc-footer{
+  margin-top:auto;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  padding-top:10px;
+}
+.rc-stamp{
+  border:2px dashed #000080;
+  padding:6px 14px;
+  text-align:center;
+  color:#000080;
+  transform:rotate(-5deg);
+  background:#fff;
+}
+.rc-stamp .stamp-title{font-size:8pt;font-weight:bold;text-transform:uppercase;margin:0}
+.rc-stamp .stamp-date{font-size:10pt;font-weight:bold;margin:2px 0}
+.rc-stamp .stamp-auth{font-size:8pt;font-weight:bold;text-transform:uppercase;margin:0}
+.rc-illustration{font-size:10pt;font-weight:bold;color:#800080;display:flex;gap:10px}
+
+@media(max-width:800px){.rc-stage{padding:8px;justify-content:flex-start}}
+@media print{
+  @page{size:A4 portrait;margin:0}
+  body{background:#fff}
+  .topbar,.header-wrap,.nav-pills,.bottom-bar,#modalRoot,.page-head,.card,.alert-item,.btn{display:none !important}
+  #app{padding:0 !important}
+  .container{max-width:none;padding:0}
+  .rc-stage{background:#fff;padding:0;margin:0;border:none;display:block}
+  .rc-page{width:210mm;height:297mm;box-shadow:none;padding:10mm 12mm;margin:0;page-break-after:always;}
+}
 </style>
 </head>
 <body>
@@ -174,12 +341,8 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 const SUPA_URL='https://wabeempxckdtjvrkzhpv.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndhYmVlbXB4Y2tkdGp2cmt6aHB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1NTQyODcsImV4cCI6MjEwMDEzMDI4N30.5IDNbrip0nLDF9pN2fXHWVB7w-lYNxPIbTaTO-s1PaM';
 
-const JUKILA_BASE = 'https://jukila-api.elastictech.biz';
-const JUKILA_TOKEN = 'juk_live_3a6243920f1c322127ca4ae3b54f0fcfefac9b83df36c1d8';
-const JUKILA_SENDER = 'eudesmedia';
-
 /* ============================================================
-   STATE & STORAGE
+   STATE & STORAGE (WITH AUTO-REFRESH TOKEN)
    ============================================================ */
 let _session=null,_profile=null,_school=null,_schoolId=null,_role=null;
 let _classesCache=null,_examsCache=null;
@@ -187,6 +350,7 @@ let _cachedStudents=[],_cachedPayments=[],_cachedPOStudents=[];
 let _profileStudentId=null;
 let _marksClass=null,_marksExam=null,_subjClass=null;
 let activeRoute='dashboard';
+let refreshTimer=null;
 
 function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
@@ -196,7 +360,37 @@ function getTerm(){return parseInt(lsGet('pm_term'))||1}
 function setPeriod(y,t){lsSet('pm_year',String(y));lsSet('pm_term',String(t))}
 function getToken(){return _session?_session.access_token:null}
 function getUser(){return _session?_session.user:null}
-function setSession(d){_session=d;if(d)lsSet('pm_session',JSON.stringify(d));else lsDel('pm_session')}
+
+function setSession(d){
+  _session=d;
+  if(d){
+    lsSet('pm_session',JSON.stringify(d));
+    scheduleTokenRefresh(d.expires_in||3600);
+  } else {
+    lsDel('pm_session');
+    if(refreshTimer) clearTimeout(refreshTimer);
+  }
+}
+
+function scheduleTokenRefresh(expiresInSeconds){
+  if(refreshTimer) clearTimeout(refreshTimer);
+  const refreshInMs = (expiresInSeconds - 120) * 1000; 
+  if(refreshInMs > 0){
+    refreshTimer = setTimeout(async () => {
+      try{
+        const res = await fetch(SUPA_URL+'/auth/v1/token?grant_type=refresh_token', {
+          method:'POST',
+          headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},
+          body:JSON.stringify({refresh_token:_session.refresh_token})
+        });
+        if(res.ok){
+          const data = await res.json();
+          setSession({access_token:data.access_token, refresh_token:data.refresh_token, user:data.user, expires_in:data.expires_in});
+        }
+      }catch(e){ console.warn('Auto token refresh failed', e); }
+    }, refreshInMs);
+  }
+}
 
 /* ============================================================
    HELPERS
@@ -211,28 +405,38 @@ function telLink(num){if(!num)return'';return String(num).replace(/[^0-9+]/g,'')
 function waLink(num){if(!num)return'';let c=String(num).replace(/[^0-9]/g,'');if(c.startsWith('0'))c='256'+c.slice(1);return c}
 function genderLabel(g){if(!g)return'—';const x=String(g).trim().toLowerCase();if(x==='m'||x==='male')return'Male';if(x==='f'||x==='female')return'Female';return'—'}
 function isBoard(s){if(!s)return false;const v=String(s).trim().toLowerCase();return v==='boarding'||v==='boarder'||v==='b'}
-function gradeOf(score){if(score==null||isNaN(score))return{g:'—',r:'—'};const s=Number(score);if(s>=90)return{g:'D1',r:'Distinction 1'};if(s>=80)return{g:'D2',r:'Distinction 2'};if(s>=70)return{g:'C3',r:'Credit 3'};if(s>=60)return{g:'C4',r:'Credit 4'};if(s>=55)return{g:'C5',r:'Credit 5'};if(s>=50)return{g:'C6',r:'Credit 6'};if(s>=45)return{g:'P7',r:'Pass 7'};if(s>=40)return{g:'P8',r:'Pass 8'};return{g:'F9',r:'Fail 9'}}
+
+function gradePrimary(score){
+  if(score==null||isNaN(score))return{g:'—',r:'—',agg:'—'};
+  const s=Number(score);
+  if(s>=90)return{g:'D1',r:'Distinction 1',agg:'1'};
+  if(s>=80)return{g:'D2',r:'Distinction 2',agg:'2'};
+  if(s>=70)return{g:'C3',r:'Credit 3',agg:'3'};
+  if(s>=60)return{g:'C4',r:'Credit 4',agg:'4'};
+  if(s>=55)return{g:'C5',r:'Credit 5',agg:'5'};
+  if(s>=50)return{g:'C6',r:'Credit 6',agg:'6'};
+  if(s>=45)return{g:'P7',r:'Pass 7',agg:'7'};
+  if(s>=40)return{g:'P8',r:'Pass 8',agg:'8'};
+  return{g:'F9',r:'Fail 9',agg:'9'};
+}
+
+function gradeBaby(score){
+  if(score==null||isNaN(score))return{g:'—',r:'—'};
+  const s=Number(score);
+  if(s>=90)return{g:'A',r:'Excellent'};
+  if(s>=80)return{g:'B',r:'V. Good'};
+  if(s>=70)return{g:'C',r:'Good'};
+  if(s>=50)return{g:'D',r:'Fair'};
+  return{g:'E',r:'Needs Help'};
+}
 
 function toast(msg,type){const el=document.createElement('div');el.className='toast'+(type==='bad'?' bad':(type==='ok'?' ok':''));el.textContent=msg;document.getElementById('toastRoot').appendChild(el);setTimeout(()=>el.remove(),3500)}
 function modal(html){const r=document.getElementById('modalRoot');r.innerHTML='<div class="modal-bg"><div class="modal">'+html+'</div></div>';r.querySelector('.modal-bg').addEventListener('click',e=>{if(e.target.classList.contains('modal-bg'))closeModal()})}
 function closeModal(){document.getElementById('modalRoot').innerHTML=''}
 window.toast=toast;window.modal=modal;window.closeModal=closeModal;window.esc=esc;
 
-function printSection(title,tableHTML){
-  const w=window.open('','_blank');
-  if(!w){toast('Allow popups','bad');return}
-  const logo=_school&&(_school.logo_url||_school.logo_data);
-  let h='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+esc(title)+'</title><style>*{box-sizing:border-box}body{font-family:Arial;padding:20px;margin:0;font-size:13px}.letterhead{display:flex;align-items:center;gap:16px;padding-bottom:14px;border-bottom:2px solid #0a2540;margin-bottom:18px}.letterhead img{width:70px;height:70px;object-fit:contain}.letterhead h1{font-size:18px;margin:0 0 4px;text-transform:uppercase;color:#0a2540}.doc-title{text-align:center;font-size:14px;font-weight:700;text-transform:uppercase;color:#0a2540;margin:14px 0 6px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{padding:7px 9px;border:1px solid #ccc;font-size:11.5px;text-align:left}th{background:#0a2540;color:#fff}@media print{body{padding:0}}</style></head><body>';
-  h+='<div class="letterhead">'+(logo?'<img src="'+esc(logo)+'">':'')+'<div><h1>'+esc(_school?.name||'')+'</h1><div style="font-size:11px;color:#555">'+esc(_school?.address||'')+'</div></div></div>';
-  h+='<div class="doc-title">'+esc(title)+'</div>'+tableHTML;
-  h+='<div style="text-align:center;font-size:10px;color:#888;margin-top:24px">Powered by EUDES MEDIA</div>';
-  h+='<script>setTimeout(function(){window.print()},400)</'+'script></body></html>';
-  w.document.write(h);w.document.close();
-}
-window.printSection=printSection;
-
 /* ============================================================
-   API (Supabase)
+   API
    ============================================================ */
 async function api(path,opt){
   opt=opt||{};
@@ -244,128 +448,6 @@ async function api(path,opt){
   if(!res.ok)throw new Error((data&&(data.message||data.msg||data.error_description||data.error))||txt||('HTTP '+res.status));
   return data;
 }
-
-/* ============================================================
-   API (Jukila)
-   ============================================================ */
-async function jukilaRequest(path, method, body) {
-  const res = await fetch(JUKILA_BASE + path, {
-    method: method,
-    headers: {
-      'Authorization': 'Bearer ' + JUKILA_TOKEN,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    },
-    body: body ? JSON.stringify(body) : null
-  });
-  const txt = await res.text();
-  let data = null; try { data = txt ? JSON.parse(txt) : null; } catch(e) { data = txt; }
-  if (!res.ok) throw new Error((data && (data.message || data.error)) || 'HTTP ' + res.status);
-  return data;
-}
-
-async function sendJukilaSMS(phone, message, studentId) {
-  if (!phone) { toast('No phone number provided.', 'bad'); return; }
-  let cleanPhone = String(phone).replace(/[^0-9]/g, '');
-  if (cleanPhone.startsWith('0')) cleanPhone = '256' + cleanPhone.slice(1);
-
-  try {
-    const contact = await jukilaRequest('/api/v1/contacts', 'POST', { name: 'Parent ' + cleanPhone, phone_number: cleanPhone });
-    const campaign = await jukilaRequest('/api/v1/campaigns', 'POST', {
-      name: 'SMS ' + Date.now(), type: 'sms', message: message, sender_id: JUKILA_SENDER, contacts: [contact.id || cleanPhone]
-    });
-    await jukilaRequest('/api/v1/campaigns/' + campaign.id + '/activate', 'POST');
-
-    await api('/rest/v1/sms_log', {
-      method: 'POST', headers: { 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ school_id: _schoolId, student_id: studentId, recipient_phone: cleanPhone, message_type: 'sms', message: message, status: 'sent', provider: 'jukila', response_body: JSON.stringify(campaign) })
-    });
-    toast('SMS sent to ' + cleanPhone, 'ok');
-  } catch (e) {
-    console.error('Jukila SMS Error:', e);
-    toast('SMS failed: ' + e.message, 'bad');
-    await api('/rest/v1/sms_log', {
-      method: 'POST', headers: { 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ school_id: _schoolId, student_id: studentId, recipient_phone: cleanPhone, message_type: 'sms', message: message, status: 'failed', provider: 'jukila', error_message: e.message })
-    }).catch(()=>{});
-  }
-}
-
-async function sendJukilaVoice(phone, message, studentId) {
-  if (!phone) { toast('No phone number provided.', 'bad'); return; }
-  let cleanPhone = String(phone).replace(/[^0-9]/g, '');
-  if (cleanPhone.startsWith('0')) cleanPhone = '256' + cleanPhone.slice(1);
-
-  try {
-    const contact = await jukilaRequest('/api/v1/contacts', 'POST', { name: 'Parent ' + cleanPhone, phone_number: cleanPhone });
-    const campaign = await jukilaRequest('/api/v1/campaigns', 'POST', {
-      name: 'Voice ' + Date.now(), type: 'voice', message: message, sender_id: JUKILA_SENDER, contacts: [contact.id || cleanPhone]
-    });
-    await jukilaRequest('/api/v1/campaigns/' + campaign.id + '/activate', 'POST');
-
-    await api('/rest/v1/sms_log', {
-      method: 'POST', headers: { 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ school_id: _schoolId, student_id: studentId, recipient_phone: cleanPhone, message_type: 'voice', message: message, status: 'sent', provider: 'jukila', response_body: JSON.stringify(campaign) })
-    });
-    toast('Voice Call sent to ' + cleanPhone, 'ok');
-  } catch (e) {
-    console.error('Jukila Voice Error:', e);
-    toast('Voice failed: ' + e.message, 'bad');
-    await api('/rest/v1/sms_log', {
-      method: 'POST', headers: { 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ school_id: _schoolId, student_id: studentId, recipient_phone: cleanPhone, message_type: 'voice', message: message, status: 'failed', provider: 'jukila', error_message: e.message })
-    }).catch(()=>{});
-  }
-}
-
-window.jukilaSMS = sendJukilaSMS;
-window.jukilaVoice = sendJukilaVoice;
-
-/* ============================================================
-   BUTTON HANDLERS
-   ============================================================ */
-async function triggerSMS(studentId) {
-  const s = _cachedStudents.find(x => x.id === studentId) || (window._remAll || []).find(r => r.s.id === studentId)?.s;
-  if (!s || !s.parent_contact) { toast('No parent phone number saved for this pupil.', 'bad'); return; }
-  const bal = (Number(s.total_charged)||0) - (Number(s.total_paid)||0);
-  const msg = 'Dear ' + (s.parent_name || 'Parent') + ', reminder for ' + s.first_name + '. Balance: UGX ' + bal.toLocaleString() + '. Pay via School Pay Code: ' + (s.school_pay_code || 'N/A') + '. Thank you.';
-  if (!confirm('Send this SMS to ' + s.parent_contact + '?\n\n' + msg)) return;
-  await sendJukilaSMS(s.parent_contact, msg, s.id);
-}
-
-async function triggerVoice(studentId) {
-  const s = _cachedStudents.find(x => x.id === studentId) || (window._remAll || []).find(r => r.s.id === studentId)?.s;
-  if (!s || !s.parent_contact) { toast('No parent phone number saved for this pupil.', 'bad'); return; }
-  const bal = (Number(s.total_charged)||0) - (Number(s.total_paid)||0);
-  const msg = 'Hello ' + (s.parent_name || 'Parent') + '. This is a reminder from ' + (_school ? _school.name : 'School') + ' regarding fees for ' + s.first_name + '. The balance is ' + bal + ' shillings. Please visit the office. Thank you.';
-  if (!confirm('Place Voice Call to ' + s.parent_contact + '?\n\n' + msg)) return;
-  await sendJukilaVoice(s.parent_contact, msg, s.id);
-}
-window.triggerSMS=triggerSMS;window.triggerVoice=triggerVoice;
-
-async function bulkSMSReminders() {
-  const list = (window._remFiltered || window._remAll || []).filter(r => r.bal > 0.5 && r.s.parent_contact);
-  if (!list.length) { toast('No debtors with phone numbers to send to.', 'bad'); return; }
-  if (!confirm(`Send SMS to ${list.length} parents?\n\nThis will cost money on your Jukila account.`)) return;
-
-  let ok = 0, fail = 0;
-  toast('Sending bulk SMS... please wait.', 'info');
-
-  for (const r of list) {
-    const bal = r.bal;
-    const msg = 'Dear ' + (r.s.parent_name || 'Parent') + ', reminder for ' + r.s.first_name + '. Balance: UGX ' + bal.toLocaleString() + '. Pay via School Pay Code: ' + (r.s.school_pay_code || 'N/A') + '. Thank you.';
-    try {
-      const contact = await jukilaRequest('/api/v1/contacts', 'POST', { name: 'Parent ' + r.s.parent_contact, phone_number: r.s.parent_contact });
-      const campaign = await jukilaRequest('/api/v1/campaigns', 'POST', { name: 'Bulk SMS ' + Date.now(), type: 'sms', message: msg, sender_id: JUKILA_SENDER, contacts: [contact.id || r.s.parent_contact] });
-      await jukilaRequest('/api/v1/campaigns/' + campaign.id + '/activate', 'POST');
-      ok++;
-    } catch(e) { console.error(e); fail++; }
-    await new Promise(res => setTimeout(res, 1500));
-  }
-  alert(`Bulk SMS Complete!\n\nSent: ${ok}\nFailed: ${fail}`);
-  toast('Bulk SMS Complete', 'ok');
-}
-window.bulkSMSReminders=bulkSMSReminders;
 
 /* ============================================================
    AUTH
@@ -382,7 +464,7 @@ async function doLogin(){
     const res=await fetch(SUPA_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
     const txt=await res.text();const data=txt?JSON.parse(txt):null;
     if(!res.ok)throw new Error((data&&(data.error_description||data.msg||data.error))||'Login failed');
-    setSession({access_token:data.access_token,refresh_token:data.refresh_token,user:data.user});
+    setSession({access_token:data.access_token,refresh_token:data.refresh_token,user:data.user,expires_in:data.expires_in});
     await boot();
   }catch(e){err.textContent=e.message;err.style.display='block'}
   btn.disabled=false;btn.textContent='Sign In';
@@ -1300,7 +1382,7 @@ function markAllPresent(){if(!confirm('Mark all present?'))return;const btns=doc
 window.markAllPresent=markAllPresent;
 
 /* ============================================================
-   MARKS
+   MARKS ENTRY
    ============================================================ */
 async function pageMarks(root){
   clearClassesCache();
@@ -1308,14 +1390,17 @@ async function pageMarks(root){
   if(!_marksClass&&classes[0])_marksClass=classes[0].id;
   const exams=await loadExams();
   if(!_marksExam&&exams[0])_marksExam=exams[0].id;
+  if(!_marksClass||!_marksExam){root.innerHTML='<div class="card empty">Select Class/Exam or create them first.</div>';return}
+
   const subjects=await loadSubjectsForClass(_marksClass);
   const results=await Promise.all([
     api('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+_marksClass+'&status=eq.active&select=id,admission_no,first_name,last_name&order=first_name'),
-    _marksExam?api('/rest/v1/marks?school_id=eq.'+_schoolId+'&exam_id=eq.'+_marksExam+'&select=student_id,subject_id,score'):[]
+    api('/rest/v1/marks?school_id=eq.'+_schoolId+'&exam_id=eq.'+_marksExam+'&select=student_id,subject_id,score')
   ]);
   const students=results[0]||[],marksRows=results[1]||[];
   const mm={};marksRows.forEach(m=>{if(!mm[m.student_id])mm[m.student_id]={};mm[m.student_id][m.subject_id]=m.score});
   window._marksMap=mm;window._marksSubjects=subjects;
+  
   const cOpts=classes.map(c=>'<option value="'+c.id+'"'+(_marksClass===c.id?' selected':'')+'>'+esc(c.name)+'</option>').join('');
   const eOpts=exams.map(e=>'<option value="'+e.id+'"'+(_marksExam===e.id?' selected':'')+'>'+esc(e.name)+'</option>').join('');
   let table='';
@@ -1331,21 +1416,235 @@ async function pageMarks(root){
     });
     table='<div class="card"><div class="table-wrap"><table><thead><tr><th>#</th><th>ADM</th><th>Name</th>'+hdr+'<th style="text-align:right">Total</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
   }
-  root.innerHTML='<div class="page-head"><h1>✍️ Marks</h1></div><div class="card"><div class="grid grid-2"><div><label>Class</label><select onchange="_marksClass=this.value;pageMarks(document.getElementById(\'main\'))">'+cOpts+'</select></div><div><label>Exam</label><select onchange="_marksExam=this.value;pageMarks(document.getElementById(\'main\'))">'+eOpts+'</select></div></div></div>'+table;
+  root.innerHTML='<div class="page-head"><h1>✍️ Edit Marks (Admin)</h1></div><div class="card"><div class="grid grid-2"><div><label>Class</label><select onchange="_marksClass=this.value;pageMarks(document.getElementById(\'main\'))">'+cOpts+'</select></div><div><label>Exam</label><select onchange="_marksExam=this.value;pageMarks(document.getElementById(\'main\'))">'+eOpts+'</select></div></div></div>'+table;
 }
 window.pageMarks=pageMarks;
 
 async function setMark(inp){
   const sid=inp.dataset.student,subid=inp.dataset.subject;
-  const sc=inp.value===''?null:parseFloat(inp.value);
-  if(sc!=null&&(isNaN(sc)||sc<0||sc>100)){toast('0-100','bad');inp.value='';return}
-  try{await api('/rest/v1/marks?school_id=eq.'+_schoolId+'&student_id=eq.'+sid+'&exam_id=eq.'+_marksExam+'&subject_id=eq.'+subid,{method:'DELETE'});if(sc!=null)await api('/rest/v1/marks',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,student_id:sid,exam_id:_marksExam,subject_id:subid,score:sc,academic_year:getYear(),term:getTerm()})});const per=window._marksMap[sid]||{};per[subid]=sc;let total=0;window._marksSubjects.forEach(sj=>{const v=per[sj.subject_id];if(v!=null&&!isNaN(v))total+=Number(v)});const el=document.querySelector('.row-total[data-student="'+sid+'"]');if(el)el.textContent=total.toFixed(0)}
-  catch(e){toast(e.message,'bad')}
+  let sc=inp.value===''?null:parseFloat(inp.value);
+  // Enforce 0 - 100
+  if(sc!=null){
+    if(isNaN(sc)||sc<0){sc=0;inp.value=0;}
+    if(sc>100){sc=100;inp.value=100;}
+  }
+  try{
+    await api('/rest/v1/marks?school_id=eq.'+_schoolId+'&student_id=eq.'+sid+'&exam_id=eq.'+_marksExam+'&subject_id=eq.'+subid,{method:'DELETE'});
+    if(sc!=null)await api('/rest/v1/marks',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,student_id:sid,exam_id:_marksExam,subject_id:subid,score:sc,academic_year:getYear(),term:getTerm()})});
+    const per=window._marksMap[sid]||{};per[subid]=sc;window._marksMap[sid]=per;
+    let total=0;window._marksSubjects.forEach(sj=>{const v=per[sj.subject_id];if(v!=null&&!isNaN(v))total+=Number(v)});
+    const el=document.querySelector('.row-total[data-student="'+sid+'"]');if(el)el.textContent=total.toFixed(0);
+  }catch(e){toast(e.message,'bad')}
 }
 window.setMark=setMark;
 
 /* ============================================================
-   REPORTS
+   BUILDERS (REPORTS)
+   ============================================================ */
+
+function buildHeader(){
+  const logoSrc=_school?(_school.logo_data||_school.logo_url||''):'';
+  return '<div class="rc-head">'+
+    '<div class="side-logo">'+(logoSrc?'<img src="'+esc(logoSrc)+'">':'SCHOOL<br>LOGO')+'</div>'+
+    '<div class="title-block">'+
+      '<h1>'+esc(_school?(_school.name||'PROGRESSIVE MOTHERS NUR. & PRIMARY SCHOOL'):'PROGRESSIVE MOTHERS NUR. & PRIMARY SCHOOL')+'</h1>'+
+      '<p class="addr">P.O BOX ...... KAMPALA - UGANDA</p>'+
+      '<p class="addr">TEL: 0756 585035 / 0779 585035</p>'+
+      '<p class="contact">Email: progressivemothersprisch@gmail.com</p>'+
+      '<p class="contact">Website: www.progressivemothers.com</p>'+
+      '<div class="doctype">TERMLY REPORT</div>'+
+    '</div>'+
+    '<div class="photo"></div>'+
+  '</div>';
+}
+
+function buildFooter(isMidTerm){
+  return '<div class="rc-footer">'+
+    '<div class="rc-illustration">🎒 🎨 📚</div>'+
+    (isMidTerm ? 
+      '<div class="rc-stamp" style="border:none;background:transparent;box-shadow:none"></div>' : 
+      '<div class="rc-stamp">'+
+        '<p class="stamp-title">PROGRESSIVE MOTHER\'S<br>NURSERY & PRIMARY SCHOOL</p>'+
+        '<p class="stamp-date">'+fmtDate(new Date().toISOString())+'</p>'+
+        '<p class="stamp-auth">ADMIN</p>'+
+      '</div>'
+    )+
+  '</div>';
+}
+
+function buildReportDates(isMidTerm){
+  if(isMidTerm) return '';
+  const dateStr = _school && _school.current_term_end ? fmtDate(_school.current_term_end) : '';
+  const nextTermStr = _school && _school.next_term_begin ? fmtDate(_school.next_term_begin) : '';
+  return '<div class="rc-pupil" style="margin-top:10px;margin-bottom:20px">'+
+    '<div class="cell w-50"><span class="lbl">This term has Ended on:</span><span class="val" style="color:#000;border-bottom:1px solid #000">'+dateStr+'</span></div>'+
+    '<div class="cell w-50"><span class="lbl">Next term begins on:</span><span class="val" style="color:#000;border-bottom:1px solid #000">'+nextTermStr+'</span></div>'+
+  '</div>';
+}
+
+function buildPrimaryReportCard(s,subjects,marks,positions,totalInClass,isUpperPrimary,isMidTerm){
+  const cls=(_classesCache||[]).find(c=>c.id===s.class_id);
+  const per=marks[s.id]||{};
+  let sRows='';let grand=0,cnt=0;let aggTotal=0;
+  
+  subjects.forEach(sj=>{
+    const v=per[sj.subject_id];
+    const sc=(v!=null&&!isNaN(v))?Number(v):null;
+    let g={g:'',agg:''};
+    let isRE = sj.name.toUpperCase().includes('R.E') || sj.name.toUpperCase().includes('RE ') || sj.code.toUpperCase() === 'RE';
+
+    if(sc!=null){
+      if(!isRE) {
+        grand+=sc;cnt++;g=gradePrimary(sc);aggTotal+=Number(g.agg)||0;
+      } else {
+        g = {g:'-',agg:'-'};
+      }
+    }
+    
+    sRows+='<tr><td class="subname">'+esc(sj.name)+'</td><td>100</td><td class="sc">'+(sc!=null?sc:'')+'</td><td class="agg">'+g.g+'</td><td></td></tr>';
+  });
+  
+  const avg=cnt?grand/cnt:0;const pos=positions[s.id]||'—';
+  
+  const midTermCols = isUpperPrimary ? ['ENG','MATH','SCI','SST'] : ['ENG','MATH','LIT 1','LIT 2'];
+
+  let ctComment = _school && _school.teacher_comment ? _school.teacher_comment : "";
+  if(!ctComment) ctComment = cnt===0 ? '' : avg>=70 ? 'Excellent performance. Keep it up.' : 'Good progress. Aim higher.';
+  
+  let htComment = _school && _school.head_comment ? _school.head_comment : "";
+  if(!htComment) htComment = cnt===0 ? '' : avg>=70 ? 'Promoted to next class.' : 'Needs improvement.';
+
+  return '<div class="rc-page"><div class="rc-inner">'+
+    buildHeader() +
+    '<div class="rc-pupil">'+
+      '<div class="cell w-full"><span class="lbl">PUPIL\'S NAME:</span><span class="val">'+esc(s.first_name+' '+(s.last_name||'').toUpperCase())+'</span></div>'+
+      '<div class="cell w-50"><span class="lbl">CLASS:</span><span class="val">'+esc(cls?cls.name.toUpperCase():'—')+'</span></div>'+
+      '<div class="cell w-50"><span class="lbl">TERM:</span><span class="val">'+getTerm()+'</span></div>'+
+      '<div class="cell w-50"><span class="lbl">YEAR:</span><span class="val">'+getYear()+'</span></div>'+
+      '<div class="cell w-50"><span class="lbl">POSITION:</span><span class="val">'+pos+' OUT OF '+totalInClass+'</span></div>'+
+      '<div class="cell w-50"><span class="lbl">DIV:</span><span class="val">'+ (avg>=70?'I':avg>=60?'II':avg>=50?'III':avg>=40?'IV':'U') +'</span></div>'+
+    '</div>'+
+    
+    '<div class="rc-section-title">MIDTERM EXAMINATIONS RECORD</div>'+
+    '<table class="rc-table">'+
+      '<thead><tr><th style="width:20%">SUBJECTS</th>'+
+      midTermCols.map(ms=>'<th>'+ms+'</th>').join('')+
+      '<th style="width:15%">TOTAL</th></tr></thead>'+
+      '<tbody><tr><td class="subname">SCORE</td>'+ midTermCols.map(()=>'<td></td>').join('') +'<td></td></tr>'+
+      '<tr><td class="subname">AGGREGATES</td>'+ midTermCols.map(()=>'<td></td>').join('') +'<td></td></tr></tbody>'+
+    '</table>'+
+
+    '<div class="rc-section-title">END OF TERM PERFORMANCE</div>'+
+    '<table class="rc-table">'+
+      '<thead><tr><th style="text-align:left;padding-left:10px">SUBJECT</th><th style="width:20%">SCORE</th><th style="width:20%">MARKS OBTAINED</th><th style="width:15%">AGG.</th><th style="width:20%">INITIALS</th></tr></thead>'+
+      '<tbody>'+sRows+
+        '<tr><td class="subname">TOTAL</td><td>'+ (subjects.length*100) +'</td><td class="sc" style="font-size:12pt">'+grand.toFixed(0)+'</td><td class="agg" style="font-size:12pt">'+aggTotal+'</td><td></td></tr>'+
+      '</tbody>'+
+    '</table>'+
+    
+    '<div style="text-align:center;font-size:9pt;color:#800080;margin-bottom:2px;font-weight:bold">GRADING SCALE %</div>'+
+    '<table class="rc-scale"><tr><th>90-100</th><th>80-89</th><th>70-79</th><th>60-69</th><th>55-59</th><th>50-54</th><th>45-49</th><th>40-44</th><th>0-39</th></tr>'+
+    '<tr><td style="font-weight:bold">D1</td><td style="font-weight:bold">D2</td><td style="font-weight:bold">C3</td><td style="font-weight:bold">C4</td><td style="font-weight:bold">C5</td><td style="font-weight:bold">C6</td><td style="font-weight:bold">P7</td><td style="font-weight:bold">P8</td><td style="font-weight:bold">F9</td></tr></table>'+
+    
+    '<div class="rc-lines">'+
+      '<span class="lbl">Conduct:</span><span class="line handwriting" style="min-height:22px">'+esc(s.conduct || '')+'</span>'+
+      '<span class="lbl" style="margin-top:8px">Class Teacher\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(ctComment)+'</span>'+
+      '<div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div>'+
+    '</div>'+
+    '<div class="rc-lines">'+
+      '<span class="lbl">Head Teacher\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(htComment)+'</span>'+
+      '<div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div>'+
+    '</div>'+
+    
+    buildReportDates(isMidTerm)+
+    buildFooter(isMidTerm)+
+  '</div></div>';
+}
+
+function buildBabyReportCard(s,subjects,marks,isMidTerm){
+  const cls=(_classesCache||[]).find(c=>c.id===s.class_id);
+  const per=marks[s.id]||{};
+  
+  let sRows='';let grand=0,cnt=0;
+  subjects.forEach(sj=>{
+    const v=per[sj.subject_id];
+    const sc=(v!=null&&!isNaN(v))?Number(v):null;
+    let g={g:'',r:''};
+    if(sc!=null) { g=gradeBaby(sc); grand+=sc; cnt++; }
+    sRows+='<tr><td class="subname" style="text-align:center">'+esc(sj.name)+'</td><td class="sc" style="font-size:14pt">'+(g.g||'')+'</td><td class="handwriting" style="font-family:\'Comic Sans MS\', cursive; font-size:14pt; text-align:center">'+(g.r||'')+'</td><td></td></tr>';
+  });
+
+  const midTermCols=['ENGLISH','ENVIRONMENT','HEALTH HABITS','READING','WRITING','NUMBERS'];
+  const avg=cnt?grand/cnt:0;
+  
+  let ctComment = _school && _school.teacher_comment ? _school.teacher_comment : "";
+  if(!ctComment) ctComment = cnt===0 ? '' : avg>=70 ? 'Promising report.' : 'Good progress.';
+  
+  let htComment = _school && _school.head_comment ? _school.head_comment : "";
+  if(!htComment) htComment = cnt===0 ? '' : avg>=70 ? 'Good marks. More effort needed.' : 'Needs improvement.';
+
+  return '<div class="rc-page"><div class="rc-inner">'+
+    buildHeader() +
+    '<div class="rc-pupil">'+
+      '<div class="cell w-full"><span class="lbl">PUPIL\'S NAME:</span><span class="val">'+esc(s.first_name+' '+(s.last_name||'').toUpperCase())+'</span></div>'+
+      '<div class="cell w-50"><span class="lbl">CLASS:</span><span class="val">'+esc(cls?cls.name.toUpperCase():'—')+'</span></div>'+
+      '<div class="cell w-50"><span class="lbl">TERM:</span><span class="val">'+getTerm()+'</span></div>'+
+      '<div class="cell w-50"><span class="lbl">LIN NO.:</span><span class="val">'+esc(s.lin||'—')+'</span></div>'+
+      '<div class="cell w-50"><span class="lbl">YEAR:</span><span class="val">'+getYear()+'</span></div>'+
+      '<div class="cell w-full"><span class="lbl">SCHOOL PAY CODE:</span><span class="val" style="border-bottom:none">'+esc(s.school_pay_code||'—')+'</span></div>'+
+    '</div>'+
+
+    '<div class="rc-section-title" style="background:#fff;border:none;color:#000">PROGRESSIVE ASSESSMENT RECORD</div>'+
+    '<table class="rc-table">'+
+      '<thead><tr><th style="width:15%">SUBJECTS</th>'+ midTermCols.map(ms=>'<th>'+ms+'</th>').join('') +'</tr></thead>'+
+      '<tbody><tr><td class="subname">SCORE</td>'+ midTermCols.map(()=>'<td></td>').join('') +'</tr></tbody>'+
+    '</table>'+
+
+    '<div class="rc-section-title">END OF TERM PERFORMANCE</div>'+
+    '<table class="rc-table">'+
+      '<thead><tr><th style="width:40%;text-align:left;padding-left:10px">SUBJECT</th><th style="width:20%">SCORE</th><th style="width:25%">REMARK</th><th style="width:15%">INITIALS</th></tr></thead>'+
+      '<tbody>'+sRows+'</tbody>'+
+    '</table>'+
+
+    '<div style="text-align:center;font-size:9pt;color:#800080;margin-bottom:2px;font-weight:bold">GRADING SCALE %</div>'+
+    '<table class="rc-scale"><tr><th>90-100</th><th>80-89</th><th>70-79</th><th>50-69</th><th>0-49</th></tr>'+
+    '<tr><td style="font-weight:bold;font-size:11pt">A</td><td style="font-weight:bold;font-size:11pt">B</td><td style="font-weight:bold;font-size:11pt">C</td><td style="font-weight:bold;font-size:11pt">D</td><td style="font-weight:bold;font-size:11pt">E</td></tr></table>'+
+
+    '<div class="rc-lines">'+
+      '<span class="lbl">Conduct:</span><span class="line handwriting" style="min-height:22px">'+esc(s.conduct || '')+'</span>'+
+      '<span class="lbl" style="margin-top:8px">Class Teacher\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(ctComment)+'</span>'+
+      '<div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div>'+
+    '</div>'+
+    '<div class="rc-lines">'+
+      '<span class="lbl">Head Teacher\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(htComment)+'</span>'+
+      '<div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div>'+
+    '</div>'+
+
+    buildReportDates(isMidTerm)+
+    buildFooter(isMidTerm)+
+  '</div></div>';
+}
+
+function printAllReports(){
+  const d=window._reportData;
+  if(!d||!d.students.length){toast('Nothing to print','bad');return}
+  const w=window.open('','_blank');
+  if(!w){toast('Allow popups to print','bad');return}
+  let styles='';document.querySelectorAll('style').forEach(st=>{styles+=st.innerHTML});
+  
+  let h='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Report Cards — '+esc(_school?(_school.name||''):'')+'</title><style>'+styles+'</style></head><body>';
+  
+  d.students.forEach(s=>{
+    h+='<div class="rc-stage">'+(d.isBaby ? buildBabyReportCard(s,d.subjects,d.marks,d.isMidTerm) : buildPrimaryReportCard(s,d.subjects,d.marks,d.positions,d.students.length,d.isUpperPrimary,d.isMidTerm))+'</div>';
+  });
+  
+  h+='<script>setTimeout(function(){window.print()},700)</'+'script></body></html>';
+  w.document.write(h);w.document.close();
+}
+window.printAllReports=printAllReports;
+
+/* ============================================================
+   REPORT VIEW (ADMIN)
    ============================================================ */
 async function pageReports(root){
   clearClassesCache();
@@ -1361,78 +1660,75 @@ async function pageReports(root){
   let marksRows=[];
   if(students.length){const ids=students.map(s=>s.id).join(',');marksRows=await api('/rest/v1/marks?school_id=eq.'+_schoolId+'&student_id=in.('+ids+')&exam_id=eq.'+examId+'&select=student_id,subject_id,score')||[]}
   const marks={};marksRows.forEach(m=>{if(!marks[m.student_id])marks[m.student_id]={};marks[m.student_id][m.subject_id]=Number(m.score)});
-  window._reportData={students,subjects,marks,classObj};
+
+  const positions={};
+  const totals=students.map(s=>{
+    const per=marks[s.id]||{};let total=0;
+    subjects.forEach(sj=>{const v=per[sj.subject_id];if(v!=null&&!isNaN(v))total+=Number(v)});
+    return{id:s.id,total};
+  });
+  totals.slice().sort((a,b)=>b.total-a.total).forEach((t,i)=>{positions[t.id]=i+1});
+
+  const clsName=classObj?classObj.name.toLowerCase():'';
+  const examName=(exams.find(e=>e.id===examId)||{name:''}).name.toLowerCase();
+  
+  const isBaby = clsName.includes('baby') || clsName.includes('middle') || clsName.includes('top') || clsName.includes('nur');
+  const isUpperPrimary = clsName.match(/p\.?\s*[4-7]/) || clsName.includes('p4') || clsName.includes('p5') || clsName.includes('p6') || clsName.includes('p7');
+  const isLowerPrimary = !isBaby && !isUpperPrimary;
+  const isMidTerm = examName.includes('mid') || examName.includes('bot') || examName.includes('beginning') || examName.includes('half');
+
+  if(isUpperPrimary){
+    const reqKeys = ['ENG', 'MAT', 'SCI', 'SST'];
+    const filtered = subjects.filter(sj => reqKeys.some(k => sj.code.toUpperCase().includes(k) || sj.name.toUpperCase().includes(k)));
+    if(filtered.length > 0) subjects = filtered;
+  } else if (isLowerPrimary) {
+    const reqKeys = ['ENG', 'MAT', 'LIT', 'RE', 'R.E'];
+    const filtered = subjects.filter(sj => reqKeys.some(k => sj.code.toUpperCase().includes(k) || sj.name.toUpperCase().includes(k)));
+    if(filtered.length > 0) subjects = filtered;
+  }
+
+  window._reportData={students,subjects,marks,positions,examId,isBaby,isUpperPrimary,isMidTerm};
+
   const cOpts=classes.map(c=>'<option value="'+c.id+'"'+(c.id===_marksClass?' selected':'')+'>'+esc(c.name)+'</option>').join('');
   const eOpts=exams.map(e=>'<option value="'+e.id+'"'+(e.id===examId?' selected':'')+'>'+esc(e.name)+'</option>').join('');
   let cards='';
-  if(students.length&&subjects.length)cards=students.map(s=>buildReportCard(s,subjects,marks)).join('');
-  root.innerHTML='<div class="page-head"><div><h1>📄 Reports</h1><div class="sub">'+getYear()+' Term '+getTerm()+'</div></div><button class="btn gold" onclick="printAllReports()">🖨️ Print All</button></div><div class="card"><div class="grid grid-2"><div><label>Class</label><select onchange="_marksClass=this.value;pageReports(document.getElementById(\'main\'))">'+cOpts+'</select></div><div><label>Exam</label><select onchange="_marksExam=this.value;pageReports(document.getElementById(\'main\'))">'+eOpts+'</select></div></div></div>'+(students.length===0?'<div class="card empty">No pupils.</div>':(subjects.length===0?'<div class="card empty">No subjects.</div>':'<div>'+cards+'</div>'));
+  if(students.length&&subjects.length){
+    cards=students.map(s=>'<div class="rc-stage">'+(isBaby?buildBabyReportCard(s,subjects,marks,isMidTerm):buildPrimaryReportCard(s,subjects,marks,positions,students.length,isUpperPrimary,isMidTerm))+'</div>').join('');
+  }
+
+  root.innerHTML='<div class="page-head"><div><h1>📄 Report Cards</h1><div class="sub">'+(isMidTerm?'Mid-Term':'End of Term')+' · '+(isBaby?'Baby Format':(isUpperPrimary?'Upper Primary':'Lower Primary'))+'</div></div><button class="btn gold" onclick="printAllReports()">🖨️ Print All</button></div>'+
+  '<div class="card"><div class="grid grid-2"><div><label>Class</label><select onchange="_marksClass=this.value;pageReports(document.getElementById(\'main\'))">'+cOpts+'</select></div><div><label>Exam</label><select onchange="_marksExam=this.value;pageReports(document.getElementById(\'main\'))">'+eOpts+'</select></div></div></div>'+
+  (students.length===0?'<div class="card empty">No pupils.</div>':(subjects.length===0?'<div class="card empty">No subjects.</div>':cards));
 }
 window.pageReports=pageReports;
 
-function buildReportCard(s,subjects,marks){
-  const cls=(_classesCache||[]).find(c=>c.id===s.class_id);
-  const per=marks[s.id]||{};
-  let sRows='';let grand=0,cnt=0;
-  subjects.forEach((sj,i)=>{const v=per[sj.subject_id];const sc=(v!=null&&!isNaN(v))?Number(v):null;if(sc!=null){grand+=sc;cnt++}const g=gradeOf(sc);sRows+='<tr><td>'+(i+1)+'</td><td>'+esc(sj.name)+'</td><td style="text-align:center">'+(sc!=null?sc:'—')+'</td><td style="text-align:center"><b>'+g.g+'</b></td><td>'+g.r+'</td></tr>'});
-  const avg=cnt?grand/cnt:0;const fg=gradeOf(avg);
-  return '<div class="card" style="page-break-after:always"><div style="text-align:center;padding-bottom:8px;border-bottom:2px solid #0a2540;margin-bottom:10px"><h3 style="font-size:16px;color:#0a2540">'+esc(_school.name||'')+'</h3><div style="font-size:11px;color:#666">'+esc(_school.address||'')+'</div><div style="font-size:12px;font-weight:700;margin-top:4px">TERMLY REPORT CARD</div></div><table style="margin-bottom:10px;font-size:12px"><tbody><tr><td><b>Name:</b> '+esc(s.first_name+' '+(s.last_name||''))+'</td><td><b>ADM:</b> '+esc(s.admission_no)+'</td><td><b>Class:</b> '+esc(cls?cls.name:'')+'</td></tr></tbody></table><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#0a2540;color:#fff"><th>#</th><th>Subject</th><th>Score</th><th>Grade</th><th>Remark</th></tr></thead><tbody>'+sRows+'<tr style="background:#f1f5f9;font-weight:700"><td colspan="2" style="text-align:right">TOTAL</td><td style="text-align:center">'+grand.toFixed(0)+'</td><td style="text-align:center">'+fg.g+'</td><td>'+fg.r+'</td></tr><tr style="background:#f1f5f9;font-weight:700"><td colspan="2" style="text-align:right">AVERAGE</td><td colspan="3" style="text-align:center">'+avg.toFixed(1)+'%</td></tr></tbody></table></div>';
-}
-window.buildReportCard=buildReportCard;
-
-function printAllReports(){
-  const d=window._reportData;
-  if(!d||!d.students.length){toast('Nothing','bad');return}
-  const w=window.open('','_blank');if(!w){toast('Allow popups','bad');return}
-  let h='<!DOCTYPE html><html><head><title>Reports</title><style>body{margin:0;padding:8mm;font-family:Arial}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:5px;font-size:11px}th{background:#0a2540;color:#fff}@page{size:A4;margin:8mm}</style></head><body>';
-  d.students.forEach((s,i)=>{h+=buildReportCard(s,d.subjects,d.marks).replace(/class="card" style="page-break-after:always"/,'style="page-break-after:'+(i<d.students.length-1?'always':'auto')+'"')});
-  h+='<script>setTimeout(function(){window.print()},500)</'+'script></body></html>';
-  w.document.write(h);w.document.close();
-}
-window.printAllReports=printAllReports;
-
 /* ============================================================
-   CLASSES
+   CLASSES & SUBJECTS
    ============================================================ */
 async function pageClasses(root){
-  clearClassesCache();
-  const classes=await loadClasses();
-  const counts={};
+  clearClassesCache();const classes=await loadClasses();const counts={};
   for(const c of classes){const r=await api('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+c.id+'&select=id');counts[c.id]=r.length}
-  let rows='';
-  classes.forEach(c=>{rows+='<tr><td><b>'+esc(c.name)+'</b></td><td>'+esc(c.level||'')+'</td><td>'+counts[c.id]+'</td><td><button class="btn sm danger" onclick="delClass(\''+c.id+'\')">✕</button></td></tr>'});
+  let rows='';classes.forEach(c=>{rows+='<tr><td><b>'+esc(c.name)+'</b></td><td>'+esc(c.level||'')+'</td><td>'+counts[c.id]+'</td><td><button class="btn sm danger" onclick="delClass(\''+c.id+'\')">✕</button></td></tr>'});
   root.innerHTML='<div class="page-head"><div><h1>🏫 Classes</h1><div class="sub">'+classes.length+'</div></div><button class="btn" onclick="addClass()">＋ Add</button></div>'+(classes.length?'<div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Level</th><th>Pupils</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>':'<div class="card"><div class="empty">No classes yet.</div></div>');
 }
 window.pageClasses=pageClasses;
-
 function addClass(){modal('<h3>Add Class</h3><div><label>Name *</label><input id="cn" placeholder="Primary 1"></div><div style="margin-top:12px"><label>Level</label><select id="cl"><option value="nursery">Nursery</option><option value="lower">Lower Primary</option><option value="upper" selected>Upper Primary</option></select></div><div style="margin-top:12px"><label>Sort</label><input id="cs" type="number" value="99"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveClass()">Save</button></div>')}
 window.addClass=addClass;
-
 async function saveClass(){const n=document.getElementById('cn').value.trim();const l=document.getElementById('cl').value;const s=parseInt(document.getElementById('cs').value)||99;if(!n){toast('Name required','bad');return}try{await api('/rest/v1/classes',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,name:n,level:l,sort_order:s})});toast('Added','ok');closeModal();clearClassesCache();nav('classes')}catch(e){toast(e.message,'bad')}}
 window.saveClass=saveClass;
-
 async function delClass(id){if(!confirm('Delete?'))return;try{await api('/rest/v1/classes?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');clearClassesCache();nav('classes')}catch(e){toast(e.message,'bad')}}
 window.delClass=delClass;
 
-/* ============================================================
-   SUBJECTS
-   ============================================================ */
 async function pageSubjects(root){
-  clearClassesCache();
-  const classes=await loadClasses();
-  if(!_subjClass&&classes[0])_subjClass=classes[0].id;
-  const subjects=await loadSubjectsForClass(_subjClass);
-  const cOpts=classes.map(c=>'<option value="'+c.id+'"'+(_subjClass===c.id?' selected':'')+'>'+esc(c.name)+'</option>').join('');
-  let rows='';
-  if(subjects.length)subjects.forEach(s=>{rows+='<tr><td><b>'+esc(s.code)+'</b></td><td>'+esc(s.name)+'</td><td><button class="btn sm danger" onclick="delSubject(\''+s.subject_id+'\')">✕</button></td></tr>'});
+  clearClassesCache();const classes=await loadClasses();if(!_subjClass&&classes[0])_subjClass=classes[0].id;
+  const subjects=await loadSubjectsForClass(_subjClass);const cOpts=classes.map(c=>'<option value="'+c.id+'"'+(_subjClass===c.id?' selected':'')+'>'+esc(c.name)+'</option>').join('');
+  let rows='';if(subjects.length)subjects.forEach(s=>{rows+='<tr><td><b>'+esc(s.code)+'</b></td><td>'+esc(s.name)+'</td><td><button class="btn sm danger" onclick="delSubject(\''+s.subject_id+'\')">✕</button></td></tr>'});
   else rows='<tr><td colspan="3" class="empty">No subjects for this class</td></tr>';
   root.innerHTML='<div class="page-head"><h1>📚 Subjects</h1><button class="btn" onclick="addSubject()">＋ Add</button></div>'+(classes.length?'<div class="card"><label>Class</label><select onchange="_subjClass=this.value;pageSubjects(document.getElementById(\'main\'))">'+cOpts+'</select></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Code</th><th>Name</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>':'<div class="card"><div class="empty">Add classes first.</div></div>');
 }
 window.pageSubjects=pageSubjects;
-
 function addSubject(){modal('<h3>Add Subject</h3><div><label>Code *</label><input id="sc" placeholder="ENG"></div><div style="margin-top:12px"><label>Name *</label><input id="sn" placeholder="English"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveSubject()">Save</button></div>')}
 window.addSubject=addSubject;
-
 async function saveSubject(){
   const code=document.getElementById('sc').value.trim().toUpperCase();
   const name=document.getElementById('sn').value.trim();
@@ -1448,60 +1744,41 @@ async function saveSubject(){
   }catch(e){toast(e.message,'bad')}
 }
 window.saveSubject=saveSubject;
-
 async function delSubject(sid){if(!confirm('Remove?'))return;try{await api('/rest/v1/class_subjects?school_id=eq.'+_schoolId+'&class_id=eq.'+_subjClass+'&subject_id=eq.'+sid,{method:'DELETE'});toast('Removed','ok');nav('subjects')}catch(e){toast(e.message,'bad')}}
 window.delSubject=delSubject;
 
 /* ============================================================
-   EXAMS
+   EXAMS & STAFF
    ============================================================ */
 async function pageExams(root){
-  _examsCache=null;
-  const exams=await loadExams();
-  let rows='';
+  _examsCache=null;const exams=await loadExams();let rows='';
   exams.forEach(e=>{rows+='<tr><td><b>'+esc(e.name)+'</b></td><td>Stage '+(e.stage||'')+'</td><td>'+(e.year||'')+'</td><td>Term '+e.term+'</td><td><button class="btn sm danger" onclick="delExam(\''+e.id+'\')">✕</button></td></tr>'});
   root.innerHTML='<div class="page-head"><div><h1>📝 Exams</h1><div class="sub">'+exams.length+'</div></div><button class="btn" onclick="addExam()">＋ Add</button></div>'+(exams.length?'<div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Stage</th><th>Year</th><th>Term</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>':'<div class="card"><div class="empty">No exams yet.</div></div>');
 }
 window.pageExams=pageExams;
-
 function addExam(){modal('<h3>Add Exam</h3><div><label>Name *</label><input id="en" placeholder="End of Term"></div><div style="margin-top:12px"><label>Stage (1=BOT, 2=MID, 3=EOT)</label><input id="es" type="number" value="3" min="1" max="3"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveExam()">Save</button></div>')}
 window.addExam=addExam;
-
 async function saveExam(){const n=document.getElementById('en').value.trim();const s=parseInt(document.getElementById('es').value)||3;if(!n){toast('Enter name','bad');return}try{await api('/rest/v1/exams',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,name:n,stage:s,year:getYear(),term:getTerm()})});toast('Added','ok');closeModal();_examsCache=null;nav('exams')}catch(e){toast(e.message,'bad')}}
 window.saveExam=saveExam;
-
 async function delExam(id){if(!confirm('Delete?'))return;try{await api('/rest/v1/exams?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');_examsCache=null;nav('exams')}catch(e){toast(e.message,'bad')}}
 window.delExam=delExam;
 
-/* ============================================================
-   STAFF
-   ============================================================ */
 async function pageStaff(root){
   const staff=await api('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=*&order=full_name')||[];
-  window._staffList=staff;
-  let rows='';
-  staff.forEach(s=>{
-    const tel=s.telephone||'';
-    const wa=tel?waLink(tel):'',tl=tel?telLink(tel):'';
-    let cc='—';
-    if(tel)cc='<b>'+esc(tel)+'</b><div style="display:flex;gap:4px;margin-top:4px">'+(wa?'<a href="https://wa.me/'+wa+'" target="_blank" class="btn sm wa" style="text-decoration:none">💬</a>':'')+(tl?'<a href="tel:'+tl+'" class="btn sm ghost" style="text-decoration:none">📞</a>':'')+'</div>';
-    rows+='<tr><td><b>'+esc(s.full_name)+'</b></td><td>'+esc(s.role||'')+'</td><td>'+cc+'</td><td style="text-align:right">'+fmtNum(s.monthly_salary||0)+'</td><td><button class="btn sm danger" onclick="delStaff(\''+s.id+'\')">✕</button></td></tr>';
-  });
+  window._staffList=staff;let rows='';
+  staff.forEach(s=>{const tel=s.telephone||'';const wa=tel?waLink(tel):'',tl=tel?telLink(tel):'';let cc='—';if(tel)cc='<b>'+esc(tel)+'</b><div style="display:flex;gap:4px;margin-top:4px">'+(wa?'<a href="https://wa.me/'+wa+'" target="_blank" class="btn sm wa" style="text-decoration:none">💬</a>':'')+(tl?'<a href="tel:'+tl+'" class="btn sm ghost" style="text-decoration:none">📞</a>':'')+'</div>';rows+='<tr><td><b>'+esc(s.full_name)+'</b></td><td>'+esc(s.role||'')+'</td><td>'+cc+'</td><td style="text-align:right">'+fmtNum(s.monthly_salary||0)+'</td><td><button class="btn sm danger" onclick="delStaff(\''+s.id+'\')">✕</button></td></tr>'});
   root.innerHTML='<div class="page-head"><div><h1>👨‍🏫 Staff</h1><div class="sub">'+staff.length+'</div></div><button class="btn" onclick="addStaff()">＋ Add</button></div>'+(staff.length?'<div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Phone</th><th style="text-align:right">Salary</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>':'<div class="card"><div class="empty">No staff yet.</div></div>');
 }
 window.pageStaff=pageStaff;
-
 function addStaff(){modal('<h3>Add Staff</h3><div><label>Full Name *</label><input id="fn"></div><div class="grid grid-2" style="margin-top:12px"><div><label>Role</label><input id="fr"></div><div><label>Phone</label><input id="ft"></div></div><div style="margin-top:12px"><label>Monthly Salary</label><input id="fs" type="number" value="0"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveStaff()">Save</button></div>')}
 window.addStaff=addStaff;
-
 async function saveStaff(){const b={school_id:_schoolId,full_name:document.getElementById('fn').value.trim(),role:document.getElementById('fr').value.trim()||null,telephone:document.getElementById('ft').value.trim()||null,monthly_salary:Number(document.getElementById('fs').value)||0};if(!b.full_name){toast('Name','bad');return}try{await api('/rest/v1/staff',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(b)});toast('Saved','ok');closeModal();nav('staff')}catch(e){toast(e.message,'bad')}}
 window.saveStaff=saveStaff;
-
 async function delStaff(id){if(!confirm('Delete?'))return;try{await api('/rest/v1/staff?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');nav('staff')}catch(e){toast(e.message,'bad')}}
 window.delStaff=delStaff;
 
 /* ============================================================
-   STAFF ATTENDANCE
+   STAFF ATTENDANCE & PAYROLL
    ============================================================ */
 async function pageStaffAttendance(root){
   const today=new Date().toISOString().slice(0,10);
@@ -1509,100 +1786,61 @@ async function pageStaffAttendance(root){
   loadStaffAtt();
 }
 window.pageStaffAttendance=pageStaffAttendance;
-
 async function loadStaffAtt(){
   const dt=document.getElementById('sad').value;
   const results=await Promise.all([api('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=*&order=full_name'),api('/rest/v1/staff_attendance?school_id=eq.'+_schoolId+'&date=eq.'+dt+'&select=staff_id,status')]);
-  const staff=results[0]||[],ex=results[1]||[];
-  const map={};ex.forEach(a=>map[a.staff_id]=a.status);
-  window._saDate=dt;
-  const c=document.getElementById('sat');
-  if(!staff.length){c.innerHTML='<div class="card empty">No staff.</div>';return}
-  let rows='';
-  staff.forEach(s=>{const st=map[s.id]||'';rows+='<tr><td><b>'+esc(s.full_name)+'</b></td><td>'+esc(s.role||'')+'</td><td style="text-align:center"><button class="btn sm '+(st==='present'?'ok':'ghost')+'" onclick="setStaffAtt(\''+s.id+'\',\'present\')">✓</button> <button class="btn sm '+(st==='absent'?'danger':'ghost')+'" onclick="setStaffAtt(\''+s.id+'\',\'absent\')">✗</button></td></tr>'});
+  const staff=results[0]||[],ex=results[1]||[];const map={};ex.forEach(a=>map[a.staff_id]=a.status);window._saDate=dt;
+  const c=document.getElementById('sat');if(!staff.length){c.innerHTML='<div class="card empty">No staff.</div>';return}
+  let rows='';staff.forEach(s=>{const st=map[s.id]||'';rows+='<tr><td><b>'+esc(s.full_name)+'</b></td><td>'+esc(s.role||'')+'</td><td style="text-align:center"><button class="btn sm '+(st==='present'?'ok':'ghost')+'" onclick="setStaffAtt(\''+s.id+'\',\'present\')">✓</button> <button class="btn sm '+(st==='absent'?'danger':'ghost')+'" onclick="setStaffAtt(\''+s.id+'\',\'absent\')">✗</button></td></tr>'});
   c.innerHTML='<div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th style="text-align:center">Status</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 window.loadStaffAtt=loadStaffAtt;
-
 async function setStaffAtt(id,status){try{await api('/rest/v1/staff_attendance?school_id=eq.'+_schoolId+'&staff_id=eq.'+id+'&date=eq.'+window._saDate,{method:'DELETE'});await api('/rest/v1/staff_attendance',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,staff_id:id,date:window._saDate,status:status,source:'manual'})});loadStaffAtt()}catch(e){toast(e.message,'bad')}}
 window.setStaffAtt=setStaffAtt;
 
-/* ============================================================
-   PAYROLL
-   ============================================================ */
 async function pagePayroll(root){
-  const results=await Promise.all([
-    api('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=*&order=full_name'),
-    api('/rest/v1/staff_salaries?school_id=eq.'+_schoolId+'&select=*&order=created_at.desc&limit=200').catch(()=>[])
-  ]);
-  const staff=results[0]||[],salaries=results[1]||[];
-  window._payrollStaff=staff;
-  const byId={};staff.forEach(s=>byId[s.id]=s);
-  let rows='';
-  salaries.forEach(s=>{const st=byId[s.staff_id]||{};rows+='<tr><td>'+esc(st.full_name||'')+'</td><td>'+s.month+'/'+s.year+'</td><td style="text-align:right">'+fmtNum(s.net)+'</td><td><span class="badge '+(s.status==='paid'?'ok':'warn')+'">'+esc(s.status)+'</span></td><td>'+(s.status!=='paid'?'<button class="btn sm ok" onclick="markPaid(\''+s.id+'\')">💵 Pay</button>':'')+'</td></tr>'});
+  const results=await Promise.all([api('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=*&order=full_name'),api('/rest/v1/staff_salaries?school_id=eq.'+_schoolId+'&select=*&order=created_at.desc&limit=200').catch(()=>[])]);
+  const staff=results[0]||[],salaries=results[1]||[];window._payrollStaff=staff;const byId={};staff.forEach(s=>byId[s.id]=s);
+  let rows='';salaries.forEach(s=>{const st=byId[s.staff_id]||{};rows+='<tr><td>'+esc(st.full_name||'')+'</td><td>'+s.month+'/'+s.year+'</td><td style="text-align:right">'+fmtNum(s.net)+'</td><td><span class="badge '+(s.status==='paid'?'ok':'warn')+'">'+esc(s.status)+'</span></td><td>'+(s.status!=='paid'?'<button class="btn sm ok" onclick="markPaid(\''+s.id+'\')">💵 Pay</button>':'')+'</td></tr>'});
   root.innerHTML='<div class="page-head"><h1>💼 Payroll</h1><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn gold" onclick="runPayroll()">▶ Run Payroll</button><button class="btn" onclick="addSalary()">＋ Salary</button></div></div><div class="card">'+(rows?'<div class="table-wrap"><table><thead><tr><th>Staff</th><th>Period</th><th style="text-align:right">Net</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<div class="empty">No salaries.</div>')+'</div>';
 }
 window.pagePayroll=pagePayroll;
-
-async function runPayroll(){
-  const staff=window._payrollStaff||[];
-  if(!staff.length){toast('No staff','bad');return}
-  const m=parseInt(prompt('Month (1-12):',new Date().getMonth()+1));
-  const y=parseInt(prompt('Year:',new Date().getFullYear()));
-  if(!m||!y)return;
-  let c=0;
-  for(const s of staff){const gross=Number(s.monthly_salary||0);if(!gross)continue;try{await api('/rest/v1/staff_salaries',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,staff_id:s.id,month:m,year:y,gross:gross,allowances:0,deductions:0,advance_deducted:0,net:gross,status:'pending'})});c++}catch(e){}}
-  toast('Created '+c+' salaries','ok');nav('payroll');
-}
+async function runPayroll(){const staff=window._payrollStaff||[];if(!staff.length){toast('No staff','bad');return}const m=parseInt(prompt('Month (1-12):',new Date().getMonth()+1));const y=parseInt(prompt('Year:',new Date().getFullYear()));if(!m||!y)return;let c=0;for(const s of staff){const gross=Number(s.monthly_salary||0);if(!gross)continue;try{await api('/rest/v1/staff_salaries',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,staff_id:s.id,month:m,year:y,gross:gross,allowances:0,deductions:0,advance_deducted:0,net:gross,status:'pending'})});c++}catch(e){}}toast('Created '+c+' salaries','ok');nav('payroll');}
 window.runPayroll=runPayroll;
-
 async function markPaid(id){if(!confirm('Mark PAID?'))return;try{await api('/rest/v1/staff_salaries?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'paid',paid_date:new Date().toISOString().slice(0,10)})});toast('Paid','ok');nav('payroll')}catch(e){toast(e.message,'bad')}}
 window.markPaid=markPaid;
-
 function addSalary(){const opts=(window._payrollStaff||[]).map(s=>'<option value="'+s.id+'">'+esc(s.full_name)+'</option>').join('');modal('<h3>Add Salary</h3><div><label>Staff</label><select id="ss">'+opts+'</select></div><div class="grid grid-2" style="margin-top:12px"><div><label>Month</label><input id="sm" type="number" value="'+(new Date().getMonth()+1)+'"></div><div><label>Year</label><input id="sy" type="number" value="'+new Date().getFullYear()+'"></div></div><div style="margin-top:12px"><label>Gross</label><input id="sg" type="number" value="0"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveSalary()">Save</button></div>')}
 window.addSalary=addSalary;
-
 async function saveSalary(){const sid=document.getElementById('ss').value;const m=parseInt(document.getElementById('sm').value);const y=parseInt(document.getElementById('sy').value);const g=Number(document.getElementById('sg').value)||0;if(!sid){toast('Select','bad');return}try{await api('/rest/v1/staff_salaries',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,staff_id:sid,month:m,year:y,gross:g,allowances:0,deductions:0,advance_deducted:0,net:g,status:'pending'})});toast('Added','ok');closeModal();nav('payroll')}catch(e){toast(e.message,'bad')}}
 window.saveSalary=saveSalary;
 
 /* ============================================================
-   UNIFORMS
+   UNIFORMS & EXPENSES & SETTINGS
    ============================================================ */
 async function pageUniforms(root){
   const sales=await api('/rest/v1/uniform_sales?school_id=eq.'+_schoolId+'&select=*&order=sold_at.desc&limit=200').catch(()=>[]);
-  let rows='';
-  sales.forEach(s=>{rows+='<tr><td>'+fmtDate(s.sold_at)+'</td><td>'+esc(s.item||'')+'</td><td>'+(s.quantity||1)+'</td><td style="text-align:right">'+fmtNum(s.total_amount||0)+'</td></tr>'});
+  let rows='';sales.forEach(s=>{rows+='<tr><td>'+fmtDate(s.sold_at)+'</td><td>'+esc(s.item||'')+'</td><td>'+(s.quantity||1)+'</td><td style="text-align:right">'+fmtNum(s.total_amount||0)+'</td></tr>'});
   root.innerHTML='<div class="page-head"><h1>👕 Uniforms</h1></div><div class="card">'+(rows?'<div class="table-wrap"><table><thead><tr><th>Date</th><th>Item</th><th>Qty</th><th style="text-align:right">Total</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<div class="empty">No sales yet.</div>')+'</div>';
 }
 window.pageUniforms=pageUniforms;
 
-/* ============================================================
-   EXPENSES
-   ============================================================ */
 async function pageExpenses(root){
   let rows=await api('/rest/v1/expenses?school_id=eq.'+_schoolId+'&select=*&order=date.desc').catch(()=>[]);
   let body='';let total=0;
   rows.forEach(e=>{total+=Number(e.amount);body+='<tr><td>'+fmtDate(e.date)+'</td><td>'+esc(e.description)+'</td><td>'+esc(e.category||'')+'</td><td style="text-align:right">'+fmtNum(e.amount)+'</td></tr>'});
-  if(!rows.length)body='<tr><td colspan="4" class="empty">No expenses.</td></tr>';
-  else body+='<tr style="background:#f1f5f9;font-weight:700"><td colspan="3" style="text-align:right">TOTAL</td><td style="text-align:right">'+fmtNum(total)+'</td></tr>';
+  if(!rows.length)body='<tr><td colspan="4" class="empty">No expenses.</td></tr>';else body+='<tr style="background:#f1f5f9;font-weight:700"><td colspan="3" style="text-align:right">TOTAL</td><td style="text-align:right">'+fmtNum(total)+'</td></tr>';
   root.innerHTML='<div class="page-head"><h1>💸 Expenses</h1><button class="btn" onclick="addExpense()">＋ Add</button></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+body+'</tbody></table></div></div>';
 }
 window.pageExpenses=pageExpenses;
-
 function addExpense(){modal('<h3>Add Expense</h3><div><label>Description</label><input id="xd"></div><div style="margin-top:12px"><label>Amount</label><input id="xa" type="number"></div><div style="margin-top:12px"><label>Category</label><input id="xc"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveExpense()">Save</button></div>')}
 window.addExpense=addExpense;
-
 async function saveExpense(){const d=document.getElementById('xd').value.trim();const a=Number(document.getElementById('xa').value);const c=document.getElementById('xc').value.trim()||'Other';if(!d||!a){toast('Fill','bad');return}try{await api('/rest/v1/expenses',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,description:d,amount:a,category:c,academic_year:getYear(),term:getTerm()})});toast('Saved','ok');closeModal();nav('expenses')}catch(e){toast(e.message,'bad')}}
 window.saveExpense=saveExpense;
 
-/* ============================================================
-   SETTINGS
-   ============================================================ */
 async function pageSettings(root){
   root.innerHTML='<div class="page-head"><h1>⚙️ Settings</h1></div><div class="card"><h3>School Info</h3><div class="grid grid-2" style="margin-top:12px"><div><label>Name</label><input id="s_name" value="'+esc(_school.name||'')+'"></div><div><label>Telephone</label><input id="s_phone" value="'+esc(_school.telephone||'')+'"></div><div><label>Address</label><input id="s_addr" value="'+esc(_school.address||'')+'"></div><div><label>Head Teacher</label><input id="s_head" value="'+esc(_school.head_teacher||'')+'"></div></div><button class="btn" style="margin-top:14px" onclick="saveSchool()">💾 Save</button></div><div class="card"><h3>Account</h3><div class="muted">'+esc(_profile.full_name||'')+' ('+esc(_profile.email||'')+')</div><button class="btn danger" style="margin-top:12px" onclick="doLogout()">Sign Out</button></div>';
 }
 window.pageSettings=pageSettings;
-
 async function saveSchool(){const b={name:document.getElementById('s_name').value.trim(),telephone:document.getElementById('s_phone').value.trim(),address:document.getElementById('s_addr').value.trim(),head_teacher:document.getElementById('s_head').value.trim()};try{await api('/rest/v1/schools?id=eq.'+_schoolId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(b)});Object.assign(_school,b);renderHeader();toast('Saved ✓','ok')}catch(e){toast('Save failed: '+e.message,'bad')}}
 window.saveSchool=saveSchool;
 
@@ -1613,39 +1851,21 @@ async function pageProfile(root){
   if(!_profileStudentId){root.innerHTML='<div class="empty">No pupil selected</div>';return}
   clearClassesCache();
   const classes=await loadClasses();
-  const results=await Promise.all([
-    api('/rest/v1/students?id=eq.'+_profileStudentId+'&select=*'),
-    api('/rest/v1/payments?student_id=eq.'+_profileStudentId+'&select=*&order=paid_at.desc').catch(()=>[]),
-    api('/rest/v1/pass_outs?student_id=eq.'+_profileStudentId+'&select=*&order=signed_out_at.desc').catch(()=>[])
-  ]);
-  const s=results[0]&&results[0][0];
-  if(!s){root.innerHTML='<div class="empty">Not found</div>';return}
-  const payments=results[1],passouts=results[2];
-  window._profileStudent=s;
-  const cls=classes.find(c=>c.id===s.class_id);
-  const charged=Number(s.total_charged)||0,paid=Number(s.total_paid)||0,bal=charged-paid;
-  const initials=(s.first_name||'?').charAt(0).toUpperCase();
-  const gl=genderLabel(s.gender);
+  const results=await Promise.all([api('/rest/v1/students?id=eq.'+_profileStudentId+'&select=*'),api('/rest/v1/payments?student_id=eq.'+_profileStudentId+'&select=*&order=paid_at.desc').catch(()=>[]),api('/rest/v1/pass_outs?student_id=eq.'+_profileStudentId+'&select=*&order=signed_out_at.desc').catch(()=>[])]);
+  const s=results[0]&&results[0][0];if(!s){root.innerHTML='<div class="empty">Not found</div>';return}
+  const payments=results[1],passouts=results[2];window._profileStudent=s;
+  const cls=classes.find(c=>c.id===s.class_id);const charged=Number(s.total_charged)||0,paid=Number(s.total_paid)||0,bal=charged-paid;
+  const initials=(s.first_name||'?').charAt(0).toUpperCase();const gl=genderLabel(s.gender);
   const hero='<div class="profile-hero"><div class="avatar">'+esc(initials)+'</div><div class="info"><h1>'+esc(s.first_name+' '+(s.last_name||''))+'</h1><div class="meta">📋 '+esc(s.admission_no)+' · '+(cls?'🏫 '+esc(cls.name):'No class')+' · '+(gl!=='—'?'👤 '+gl+' · ':'')+esc(isBoard(s.boarding_status)?'Boarding':'Day')+'</div>'+(s.parent_name||s.parent_contact?'<div class="meta">👤 '+esc(s.parent_name||'')+(s.parent_contact?' · 📞 '+esc(s.parent_contact):'')+'</div>':'')+'</div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn gold" onclick="recordPayment(\''+s.id+'\')">💵 Pay</button><button class="btn ghost" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.3)" onclick="openStudentModalById(\''+s.id+'\')">✏️ Edit</button></div></div>';
   const kpis='<div class="grid grid-kpi" style="margin-bottom:14px"><div class="kpi"><div class="v">'+fmtUGX(charged)+'</div><div class="l">Charged</div></div><div class="kpi kpi-ok"><div class="v">'+fmtUGX(paid)+'</div><div class="l">Paid</div></div><div class="kpi '+(bal>0?'kpi-bad':'kpi-ok')+'"><div class="v">'+fmtUGX(bal)+'</div><div class="l">Balance</div></div><div class="kpi kpi-warn"><div class="v">'+passouts.length+'</div><div class="l">Pass Outs</div></div></div>';
   let content='<div class="grid grid-2"><div class="card"><h3>Personal</h3><table><tbody><tr><td>ADM</td><td><b>'+esc(s.admission_no)+'</b></td></tr><tr><td>Class</td><td>'+esc(cls?cls.name:'—')+'</td></tr><tr><td>Gender</td><td><b>'+esc(gl)+'</b></td></tr><tr><td>Boarding</td><td>'+esc(isBoard(s.boarding_status)?'Boarding':'Day')+'</td></tr><tr><td>DOB</td><td>'+fmtDate(s.date_of_birth)+'</td></tr><tr><td>LIN</td><td>'+esc(s.lin||'—')+'</td></tr><tr><td>Pay Code</td><td><b>'+esc(s.school_pay_code||'—')+'</b></td></tr></tbody></table></div><div class="card"><h3>Parent / Guardian</h3><table><tbody><tr><td>Name</td><td><b>'+esc(s.parent_name||'—')+'</b></td></tr><tr><td>Phone</td><td><b>'+esc(s.parent_contact||'—')+'</b></td></tr></tbody></table>'+(s.parent_contact?'<div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap"><a href="https://wa.me/'+waLink(s.parent_contact)+'" target="_blank" class="btn wa">💬 WhatsApp</a><a href="tel:'+telLink(s.parent_contact)+'" class="btn ghost">📞 Call</a></div>':'')+'</div></div>';
-  if(payments.length){
-    let rows='';
-    payments.forEach(p=>{rows+='<tr><td>'+fmtDateTime(p.paid_at)+'</td><td><b style="font-family:monospace">'+esc(p.receipt_no||'')+'</b></td><td>'+esc(p.payment_for||'')+'</td><td style="text-align:right;color:#047857">'+fmtNum(p.amount)+'</td></tr>'});
-    content+='<div class="card"><h3>💳 Payment History</h3><div class="table-wrap"><table><thead><tr><th>Date</th><th>Receipt</th><th>For</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
-  }
-  if(passouts.length){
-    let rows='';
-    passouts.forEach(p=>{const statusBadge=p.status==='out'?'<span class="badge bad">OUT</span>':'<span class="badge ok">Returned</span>';rows+='<tr><td>'+fmtDateTime(p.signed_out_at)+'</td><td>'+fmtDateTime(p.signed_in_at)+'</td><td>'+esc(p.reason||'')+'</td><td>'+esc(p.picked_up_by||'')+'</td><td>'+statusBadge+'</td></tr>'});
-    content+='<div class="card"><h3>🚪 Pass Outs</h3><div class="table-wrap"><table><thead><tr><th>Out</th><th>Return</th><th>Reason</th><th>Picked By</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
-  }
+  if(payments.length){let rows='';payments.forEach(p=>{rows+='<tr><td>'+fmtDateTime(p.paid_at)+'</td><td><b style="font-family:monospace">'+esc(p.receipt_no||'')+'</b></td><td>'+esc(p.payment_for||'')+'</td><td style="text-align:right;color:#047857">'+fmtNum(p.amount)+'</td></tr>'});content+='<div class="card"><h3>💳 Payment History</h3><div class="table-wrap"><table><thead><tr><th>Date</th><th>Receipt</th><th>For</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
+  if(passouts.length){let rows='';passouts.forEach(p=>{const statusBadge=p.status==='out'?'<span class="badge bad">OUT</span>':'<span class="badge ok">Returned</span>';rows+='<tr><td>'+fmtDateTime(p.signed_out_at)+'</td><td>'+fmtDateTime(p.signed_in_at)+'</td><td>'+esc(p.reason||'')+'</td><td>'+esc(p.picked_up_by||'')+'</td><td>'+statusBadge+'</td></tr>'});content+='<div class="card"><h3>🚪 Pass Outs</h3><div class="table-wrap"><table><thead><tr><th>Out</th><th>Return</th><th>Reason</th><th>Picked By</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';}
   root.innerHTML=hero+kpis+content;
 }
 window.pageProfile=pageProfile;
 
-/* ============================================================
-   INIT — MUST BE LAST
-   ============================================================ */
+/* INIT */
 try{const s=lsGet('pm_session');if(s)_session=JSON.parse(s)}catch(e){_session=null}
 if(_session&&_session.user)boot();
 </script>
