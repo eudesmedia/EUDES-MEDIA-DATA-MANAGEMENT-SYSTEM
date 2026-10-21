@@ -252,25 +252,14 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .rc-lines .line{border-bottom:1px dotted #000;display:block;min-height:20px}
 .rc-lines .line.handwriting{font-family:'Comic Sans MS', cursive;color:#000080;font-size:12pt;padding-left:5px}
 
-/* Footer Stamp */
+/* Footer Stamp Removed */
 .rc-footer{
   margin-top:auto;
   display:flex;
-  justify-content:space-between;
+  justify-content:center;
   align-items:flex-end;
   padding-top:10px;
 }
-.rc-stamp{
-  border:2px dashed #000080;
-  padding:6px 14px;
-  text-align:center;
-  color:#000080;
-  transform:rotate(-5deg);
-  background:#fff;
-}
-.rc-stamp .stamp-title{font-size:8pt;font-weight:bold;text-transform:uppercase;margin:0}
-.rc-stamp .stamp-date{font-size:10pt;font-weight:bold;margin:2px 0}
-.rc-stamp .stamp-auth{font-size:8pt;font-weight:bold;text-transform:uppercase;margin:0}
 .rc-illustration{font-size:10pt;font-weight:bold;color:#800080;display:flex;gap:10px}
 
 @media(max-width:800px){.rc-stage{padding:8px;justify-content:flex-start}}
@@ -342,7 +331,7 @@ const SUPA_URL='https://wabeempxckdtjvrkzhpv.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndhYmVlbXB4Y2tkdGp2cmt6aHB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1NTQyODcsImV4cCI6MjEwMDEzMDI4N30.5IDNbrip0nLDF9pN2fXHWVB7w-lYNxPIbTaTO-s1PaM';
 
 /* ============================================================
-   STATE & STORAGE (WITH AUTO-REFRESH TOKEN)
+   STATE & STORAGE
    ============================================================ */
 let _session=null,_profile=null,_school=null,_schoolId=null,_role=null;
 let _classesCache=null,_examsCache=null;
@@ -1014,7 +1003,7 @@ function fallbackCopy(str, count){
 }
 
 /* ============================================================
-   JUKILA CSV EXPORT — matches: name,phone,language,nokPhone
+   JUKILA CSV EXPORT
    ============================================================ */
 function downloadJukilaCSV(){
   const list = window._contactsFiltered || window._contactsAll || [];
@@ -1031,7 +1020,6 @@ function downloadJukilaCSV(){
 
   withPhone.forEach(r => {
     const s = r.s;
-    // Contact name: parent name preferred, fallback to pupil
     let contactName = '';
     if (s.parent_name && String(s.parent_name).trim()) {
       contactName = String(s.parent_name).trim();
@@ -1041,16 +1029,12 @@ function downloadJukilaCSV(){
     contactName = contactName.replace(/[\r\n,;"]/g, ' ').replace(/\s+/g, ' ').trim();
     if(!contactName) contactName = 'Parent';
 
-    // Phone: digits only, strip leading + (Jukila sample uses no +)
     let phone = String(r.phone).replace(/[^0-9]/g, '');
     if (!phone) return;
-    // De-duplicate by phone
     if (seenPhones.has(phone)) return;
     seenPhones.add(phone);
 
-    // Language: always English as requested
     const language = 'English';
-    // nokPhone: optional, left empty
     const nokPhone = '';
 
     const safe = (v) => {
@@ -1423,7 +1407,6 @@ window.pageMarks=pageMarks;
 async function setMark(inp){
   const sid=inp.dataset.student,subid=inp.dataset.subject;
   let sc=inp.value===''?null:parseFloat(inp.value);
-  // Enforce 0 - 100
   if(sc!=null){
     if(isNaN(sc)||sc<0){sc=0;inp.value=0;}
     if(sc>100){sc=100;inp.value=100;}
@@ -1461,14 +1444,6 @@ function buildHeader(){
 function buildFooter(isMidTerm){
   return '<div class="rc-footer">'+
     '<div class="rc-illustration">🎒 🎨 📚</div>'+
-    (isMidTerm ? 
-      '<div class="rc-stamp" style="border:none;background:transparent;box-shadow:none"></div>' : 
-      '<div class="rc-stamp">'+
-        '<p class="stamp-title">PROGRESSIVE MOTHER\'S<br>NURSERY & PRIMARY SCHOOL</p>'+
-        '<p class="stamp-date">'+fmtDate(new Date().toISOString())+'</p>'+
-        '<p class="stamp-auth">ADMIN</p>'+
-      '</div>'
-    )+
   '</div>';
 }
 
