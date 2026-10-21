@@ -110,52 +110,175 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .alert-item .txt b{display:block;color:var(--navy)}
 .alert-item .txt span{color:var(--muted);font-size:12px;display:block}
 .profile-hero{background:linear-gradient(135deg,var(--navy),var(--navy3));color:#fff;border-radius:16px;padding:20px;margin-bottom:14px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
-.profile-hero .avatar{width:72px;height:72px;border-radius:50%;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-size:28px;font-weight:800;flex-shrink:0;overflow:hidden}
-.profile-hero .avatar img{width:100%;height:100%;object-fit:cover}
+.profile-hero .avatar{width:72px;height:72px;border-radius:50%;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-size:28px;font-weight:800;flex-shrink:0}
 .profile-hero .info{flex:1;min-width:200px}
 .profile-hero .info h1{color:#fff;font-size:20px;margin:0 0 4px}
 .profile-hero .info .meta{color:#cbd5e1;font-size:12.5px;line-height:1.7}
 .marks-input{width:70px;padding:6px;text-align:center;border:2px solid var(--line);border-radius:8px;font-weight:700}
 .marks-input:focus{border-color:var(--navy);background:#f8fafc}
-.photo-upload{border:2px dashed var(--line);border-radius:10px;padding:14px;text-align:center;cursor:pointer;background:#f8fafc}
-.photo-upload:hover{border-color:var(--navy)}
-.photo-preview{width:100px;height:125px;object-fit:cover;border-radius:6px;border:2px solid var(--line);display:block;margin:0 auto}
-/* REPORT CARD */
-.rc-stage{background:#e2e8f0;padding:20px;border-radius:12px;display:flex;justify-content:center;margin-bottom:20px;overflow-x:auto}
-.rc-page{width:210mm;min-height:297mm;background:#fff;padding:10mm 12mm;font-family:'Times New Roman',Times,serif;color:#000;box-shadow:0 4px 20px rgba(10,37,64,.15);position:relative;display:flex;flex-direction:column;page-break-after:always;font-size:11pt;line-height:1.3;border:3px solid #800080}
-.rc-inner{border:2px solid #800080;padding:10px;flex:1;display:flex;flex-direction:column}
-.rc-head{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #800080;padding-bottom:10px;margin-bottom:10px;text-align:center}
-.rc-head .side-logo{width:75px;height:75px;flex-shrink:0;border-radius:50%;border:1px solid #800080;display:grid;place-items:center;font-size:9pt;color:#800080;text-align:center;overflow:hidden}
+
+/* ============================================================
+   EXACT PHYSICAL REPORT CARD MATCH (A4 PORTRAIT)
+   ============================================================ */
+.rc-stage{
+  background:#e2e8f0;
+  padding:20px;
+  border-radius:12px;
+  display:flex;
+  justify-content:center;
+  margin-bottom:20px;
+  overflow-x:auto;
+}
+.rc-page{
+  width:210mm;
+  min-height:297mm;
+  background:#fff;
+  padding:10mm 12mm;
+  font-family:'Times New Roman', Times, serif;
+  color:#000;
+  box-shadow:0 4px 20px rgba(10,37,64,.15);
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  page-break-after:always;
+  font-size:11pt;
+  line-height:1.3;
+  border: 3px solid #800080;
+}
+.rc-inner{
+  border: 2px solid #800080;
+  padding: 10px;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+
+/* Header */
+.rc-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:2px solid #800080;
+  padding-bottom:10px;
+  margin-bottom:10px;
+  text-align:center;
+}
+.rc-head .side-logo{
+  width:75px;height:75px;flex-shrink:0;
+  border-radius:50%;border:1px solid #800080;
+  display:grid;place-items:center;font-size:9pt;color:#800080;text-align:center;overflow:hidden;
+}
 .rc-head .side-logo img{width:100%;height:100%;object-fit:cover}
 .rc-head .title-block{flex:1;padding:0 10px}
 .rc-head .title-block h1{font-size:22pt;margin:0 0 2px;text-transform:uppercase;color:#800080;font-weight:bold;font-family:Arial,sans-serif}
 .rc-head .title-block .addr{font-size:10pt;margin:0;font-weight:bold}
 .rc-head .title-block .contact{font-size:10pt;margin:2px 0 0;font-weight:bold;color:#000080}
 .rc-head .title-block .doctype{font-size:13pt;font-weight:bold;letter-spacing:2px;color:#000080;margin-top:6px;text-transform:uppercase;text-decoration:underline}
-.rc-head .photo{width:70px;height:85px;flex-shrink:0;border:1.5px solid #800080;overflow:hidden}
-.rc-head .photo img{width:100%;height:100%;object-fit:cover}
-.rc-pupil{display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:10px;font-size:11pt;font-weight:bold}
+.rc-head .photo{
+  width:70px;height:85px;flex-shrink:0;
+  border:1.5px solid #800080;
+}
+
+/* Pupil info */
+.rc-pupil{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px 16px;
+  margin-bottom:10px;
+  font-size:11pt;
+  font-weight:bold;
+}
 .rc-pupil .cell{display:flex;align-items:flex-end;gap:4px}
 .rc-pupil .lbl{white-space:nowrap}
 .rc-pupil .val{border-bottom:1px dotted #000;min-width:80px;padding:0 4px;text-align:center;color:#000080}
 .rc-pupil .cell.w-50{width:calc(50% - 8px)}
 .rc-pupil .cell.w-full{width:100%}
-.rc-section-title{text-align:center;font-weight:bold;font-size:10pt;color:#800080;background:#f8f8f8;border:1px solid #800080;border-bottom:none;padding:3px;text-transform:uppercase}
-.rc-table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10pt}
-.rc-table th,.rc-table td{border:1px solid #800080;padding:3px 6px;text-align:center;color:#000}
-.rc-table th{font-weight:bold;text-transform:uppercase;background:#fff}
+
+/* Tables */
+.rc-section-title{
+  text-align:center;
+  font-weight:bold;
+  font-size:10pt;
+  color:#800080;
+  background:#f8f8f8;
+  border:1px solid #800080;
+  border-bottom:none;
+  padding:3px;
+  text-transform:uppercase;
+}
+.rc-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-bottom:10px;
+  font-size:10pt;
+}
+.rc-table th, .rc-table td{
+  border:1px solid #800080;
+  padding:3px 6px;
+  text-align:center;
+  color:#000;
+}
+.rc-table th{
+  font-weight:bold;
+  text-transform:uppercase;
+  background:#fff;
+}
 .rc-table td.subname{text-align:left;font-weight:bold}
 .rc-table td.sc{color:#000080;font-weight:bold}
-.rc-table td.grade,.rc-table td.agg{color:#800080;font-weight:bold}
-.rc-scale{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9pt}
-.rc-scale th,.rc-scale td{border:1px solid #800080;text-align:center;padding:3px}
+.rc-table td.grade{color:#800080;font-weight:bold}
+.rc-table td.agg{color:#800080;font-weight:bold}
+
+/* Grading Scale Table */
+.rc-scale{
+  width:100%;
+  border-collapse:collapse;
+  margin-bottom:12px;
+  font-size:9pt;
+}
+.rc-scale th, .rc-scale td{
+  border:1px solid #800080;
+  text-align:center;
+  padding:3px;
+}
 .rc-scale th{font-weight:normal;font-size:8pt}
-.rc-lines{font-size:10pt;margin-bottom:8px;line-height:1.8}
+
+/* Remarks */
+.rc-lines{
+  font-size:10pt;
+  margin-bottom:8px;
+  line-height:1.8;
+}
 .rc-lines .lbl{font-weight:bold;display:block;margin-bottom:2px}
 .rc-lines .line{border-bottom:1px dotted #000;display:block;min-height:20px}
-.rc-lines .line.handwriting{font-family:'Comic Sans MS',cursive;color:#000080;font-size:12pt;padding-left:5px}
-.rc-footer{margin-top:auto;display:flex;justify-content:center;align-items:flex-end;padding-top:10px}
+.rc-lines .line.handwriting{font-family:'Comic Sans MS', cursive;color:#000080;font-size:12pt;padding-left:5px}
+
+/* Signatures */
+.rc-signs-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+  margin-top:10px;
+  font-size:10pt;
+  font-weight:bold;
+}
+.rc-signs-row .s{
+  display:flex;
+  align-items:flex-end;
+  gap:8px;
+}
+.rc-signs-row .s .line{border-bottom:1px dotted #000;flex:1;min-height:18px}
+
+/* Footer Stamp Removed */
+.rc-footer{
+  margin-top:auto;
+  display:flex;
+  justify-content:center;
+  align-items:flex-end;
+  padding-top:10px;
+}
 .rc-illustration{font-size:10pt;font-weight:bold;color:#800080;display:flex;gap:10px}
+
+@media(max-width:800px){.rc-stage{padding:8px;justify-content:flex-start}}
 @media print{
   @page{size:A4 portrait;margin:0}
   body{background:#fff}
@@ -163,7 +286,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
   #app{padding:0 !important}
   .container{max-width:none;padding:0}
   .rc-stage{background:#fff;padding:0;margin:0;border:none;display:block}
-  .rc-page{width:210mm;height:297mm;box-shadow:none;padding:10mm 12mm;margin:0;page-break-after:always}
+  .rc-page{width:210mm;height:297mm;box-shadow:none;padding:10mm 12mm;margin:0;page-break-after:always;}
 }
 </style>
 </head>
@@ -174,7 +297,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
     <div class="logo" id="authLogo">P</div>
     <h1>Progressive Mothers School</h1>
     <div class="sub">Powered by Eudes Media</div>
-    <div><label>Email</label><input id="loginEmail" type="email" placeholder="eudesprince078@gmail.com"></div>
+    <div><label>Email</label><input id="loginEmail" type="email" value="eudesprince078@gmail.com"></div>
     <div style="margin-top:12px"><label>Password</label><input id="loginPass" type="password" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <div id="loginErr" class="err" style="display:none"></div>
     <button class="btn block" id="loginBtn" style="padding:13px;margin-top:18px" onclick="doLogin()">Sign In</button>
@@ -217,7 +340,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 <div id="toastRoot"></div>
 
 <script>
-/* PHASE 2 GOES HERE *//* ============================================================
+/* ============================================================
    CONFIG
    ============================================================ */
 const SUPA_URL='https://wabeempxckdtjvrkzhpv.supabase.co';
@@ -233,9 +356,6 @@ let _profileStudentId=null;
 let _marksClass=null,_marksExam=null,_subjClass=null;
 let activeRoute='dashboard';
 let refreshTimer=null;
-const ADMIN_ROLES=['admin','head_teacher','headteacher','director','bursar','manager'];
-const TEACHER_PAGES=['dashboard','attendance','marks','reports','students','student_profile'];
-function isTeacher(){return _role && !ADMIN_ROLES.includes(String(_role).toLowerCase())}
 
 function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
@@ -347,7 +467,7 @@ async function doLogin(){
   btn.disabled=true;btn.textContent='Signing in…';
   try{
     const res=await fetch(SUPA_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SUPA_KEY,'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
-    const txt=await res.text();let data=null;try{data=txt?JSON.parse(txt):null}catch(e){}
+    const txt=await res.text();const data=txt?JSON.parse(txt):null;
     if(!res.ok)throw new Error((data&&(data.error_description||data.msg||data.error))||'Login failed');
     setSession({access_token:data.access_token,refresh_token:data.refresh_token,user:data.user,expires_in:data.expires_in});
     await boot();
@@ -420,11 +540,7 @@ window.changePeriod=changePeriod;
 /* ============================================================
    LOADERS
    ============================================================ */
-async function loadClasses(){
-  if(_classesCache)return _classesCache;
-  let all=await api('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=id,name,level,sort_order&order=sort_order')||[];
-  _classesCache=all;return _classesCache;
-}
+async function loadClasses(){if(_classesCache)return _classesCache;_classesCache=await api('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=id,name,level,sort_order&order=sort_order')||[];return _classesCache}
 function clearClassesCache(){_classesCache=null}
 async function loadSubjectsForClass(classId){if(!classId)return[];const rows=await api('/rest/v1/class_subjects?school_id=eq.'+_schoolId+'&class_id=eq.'+classId+'&select=subject_id,subjects:subject_id(id,code,name,is_compulsory)')||[];return rows.map(r=>({subject_id:r.subject_id,code:r.subjects?.code||'',name:r.subjects?.name||''}))}
 async function loadExams(){if(_examsCache)return _examsCache;_examsCache=await api('/rest/v1/exams?school_id=eq.'+_schoolId+'&select=*&order=stage')||[];return _examsCache}
@@ -458,11 +574,8 @@ const ROUTES={
   settings:{label:'Settings',icon:'⚙️',render:pageSettings}
 };
 
-function allowedRoutes(){return Object.entries(ROUTES).filter(([k])=>{if(k==='student_profile')return false;if(isTeacher())return TEACHER_PAGES.includes(k);return true})}
-
 async function nav(route){
   if(!ROUTES[route])return;
-  if(isTeacher()&&!TEACHER_PAGES.includes(route)){route='dashboard'}
   activeRoute=route;renderNav();renderBottomBar();
   const main=document.getElementById('main');main.innerHTML='<div class="loading">Loading…</div>';
   window.scrollTo({top:0,behavior:'smooth'});
@@ -470,9 +583,9 @@ async function nav(route){
   catch(e){console.error(e);main.innerHTML='<div class="card"><h3>Error</h3><p class="muted">'+esc(e.message)+'</p><button class="btn ghost" onclick="nav(\''+route+'\')">Retry</button></div>'}
 }
 window.nav=nav;
-function renderNav(){const entries=allowedRoutes();document.getElementById('nav').innerHTML=entries.map(([k,r])=>'<button class="pill'+(k===activeRoute?' active':'')+'" onclick="nav(\''+k+'\')">'+r.icon+' '+esc(r.label)+'</button>').join('')}
-function renderBottomBar(){const entries=allowedRoutes().filter(([k,r])=>r.bottom);document.getElementById('bottomBar').innerHTML=entries.map(([k,r])=>'<button class="pill'+(k===activeRoute?' active':'')+'" onclick="nav(\''+k+'\')">'+r.icon+' '+esc(r.label)+'</button>').join('')}
-function doGlobalSearch(){const v=document.getElementById('globalSearch').value.trim();if(!v)return;nav('students');setTimeout(()=>{const el=document.getElementById('stSearch');if(el){el.value=v;filterStudents()}},150)}
+function renderNav(){const entries=Object.entries(ROUTES).filter(([k])=>k!=='student_profile');document.getElementById('nav').innerHTML=entries.map(([k,r])=>'<button class="pill'+(k===activeRoute?' active':'')+'" onclick="nav(\''+k+'\')">'+r.icon+' '+esc(r.label)+'</button>').join('')}
+function renderBottomBar(){const entries=Object.entries(ROUTES).filter(([k,r])=>r.bottom&&k!=='student_profile');document.getElementById('bottomBar').innerHTML=entries.map(([k,r])=>'<button class="pill'+(k===activeRoute?' active':'')+'" onclick="nav(\''+k+'\')">'+r.icon+' '+esc(r.label)+'</button>').join('')}
+function doGlobalSearch(){const v=document.getElementById('globalSearch').value.trim();if(!v)return;nav('students');setTimeout(()=>{const el=document.getElementById('stSearch');if(el){el.value=v;filterStudents()}},100)}
 window.doGlobalSearch=doGlobalSearch;
 
 /* ============================================================
@@ -490,7 +603,8 @@ async function pageDashboard(root){
   const students=results[0],classes=results[1],payments=results[2],passOuts=results[3],staff=results[4];
   _cachedStudents=students;
   const active=students.filter(s=>s.status==='active'||!s.status);
-  let tC=0,tP=0,debtors=0;active.forEach(s=>{const c=Number(s.total_charged)||0;const p=Number(s.total_paid)||0;tC+=c;tP+=p;if(c-p>0)debtors++});
+  let tC=0,tP=0,debtors=0;
+  active.forEach(s=>{const c=Number(s.total_charged)||0;const p=Number(s.total_paid)||0;tC+=c;tP+=p;if(c-p>0)debtors++});
   const todayColl=payments.filter(p=>(p.paid_at||'').slice(0,10)===today).reduce((s,p)=>s+Number(p.amount),0);
   root.innerHTML='<div class="page-head"><div><h1>Dashboard</h1><div class="sub">'+cy+' Term '+ct+' · '+fmtLongDate(new Date())+'</div></div><button class="btn" onclick="openStudentModal(null)">＋ Register Pupil</button></div>'+
   '<div class="grid grid-kpi" style="margin-bottom:14px">'+
@@ -612,12 +726,13 @@ async function saveStudent(id){
   try{
     if(id)await api('/rest/v1/students?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(body)});
     else await api('/rest/v1/students',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(body)});
-    toast('Saved ✓','ok');closeModal();nav(activeRoute);
+    toast('Saved ✓ Charged: '+fmtUGX(tc)+' · Paid: '+fmtUGX(tp)+' · Balance: '+fmtUGX(bal),'ok');
+    closeModal();nav(activeRoute);
   }catch(e){toast('Save failed: '+e.message,'bad')}
 }
 window.saveStudent=saveStudent;
 
-async function deleteStudent(id){if(!confirm('Delete permanently?'))return;try{await api('/rest/v1/students?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');nav('students')}catch(e){toast('Delete failed: '+e.message,'bad')}}
+async function deleteStudent(id){if(!confirm('Delete this pupil permanently?'))return;try{await api('/rest/v1/students?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');nav('students')}catch(e){toast('Delete failed: '+e.message,'bad')}}
 window.deleteStudent=deleteStudent;
 
 /* ============================================================
@@ -665,6 +780,7 @@ async function savePayment(studentId){
 window.savePayment=savePayment;
 
 function printReceipt(student,pay){
+  const cls=(_classesCache||[]).find(c=>c.id===student.class_id);
   const charged=Number(student.total_charged)||0,before=Number(student.total_paid)||0;
   const bal=charged-(before+Number(pay.amount));
   const w=window.open('','_blank');if(!w){toast('Allow popups','bad');return}
@@ -751,7 +867,7 @@ async function pageReminders(root){
   window._remAll=rows;
   let tc=0,tp=0,tb=0,debt=0;rows.forEach(r=>{tc+=r.charged;tp+=r.paid;tb+=r.bal;if(r.bal>0.5)debt++});
   root.innerHTML='<div class="page-head"><div><h1>📨 Fee Reminders</h1><div class="sub">'+rows.length+' active pupils</div></div><div style="display:flex;gap:8px;flex-wrap:wrap">'+
-  '<button class="btn ok" onclick="bulkSMSReminders()">📨 Bulk SMS</button>'+
+  '<button class="btn ok" onclick="bulkSMSReminders()">📨 Bulk SMS (Debtors)</button>'+
   '<button class="btn wa" onclick="bulkWhatsApp()">💬 Bulk WhatsApp</button>'+
   '<button class="btn ghost" onclick="copyPhones()">📋 Copy Phones</button></div></div>'+
   '<div class="grid grid-kpi" style="margin-bottom:14px"><div class="kpi kpi-navy"><div class="v">'+fmtUGX(tc)+'</div><div class="l">Total Charged</div></div><div class="kpi kpi-ok"><div class="v">'+fmtUGX(tp)+'</div><div class="l">Collected</div></div><div class="kpi kpi-bad"><div class="v">'+fmtUGX(tb)+'</div><div class="l">Outstanding</div></div><div class="kpi kpi-warn"><div class="v">'+debt+'</div><div class="l">Debtors</div></div></div>'+
@@ -782,7 +898,7 @@ function buildReminderMessage(r){
   const parent=r.s.parent_name||'Parent';
   const pupil=(r.s.first_name||'')+' '+(r.s.last_name||'');
   const lin=r.s.lin||'—';const code=r.s.school_pay_code||'—';
-  let msg='Dear '+parent+',\n\nGreetings from '+school+'. 🌸\n\nWe are writing to gently remind you about the school fees for your child.\n\n👤 Pupil:            '+pupil+'\n🔢 LIN:              '+lin+'\n💳 School Pay Code:  '+code+'\n\nPlease visit our school office or use the School Pay Code.\n\nThank you,\n'+school+(phone?'\n📞 '+phone:'');
+  let msg='Dear '+parent+',\n\nGreetings and blessings from all of us at '+school+'. 🌸\n\nWe hope this message finds you and your family in good health and happiness.\n\nWe are writing with love and respect to gently remind you about the school fees for your dear child.\n\n👤 Pupil:            '+pupil+'\n🔢 LIN:              '+lin+'\n💳 School Pay Code:  '+code+'\n\nThere are two easy ways to make payment:\n\n  1️⃣ Visit our school office — our bursar will be happy to assist you personally.\n\n  2️⃣ Pay using your child\'s School Pay Code: '+code+'\n\nPlease do not feel pressured — we simply want to walk this journey together with you.\n\nYour child is precious to us, and we are committed to giving them the very best education in a loving environment.\n\nThank you for being part of our school family.\n\nWith warmth, love and prayers,\n'+school+(phone?'\n📞 '+phone:'');
   return msg;
 }
 window.buildReminderMessage=buildReminderMessage;
@@ -792,15 +908,9 @@ function bulkWhatsApp(){
   if(!list.length){toast('No debtors with phone numbers','bad');return}
   let inner='';
   list.forEach(r=>{const pc=r.s.parent_contact;const link='https://wa.me/'+waLink(pc)+'?text='+encodeURIComponent(buildReminderMessage(r));inner+='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px;border-bottom:1px solid #eef1f6"><div><b style="font-size:13px">'+esc(r.s.first_name+' '+(r.s.last_name||''))+'</b><div class="muted" style="font-size:11px">'+esc(pc)+' · Bal: '+fmtUGX(r.bal)+'</div></div><a class="btn sm wa" style="text-decoration:none" target="_blank" href="'+link+'">💬 Open</a></div>'});
-  modal('<h3>💬 Bulk WhatsApp</h3><div class="alert-item info" style="margin-bottom:12px"><span class="ico">💡</span><div class="txt"><b>'+list.length+' contact(s)</b><span>Tap each to open WhatsApp.</span></div></div><div style="max-height:60vh;overflow:auto">'+inner+'</div><div class="actions"><button class="btn ghost" onclick="closeModal()">Close</button></div>');
+  modal('<h3>💬 Bulk WhatsApp</h3><div class="alert-item info" style="margin-bottom:12px"><span class="ico">💡</span><div class="txt"><b>'+list.length+' contact(s)</b><span>Tap each to open WhatsApp with pre-filled message.</span></div></div><div style="max-height:60vh;overflow:auto">'+inner+'</div><div class="actions"><button class="btn ghost" onclick="closeModal()">Close</button></div>');
 }
 window.bulkWhatsApp=bulkWhatsApp;
-function bulkSMSReminders(){toast('SMS gateway not configured','bad')}
-window.bulkSMSReminders=bulkSMSReminders;
-function triggerSMS(id){toast('SMS gateway not configured','bad')}
-window.triggerSMS=triggerSMS;
-function triggerVoice(id){toast('Voice gateway not configured','bad')}
-window.triggerVoice=triggerVoice;
 
 async function copyPhones(){
   const list=(window._remFiltered||window._remAll||[]).filter(r=>r.s.parent_contact);
@@ -841,22 +951,27 @@ function renderContacts(){
   const q=(document.getElementById('cSearch').value||'').toLowerCase();
   const cf=document.getElementById('cClass').value||'';
   const ff=document.getElementById('cFilter').value||'';
+  
   const list=(window._contactsAll||[]).filter(r=>{
     if(cf && r.s.class_id!==cf) return false;
     if(ff==='has-phone' && !r.phone) return false;
     if(ff==='debtors' && r.bal<=0.5) return false;
     if(ff==='cleared' && r.bal>0.5) return false;
+    
     if(q){
       const h=((r.s.parent_name||'')+' '+(r.phone||'')+' '+(r.s.first_name||'')+' '+(r.s.last_name||'')+' '+(r.s.admission_no||'')).toLowerCase();
       return h.indexOf(q)!==-1;
     }
     return true;
   });
+  
   window._contactsFiltered=list;
   const sub=document.getElementById('ctSub');
   if(sub) sub.textContent = (window._contactsAll.length) + ' total · ' + list.length + ' shown';
+  
   const t=document.getElementById('conTable');
   if(!list.length){t.innerHTML='<div class="empty">No contacts match your filter.</div>';return}
+  
   let rows='';
   list.forEach(r=>{
     const s=r.s;
@@ -870,8 +985,11 @@ window.renderContacts=renderContacts;
 function copyContactNumbers(){
   const list = window._contactsFiltered || window._contactsAll || [];
   const phones = list.map(r => r.phone).filter(p => p && p.trim() !== '');
+  
   if(!phones.length){ toast('No phone numbers in this list to copy.', 'bad'); return; }
+  
   const str = phones.join('; ');
+  
   if (navigator.clipboard && window.isSecureContext) {
     navigator.clipboard.writeText(str).then(() => {
       toast('✅ Copied ' + phones.length + ' numbers!', 'ok');
@@ -884,49 +1002,78 @@ window.copyContactNumbers=copyContactNumbers;
 
 function fallbackCopy(str, count){
   const ta = document.createElement('textarea');
-  ta.value = str; ta.style.position = 'fixed'; ta.style.left = '-999999px';
-  document.body.appendChild(ta); ta.focus(); ta.select();
+  ta.value = str;
+  ta.style.position = 'fixed';
+  ta.style.left = '-999999px';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
   try {
     const successful = document.execCommand('copy');
     if(successful) toast('✅ Copied ' + count + ' numbers!', 'ok');
     else toast('Could not copy. Please try Download CSV.', 'bad');
-  } catch (err) { toast('Could not copy. Please try Download CSV.', 'bad'); }
+  } catch (err) {
+    toast('Could not copy. Please try Download CSV.', 'bad');
+  }
   document.body.removeChild(ta);
 }
 
+/* ============================================================
+   JUKILA CSV EXPORT
+   ============================================================ */
 function downloadJukilaCSV(){
   const list = window._contactsFiltered || window._contactsAll || [];
   const withPhone = list.filter(r => r.phone && String(r.phone).trim() !== '');
-  if(!withPhone.length){ toast('No contacts with phone numbers to export.', 'bad'); return; }
+  
+  if(!withPhone.length){
+    toast('No contacts with phone numbers to export.', 'bad');
+    return;
+  }
+
   const head = ['name','phone','language','nokPhone'];
   const rows = [head.join(',')];
   const seenPhones = new Set();
+
   withPhone.forEach(r => {
     const s = r.s;
     let contactName = '';
-    if (s.parent_name && String(s.parent_name).trim()) contactName = String(s.parent_name).trim();
-    else contactName = 'Parent of ' + (s.first_name || '') + ' ' + (s.last_name || '');
+    if (s.parent_name && String(s.parent_name).trim()) {
+      contactName = String(s.parent_name).trim();
+    } else {
+      contactName = 'Parent of ' + (s.first_name || '') + ' ' + (s.last_name || '');
+    }
     contactName = contactName.replace(/[\r\n,;"]/g, ' ').replace(/\s+/g, ' ').trim();
     if(!contactName) contactName = 'Parent';
+
     let phone = String(r.phone).replace(/[^0-9]/g, '');
     if (!phone) return;
     if (seenPhones.has(phone)) return;
     seenPhones.add(phone);
+
     const language = 'English';
     const nokPhone = '';
+
     const safe = (v) => {
       const str = String(v == null ? '' : v);
-      if (str.includes(',') || str.includes('"') || str.includes('\n')) return '"' + str.replace(/"/g, '""') + '"';
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return '"' + str.replace(/"/g, '""') + '"';
+      }
       return str;
     };
+
     rows.push([safe(contactName), safe(phone), safe(language), safe(nokPhone)].join(','));
   });
+
   const blob = new Blob(['\ufeff' + rows.join('\r\n')], {type: 'text/csv;charset=utf-8'});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url;
+  const a = document.createElement('a');
+  a.href = url;
   a.download = 'jukila_contacts_' + new Date().toISOString().slice(0,10) + '.csv';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
   URL.revokeObjectURL(url);
+
   toast('✅ Jukila CSV downloaded (' + seenPhones.size + ' contacts, English)', 'ok');
 }
 window.downloadJukilaCSV = downloadJukilaCSV;
@@ -980,19 +1127,6 @@ function printContacts(){
 }
 window.printContacts=printContacts;
 
-function printSection(title,tableHTML){
-  const w=window.open('','_blank');
-  if(!w){toast('Allow popups','bad');return}
-  const logo=_school&&(_school.logo_url||_school.logo_data);
-  let h='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+esc(title)+'</title><style>*{box-sizing:border-box}body{font-family:Arial;padding:20px;margin:0;font-size:13px}.letterhead{display:flex;align-items:center;gap:16px;padding-bottom:14px;border-bottom:2px solid #0a2540;margin-bottom:18px}.letterhead img{width:70px;height:70px;object-fit:contain}.letterhead h1{font-size:18px;margin:0 0 4px;text-transform:uppercase;color:#0a2540}.doc-title{text-align:center;font-size:14px;font-weight:700;text-transform:uppercase;color:#0a2540;margin:14px 0 6px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{padding:7px 9px;border:1px solid #ccc;font-size:11.5px;text-align:left}th{background:#0a2540;color:#fff}@media print{body{padding:0}}</style></head><body>';
-  h+='<div class="letterhead">'+(logo?'<img src="'+esc(logo)+'">':'')+'<div><h1>'+esc(_school?.name||'')+'</h1><div style="font-size:11px;color:#555">'+esc(_school?.address||'')+'</div></div></div>';
-  h+='<div class="doc-title">'+esc(title)+'</div>'+tableHTML;
-  h+='<div style="text-align:center;font-size:10px;color:#888;margin-top:24px">Powered by EUDES MEDIA</div>';
-  h+='<script>setTimeout(function(){window.print()},400)</'+'script></body></html>';
-  w.document.write(h);w.document.close();
-}
-window.printSection=printSection;
-
 /* ============================================================
    PROMISES
    ============================================================ */
@@ -1028,7 +1162,7 @@ function filterPromises(){
   const sById={};(window._promiseStudents||[]).forEach(s=>sById[s.id]=s);
   const list=(window._allPromises||[]).filter(p=>{if(!q)return true;const s=sById[p.student_id]||{};const h=((s.first_name||'')+' '+(s.last_name||'')+' '+(s.admission_no||'')+' '+(p.promised_by||'')).toLowerCase();return h.indexOf(q)!==-1});
   const c=document.getElementById('promTable');
-  if(!list.length){c.innerHTML='<div class="empty">'+((window._allPromises||[]).length===0?'No promises yet.':'No match.')+'</div>';return}
+  if(!list.length){c.innerHTML='<div class="empty">'+( (window._allPromises||[]).length===0?'No promises yet.':'No match.')+'</div>';return}
   let rows='';
   list.forEach(p=>{
     const s=sById[p.student_id]||{};
@@ -1066,6 +1200,9 @@ window.clearPromise=clearPromise;
 async function deletePromise(id){if(!confirm('Delete?'))return;try{await api('/rest/v1/fee_reminders?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');nav('promises')}catch(e){toast(e.message,'bad')}}
 window.deletePromise=deletePromise;
 
+/* ============================================================
+   DEBTORS
+   ============================================================ */
 async function pageDebtors(root){
   clearClassesCache();
   const classes=await loadClasses();
@@ -1090,6 +1227,9 @@ function filterDebtors(){
 }
 window.filterDebtors=filterDebtors;
 
+/* ============================================================
+   MISSING
+   ============================================================ */
 async function pageMissing(root){
   const students=await api('/rest/v1/students?school_id=eq.'+_schoolId+'&select=*&order=admission_no')||[];
   _cachedStudents=students;
@@ -1111,6 +1251,9 @@ function filterMissing(){
 }
 window.filterMissing=filterMissing;
 
+/* ============================================================
+   PASS OUTS
+   ============================================================ */
 async function pagePassOuts(root){
   const results=await Promise.all([
     api('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,admission_no,first_name,last_name,class_id,parent_name,parent_contact'),
@@ -1141,17 +1284,20 @@ async function addPassOut(){
   const students=await api('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=id,first_name,last_name,admission_no,parent_name,parent_contact&order=first_name')||[];
   const outRows=await api('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&status=eq.out&select=student_id')||[];
   const outIds=new Set(outRows.map(p=>p.student_id));
+  
   window._passOutLookup={};
   let innerRows='';
+  
   students.forEach(s=>{
     const isOut=outIds.has(s.id);
     window._passOutLookup[s.id]=s;
     innerRows+='<div style="padding:10px;border-bottom:1px solid #eef1f6;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="selectPassOutPupil(\''+s.id+'\')"><div><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b><div style="font-size:11px;color:#64748b">'+esc(s.admission_no)+'</div></div><div>'+(isOut?'<span class="badge bad">OUT</span>':'<span class="badge info">Select</span>')+'</div></div>';
   });
+
   const rOpts=PASSOUT_REASONS.map(r=>'<option>'+r+'</option>').join('');
   modal('<h3>🚪 New Pass Out</h3>'+
     '<div id="poStep1">'+
-      '<div style="position:relative;margin-bottom:12px"><input type="text" id="poSearchInput" placeholder="🔍 Search pupil name or ADM..." oninput="filterPassOutSearch(this.value)" style="padding:14px"></div>'+
+      '<div style="position:relative;margin-bottom:12px"><input type="text" id="poSearchInput" placeholder="🔍 Search pupil name or ADM..." oninput="filterPassOutSearch(this.value)" style="padding:14px 14px 14px 40px"><span style="position:absolute;left:14px;top:14px">🔍</span></div>'+
       '<div id="poList" style="max-height:35vh;overflow:auto;border:1px solid var(--line);border-radius:10px">'+innerRows+'</div>'+
       '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button></div>'+
     '</div>'+
@@ -1276,6 +1422,7 @@ async function pageMarks(root){
   const exams=await loadExams();
   if(!_marksExam&&exams[0])_marksExam=exams[0].id;
   if(!_marksClass||!_marksExam){root.innerHTML='<div class="card empty">Select Class/Exam or create them first.</div>';return}
+
   const subjects=await loadSubjectsForClass(_marksClass);
   const results=await Promise.all([
     api('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+_marksClass+'&status=eq.active&select=id,admission_no,first_name,last_name&order=first_name'),
@@ -1284,6 +1431,7 @@ async function pageMarks(root){
   const students=results[0]||[],marksRows=results[1]||[];
   const mm={};marksRows.forEach(m=>{if(!mm[m.student_id])mm[m.student_id]={};mm[m.student_id][m.subject_id]=m.score});
   window._marksMap=mm;window._marksSubjects=subjects;
+  
   const cOpts=classes.map(c=>'<option value="'+c.id+'"'+(_marksClass===c.id?' selected':'')+'>'+esc(c.name)+'</option>').join('');
   const eOpts=exams.map(e=>'<option value="'+e.id+'"'+(_marksExam===e.id?' selected':'')+'>'+esc(e.name)+'</option>').join('');
   let table='';
@@ -1321,8 +1469,39 @@ async function setMark(inp){
 window.setMark=setMark;
 
 /* ============================================================
-   BUILDERS (REPORTS) — CORRECTED FOR NURSERY & PRIMARY
+   BUILDERS (REPORTS) — UPGRADED with BOT, MID, EOT & COMMENTS
    ============================================================ */
+function buildHeader(){
+  const logoSrc=_school?(_school.logo_data||_school.logo_url||''):'';
+  return '<div class="rc-head">'+
+    '<div class="side-logo">'+(logoSrc?'<img src="'+esc(logoSrc)+'">':'SCHOOL<br>LOGO')+'</div>'+
+    '<div class="title-block">'+
+      '<h1>'+esc(_school?(_school.name||'PROGRESSIVE MOTHERS NUR. & PRIMARY SCHOOL'):'PROGRESSIVE MOTHERS NUR. & PRIMARY SCHOOL')+'</h1>'+
+      '<p class="addr">P.O BOX ...... KAMPALA - UGANDA</p>'+
+      '<p class="addr">TEL: 0756 585035 / 0779 585035</p>'+
+      '<p class="contact">Email: progressivemothersprisch@gmail.com</p>'+
+      '<p class="contact">Website: www.progressivemothers.com</p>'+
+      '<div class="doctype">TERMLY REPORT</div>'+
+    '</div>'+
+    '<div class="photo"></div>'+
+  '</div>';
+}
+
+function buildFooter(isMidTerm){
+  return '<div class="rc-footer">'+
+    '<div class="rc-illustration">🎒 🎨 📚</div>'+
+  '</div>';
+}
+
+function buildReportDates(termEnd,nextTerm){
+  const dateStr = termEnd ? fmtDate(termEnd) : '';
+  const nextTermStr = nextTerm ? fmtDate(nextTerm) : '';
+  return '<div class="rc-pupil" style="margin-top:10px;margin-bottom:20px">'+
+    '<div class="cell w-50"><span class="lbl">This term has Ended on:</span><span class="val" style="color:#000;border-bottom:1px solid #000">'+dateStr+'</span></div>'+
+    '<div class="cell w-50"><span class="lbl">Next term begins on:</span><span class="val" style="color:#000;border-bottom:1px solid #000">'+nextTermStr+'</span></div>'+
+  '</div>';
+}
+
 function buildPrimaryReportCard(s,subjects,marks,positions,totalInClass,isUpperPrimary,isMidTerm,classes,midMarks,botMarks){
   midMarks=midMarks||{};botMarks=botMarks||{};if(!window._printTables)window._printTables={bot:true,mid:true,end:true};
   const list=classes||_classesCache||[];const cls=list.find(c=>c.id===s.class_id);
@@ -1341,9 +1520,9 @@ function buildPrimaryReportCard(s,subjects,marks,positions,totalInClass,isUpperP
   
   const botT=buildTable(botPer,'bot');const midT=buildTable(midPer,'mid');const endT=buildTable(per,'end');
   const avg=endT.cnt?endT.grand/endT.cnt:0;const pos=s.position_manual?s.position_manual:(positions[s.id]||'—');const div=s.division_manual?s.division_manual:(avg>=70?'I':avg>=60?'II':avg>=50?'III':avg>=40?'IV':'U');
-  let ctComment=s.class_teacher_comment||(_school && _school.teacher_comment?_school.teacher_comment:'');if(!ctComment)ctComment=endT.cnt===0?'':avg>=70?'Excellent performance. Keep it up.':'Good progress. Aim higher.';
-  let htComment=s.head_teacher_comment||(_school && _school.head_comment?_school.head_comment:'');if(!htComment)htComment=endT.cnt===0?'':avg>=70?'Promoted to next class.':'Needs improvement.';
-  const dirComment=s.director_comment||'';const termEnd=s.term_ended_on||(_school && _school.current_term_end)||'';const nextTerm=s.next_term_begins||(_school && _school.next_term_begin)||'';const photo=s.photo_data||s.report_photo||'';
+  let ctComment=s.class_teacher_comment||'';if(!ctComment)ctComment=endT.cnt===0?'':avg>=70?'Excellent performance. Keep it up.':'Good progress. Aim higher.';
+  let htComment=s.head_teacher_comment||'';if(!htComment)htComment=endT.cnt===0?'':avg>=70?'Promoted to next class.':'Needs improvement.';
+  const dirComment=s.director_comment||'';const termEnd=s.term_ended_on||(_school && _school.current_term_end)||'';const nextTerm=s.next_term_begins||(_school && _school.next_term_begin)||'';const photo=s.photo_data||'';
   
   let tables='';
   if(window._printTables.bot)tables+='<div class="rc-section-title">BEGINNING OF TERM PERFORMANCE</div><table class="rc-table"><thead><tr><th style="text-align:left;padding-left:10px">SUBJECT</th><th style="width:20%">SCORE</th><th style="width:20%">MARKS OBTAINED</th><th style="width:15%">AGG.</th><th style="width:20%">INITIALS</th></tr></thead><tbody>'+botT.rows+'<tr><td class="subname">TOTAL</td><td>'+(subjects.length*100)+'</td><td class="sc" style="font-size:12pt">'+botT.grand.toFixed(0)+'</td><td class="agg" style="font-size:12pt">'+botT.aggTotal+'</td><td></td></tr></tbody></table>';
@@ -1366,42 +1545,21 @@ function buildBabyReportCard(s,subjects,marks,midMarks,botMarks,isMidTerm,classe
   const list=classes||_classesCache||[];const cls=list.find(c=>c.id===s.class_id);
   const per=marks[s.id]||{};const midPer=midMarks[s.id]||{};const botPer=botMarks[s.id]||{};
 
-  const babySubjects = [
-    'LA 1 (SOCIAL DEVELOPMENT)',
-    'LA 2 (ENGLISH)',
-    'LA 3 (HEALTH HABITS)',
-    'LA 4 (MATHEMATICS)',
-    'LA 5 (READING & WRITING)'
-  ];
+  const babySubjects = ['LA 1 (SOCIAL DEVELOPMENT)','LA 2 (ENGLISH)','LA 3 (HEALTH HABITS)','LA 4 (MATHEMATICS)','LA 5 (READING & WRITING)'];
   
   function buildTable(perObj){
     let rows='';
     babySubjects.forEach((subjectName, index) => {
-      const dbSubject = subjects[index]; 
-      const v = dbSubject ? perObj[dbSubject.subject_id] : null;
-      const sc = (v!=null && !isNaN(v)) ? Number(v) : null;
-      let g = {g:'',r:''};
-      if(sc!=null){ 
-        if(sc>=90) g={g:'A',r:'Excellent'};
-        else if(sc>=80) g={g:'B',r:'V. Good'};
-        else if(sc>=70) g={g:'C',r:'Good'};
-        else if(sc>=50) g={g:'D',r:'Fair'};
-        else g={g:'E',r:'Needs Help'};
-      }
+      const dbSubject = subjects[index]; const v = dbSubject ? perObj[dbSubject.subject_id] : null;const sc = (v!=null && !isNaN(v)) ? Number(v) : null;let g = {g:'',r:''};
+      if(sc!=null){ if(sc>=90) g={g:'A',r:'Excellent'};else if(sc>=80) g={g:'B',r:'V. Good'};else if(sc>=70) g={g:'C',r:'Good'};else if(sc>=50) g={g:'D',r:'Fair'};else g={g:'E',r:'Needs Help'};}
       rows+='<tr><td class="subname" style="text-align:center">'+esc(subjectName)+'</td><td class="sc" style="font-size:14pt">'+(g.g||'')+'</td><td class="handwriting" style="font-family:\'Comic Sans MS\',cursive;font-size:14pt;text-align:center">'+(g.r||'')+'</td><td></td></tr>';
     });
     return { rows };
   }
   
-  const botT = buildTable(botPer);
-  const midT = buildTable(midPer);
-  const endT = buildTable(per);
-
-  const ctComment = s.class_teacher_comment || 'Promising report.';
-  const htComment = s.head_teacher_comment || 'Good marks seen, but more effort is needed.';
-  const termEnd = s.term_ended_on || (_school && _school.current_term_end) || '';
-  const nextTerm = s.next_term_begins || (_school && _school.next_term_begin) || '';
-
+  const botT = buildTable(botPer);const midT = buildTable(midPer);const endT = buildTable(per);
+  const ctComment = s.class_teacher_comment || 'Promising report.';const htComment = s.head_teacher_comment || 'Good marks seen, but more effort is needed.';
+  const termEnd = s.term_ended_on || (_school && _school.current_term_end) || '';const nextTerm = s.next_term_begins || (_school && _school.next_term_begin) || '';
   const headers = '<thead><tr><th style="width:40%;text-align:left;padding-left:10px">SUBJECT</th><th style="width:20%">SCORE</th><th style="width:25%">REMARK</th><th style="width:15%">INITIALS</th></tr></thead>';
   
   let tables = '';
@@ -1438,42 +1596,161 @@ function buildBabyReportCard(s,subjects,marks,midMarks,botMarks,isMidTerm,classe
 }
 
 function printAllReports(){
-  const d = window._reportData;
-  if(!d||!d.students.length){ toast('Nothing to print','bad'); return; }
-  const w = window.open('','_blank');
-  if(!w){ toast('Allow popups to print','bad'); return; }
-  let styles=''; document.querySelectorAll('style').forEach(st=>{ styles+=st.innerHTML; });
+  const d=window._reportData;
+  if(!d||!d.students.length){toast('Nothing to print','bad');return}
+  const w=window.open('','_blank');
+  if(!w){toast('Allow popups to print','bad');return}
+  let styles='';document.querySelectorAll('style').forEach(st=>{styles+=st.innerHTML});
+  
   let h='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Report Cards — '+esc(_school?(_school.name||''):'')+'</title><style>'+styles+'</style></head><body>';
+  
   d.students.forEach(s=>{
-    h+='<div class="rc-stage">'+
-      (d.isBaby
-        ? buildBabyReportCard(s,d.subjects,d.marks,d.midMarks,d.botMarks,d.isMidTerm,d.classes)
-        : buildPrimaryReportCard(s,d.subjects,d.marks,d.positions,d.students.length,d.isUpperPrimary,d.isMidTerm,d.classes,d.midMarks,d.botMarks))
-    +'</div>';
+    h+='<div class="rc-stage">'+(d.isBaby ? buildBabyReportCard(s,d.subjects,d.marks,d.midMarks,d.botMarks,d.isMidTerm,d.classes) : buildPrimaryReportCard(s,d.subjects,d.marks,d.positions,d.students.length,d.isUpperPrimary,d.isMidTerm,d.classes,d.midMarks,d.botMarks))+'</div>';
   });
+  
   h+='<script>setTimeout(function(){window.print()},700)</'+'script></body></html>';
-  w.document.write(h); w.document.close();
+  w.document.write(h);w.document.close();
 }
-window.printAllReports = printAllReports;
+window.printAllReports=printAllReports;
 
+/* ============================================================
+   REPORT VIEW (ADMIN)
+   ============================================================ */
 async function pageReports(root){
-  clearClassesCache();const classes = await loadClasses();if(!_marksClass && classes[0]) _marksClass = classes[0].id;const classObj = classes.find(c=>c.id===_marksClass);let subjects = await loadSubjectsForClass(_marksClass);const exams = await loadExams();const examId = _marksExam || (exams[0] && exams[0].id);if(!examId){ root.innerHTML='<div class="card empty">No exams yet.</div>'; return; }_marksExam = examId;
-  const yr = getYear(), tr = getTerm();const botExam = exams.find(e => (e.type==='bot'||e.stage===1) && Number(e.year)===yr && Number(e.term)===tr);const midExam = exams.find(e => (e.type==='mid'||e.stage===2) && Number(e.year)===yr && Number(e.term)===tr);const eotExam = exams.find(e => (e.type==='eot'||e.stage===3) && Number(e.year)===yr && Number(e.term)===tr);
+  clearClassesCache();
+  const classes = await loadClasses();
+  if(!_marksClass && classes[0]) _marksClass = classes[0].id;
+  const classObj = classes.find(c=>c.id===_marksClass);
+  let subjects = await loadSubjectsForClass(_marksClass);
+  const exams = await loadExams();
+  const examId = _marksExam || (exams[0] && exams[0].id);
+  if(!examId){ root.innerHTML='<div class="card empty">No exams yet.</div>'; return; }
+  _marksExam = examId;
+
+  const yr = getYear(), tr = getTerm();
+  const botExam = exams.find(e => (e.type==='bot'||e.stage===1) && Number(e.year)===yr && Number(e.term)===tr);
+  const midExam = exams.find(e => (e.type==='mid'||e.stage===2) && Number(e.year)===yr && Number(e.term)===tr);
+  const eotExam = exams.find(e => (e.type==='eot'||e.stage===3) && Number(e.year)===yr && Number(e.term)===tr);
+
   const students = await api('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+_marksClass+'&status=eq.active&select=*&order=first_name') || [];
+  
   const allExamIds = [botExam,midExam,eotExam].filter(Boolean).map(e=>e.id);
-  let marksRows = [];if(students.length && allExamIds.length){const ids = students.map(s=>s.id).join(',');marksRows = await api('/rest/v1/marks?school_id=eq.'+_schoolId+'&student_id=in.('+ids+')&exam_id=in.('+allExamIds.join(',')+')&select=student_id,exam_id,subject_id,score') || [];}
-  const byExam = {};marksRows.forEach(m=>{ if(!byExam[m.exam_id]) byExam[m.exam_id]={}; if(!byExam[m.exam_id][m.student_id]) byExam[m.exam_id][m.student_id]={}; byExam[m.exam_id][m.student_id][m.subject_id]=Number(m.score); });
-  const endMarks = byExam[eotExam?eotExam.id:''] || {};const midMarks = byExam[midExam?midExam.id:''] || {};const botMarks = byExam[botExam?botExam.id:''] || {};
-  const posMarks = Object.keys(endMarks).length ? endMarks : midMarks;const positions = {};const totals = students.map(s=>{const per = posMarks[s.id]||{}; let total=0;subjects.forEach(sj=>{ const v=per[sj.subject_id]; if(v!=null&&!isNaN(v)) total+=Number(v); });return { id:s.id, total };});totals.slice().sort((a,b)=>b.total-a.total).forEach((t,i)=>{ positions[t.id]=i+1; });
-  const clsName  = classObj ? classObj.name.toLowerCase() : '';const examName = (exams.find(e=>e.id===examId)||{name:''}).name.toLowerCase();const isBaby         = clsName.includes('baby')||clsName.includes('middle')||clsName.includes('top')||clsName.includes('nur');const isUpperPrimary = /p\.?\s*[4-7]/.test(clsName) || clsName.includes('p4')||clsName.includes('p5')||clsName.includes('p6')||clsName.includes('p7');const isMidTerm      = examName.includes('mid')||examName.includes('bot')||examName.includes('beginning')||examName.includes('half');
-  if(isUpperPrimary){const req=['ENG','MAT','SCI','SST'];const f=subjects.filter(sj=>req.some(k=>sj.code.toUpperCase().includes(k)||sj.name.toUpperCase().includes(k)));if(f.length) subjects=f;} else if(!isBaby){const req=['ENG','MAT','LIT','RE','R.E'];const f=subjects.filter(sj=>req.some(k=>sj.code.toUpperCase().includes(k)||sj.name.toUpperCase().includes(k)));if(f.length) subjects=f;}
+  let marksRows = [];
+  if(students.length && allExamIds.length){
+    const ids = students.map(s=>s.id).join(',');
+    marksRows = await api('/rest/v1/marks?school_id=eq.'+_schoolId+'&student_id=in.('+ids+')&exam_id=in.('+allExamIds.join(',')+')&select=student_id,exam_id,subject_id,score') || [];
+  }
+
+  const byExam = {};
+  marksRows.forEach(m=>{ if(!byExam[m.exam_id]) byExam[m.exam_id]={}; if(!byExam[m.exam_id][m.student_id]) byExam[m.exam_id][m.student_id]={}; byExam[m.exam_id][m.student_id][m.subject_id]=Number(m.score); });
+  
+  const endMarks = byExam[eotExam?eotExam.id:''] || {};
+  const midMarks = byExam[midExam?midExam.id:''] || {};
+  const botMarks = byExam[botExam?botExam.id:''] || {};
+
+  const posMarks = Object.keys(endMarks).length ? endMarks : midMarks;
+  const positions = {};
+  const totals = students.map(s=>{
+    const per = posMarks[s.id]||{}; let total=0;
+    subjects.forEach(sj=>{ const v=per[sj.subject_id]; if(v!=null&&!isNaN(v)) total+=Number(v); });
+    return { id:s.id, total };
+  });
+  totals.slice().sort((a,b)=>b.total-a.total).forEach((t,i)=>{ positions[t.id]=i+1; });
+
+  const clsName  = classObj ? classObj.name.toLowerCase() : '';
+  const examName = (exams.find(e=>e.id===examId)||{name:''}).name.toLowerCase();
+  const isBaby = clsName.includes('baby')||clsName.includes('middle')||clsName.includes('top')||clsName.includes('nur');
+  const isUpperPrimary = /p\.?\s*[4-7]/.test(clsName) || clsName.includes('p4')||clsName.includes('p5')||clsName.includes('p6')||clsName.includes('p7');
+  const isMidTerm = examName.includes('mid')||examName.includes('bot')||examName.includes('beginning')||examName.includes('half');
+
+  if(isUpperPrimary){const req=['ENG','MAT','SCI','SST'];const f=subjects.filter(sj=>req.some(k=>sj.code.toUpperCase().includes(k)||sj.name.toUpperCase().includes(k)));if(f.length) subjects=f;} 
+  else if(!isBaby){const req=['ENG','MAT','LIT','RE','R.E'];const f=subjects.filter(sj=>req.some(k=>sj.code.toUpperCase().includes(k)||sj.name.toUpperCase().includes(k)));if(f.length) subjects=f;}
+
   window._reportData = { students, subjects, marks:endMarks, midMarks, botMarks, positions, examId, isBaby, isUpperPrimary, isMidTerm, classes };
-  const cOpts = classes.map(c=>'<option value="'+c.id+'"'+(c.id===_marksClass?' selected':'')+'>'+esc(c.name)+'</option>').join('');const eOpts = exams.map(e=>'<option value="'+e.id+'"'+(e.id===examId?' selected':'')+'>'+esc(e.name)+'</option>').join('');
+
+  const cOpts = classes.map(c=>'<option value="'+c.id+'"'+(c.id===_marksClass?' selected':'')+'>'+esc(c.name)+'</option>').join('');
+  const eOpts = exams.map(e=>'<option value="'+e.id+'"'+(e.id===examId?' selected':'')+'>'+esc(e.name)+'</option>').join('');
+
   if(window._printTables===undefined) window._printTables = { bot:true, mid:true, end:true };
-  let cards='';if(students.length && subjects.length){ cards = '<div id="rcCardsWrap">'+students.map(s=>'<div class="rc-stage">'+(isBaby?buildBabyReportCard(s,subjects,endMarks,midMarks,botMarks,isMidTerm,classes):buildPrimaryReportCard(s,subjects,endMarks,positions,students.length,isUpperPrimary,isMidTerm,classes,midMarks,botMarks))+'</div>').join('')+'</div>'; }
-  root.innerHTML ='<div class="page-head"><div><h1>📄 Report Cards</h1><div class="sub">'+(isMidTerm?'Mid-Term':'End of Term')+' · '+(isBaby?'Baby Format':(isUpperPrimary?'Upper Primary':'Lower Primary'))+'</div></div><button class="btn gold" onclick="printAllReports()">🖨️ Print All</button></div><div class="card"><div class="grid grid-2"><div><label>Class</label><select onchange="_marksClass=this.value;pageReports(document.getElementById(\'main\'))">'+cOpts+'</select></div><div><label>Exam</label><select onchange="_marksExam=this.value;pageReports(document.getElementById(\'main\'))">'+eOpts+'</select></div></div><div style="margin-top:14px;padding-top:12px;border-top:1px solid #eef1f6"><label style="margin-bottom:8px">Tables to print on report card</label><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><label style="margin:0;font-weight:600"><input type="checkbox" id="pt_bot" '+(window._printTables.bot?'checked':'')+' onchange="togglePrintTable(\'bot\',this.checked)" style="width:auto"> Beginning</label><label style="margin:0;font-weight:600"><input type="checkbox" id="pt_mid" '+(window._printTables.mid?'checked':'')+' onchange="togglePrintTable(\'mid\',this.checked)" style="width:auto"> Mid Term</label><label style="margin:0;font-weight:600"><input type="checkbox" id="pt_end" '+(window._printTables.end?'checked':'')+' onchange="togglePrintTable(\'end\',this.checked)" style="width:auto"> End of Term</label><span class="muted">·</span><button class="btn sm ghost" onclick="selectPrintTables({bot:true,mid:true,end:true})">All</button><button class="btn sm ghost" onclick="selectPrintTables({bot:false,mid:true,end:true})">Mid + End</button><button class="btn sm ghost" onclick="selectPrintTables({bot:false,mid:false,end:true})">End only</button><button class="btn sm ghost" onclick="selectPrintTables({bot:false,mid:true,end:false})">Mid only</button></div></div></div>'+(students.length===0?'<div class="card empty">No pupils.</div>':(subjects.length===0?'<div class="card empty">No subjects.</div>':cards));
+  let cards='';
+  if(students.length && subjects.length){
+    cards = '<div id="rcCardsWrap">'+students.map(s=>'<div class="rc-stage">'+(isBaby?buildBabyReportCard(s,subjects,endMarks,midMarks,botMarks,isMidTerm,classes):buildPrimaryReportCard(s,subjects,endMarks,positions,students.length,isUpperPrimary,isMidTerm,classes,midMarks,botMarks))+'</div>').join('')+'</div>';
+  }
+
+  root.innerHTML =
+    '<div class="page-head"><div><h1>📄 Report Cards</h1>'+
+    '<div class="sub">'+(isMidTerm?'Mid-Term':'End of Term')+' · '+(isBaby?'Baby Format':(isUpperPrimary?'Upper Primary':'Lower Primary'))+'</div></div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ok" onclick="openCommentsModal()">✏️ Save Comments</button><button class="btn gold" onclick="printAllReports()">🖨️ Print All</button></div></div>'+
+    '<div class="card"><div class="grid grid-2">'+
+      '<div><label>Class</label><select onchange="_marksClass=this.value;pageReports(document.getElementById(\'main\'))">'+cOpts+'</select></div>'+
+      '<div><label>Exam</label><select onchange="_marksExam=this.value;pageReports(document.getElementById(\'main\'))">'+eOpts+'</select></div>'+
+    '</div>'+
+    '<div style="margin-top:14px;padding-top:12px;border-top:1px solid #eef1f6"><label style="margin-bottom:8px">Tables to print on report card</label>'+
+    '<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">'+
+    '<label style="margin:0;font-weight:600"><input type="checkbox" id="pt_bot" '+(window._printTables.bot?'checked':'')+' onchange="togglePrintTable(\'bot\',this.checked)" style="width:auto"> Beginning</label>'+
+    '<label style="margin:0;font-weight:600"><input type="checkbox" id="pt_mid" '+(window._printTables.mid?'checked':'')+' onchange="togglePrintTable(\'mid\',this.checked)" style="width:auto"> Mid Term</label>'+
+    '<label style="margin:0;font-weight:600"><input type="checkbox" id="pt_end" '+(window._printTables.end?'checked':'')+' onchange="togglePrintTable(\'end\',this.checked)" style="width:auto"> End of Term</label>'+
+    '<span class="muted">·</span>'+
+    '<button class="btn sm ghost" onclick="selectPrintTables({bot:true,mid:true,end:true})">All</button>'+
+    '<button class="btn sm ghost" onclick="selectPrintTables({bot:false,mid:true,end:true})">Mid + End</button>'+
+    '<button class="btn sm ghost" onclick="selectPrintTables({bot:false,mid:false,end:true})">End only</button>'+
+    '<button class="btn sm ghost" onclick="selectPrintTables({bot:false,mid:true,end:false})">Mid only</button>'+
+    '</div></div></div>'+
+    (students.length===0?'<div class="card empty">No pupils.</div>':(subjects.length===0?'<div class="card empty">No subjects.</div>':cards));
 }
 window.pageReports = pageReports;
+
+function openCommentsModal(){
+  const d = window._reportData;
+  if(!d || !d.students.length) { toast('Select a class first','bad'); return; }
+  const opts = d.students.map(s=>'<option value="'+s.id+'">'+esc(s.admission_no+' - '+s.first_name+' '+(s.last_name||''))+'</option>').join('');
+  modal('<h3>✏️ Report Comments</h3>'+
+    '<div style="background:#f8fafc;padding:12px;border-radius:8px;margin-bottom:12px"><label>Select Pupil</label><select id="c_student" onchange="loadStudentComments(this.value)">'+opts+'</select></div>'+
+    '<div class="grid grid-2"><div><label>Conduct</label><input id="c_conduct" placeholder="e.g. Good"></div><div><label>Position</label><input id="c_pos" placeholder="e.g. 3"></div></div>'+
+    '<div class="grid grid-2" style="margin-top:12px"><div><label>Division</label><input id="c_div" placeholder="e.g. I"></div><div><label>Term End Date</label><input id="c_term_end" type="date"></div></div>'+
+    '<div class="grid grid-2" style="margin-top:12px"><div><label>Next Term Begins</label><input id="c_next_term" type="date"></div></div>'+
+    '<div style="margin-top:12px"><label>Class Teacher Comment</label><textarea id="c_ct_comment" rows="2"></textarea></div>'+
+    '<div style="margin-top:12px"><label>Head Teacher Comment</label><textarea id="c_ht_comment" rows="2"></textarea></div>'+
+    '<div style="margin-top:12px"><label>Director Comment</label><textarea id="c_dir_comment" rows="2"></textarea></div>'+
+    '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveStudentComments()">💾 Save Comments</button></div>');
+  loadStudentComments(d.students[0].id);
+}
+window.openCommentsModal = openCommentsModal;
+
+function loadStudentComments(id){
+  const s = (window._reportData.students||[]).find(x=>x.id===id);
+  if(!s) return;
+  document.getElementById('c_conduct').value = s.conduct||'';
+  document.getElementById('c_pos').value = s.position_manual||'';
+  document.getElementById('c_div').value = s.division_manual||'';
+  document.getElementById('c_term_end').value = s.term_ended_on ? s.term_ended_on.slice(0,10) : '';
+  document.getElementById('c_next_term').value = s.next_term_begins ? s.next_term_begins.slice(0,10) : '';
+  document.getElementById('c_ct_comment').value = s.class_teacher_comment||'';
+  document.getElementById('c_ht_comment').value = s.head_teacher_comment||'';
+  document.getElementById('c_dir_comment').value = s.director_comment||'';
+}
+window.loadStudentComments = loadStudentComments;
+
+async function saveStudentComments(){
+  const id = document.getElementById('c_student').value;
+  const body = {
+    conduct: document.getElementById('c_conduct').value.trim() || null,
+    position_manual: document.getElementById('c_pos').value.trim() || null,
+    division_manual: document.getElementById('c_div').value.trim() || null,
+    term_ended_on: document.getElementById('c_term_end').value || null,
+    next_term_begins: document.getElementById('c_next_term').value || null,
+    class_teacher_comment: document.getElementById('c_ct_comment').value.trim() || null,
+    head_teacher_comment: document.getElementById('c_ht_comment').value.trim() || null,
+    director_comment: document.getElementById('c_dir_comment').value.trim() || null
+  };
+  try{
+    await api('/rest/v1/students?id=eq.'+id, {method:'PATCH', headers:{'Prefer':'return=minimal'}, body:JSON.stringify(body)});
+    toast('Comments saved successfully ✓','ok');
+    closeModal();
+    pageReports(document.getElementById('main'));
+  }catch(e){ toast('Error saving: '+e.message,'bad'); }
+}
+window.saveStudentComments = saveStudentComments;
 
 function togglePrintTable(key, on){ window._printTables[key]=!!on; rerenderReportCards(); }
 window.togglePrintTable = togglePrintTable;
@@ -1482,6 +1759,9 @@ window.selectPrintTables = selectPrintTables;
 function rerenderReportCards(){const d = window._reportData; if(!d||!d.students) return;const wrap = document.getElementById('rcCardsWrap'); if(!wrap) return;wrap.innerHTML = d.students.map(s=>'<div class="rc-stage">'+(d.isBaby?buildBabyReportCard(s,d.subjects,d.marks,d.midMarks,d.botMarks,d.isMidTerm,d.classes):buildPrimaryReportCard(s,d.subjects,d.marks,d.positions,d.students.length,d.isUpperPrimary,d.isMidTerm,d.classes,d.midMarks,d.botMarks))+'</div>').join('');}
 window.rerenderReportCards = rerenderReportCards;
 
+/* ============================================================
+   CLASSES & SUBJECTS
+   ============================================================ */
 async function pageClasses(root){
   clearClassesCache();const classes=await loadClasses();const counts={};
   for(const c of classes){const r=await api('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+c.id+'&select=id');counts[c.id]=r.length}
@@ -1524,8 +1804,8 @@ window.saveSubject=saveSubject;
 async function delSubject(sid){if(!confirm('Remove?'))return;try{await api('/rest/v1/class_subjects?school_id=eq.'+_schoolId+'&class_id=eq.'+_subjClass+'&subject_id=eq.'+sid,{method:'DELETE'});toast('Removed','ok');nav('subjects')}catch(e){toast(e.message,'bad')}}
 window.delSubject=delSubject;
 
-/* PHASE 3 GOES HERE *//* ============================================================
-   EXAMS
+/* ============================================================
+   EXAMS & STAFF
    ============================================================ */
 async function pageExams(root){
   _examsCache=null;const exams=await loadExams();let rows='';
@@ -1540,9 +1820,6 @@ window.saveExam=saveExam;
 async function delExam(id){if(!confirm('Delete?'))return;try{await api('/rest/v1/exams?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');_examsCache=null;nav('exams')}catch(e){toast(e.message,'bad')}}
 window.delExam=delExam;
 
-/* ============================================================
-   STAFF
-   ============================================================ */
 async function pageStaff(root){
   const staff=await api('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=*&order=full_name')||[];
   window._staffList=staff;let rows='';
@@ -1558,7 +1835,7 @@ async function delStaff(id){if(!confirm('Delete?'))return;try{await api('/rest/v
 window.delStaff=delStaff;
 
 /* ============================================================
-   STAFF ATTENDANCE
+   STAFF ATTENDANCE & PAYROLL
    ============================================================ */
 async function pageStaffAttendance(root){
   const today=new Date().toISOString().slice(0,10);
@@ -1578,9 +1855,6 @@ window.loadStaffAtt=loadStaffAtt;
 async function setStaffAtt(id,status){try{await api('/rest/v1/staff_attendance?school_id=eq.'+_schoolId+'&staff_id=eq.'+id+'&date=eq.'+window._saDate,{method:'DELETE'});await api('/rest/v1/staff_attendance',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,staff_id:id,date:window._saDate,status:status,source:'manual'})});loadStaffAtt()}catch(e){toast(e.message,'bad')}}
 window.setStaffAtt=setStaffAtt;
 
-/* ============================================================
-   PAYROLL
-   ============================================================ */
 async function pagePayroll(root){
   const results=await Promise.all([api('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=*&order=full_name'),api('/rest/v1/staff_salaries?school_id=eq.'+_schoolId+'&select=*&order=created_at.desc&limit=200').catch(()=>[])]);
   const staff=results[0]||[],salaries=results[1]||[];window._payrollStaff=staff;const byId={};staff.forEach(s=>byId[s.id]=s);
@@ -1598,7 +1872,7 @@ async function saveSalary(){const sid=document.getElementById('ss').value;const 
 window.saveSalary=saveSalary;
 
 /* ============================================================
-   UNIFORMS
+   UNIFORMS & EXPENSES & SETTINGS
    ============================================================ */
 async function pageUniforms(root){
   const sales=await api('/rest/v1/uniform_sales?school_id=eq.'+_schoolId+'&select=*&order=sold_at.desc&limit=200').catch(()=>[]);
@@ -1607,9 +1881,6 @@ async function pageUniforms(root){
 }
 window.pageUniforms=pageUniforms;
 
-/* ============================================================
-   EXPENSES
-   ============================================================ */
 async function pageExpenses(root){
   let rows=await api('/rest/v1/expenses?school_id=eq.'+_schoolId+'&select=*&order=date.desc').catch(()=>[]);
   let body='';let total=0;
@@ -1623,9 +1894,6 @@ window.addExpense=addExpense;
 async function saveExpense(){const d=document.getElementById('xd').value.trim();const a=Number(document.getElementById('xa').value);const c=document.getElementById('xc').value.trim()||'Other';if(!d||!a){toast('Fill','bad');return}try{await api('/rest/v1/expenses',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({school_id:_schoolId,description:d,amount:a,category:c,academic_year:getYear(),term:getTerm()})});toast('Saved','ok');closeModal();nav('expenses')}catch(e){toast(e.message,'bad')}}
 window.saveExpense=saveExpense;
 
-/* ============================================================
-   SETTINGS
-   ============================================================ */
 async function pageSettings(root){
   root.innerHTML='<div class="page-head"><h1>⚙️ Settings</h1></div><div class="card"><h3>School Info</h3><div class="grid grid-2" style="margin-top:12px"><div><label>Name</label><input id="s_name" value="'+esc(_school.name||'')+'"></div><div><label>Telephone</label><input id="s_phone" value="'+esc(_school.telephone||'')+'"></div><div><label>Address</label><input id="s_addr" value="'+esc(_school.address||'')+'"></div><div><label>Head Teacher</label><input id="s_head" value="'+esc(_school.head_teacher||'')+'"></div></div><button class="btn" style="margin-top:14px" onclick="saveSchool()">💾 Save</button></div><div class="card"><h3>Account</h3><div class="muted">'+esc(_profile.full_name||'')+' ('+esc(_profile.email||'')+')</div><button class="btn danger" style="margin-top:12px" onclick="doLogout()">Sign Out</button></div>';
 }
@@ -1654,9 +1922,7 @@ async function pageProfile(root){
 }
 window.pageProfile=pageProfile;
 
-/* ============================================================
-   INIT
-   ============================================================ */
+/* INIT */
 try{const s=lsGet('pm_session');if(s)_session=JSON.parse(s)}catch(e){_session=null}
 if(_session&&_session.user)boot();
 </script>
