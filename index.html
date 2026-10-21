@@ -252,6 +252,22 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .rc-lines .line{border-bottom:1px dotted #000;display:block;min-height:20px}
 .rc-lines .line.handwriting{font-family:'Comic Sans MS', cursive;color:#000080;font-size:12pt;padding-left:5px}
 
+/* Signatures */
+.rc-signs-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+  margin-top:10px;
+  font-size:10pt;
+  font-weight:bold;
+}
+.rc-signs-row .s{
+  display:flex;
+  align-items:flex-end;
+  gap:8px;
+}
+.rc-signs-row .s .line{border-bottom:1px dotted #000;flex:1;min-height:18px}
+
 /* Footer Stamp Removed */
 .rc-footer{
   margin-top:auto;
@@ -1268,24 +1284,55 @@ async function addPassOut(){
   const students=await api('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=id,first_name,last_name,admission_no,parent_name,parent_contact&order=first_name')||[];
   const outRows=await api('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&status=eq.out&select=student_id')||[];
   const outIds=new Set(outRows.map(p=>p.student_id));
-  window._passOutLookup={};students.forEach(s=>window._passOutLookup[s.id]=s);
-  let opts='<option value="">— Select Pupil —</option>';
-  students.forEach(s=>{const isOut=outIds.has(s.id);opts+='<option value="'+s.id+'"'+(isOut?' data-out="1"':'')+'>'+esc(s.admission_no+' — '+s.first_name+' '+(s.last_name||''))+(isOut?' ⚠️ OUT':'')+'</option>'});
+  
+  window._passOutLookup={};
+  let innerRows='';
+  
+  students.forEach(s=>{
+    const isOut=outIds.has(s.id);
+    window._passOutLookup[s.id]=s;
+    innerRows+='<div style="padding:10px;border-bottom:1px solid #eef1f6;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="selectPassOutPupil(\''+s.id+'\')"><div><b>'+esc(s.first_name+' '+(s.last_name||''))+'</b><div style="font-size:11px;color:#64748b">'+esc(s.admission_no)+'</div></div><div>'+(isOut?'<span class="badge bad">OUT</span>':'<span class="badge info">Select</span>')+'</div></div>';
+  });
+
   const rOpts=PASSOUT_REASONS.map(r=>'<option>'+r+'</option>').join('');
-  modal('<h3>🚪 New Pass Out</h3><div><label>Pupil *</label><select id="psel" onchange="poSelect()">'+opts+'</select></div><div id="phint" style="background:#f8fafc;border-radius:10px;padding:10px;margin-top:8px;font-size:12.5px"><span class="muted">Select a pupil</span></div><div class="grid grid-2" style="margin-top:12px"><div><label>Reason *</label><select id="preason">'+rOpts+'</select></div><div><label>Expected Return</label><input id="pexp" type="datetime-local"></div></div><div class="grid grid-2" style="margin-top:12px"><div><label>Picked Up By *</label><input id="ppicked"></div><div><label>Their Phone</label><input id="pphone"></div></div><div style="margin-top:12px"><label>Authorized By *</label><input id="pauth" value="'+esc(_profile?_profile.full_name||'':'')+'"></div><div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="savePassOut()">Sign Out</button></div>');
+  modal('<h3>🚪 New Pass Out</h3>'+
+    '<div id="poStep1">'+
+      '<div style="position:relative;margin-bottom:12px"><input type="text" id="poSearchInput" placeholder="🔍 Search pupil name or ADM..." oninput="filterPassOutSearch(this.value)" style="padding:14px"><span style="position:absolute;left:12px;top:14px">🔍</span></div>'+
+      '<div id="poList" style="max-height:35vh;overflow:auto;border:1px solid var(--line);border-radius:10px">'+innerRows+'</div>'+
+      '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button></div>'+
+    '</div>'+
+    '<div id="poStep2" style="display:none">'+
+      '<div id="phint" style="background:#f8fafc;border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px"></div>'+
+      '<div class="grid grid-2"><div><label>Reason *</label><select id="preason">'+rOpts+'</select></div><div><label>Expected Return</label><input id="pexp" type="datetime-local"></div></div>'+
+      '<div class="grid grid-2" style="margin-top:12px"><div><label>Picked Up By *</label><input id="ppicked"></div><div><label>Their Phone</label><input id="pphone"></div></div>'+
+      '<div style="margin-top:12px"><label>Authorized By *</label><input id="pauth" value="'+esc(_profile?_profile.full_name||'':'')+'"></div>'+
+      '<input type="hidden" id="psel">'+
+      '<div class="actions"><button class="btn ghost" onclick="document.getElementById(\'poStep1\').style.display=\'block\';document.getElementById(\'poStep2\').style.display=\'none\'">Back</button><button class="btn" onclick="savePassOut()">Sign Out</button></div>'+
+    '</div>'
+  );
 }
 window.addPassOut=addPassOut;
 
-function poSelect(){
-  const sel=document.getElementById('psel');const id=sel.value;
-  const hint=document.getElementById('phint');
-  if(!id){hint.innerHTML='<span class="muted">Select a pupil</span>';return}
-  const s=window._passOutLookup[id];if(!s)return;
-  hint.innerHTML='<b>'+esc(s.first_name+' '+(s.last_name||''))+'</b> · '+esc(s.admission_no)+'<div>👤 Parent: '+esc(s.parent_name||'—')+'</div><div>📞 '+esc(s.parent_contact||'—')+'</div>';
+function filterPassOutSearch(q){
+  q=q.toLowerCase();
+  const rows=document.querySelectorAll('#poList > div');
+  rows.forEach(r=>{
+    if(r.innerText.toLowerCase().includes(q)) r.style.display='flex';
+    else r.style.display='none';
+  });
+}
+window.filterPassOutSearch=filterPassOutSearch;
+
+function selectPassOutPupil(id){
+  const s=window._passOutLookup[id]; if(!s)return;
+  document.getElementById('psel').value=id;
+  document.getElementById('phint').innerHTML='<b>'+esc(s.first_name+' '+(s.last_name||''))+'</b> · '+esc(s.admission_no)+'<div>👤 Parent: '+esc(s.parent_name||'—')+'</div><div>📞 '+esc(s.parent_contact||'—')+'</div>';
   document.getElementById('ppicked').value=s.parent_name||'';
   document.getElementById('pphone').value=s.parent_contact||'';
+  document.getElementById('poStep1').style.display='none';
+  document.getElementById('poStep2').style.display='block';
 }
-window.poSelect=poSelect;
+window.selectPassOutPupil=selectPassOutPupil;
 
 async function savePassOut(){
   const student_id=document.getElementById('psel').value;
