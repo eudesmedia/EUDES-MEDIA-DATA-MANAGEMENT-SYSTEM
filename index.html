@@ -337,14 +337,37 @@ function computeDivision(perSubject, subjects){
   return { best7Agg, division, usedCount, incomplete: usedCount === 0 };
 }
 
-/* NEW: Auto-generate comments based on average */
-function generateAutoComments(avg){
+/* ============================================================ */
+/* SMART AUTO-COMMENTS BASED ON PERFORMANCE                     */
+/* ============================================================ */
+function generateAutoComments(avg, hasMarks){
   let ct = ''; let ht = '';
-  if(avg >= 80) { ct = 'An outstanding performance this term. Keep up the excellent work!'; ht = 'Excellent results. You are a shining example to others.'; }
-  else if(avg >= 70) { ct = 'A very good and steady effort. With a little more focus, you will achieve even greater heights.'; ht = 'You have shown great potential. Keep aiming higher.'; }
-  else if(avg >= 60) { ct = 'A good result. Continue putting in your best effort.'; ht = 'Good progress. Aim higher next term.'; }
-  else if(avg >= 50) { ct = 'A fair performance. More effort is needed to improve.'; ht = 'You can do better with more focus and hard work.'; }
-  else { ct = 'A promising effort this term. Keep working hard, and you will continue to improve.'; ht = 'Every step forward counts. Keep believing in yourself and working diligently.'; }
+  if(!hasMarks || avg === null || isNaN(avg) || avg === 0) return { ct: '', ht: '' };
+  
+  if(avg >= 80) { 
+    ct = 'An outstanding performance this term. Keep up the excellent work!'; 
+    ht = 'Excellent results. You are a shining example to others.'; 
+  }
+  else if(avg >= 70) { 
+    ct = 'A very good and steady effort. With a little more focus, you will achieve even greater heights.'; 
+    ht = 'You have shown great potential. Keep aiming higher.'; 
+  }
+  else if(avg >= 60) { 
+    ct = 'A good result. Continue putting in your best effort.'; 
+    ht = 'Good progress. Aim higher next term.'; 
+  }
+  else if(avg >= 50) { 
+    ct = 'A fair performance. More effort is needed to improve.'; 
+    ht = 'You can do better with more focus and hard work.'; 
+  }
+  else if(avg >= 40) { 
+    ct = 'A below-average performance. There is room for improvement next term.'; 
+    ht = 'More effort is required. Let us work harder next term.'; 
+  }
+  else { 
+    ct = 'A weak performance this term. Requires serious attention and improvement.'; 
+    ht = 'Needs significant improvement in all areas.'; 
+  }
   return { ct, ht };
 }
 
@@ -1650,11 +1673,14 @@ function buildPrimaryReportCard(s,subjects,marks,positions,totalInClass,isUpperP
 
   const pos = s.position_manual || (divInfo && divInfo.usedCount >= 4 ? (positions[s.id]||'—') : '—');
   
-  const avg = endT.cnt ? endT.grand/endT.cnt : 0;
-  const autoC = generateAutoComments(avg);
+  const avg = endT.cnt ? (endT.grand / endT.cnt) : 0;
+  const hasMarks = endT.cnt > 0;
+  
+  const autoC = generateAutoComments(hasMarks ? avg : null);
   
   let ctComment = s.class_teacher_comment || autoC.ct;
   let htComment = s.head_teacher_comment || autoC.ht;
+  
   const dirComment = s.director_comment||'';
   const termEnd = s.term_ended_on||(_school && _school.current_term_end)||'';
   const nextTerm = s.next_term_begins||(_school && _school.next_term_begin)||'';
@@ -1699,11 +1725,19 @@ function buildBabyReportCard(s,subjects,marks,midMarks,botMarks,classes,year,ter
   }
   const botT=buildTable(botPer);const midT=buildTable(midPer);const endT=buildTable(per);
   
-  const avg = 70; // Placeholder for baby calculation if needed, or just use fixed encouraging text
-  const autoC = generateAutoComments(avg);
+  let totalScore=0; let count=0;
+  subjects.forEach((sj, idx) => {
+     const dbSubject = subjects[idx];
+     const v = dbSubject ? per[dbSubject.subject_id] : null;
+     if (v != null && !isNaN(v)) { totalScore += Number(v); count++; }
+  });
+  const babyAvg = count > 0 ? (totalScore / count) : 0;
+  
+  const autoC = generateAutoComments(babyAvg);
 
   const ctComment = s.class_teacher_comment || autoC.ct;
   const htComment = s.head_teacher_comment || autoC.ht;
+  
   const termEnd = s.term_ended_on || (_school && _school.current_term_end) || '';
   const nextTerm = s.next_term_begins || (_school && _school.next_term_begin) || '';
   const headers = '<thead><tr><th style="width:40%;text-align:left;padding-left:10px">SUBJECT</th><th style="width:20%">SCORE</th><th style="width:25%">REMARK</th><th style="width:15%">INITIALS</th></tr></thead>';
@@ -1736,12 +1770,11 @@ function buildP7ReportCard(s,subjects,set1,set2,set3,mock,positions,totalInClass
   const list=classes||_classesCache||[];const cls=list.find(c=>c.id===s.class_id);
   
   function buildTable(perObj, title){
-    // mapping titles to object keys
     let key = '';
     if(title==='SET 1') key='set1';
     if(title==='SET 2') key='set2';
     if(title==='SET 3') key='set3';
-    if(title==='MOCK') key='mock';
+    if(title==='MOCKS') key='mock';
     
     if(!window._printTables[key]) return '';
 
@@ -1768,8 +1801,21 @@ function buildP7ReportCard(s,subjects,set1,set2,set3,mock,positions,totalInClass
 
   const pos = s.position_manual || (divInfo && divInfo.usedCount >= 4 ? (positions[s.id]||'—') : '—');
   
-  const avg = divInfo && divInfo.usedCount > 0 ? (divInfo.best7Agg / divInfo.usedCount) : 0;
-  const autoC = generateAutoComments(avg);
+  let percentAvg = 0;
+  if (divInfo && divInfo.usedCount >= 4) {
+    const avgAgg = divInfo.best7Agg / divInfo.usedCount; 
+    if (avgAgg <= 1) percentAvg = 95;
+    else if (avgAgg <= 2) percentAvg = 85;
+    else if (avgAgg <= 3) percentAvg = 75;
+    else if (avgAgg <= 4) percentAvg = 65;
+    else if (avgAgg <= 5) percentAvg = 55;
+    else if (avgAgg <= 6) percentAvg = 50;
+    else if (avgAgg <= 7) percentAvg = 45;
+    else if (avgAgg <= 8) percentAvg = 40;
+    else percentAvg = 30;
+  }
+  
+  const autoC = generateAutoComments(percentAvg);
 
   let ctComment = s.class_teacher_comment || autoC.ct;
   let htComment = s.head_teacher_comment || autoC.ht;
@@ -1778,7 +1824,7 @@ function buildP7ReportCard(s,subjects,set1,set2,set3,mock,positions,totalInClass
   const nextTerm = s.next_term_begins||(_school && _school.next_term_begin)||'';
 
   /* ORDER: MOCK first, then Set 1, Set 2, Set 3 */
-  let tables = buildTable(mock, 'MOCK') + buildTable(set1, 'SET 1') + buildTable(set2, 'SET 2') + buildTable(set3, 'SET 3');
+  let tables = buildTable(mock, 'MOCKS') + buildTable(set1, 'SET 1') + buildTable(set2, 'SET 2') + buildTable(set3, 'SET 3');
 
   return '<div class="rc-page"><div class="rc-inner">'+
     buildHeader()+
