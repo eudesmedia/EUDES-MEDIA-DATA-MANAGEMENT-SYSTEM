@@ -217,15 +217,9 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 <div id="toastRoot"></div>
 
 <script>
-/* ============================================================
-   CONFIG
-   ============================================================ */
 const SUPA_URL='https://wabeempxckdtjvrkzhpv.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndhYmVlbXB4Y2tkdGp2cmt6aHB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1NTQyODcsImV4cCI6MjEwMDEzMDI4N30.5IDNbrip0nLDF9pN2fXHWVB7w-lYNxPIbTaTO-s1PaM';
 
-/* ============================================================
-   STATE
-   ============================================================ */
 let _session=null,_profile=null,_school=null,_schoolId=null,_role=null;
 let _classesCache=null,_examsCache=null;
 let _cachedStudents=[],_cachedPayments=[],_cachedPOStudents=[];
@@ -265,9 +259,6 @@ function scheduleTokenRefresh(expiresInSeconds){
   },refreshInMs);
 }
 
-/* ============================================================
-   HELPERS
-   ============================================================ */
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function fmtUGX(n){if(n==null||isNaN(n))return'UGX 0';return'UGX '+(Number(n)||0).toLocaleString()}
 function fmtNum(n){if(n==null||isNaN(n))return'0';return(Number(n)||0).toLocaleString()}
@@ -337,37 +328,23 @@ function computeDivision(perSubject, subjects){
   return { best7Agg, division, usedCount, incomplete: usedCount === 0 };
 }
 
-/* ============================================================ */
-/* SMART AUTO-COMMENTS BASED ON PERFORMANCE                     */
-/* ============================================================ */
 function generateAutoComments(avg, hasMarks){
   let ct = ''; let ht = '';
-  if(!hasMarks || avg === null || isNaN(avg) || avg === 0) return { ct: '', ht: '' };
+  if(!hasMarks || avg === null || isNaN(avg)) return { ct: '', ht: '' };
   
-  if(avg >= 80) { 
-    ct = 'An outstanding performance this term. Keep up the excellent work!'; 
-    ht = 'Excellent results. You are a shining example to others.'; 
+  if(avg === 0) {
+    ct = 'A weak performance this term. Requires serious attention and improvement.';
+    ht = 'Needs significant improvement in all areas.';
+    return { ct, ht };
   }
-  else if(avg >= 70) { 
-    ct = 'A very good and steady effort. With a little more focus, you will achieve even greater heights.'; 
-    ht = 'You have shown great potential. Keep aiming higher.'; 
-  }
-  else if(avg >= 60) { 
-    ct = 'A good result. Continue putting in your best effort.'; 
-    ht = 'Good progress. Aim higher next term.'; 
-  }
-  else if(avg >= 50) { 
-    ct = 'A fair performance. More effort is needed to improve.'; 
-    ht = 'You can do better with more focus and hard work.'; 
-  }
-  else if(avg >= 40) { 
-    ct = 'A below-average performance. There is room for improvement next term.'; 
-    ht = 'More effort is required. Let us work harder next term.'; 
-  }
-  else { 
-    ct = 'A weak performance this term. Requires serious attention and improvement.'; 
-    ht = 'Needs significant improvement in all areas.'; 
-  }
+  
+  if(avg >= 80) { ct = 'An outstanding performance this term. Keep up the excellent work!'; ht = 'Excellent results. You are a shining example to others.'; }
+  else if(avg >= 70) { ct = 'A very good and steady effort. With a little more focus, you will achieve even greater heights.'; ht = 'You have shown great potential. Keep aiming higher.'; }
+  else if(avg >= 60) { ct = 'A good result. Continue putting in your best effort.'; ht = 'Good progress. Aim higher next term.'; }
+  else if(avg >= 50) { ct = 'A fair performance. More effort is needed to improve.'; ht = 'You can do better with more focus and hard work.'; }
+  else if(avg >= 40) { ct = 'A below-average performance. There is room for improvement next term.'; ht = 'More effort is required. Let us work harder next term.'; }
+  else { ct = 'A weak performance this term. Requires serious attention and improvement.'; ht = 'Needs significant improvement in all areas.'; }
+  
   return { ct, ht };
 }
 
@@ -376,9 +353,6 @@ function modal(html){const r=document.getElementById('modalRoot');r.innerHTML='<
 function closeModal(){document.getElementById('modalRoot').innerHTML=''}
 window.toast=toast;window.modal=modal;window.closeModal=closeModal;window.esc=esc;
 
-/* ============================================================
-   API
-   ============================================================ */
 async function api(path,opt){
   opt=opt||{};
   const h=Object.assign({'apikey':SUPA_KEY,'Content-Type':'application/json'},opt.headers||{});
@@ -390,9 +364,6 @@ async function api(path,opt){
   return data;
 }
 
-/* ============================================================
-   AUTH
-   ============================================================ */
 async function doLogin(){
   const email=document.getElementById('loginEmail').value.trim().toLowerCase();
   const pass=document.getElementById('loginPass').value;
@@ -475,17 +446,11 @@ async function changePeriod(){
 }
 window.changePeriod=changePeriod;
 
-/* ============================================================
-   LOADERS
-   ============================================================ */
 async function loadClasses(){if(_classesCache)return _classesCache;_classesCache=await api('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=id,name,level,sort_order&order=sort_order')||[];return _classesCache}
 function clearClassesCache(){_classesCache=null}
 async function loadSubjectsForClass(classId){if(!classId)return[];const rows=await api('/rest/v1/class_subjects?school_id=eq.'+_schoolId+'&class_id=eq.'+classId+'&select=subject_id,subjects:subject_id(id,code,name,is_compulsory)')||[];return rows.map(r=>({subject_id:r.subject_id,code:r.subjects?.code||'',name:r.subjects?.name||''}))}
 async function loadExams(){if(_examsCache)return _examsCache;_examsCache=await api('/rest/v1/exams?school_id=eq.'+_schoolId+'&select=*&order=stage')||[];return _examsCache}
 
-/* ============================================================
-   ROUTES
-   ============================================================ */
 const ROUTES={
   dashboard:{label:'Dashboard',icon:'📊',render:pageDashboard,bottom:true},
   students:{label:'Students',icon:'🎓',render:pageStudents,bottom:true},
@@ -526,9 +491,6 @@ function renderBottomBar(){const entries=Object.entries(ROUTES).filter(([k,r])=>
 function doGlobalSearch(){const v=document.getElementById('globalSearch').value.trim();if(!v)return;nav('students');setTimeout(()=>{const el=document.getElementById('stSearch');if(el){el.value=v;filterStudents()}},100)}
 window.doGlobalSearch=doGlobalSearch;
 
-/* ============================================================
-   DASHBOARD
-   ============================================================ */
 async function pageDashboard(root){
   const cy=getYear(),ct=getTerm(),today=new Date().toISOString().slice(0,10);
   const results=await Promise.all([
@@ -536,14 +498,47 @@ async function pageDashboard(root){
     api('/rest/v1/classes?school_id=eq.'+_schoolId+'&select=id').catch(()=>[]),
     api('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=amount,paid_at').catch(()=>[]),
     api('/rest/v1/pass_outs?school_id=eq.'+_schoolId+'&status=eq.out&select=id').catch(()=>[]),
-    api('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=id').catch(()=>[])
+    api('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=id').catch(()=>[]),
+    api('/rest/v1/exams?school_id=eq.'+_schoolId+'&year=eq.'+cy+'&term=eq.'+ct).catch(()=>[])
   ]);
-  const students=results[0],classes=results[1],payments=results[2],passOuts=results[3],staff=results[4];
+  const students=results[0],classes=results[1],payments=results[2],passOuts=results[3],staff=results[4],exams=results[5];
   _cachedStudents=students;
   const active=students.filter(s=>s.status==='active'||!s.status);
   let tC=0,tP=0,debtors=0;
   active.forEach(s=>{const c=Number(s.total_charged)||0;const p=Number(s.total_paid)||0;tC+=c;tP+=p;if(c-p>0)debtors++});
   const todayColl=payments.filter(p=>(p.paid_at||'').slice(0,10)===today).reduce((s,p)=>s+Number(p.amount),0);
+
+  let examStatusHtml = '';
+  if(exams.length === 0){
+    examStatusHtml = '<div class="alert-item danger"><div class="txt"><b>No exams found for '+cy+' Term '+ct+'</b></div></div>';
+  } else {
+    const examIds = exams.map(e=>e.id).join(',');
+    const marksCount = await api('/rest/v1/marks?school_id=eq.'+_schoolId+'&exam_id=in.('+examIds+')&select=exam_id,student_id,score').catch(()=>[]);
+    const examMarks = {};
+    marksCount.forEach(m => {
+      if(!examMarks[m.exam_id]) examMarks[m.exam_id] = new Set();
+      examMarks[m.exam_id].add(m.student_id);
+    });
+
+    exams.forEach(ex => {
+      const uniqueCount = examMarks[ex.id] ? examMarks[ex.id].size : 0;
+      const hasMarks = uniqueCount > 0;
+      const badgeClass = hasMarks ? 'ok' : 'bad';
+      const badgeText = hasMarks ? 'Uploaded' : 'No Marks';
+      
+      examStatusHtml += `
+        <div class="alert-item" style="border-left-color:${hasMarks ? 'var(--ok)' : 'var(--muted)'}">
+          <span class="ico">📝</span>
+          <div class="txt">
+            <b>${esc(ex.name)} (Stage ${ex.stage})</b>
+            <span>${uniqueCount} pupils have marks</span>
+          </div>
+          <span class="badge ${badgeClass}">${badgeText}</span>
+        </div>
+      `;
+    });
+  }
+
   root.innerHTML='<div class="page-head"><div><h1>Dashboard</h1><div class="sub">'+cy+' Term '+ct+' · '+fmtLongDate(new Date())+'</div></div><button class="btn" onclick="openStudentModal(null)">＋ Register Pupil</button></div>'+
   '<div class="grid grid-kpi" style="margin-bottom:14px">'+
   '<div class="kpi kpi-navy"><div class="v">'+active.length+'</div><div class="l">Active Pupils</div></div>'+
@@ -551,21 +546,24 @@ async function pageDashboard(root){
   '<div class="kpi kpi-bad"><div class="v">'+fmtUGX(tC-tP)+'</div><div class="l">Outstanding</div></div>'+
   '<div class="kpi"><div class="v">'+fmtUGX(todayColl)+'</div><div class="l">Today</div></div>'+
   '<div class="kpi kpi-warn" style="cursor:pointer" onclick="nav(\'reminders\')"><div class="v">'+debtors+'</div><div class="l">Send Reminders →</div></div></div>'+
-  '<div class="grid grid-2"><div class="card"><h3>🔔 Alerts</h3>'+
+  '<div class="grid grid-2">'+
+  '<div class="card"><h3>🔔 Alerts</h3>'+
   (debtors>0?'<div class="alert-item danger" onclick="nav(\'debtors\')" style="cursor:pointer"><span class="ico">⚠️</span><div class="txt"><b>'+debtors+' debtors</b><span>'+fmtUGX(tC-tP)+'</span></div></div>':'')+
   (passOuts.length>0?'<div class="alert-item danger" onclick="nav(\'passouts\')" style="cursor:pointer"><span class="ico">🚪</span><div class="txt"><b>'+passOuts.length+' pupil(s) OUT</b></div></div>':'')+
   (debtors===0&&passOuts.length===0?'<div class="alert-item ok"><span class="ico">✅</span><div class="txt"><b>All normal</b></div></div>':'')+
-  '</div><div class="card"><h3>🏫 Snapshot</h3><div class="grid grid-3">'+
+  '</div>'+
+  '<div class="card"><h3>🏫 Snapshot</h3><div class="grid grid-3">'+
   '<div><div class="muted">Classes</div><div style="font-size:20px;font-weight:800">'+classes.length+'</div></div>'+
   '<div><div class="muted">Staff</div><div style="font-size:20px;font-weight:800">'+staff.length+'</div></div>'+
   '<div><div class="muted">Payments</div><div style="font-size:20px;font-weight:800">'+payments.length+'</div></div>'+
-  '</div></div></div>';
+  '</div></div></div>'+
+  '<div class="card"><h3>📝 Exam Upload Status ('+cy+' Term '+ct+')</h3>'+
+  '<div class="muted" style="margin-bottom:10px">Shows if marks are uploaded for current exams.</div>'+
+  examStatusHtml +
+  '</div>';
 }
 window.pageDashboard=pageDashboard;
 
-/* ============================================================
-   STUDENTS
-   ============================================================ */
 async function pageStudents(root){
   clearClassesCache();
   const classes=await loadClasses();
@@ -641,7 +639,7 @@ async function openStudentModal(existing){
     '<div><label>Total Charged</label><input id="m_tc" type="number" value="'+(Number(s.total_charged)||0)+'" oninput="recalcBal()"></div>'+
     '<div><label>Amount Paid</label><input id="m_tp" type="number" value="'+(Number(s.total_paid)||0)+'" oninput="recalcBal()"></div>'+
     '<div><label>Balance</label><input id="m_bal" type="number" value="'+(Number(s.current_balance)||0)+'"></div></div>'+
-    '<div style="margin-top:12px"><label>School Pay Code</label><input id="m_paycode" value="'+esc(s.school_pay_code||'')+'"></div>'+
+    '<div style="margin-top:12px"><label>School Pay Code</label><input id="m_paycode" value="'+esc(s.school_pay_code||'')+'" placeholder="Type the real payment code here"></div>'+
     '<div class="actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" onclick="saveStudent(\''+(existing?existing.id:'')+'\')">Save</button></div>');
   setTimeout(recalcFees,80);
 }
@@ -672,9 +670,6 @@ window.saveStudent=saveStudent;
 async function deleteStudent(id){if(!confirm('Delete this pupil permanently?'))return;try{await api('/rest/v1/students?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');nav('students')}catch(e){toast('Delete failed: '+e.message,'bad')}}
 window.deleteStudent=deleteStudent;
 
-/* ============================================================
-   PAYMENT
-   ============================================================ */
 async function nextReceiptNo(){const y=getYear();try{const rows=await api('/rest/v1/payments?school_id=eq.'+_schoolId+'&year=eq.'+y+'&select=id');return 'RCP-'+y+'-'+String((rows.length||0)+1).padStart(5,'0')}catch(e){return 'RCP-'+y+'-'+String(Date.now()).slice(-5)}}
 
 async function recordPayment(studentId){
@@ -734,9 +729,6 @@ function printReceipt(student,pay){
 }
 window.printReceipt=printReceipt;
 
-/* ============================================================
-   FEES
-   ============================================================ */
 async function pageFees(root){
   clearClassesCache();
   const classes=await loadClasses();
@@ -767,9 +759,6 @@ function filterFees(){
 }
 window.filterFees=filterFees;
 
-/* ============================================================
-   PAYMENTS LIST
-   ============================================================ */
 async function pagePayments(root){
   const results=await Promise.all([
     api('/rest/v1/payments?school_id=eq.'+_schoolId+'&select=*&order=paid_at.desc&limit=500'),
@@ -795,9 +784,6 @@ function filterPayments(){
 }
 window.filterPayments=filterPayments;
 
-/* ============================================================
-   REMINDERS
-   ============================================================ */
 async function pageReminders(root){
   const students=await api('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=*&order=admission_no')||[];
   const rows=students.map(s=>{const charged=Number(s.total_charged)||0,paid=Number(s.total_paid)||0,bal=charged-paid;let status='unpaid';if(charged<=0)status='no-fees';else if(bal<=0)status='cleared';else if(paid>0)status='partial';return{s,charged,paid,bal,status}});
@@ -864,9 +850,6 @@ async function copyPhones(){
 }
 window.copyPhones=copyPhones;
 
-/* ============================================================
-   CONTACTS
-   ============================================================ */
 async function pageContacts(root){
   clearClassesCache();
   const classes=await loadClasses();
@@ -962,9 +945,6 @@ function fallbackCopy(str, count){
   document.body.removeChild(ta);
 }
 
-/* ============================================================
-   JUKILA CSV EXPORT
-   ============================================================ */
 function downloadJukilaCSV(){
   const list = window._contactsFiltered || window._contactsAll || [];
   const withPhone = list.filter(r => r.phone && String(r.phone).trim() !== '');
@@ -1071,9 +1051,6 @@ function printContacts(){
 }
 window.printContacts=printContacts;
 
-/* ============================================================
-   PRINT SECTION (generic)
-   ============================================================ */
 function printSection(title,tableHTML){
   const w=window.open('','_blank');
   if(!w){toast('Allow popups','bad');return}
@@ -1087,9 +1064,6 @@ function printSection(title,tableHTML){
 }
 window.printSection=printSection;
 
-/* ============================================================
-   PROMISES
-   ============================================================ */
 function promiseStatusOf(p){
   if(p.status==='cleared')return 'cleared';
   if(!p.promise_date)return 'future';
@@ -1160,9 +1134,6 @@ window.clearPromise=clearPromise;
 async function deletePromise(id){if(!confirm('Delete?'))return;try{await api('/rest/v1/fee_reminders?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');nav('promises')}catch(e){toast(e.message,'bad')}}
 window.deletePromise=deletePromise;
 
-/* ============================================================
-   DEBTORS
-   ============================================================ */
 async function pageDebtors(root){
   clearClassesCache();
   const classes=await loadClasses();
@@ -1187,9 +1158,6 @@ function filterDebtors(){
 }
 window.filterDebtors=filterDebtors;
 
-/* ============================================================
-   MISSING
-   ============================================================ */
 async function pageMissing(root){
   const students=await api('/rest/v1/students?school_id=eq.'+_schoolId+'&select=*&order=admission_no')||[];
   _cachedStudents=students;
@@ -1211,9 +1179,6 @@ function filterMissing(){
 }
 window.filterMissing=filterMissing;
 
-/* ============================================================
-   PASS OUTS
-   ============================================================ */
 async function pagePassOuts(root){
   const results=await Promise.all([
     api('/rest/v1/students?school_id=eq.'+_schoolId+'&select=id,admission_no,first_name,last_name,class_id,parent_name,parent_contact'),
@@ -1324,9 +1289,6 @@ async function confirmReturn(id){
 }
 window.confirmReturn=confirmReturn;
 
-/* ============================================================
-   ATTENDANCE
-   ============================================================ */
 async function pageAttendance(root){
   clearClassesCache();
   const classes=await loadClasses();
@@ -1372,9 +1334,6 @@ window.setAtt=setAtt;
 function markAllPresent(){if(!confirm('Mark all present?'))return;const btns=document.querySelectorAll('#attBody tr button');let i=0;const go=()=>{if(i>=btns.length){toast('Done','ok');return}const b=btns[i++];if(!b.classList.contains('ok'))b.click();setTimeout(go,60)};go()}
 window.markAllPresent=markAllPresent;
 
-/* ============================================================
-   MARKS ENTRY
-   ============================================================ */
 async function pageMarks(root){
   clearClassesCache();
   const classes=await loadClasses();
@@ -1433,9 +1392,6 @@ async function setMark(inp){
 }
 window.setMark=setMark;
 
-/* ============================================================
-   P.7 & PRIMARY REPORTS
-   ============================================================ */
 async function pageReports(root){
   clearClassesCache();
   const classes = await loadClasses();
@@ -1451,7 +1407,6 @@ async function pageReports(root){
   const isP7 = clsName.includes('P.7') || clsName.includes('P7') || clsName.includes('PRIMARY 7');
   const isBaby = clsName.toLowerCase().includes('baby')||clsName.toLowerCase().includes('middle')||clsName.toLowerCase().includes('top')||clsName.toLowerCase().includes('nur');
 
-  /* MAP EXAMS */
   let set1Exam, set2Exam, set3Exam, mockExam, botExam, midExam, eotExam;
   
   if(isP7){
@@ -1623,9 +1578,6 @@ async function pageReports(root){
 }
 window.pageReports = pageReports;
 
-/* ============================================================
-   BUILDERS
-   ============================================================ */
 function buildHeader(){
   const logoSrc=_school?(_school.logo_data||_school.logo_url||''):'';
   return '<div class="rc-head">'+
@@ -1673,13 +1625,20 @@ function buildPrimaryReportCard(s,subjects,marks,positions,totalInClass,isUpperP
 
   const pos = s.position_manual || (divInfo && divInfo.usedCount >= 4 ? (positions[s.id]||'—') : '—');
   
-  const avg = endT.cnt ? (endT.grand / endT.cnt) : 0;
-  const hasMarks = endT.cnt > 0;
+  let commentSource = null;
+  let hasAnyMarks = false;
+  let grandTotal = 0;
+  let count = 0;
   
-  const autoC = generateAutoComments(hasMarks ? avg : null);
+  if(endT.cnt > 0){ commentSource = per; hasAnyMarks = true; grandTotal = endT.grand; count = endT.cnt; }
+  else if(midT.cnt > 0){ commentSource = midPer; hasAnyMarks = true; grandTotal = midT.grand; count = midT.cnt; }
+  else if(botT.cnt > 0){ commentSource = botPer; hasAnyMarks = true; grandTotal = botT.grand; count = botT.cnt; }
+
+  const avg = count > 0 ? (grandTotal / count) : 0;
+  const autoC = generateAutoComments(avg, hasAnyMarks);
   
-  let ctComment = s.class_teacher_comment || autoC.ct;
-  let htComment = s.head_teacher_comment || autoC.ht;
+  let ctComment = (s.class_teacher_comment && s.class_teacher_comment.trim()) ? s.class_teacher_comment : autoC.ct;
+  let htComment = (s.head_teacher_comment && s.head_teacher_comment.trim()) ? s.head_teacher_comment : autoC.ht;
   
   const dirComment = s.director_comment||'';
   const termEnd = s.term_ended_on||(_school && _school.current_term_end)||'';
@@ -1715,6 +1674,7 @@ function buildBabyReportCard(s,subjects,marks,midMarks,botMarks,classes,year,ter
   const list=classes||_classesCache||[];const cls=list.find(c=>c.id===s.class_id);
   const per=marks[s.id]||{};const midPer=midMarks[s.id]||{};const botPer=botMarks[s.id]||{};
   const babySubjects = ['LA 1 (SOCIAL DEVELOPMENT)','LA 2 (ENGLISH)','LA 3 (HEALTH HABITS)','LA 4 (MATHEMATICS)','LA 5 (READING & WRITING)'];
+  
   function buildTable(perObj){
     let rows='';
     babySubjects.forEach((subjectName, index) => {
@@ -1725,18 +1685,32 @@ function buildBabyReportCard(s,subjects,marks,midMarks,botMarks,classes,year,ter
   }
   const botT=buildTable(botPer);const midT=buildTable(midPer);const endT=buildTable(per);
   
-  let totalScore=0; let count=0;
+  let totalScore = 0; let count = 0;
+  
   subjects.forEach((sj, idx) => {
-     const dbSubject = subjects[idx];
-     const v = dbSubject ? per[dbSubject.subject_id] : null;
+     const v = per[sj.subject_id];
      if (v != null && !isNaN(v)) { totalScore += Number(v); count++; }
   });
-  const babyAvg = count > 0 ? (totalScore / count) : 0;
   
-  const autoC = generateAutoComments(babyAvg);
+  if(count === 0){
+    subjects.forEach((sj, idx) => {
+       const v = midPer[sj.subject_id];
+       if (v != null && !isNaN(v)) { totalScore += Number(v); count++; }
+    });
+  }
+  
+  if(count === 0){
+    subjects.forEach((sj, idx) => {
+       const v = botPer[sj.subject_id];
+       if (v != null && !isNaN(v)) { totalScore += Number(v); count++; }
+    });
+  }
+  
+  const babyAvg = count > 0 ? (totalScore / count) : 0;
+  const autoC = generateAutoComments(babyAvg, count > 0);
 
-  const ctComment = s.class_teacher_comment || autoC.ct;
-  const htComment = s.head_teacher_comment || autoC.ht;
+  const ctComment = (s.class_teacher_comment && s.class_teacher_comment.trim()) ? s.class_teacher_comment : autoC.ct;
+  const htComment = (s.head_teacher_comment && s.head_teacher_comment.trim()) ? s.head_teacher_comment : autoC.ht;
   
   const termEnd = s.term_ended_on || (_school && _school.current_term_end) || '';
   const nextTerm = s.next_term_begins || (_school && _school.next_term_begin) || '';
@@ -1774,7 +1748,7 @@ function buildP7ReportCard(s,subjects,set1,set2,set3,mock,positions,totalInClass
     if(title==='SET 1') key='set1';
     if(title==='SET 2') key='set2';
     if(title==='SET 3') key='set3';
-    if(title==='MOCKS') key='mock';
+    if(title==='MOCK') key='mock';
     
     if(!window._printTables[key]) return '';
 
@@ -1802,7 +1776,10 @@ function buildP7ReportCard(s,subjects,set1,set2,set3,mock,positions,totalInClass
   const pos = s.position_manual || (divInfo && divInfo.usedCount >= 4 ? (positions[s.id]||'—') : '—');
   
   let percentAvg = 0;
-  if (divInfo && divInfo.usedCount >= 4) {
+  let hasMarks = false;
+  
+  if (divInfo && divInfo.usedCount > 0) {
+    hasMarks = true;
     const avgAgg = divInfo.best7Agg / divInfo.usedCount; 
     if (avgAgg <= 1) percentAvg = 95;
     else if (avgAgg <= 2) percentAvg = 85;
@@ -1815,16 +1792,15 @@ function buildP7ReportCard(s,subjects,set1,set2,set3,mock,positions,totalInClass
     else percentAvg = 30;
   }
   
-  const autoC = generateAutoComments(percentAvg);
+  const autoC = generateAutoComments(percentAvg, hasMarks);
 
-  let ctComment = s.class_teacher_comment || autoC.ct;
-  let htComment = s.head_teacher_comment || autoC.ht;
+  let ctComment = (s.class_teacher_comment && s.class_teacher_comment.trim()) ? s.class_teacher_comment : autoC.ct;
+  let htComment = (s.head_teacher_comment && s.head_teacher_comment.trim()) ? s.head_teacher_comment : autoC.ht;
   const dirComment = s.director_comment||'';
   const termEnd = s.term_ended_on||(_school && _school.current_term_end)||'';
   const nextTerm = s.next_term_begins||(_school && _school.next_term_begin)||'';
 
-  /* ORDER: MOCK first, then Set 1, Set 2, Set 3 */
-  let tables = buildTable(mock, 'MOCKS') + buildTable(set1, 'SET 1') + buildTable(set2, 'SET 2') + buildTable(set3, 'SET 3');
+  let tables = buildTable(mock, 'MOCK') + buildTable(set1, 'SET 1') + buildTable(set2, 'SET 2') + buildTable(set3, 'SET 3');
 
   return '<div class="rc-page"><div class="rc-inner">'+
     buildHeader()+
@@ -1915,9 +1891,6 @@ window.saveStudentComments = saveStudentComments;
 function togglePrintTable(key, on){ window._printTables[key]=!!on; pageReports(document.getElementById('main')); }
 window.togglePrintTable = togglePrintTable;
 
-/* ============================================================
-   EXAMS
-   ============================================================ */
 async function pageExams(root){
   _examsCache=null;const exams=await loadExams();
   const yr=getYear(),tr=getTerm();
@@ -1937,9 +1910,6 @@ window.saveExam=saveExam;
 async function delExam(id){if(!confirm('Delete?'))return;try{await api('/rest/v1/exams?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');_examsCache=null;nav('exams')}catch(e){toast(e.message,'bad')}}
 window.delExam=delExam;
 
-/* ============================================================
-   CLASSES
-   ============================================================ */
 async function pageClasses(root){
   clearClassesCache();const classes=await loadClasses();const counts={};
   for(const c of classes){const r=await api('/rest/v1/students?school_id=eq.'+_schoolId+'&class_id=eq.'+c.id+'&select=id');counts[c.id]=r.length}
@@ -1954,9 +1924,6 @@ window.saveClass=saveClass;
 async function delClass(id){if(!confirm('Delete?'))return;try{await api('/rest/v1/classes?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');clearClassesCache();nav('classes')}catch(e){toast(e.message,'bad')}}
 window.delClass=delClass;
 
-/* ============================================================
-   SUBJECTS
-   ============================================================ */
 async function pageSubjects(root){
   clearClassesCache();const classes=await loadClasses();if(!_subjClass&&classes[0])_subjClass=classes[0].id;
   const subjects=await loadSubjectsForClass(_subjClass);const cOpts=classes.map(c=>'<option value="'+c.id+'"'+(_subjClass===c.id?' selected':'')+'>'+esc(c.name)+'</option>').join('');
@@ -1985,9 +1952,6 @@ window.saveSubject=saveSubject;
 async function delSubject(sid){if(!confirm('Remove?'))return;try{await api('/rest/v1/class_subjects?school_id=eq.'+_schoolId+'&class_id=eq.'+_subjClass+'&subject_id=eq.'+sid,{method:'DELETE'});toast('Removed','ok');nav('subjects')}catch(e){toast(e.message,'bad')}}
 window.delSubject=delSubject;
 
-/* ============================================================
-   STAFF & PAYROLL & OTHER
-   ============================================================ */
 async function pageStaff(root){
   const staff=await api('/rest/v1/staff?school_id=eq.'+_schoolId+'&select=*&order=full_name')||[];
   window._staffList=staff;let rows='';
@@ -2063,9 +2027,6 @@ window.pageSettings=pageSettings;
 async function saveSchool(){const b={name:document.getElementById('s_name').value.trim(),telephone:document.getElementById('s_phone').value.trim(),address:document.getElementById('s_addr').value.trim(),head_teacher:document.getElementById('s_head').value.trim()};try{await api('/rest/v1/schools?id=eq.'+_schoolId,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(b)});Object.assign(_school,b);renderHeader();toast('Saved ✓','ok')}catch(e){toast('Save failed: '+e.message,'bad')}}
 window.saveSchool=saveSchool;
 
-/* ============================================================
-   PROFILE
-   ============================================================ */
 async function pageProfile(root){
   if(!_profileStudentId){root.innerHTML='<div class="empty">No pupil selected</div>';return}
   clearClassesCache();
