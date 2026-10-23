@@ -161,7 +161,7 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .rc-footer{margin-top:auto;display:flex;justify-content:center;align-items:flex-end;padding-top:10px}
 .rc-illustration{font-size:10pt;font-weight:bold;color:#800080;display:flex;gap:10px}
 .rc-page.p7 .rc-table{font-size:11pt}
-.rc-page.p7 .rc-table td, .rc-page.p7 .rc-table th{padding:6px 8px}
+.rc-page.p7 .rc-table td, .rc-page.p7 .rc-table th{padding:5px 8px}
 .rc-page.p7 .rc-table td.sc{font-size:13pt}
 @media(max-width:800px){.rc-stage{padding:8px;justify-content:flex-start}}
 @media print{
@@ -278,7 +278,6 @@ function waLink(num){if(!num)return'';let c=String(num).replace(/[^0-9]/g,'');if
 function genderLabel(g){if(!g)return'—';const x=String(g).trim().toLowerCase();if(x==='m'||x==='male')return'Male';if(x==='f'||x==='female')return'Female';return'—'}
 function isBoard(s){if(!s)return false;const v=String(s).trim().toLowerCase();return v==='boarding'||v==='boarder'||v==='b'}
 
-/* P.7 / baby class detection — bulletproof */
 function isP7Class(name){
   if(!name) return false;
   const n = String(name).toUpperCase();
@@ -288,6 +287,12 @@ function isBabyClass(name, level){
   if(level === 'nursery') return true;
   if(!name) return false;
   return /BABY|MIDDLE|TOP|NURS/.test(String(name).toUpperCase());
+}
+function hidePositionFor(name, isP7){
+  if(isP7) return true;
+  if(!name) return false;
+  const n = String(name).toUpperCase();
+  return /P\s*[.,]?\s*[4-7]/.test(n) || /PRIMARY\s*[4-7]/.test(n);
 }
 
 function gradePrimary(score){
@@ -320,7 +325,6 @@ function isUngradedSubject(sj){
   return false;
 }
 
-/* P.7 — 4-subject PLE division */
 function computeP7Division(perSubject, subjects){
   const aggs=[];
   subjects.forEach(sj=>{
@@ -343,7 +347,6 @@ function computeP7Division(perSubject, subjects){
   return {agg:total,division,usedCount,incomplete:usedCount<4};
 }
 
-/* Primary BOT/MID/EOT — best 7 of graded subjects */
 function computePrimaryDivision(perSubject, subjects){
   const aggList=[];
   subjects.forEach(sj=>{
@@ -368,8 +371,17 @@ function computePrimaryDivision(perSubject, subjects){
   return {best7Agg,division,usedCount,incomplete:usedCount===0};
 }
 
-function generateAutoComments(avg,hasMarks){
+function generateAutoComments(avg,hasMarks,mode){
   if(!hasMarks||avg===null||isNaN(avg))return{ct:'',ht:''};
+  mode=mode||'normal';
+  if(mode==='ple'){
+    if(avg>=80)return{ct:'An outstanding final year at Primary. Your hard work and discipline have truly paid off. Go shine in Secondary school!',ht:'Excellent performance throughout your primary journey. We are proud of you. Wishing you great success in your PLE and beyond.'};
+    if(avg>=70)return{ct:'A very good final performance. You have grown steadily this year. Carry the same spirit into Secondary school.',ht:'Well done. You have what it takes to succeed. Wishing you the very best in your PLE and in the next chapter.'};
+    if(avg>=60)return{ct:'A good result to finish Primary. Keep believing in yourself — the best is yet to come.',ht:'You have done well. Stay focused and confident as you move on to Secondary school. Wishing you success in your PLE.'};
+    if(avg>=50)return{ct:'A fair finish. You have the ability to do even better in Secondary school. Stay determined.',ht:'You have completed Primary with effort. Keep working hard — every step counts. Wishing you success in your PLE.'};
+    if(avg>=40)return{ct:'You made it through Primary. With more focus in Secondary school, you will achieve much more.',ht:'This is only the beginning. Do not give up — your best days are ahead. Wishing you success in your PLE.'};
+    return{ct:'You have completed an important chapter. Believe in yourself and keep pushing forward — great things await you.',ht:'Every journey begins with a step. We wish you courage, focus, and success in your PLE and in Secondary school.'};
+  }
   if(avg===0)return{ct:'A weak performance this term. Requires serious attention and improvement.',ht:'Needs significant improvement in all areas.'};
   if(avg>=80)return{ct:'An outstanding performance this term. Keep up the excellent work!',ht:'Excellent results. You are a shining example to others.'};
   if(avg>=70)return{ct:'A very good and steady effort. With a little more focus, you will achieve even greater heights.',ht:'You have shown great potential. Keep aiming higher.'};
@@ -395,7 +407,6 @@ async function api(path,opt){
   return data;
 }
 
-/* ========== AUTH (unchanged) ========== */
 async function doLogin(){
   const email=document.getElementById('loginEmail').value.trim().toLowerCase();
   const pass=document.getElementById('loginPass').value;
@@ -520,7 +531,6 @@ function renderBottomBar(){const entries=Object.entries(ROUTES).filter(([k,r])=>
 function doGlobalSearch(){const v=document.getElementById('globalSearch').value.trim();if(!v)return;nav('students');setTimeout(()=>{const el=document.getElementById('stSearch');if(el){el.value=v;filterStudents()}},100)}
 window.doGlobalSearch=doGlobalSearch;
 
-/* ========== DASHBOARD ========== */
 async function pageDashboard(root){
   const cy=getYear(),ct=getTerm(),today=new Date().toISOString().slice(0,10);
   const results=await Promise.all([
@@ -582,7 +592,6 @@ async function pageDashboard(root){
 }
 window.pageDashboard=pageDashboard;
 
-/* ========== STUDENTS ========== */
 async function pageStudents(root){
   clearClassesCache();
   const classes=await loadClasses();
@@ -688,7 +697,6 @@ window.saveStudent=saveStudent;
 async function deleteStudent(id){if(!confirm('Delete this pupil permanently?'))return;try{await api('/rest/v1/students?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');nav('students')}catch(e){toast('Delete failed: '+e.message,'bad')}}
 window.deleteStudent=deleteStudent;
 
-/* ========== PAYMENTS ========== */
 async function nextReceiptNo(){const y=getYear();try{const rows=await api('/rest/v1/payments?school_id=eq.'+_schoolId+'&year=eq.'+y+'&select=id');return 'RCP-'+y+'-'+String((rows.length||0)+1).padStart(5,'0')}catch(e){return 'RCP-'+y+'-'+String(Date.now()).slice(-5)}}
 
 async function recordPayment(studentId){
@@ -802,7 +810,6 @@ function filterPayments(){
 }
 window.filterPayments=filterPayments;
 
-/* ========== REMINDERS ========== */
 async function pageReminders(root){
   const students=await api('/rest/v1/students?school_id=eq.'+_schoolId+'&status=eq.active&select=*&order=admission_no')||[];
   const rows=students.map(s=>{const charged=Number(s.total_charged)||0,paid=Number(s.total_paid)||0,bal=charged-paid;let status='unpaid';if(charged<=0)status='no-fees';else if(bal<=0)status='cleared';else if(paid>0)status='partial';return{s,charged,paid,bal,status}});
@@ -867,7 +874,6 @@ async function copyPhones(){
 }
 window.copyPhones=copyPhones;
 
-/* ========== CONTACTS ========== */
 async function pageContacts(root){
   clearClassesCache();
   const classes=await loadClasses();
@@ -1048,7 +1054,6 @@ function printSection(title,tableHTML){
 }
 window.printSection=printSection;
 
-/* ========== PROMISES ========== */
 function promiseStatusOf(p){
   if(p.status==='cleared')return 'cleared';
   if(!p.promise_date)return 'future';
@@ -1115,7 +1120,6 @@ window.clearPromise=clearPromise;
 async function deletePromise(id){if(!confirm('Delete?'))return;try{await api('/rest/v1/fee_reminders?id=eq.'+id,{method:'DELETE'});toast('Deleted','ok');nav('promises')}catch(e){toast(e.message,'bad')}}
 window.deletePromise=deletePromise;
 
-/* ========== DEBTORS / MISSING / PASS OUTS ========== */
 async function pageDebtors(root){
   clearClassesCache();
   const classes=await loadClasses();
@@ -1259,7 +1263,6 @@ async function confirmReturn(id){
 }
 window.confirmReturn=confirmReturn;
 
-/* ========== ATTENDANCE / MARKS (unchanged) ========== */
 async function pageAttendance(root){
   clearClassesCache();
   const classes=await loadClasses();
@@ -1358,7 +1361,7 @@ async function setMark(inp){
 window.setMark=setMark;
 
 /* ============================================================
-   NEW: REPORTS PAGE (P.7 = 4 subjects, chunked fetch, publish, release)
+   NEW REPORTS PAGE — P.7 per-set DIV/AGG, PLE wish, no position P.4–P.7
    ============================================================ */
 async function pageReports(root){
   clearClassesCache();
@@ -1367,13 +1370,13 @@ async function pageReports(root){
   if(!_marksClass){ root.innerHTML='<div class="card empty">Add a class first.</div>'; return; }
 
   const classObj = classes.find(c=>c.id===_marksClass);
-  let subjects = await loadSubjectsForClass(_marksClass);
   const exams = await loadExams();
   const yr = getYear(), tr = getTerm();
 
   const clsName = classObj ? classObj.name : '';
   const isP7 = isP7Class(clsName);
   const isBaby = isBabyClass(clsName, classObj ? classObj.level : null);
+  const hidePosition = hidePositionFor(clsName, isP7);
 
   const findExamByStage = s => exams.find(e=>Number(e.stage)===s && Number(e.year)===yr && Number(e.term)===tr);
   const botExam = findExamByStage(1);
@@ -1398,7 +1401,7 @@ async function pageReports(root){
   const examFilter = isP7 ? [botExam,midExam,eotExam,mockExam] : [botExam,midExam,eotExam];
   const allExamIds = examFilter.filter(Boolean).map(e=>e.id);
 
-  // CHUNKED marks fetch — avoids 414 URI Too Long for large classes (P.7 has 44)
+  // CHUNKED marks fetch
   let marksRows = [];
   if(students.length && allExamIds.length){
     const CHUNK = 25;
@@ -1419,14 +1422,32 @@ async function pageReports(root){
     uniqueSubjectIds.add(m.subject_id);
   });
 
-  // Ensure subjects referenced in marks are in the list
-  if(uniqueSubjectIds.size > 0){
-    const dbSubjectIds = subjects.map(s=>s.subject_id);
-    const missingSubjectIds = Array.from(uniqueSubjectIds).filter(id => !dbSubjectIds.includes(id));
-    if(missingSubjectIds.length > 0){
-      const extraRows = await api('/rest/v1/subjects?id=in.('+missingSubjectIds.join(',')+')&select=id,code,name') || [];
-      extraRows.forEach(r => subjects.push({subject_id: r.id, code: r.code, name: r.name}));
-    }
+  // Build subjects from marks (fixes P.7 not showing)
+  const subjectIdsFromMarks = new Set();
+  marksRows.forEach(m => subjectIdsFromMarks.add(m.subject_id));
+
+  let subjects = [];
+  if(subjectIdsFromMarks.size){
+    const ids = Array.from(subjectIdsFromMarks);
+    const subjectRows = await api('/rest/v1/subjects?id=in.('+ids.join(',')+')&select=id,code,name') || [];
+    const byId = {};
+    subjectRows.forEach(r => byId[r.id] = {subject_id: r.id, code: r.code||'', name: r.name||''});
+    ids.forEach(id => { if(byId[id]) subjects.push(byId[id]); });
+  }
+
+  if(!subjects.length){
+    const csRows = await api('/rest/v1/class_subjects?school_id=eq.'+_schoolId+'&class_id=eq.'+_marksClass+'&select=subject_id,subjects:subject_id(id,code,name)');
+    subjects = (csRows||[]).map(r => ({subject_id: r.subject_id, code: r.subjects?.code || '', name: r.subjects?.name || ''}));
+  }
+
+  if(isP7){
+    subjects = subjects.filter(sj=>{
+      const name=(sj.name||'').toUpperCase();
+      const code=(sj.code||'').toUpperCase();
+      if(name.includes('R.E')||name.includes('RELIGIOUS')||code==='RE') return false;
+      if(name.includes('COMPUTER')||name.includes('ICT')||code.includes('COMP')||code.includes('ICT')) return false;
+      return true;
+    }).slice(0, 4);
   }
 
   const botMarks = (botExam && byExam[botExam.id]) || {};
@@ -1482,7 +1503,7 @@ async function pageReports(root){
 
   _reportData = {
     students, subjects, botMarks, midMarks, endMarks, mockMarks, set1Marks, set2Marks, set3Marks,
-    positions, computed, isP7, isBaby, classes, year: yr, term: tr,
+    positions, computed, isP7, isBaby, hidePosition, classes, year: yr, term: tr,
     currentClass: classObj, classId: _marksClass
   };
   window._reportData = _reportData;
@@ -1494,10 +1515,10 @@ async function pageReports(root){
     cards = '<div id="rcCardsWrap">'+students.map(s=>{
       const c = computed[s.id] || {};
       const card = isP7
-        ? buildP7ReportCard(s,subjects,set1Marks,set2Marks,set3Marks,mockMarks,positions,students.length,classes,c,yr,tr)
+        ? buildP7ReportCard(s,subjects,set1Marks,set2Marks,set3Marks,mockMarks,positions,students.length,classes,c,yr,tr,hidePosition)
         : (isBaby
             ? buildBabyReportCard(s,subjects,endMarks,midMarks,botMarks,classes,yr,tr)
-            : buildPrimaryReportCard(s,subjects,endMarks,positions,students.length,classes,midMarks,botMarks,c,yr,tr));
+            : buildPrimaryReportCard(s,subjects,endMarks,positions,students.length,classes,midMarks,botMarks,c,yr,tr,hidePosition));
       const badge = c.incomplete
         ? '<div style="position:absolute;top:10px;right:10px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:700">INCOMPLETE</div>'
         : '<div style="position:absolute;top:10px;right:10px;background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:700">DIV '+(c.division||'—')+'</div>';
@@ -1521,11 +1542,11 @@ async function pageReports(root){
 
   let gradeHelp = '';
   if(isP7){
-    gradeHelp = '<b>P.7 (PLE — 4 subjects):</b> Division from the 4 PLE subjects only — English, Mathematics, Science, Social Studies. <b>No R.E or Computer.</b> I=4–12 · II=13–23 · III=24–29 · IV=30–34 · U=35+.';
+    gradeHelp = '<b>P.7 (PLE — 4 subjects):</b> Per-set DIV + AGG shown below each exam table. Final division from best available set. <b>No R.E or Computer.</b> I=4–12 · II=13–23 · III=24–29 · IV=30–34 · U=35+. <b>Position hidden.</b> Encouraging end-of-Primary comments.';
   } else if(isBaby){
     gradeHelp = '<b>Nursery:</b> A (90–100) Excellent · B (80–89) V. Good · C (70–79) Good · D (50–69) Fair · E (0–49) Needs Help.';
   } else {
-    gradeHelp = '<b>Division (School Policy):</b> Sum of best-7 aggregates of graded subjects. <b>Computer and R.E are not counted.</b> I=4–12 · II=13–23 · III=24–29 · IV=30–34 · U=35+.';
+    gradeHelp = '<b>Division:</b> Sum of best-7 aggregates of graded subjects. <b>Computer and R.E not counted.</b> I=4–12 · II=13–23 · III=24–29 · IV=30–34 · U=35+.'+(hidePosition?' <b>Position hidden for P.4–P.7.</b>':'');
   }
 
   root.innerHTML =
@@ -1563,7 +1584,7 @@ async function pageReports(root){
       '</div>'+
       '<div id="releaseList" style="max-height:320px;overflow-y:auto"></div>'+
     '</div>'+
-    (students.length===0?'<div class="card empty">No pupils in this class.</div>':(subjects.length===0?'<div class="card empty">No subjects assigned to this class.</div>':cards));
+    (students.length===0?'<div class="card empty">No pupils in this class.</div>':(subjects.length===0?'<div class="card empty">No marks or subjects found for this class.</div>':cards));
 
   renderReleaseList();
 }
@@ -1662,8 +1683,11 @@ function buildScaleBaby(){
     '<table class="rc-scale"><tr><th>90-100</th><th>80-89</th><th>70-79</th><th>50-69</th><th>0-49</th></tr>'+
     '<tr><td style="font-weight:bold;font-size:11pt">A</td><td style="font-weight:bold;font-size:11pt">B</td><td style="font-weight:bold;font-size:11pt">C</td><td style="font-weight:bold;font-size:11pt">D</td><td style="font-weight:bold;font-size:11pt">E</td></tr></table>';
 }
+function buildPleWish(){
+  return '<div style="text-align:center;margin:14px 0 10px;padding:10px;background:#fdf4ff;border:2px dashed #800080;border-radius:8px;font-size:12pt;font-weight:bold;color:#800080;font-family:\'Comic Sans MS\',cursive">🌟 Wishing you success in your PLE exams! 🌟</div>';
+}
 
-function buildPrimaryReportCard(s,subjects,marks,positions,totalInClass,classes,midMarks,botMarks,divInfo,year,term){
+function buildPrimaryReportCard(s,subjects,marks,positions,totalInClass,classes,midMarks,botMarks,divInfo,year,term,hidePosition){
   midMarks=midMarks||{};botMarks=botMarks||{};
   const list=classes||_classesCache||[];const cls=list.find(c=>c.id===s.class_id);
   const per=marks[s.id]||{};const midPer=midMarks[s.id]||{};const botPer=botMarks[s.id]||{};
@@ -1691,7 +1715,7 @@ function buildPrimaryReportCard(s,subjects,marks,positions,totalInClass,classes,
   else if(botT.cnt > 0){ hasAnyMarks = true; grandTotal = botT.grand; count = botT.cnt; }
 
   const avg = count > 0 ? (grandTotal / count) : 0;
-  const autoC = generateAutoComments(avg, hasAnyMarks);
+  const autoC = generateAutoComments(avg, hasAnyMarks, 'normal');
   const ctComment = (s.class_teacher_comment && s.class_teacher_comment.trim()) ? s.class_teacher_comment : autoC.ct;
   const htComment = (s.head_teacher_comment && s.head_teacher_comment.trim()) ? s.head_teacher_comment : autoC.ht;
   const dirComment = s.director_comment||'';
@@ -1710,12 +1734,13 @@ function buildPrimaryReportCard(s,subjects,marks,positions,totalInClass,classes,
       '<div class="cell w-50"><span class="lbl">CLASS:</span><span class="val">'+esc(cls?cls.name.toUpperCase():'—')+'</span></div>'+
       '<div class="cell w-50"><span class="lbl">TERM:</span><span class="val">'+term+'</span></div>'+
       '<div class="cell w-50"><span class="lbl">YEAR:</span><span class="val">'+year+'</span></div>'+
-      '<div class="cell w-50"><span class="lbl">POSITION:</span><span class="val">'+pos+' OUT OF '+totalInClass+'</span></div>'+
+      (hidePosition ? '' : '<div class="cell w-50"><span class="lbl">POSITION:</span><span class="val">'+pos+' OUT OF '+totalInClass+'</span></div>')+
       '<div class="cell w-50"><span class="lbl">DIVISION:</span><span class="val" style="font-weight:900;color:#800080">'+div+'</span></div>'+
     '</div>'+tables+buildScalePrimary()+
     '<div class="rc-lines"><span class="lbl">Conduct:</span><span class="line handwriting" style="min-height:22px">'+esc(s.conduct||'')+'</span><span class="lbl" style="margin-top:8px">Class Teacher\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(ctComment)+'</span><div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div></div>'+
     '<div class="rc-lines"><span class="lbl">Head Teacher\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(htComment)+'</span>'+(dirComment?'<span class="lbl" style="margin-top:6px">Director\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(dirComment)+'</span>':'')+'<div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div></div>'+
-    buildReportDates(termEnd,nextTerm)+buildFooter()+
+    ((window._printTables.end && term === 3) ? buildReportDates(termEnd,nextTerm) : '')+
+    buildFooter()+
   '</div></div>';
 }
 
@@ -1742,7 +1767,7 @@ function buildBabyReportCard(s,subjects,marks,midMarks,botMarks,classes,year,ter
     if(v != null && !isNaN(v)){ totalScore += Number(v); count++; }
   });
   const avg = count > 0 ? totalScore/count : 0;
-  const autoC = generateAutoComments(avg, count > 0);
+  const autoC = generateAutoComments(avg, count > 0, 'normal');
   const ctComment = (s.class_teacher_comment && s.class_teacher_comment.trim()) ? s.class_teacher_comment : autoC.ct;
   const htComment = (s.head_teacher_comment && s.head_teacher_comment.trim()) ? s.head_teacher_comment : autoC.ht;
   const termEnd = s.term_ended_on||(_school && _school.current_term_end)||'';
@@ -1763,58 +1788,59 @@ function buildBabyReportCard(s,subjects,marks,midMarks,botMarks,classes,year,ter
     '</div>'+tables+buildScaleBaby()+
     '<div class="rc-lines"><span class="lbl">Conduct:</span><span class="line handwriting" style="min-height:22px">'+esc(s.conduct||'')+'</span><span class="lbl" style="margin-top:8px">Class Teacher\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(ctComment)+'</span><div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div></div>'+
     '<div class="rc-lines"><span class="lbl">Head Teacher\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(htComment)+'</span><div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div></div>'+
-    buildReportDates(termEnd,nextTerm)+buildFooter()+
+    ((window._printTables.end && term === 3) ? buildReportDates(termEnd,nextTerm) : '')+
+    buildFooter()+
   '</div></div>';
 }
 
-/* P.7 — 4 subjects, no R.E, no Computer, no overflow */
-function buildP7ReportCard(s,subjects,set1,set2,set3,mock,positions,totalInClass,classes,divInfo,year,term){
+function buildP7ReportCard(s,subjects,set1,set2,set3,mock,positions,totalInClass,classes,divInfo,year,term,hidePosition){
   const list=classes||_classesCache||[];const cls=list.find(c=>c.id===s.class_id);
-
-  // Only the 4 PLE subjects — strip R.E and Computer if present in the class_subjects list
-  const p7Subjects = subjects.filter(sj=>{
-    const name=(sj.name||'').toUpperCase();
-    const code=(sj.code||'').toUpperCase();
-    if(name.includes('R.E')||name.includes('RELIGIOUS')||code==='RE') return false;
-    if(name.includes('COMPUTER')||name.includes('ICT')||code.includes('COMP')||code.includes('ICT')) return false;
-    return true;
-  }).slice(0, 4);
+  const p7Subjects = subjects.slice(0, 4);
 
   function buildTable(perObj, title, key){
     if(!window._printTables[key]) return '';
-    let rows='', grand=0, aggTotal=0, cnt=0;
+    let rows='', grand=0, aggTotal=0;
     p7Subjects.forEach(sj=>{
       const v=perObj[sj.subject_id];const sc=(v!=null && !isNaN(v))?Number(v):null;const g=gradePrimary(sc);
-      if(sc!=null){grand+=sc;cnt++;if(g.aggNum!=null) aggTotal+=g.aggNum;}
+      if(sc!=null){grand+=sc;if(g.aggNum!=null) aggTotal+=g.aggNum;}
       rows+='<tr><td class="subname">'+esc(sj.name)+'</td><td>100</td><td class="sc">'+(sc!=null?sc:'')+'</td><td class="grade">'+(sc!=null?g.g:'')+'</td><td class="agg">'+(sc!=null?g.agg:'-')+'</td><td></td></tr>';
     });
+    const setDiv = computeP7Division(perObj, p7Subjects);
+    const divDisplay = setDiv.incomplete ? '—' : setDiv.division;
+    const aggDisplay = setDiv.incomplete ? '—' : setDiv.agg;
     const headers='<thead><tr><th style="text-align:left;padding-left:10px">SUBJECT</th><th style="width:15%">SCORE</th><th style="width:20%">MARKS</th><th style="width:15%">GRADE</th><th style="width:10%">AGG</th><th style="width:15%">INITIALS</th></tr></thead>';
-    return '<div class="rc-section-title">'+title+'</div><table class="rc-table">'+headers+'<tbody>'+rows+'<tr><td class="subname">TOTAL</td><td>'+(p7Subjects.length*100)+'</td><td class="sc" style="font-size:13pt">'+grand.toFixed(0)+'</td><td></td><td class="agg" style="font-size:13pt">'+aggTotal+'</td><td></td></tr></tbody></table>';
+    return '<div class="rc-section-title">'+title+'</div>'+
+      '<table class="rc-table">'+headers+'<tbody>'+
+      rows+
+      '<tr><td class="subname">TOTAL</td><td>'+(p7Subjects.length*100)+'</td><td class="sc" style="font-size:13pt">'+grand.toFixed(0)+'</td><td></td><td class="agg" style="font-size:13pt">'+aggTotal+'</td><td></td></tr>'+
+      '<tr style="background:#fdf4ff"><td class="subname" style="color:#800080">'+title+' — DIV</td><td colspan="2" style="font-weight:900;color:#800080;font-size:12pt">'+divDisplay+'</td><td class="subname" style="color:#800080">AGGREGATE</td><td colspan="2" class="agg" style="font-size:12pt">'+aggDisplay+'</td></tr>'+
+      '</tbody></table>';
   }
 
   let div = 'U';
   if(s.division_manual) div = s.division_manual;
-  else if(divInfo && !divInfo.incomplete) div = divInfo.division;
-  const pos = s.position_manual || (divInfo && !divInfo.incomplete ? (positions[s.id]||'—') : '—');
+  else if(!divInfo.incomplete) div = divInfo.division;
 
-  // Auto comments — use whichever set is actually populated
-  const activeSet = Object.keys(mock||{}).length ? mock
-                  : Object.keys(set3||{}).length ? set3
-                  : Object.keys(set2||{}).length ? set2
-                  : set1 || {};
-  let totalScore=0, count=0;
+  let totalScore = 0, count = 0;
+  const activeSet = Object.keys(mock[s.id]||{}).length ? mock[s.id]
+                  : Object.keys(set3[s.id]||{}).length ? set3[s.id]
+                  : Object.keys(set2[s.id]||{}).length ? set2[s.id]
+                  : set1[s.id] || {};
   p7Subjects.forEach(sj=>{
     const v=activeSet[sj.subject_id];
     if(v!=null && !isNaN(v)){ totalScore+=Number(v); count++; }
   });
   const avg = count>0 ? totalScore/count : 0;
-  const autoC = generateAutoComments(avg, count>0);
+  const autoC = generateAutoComments(avg, count>0, 'ple');
   const ctComment = (s.class_teacher_comment && s.class_teacher_comment.trim()) ? s.class_teacher_comment : autoC.ct;
   const htComment = (s.head_teacher_comment && s.head_teacher_comment.trim()) ? s.head_teacher_comment : autoC.ht;
   const dirComment = s.director_comment||'';
   const termEnd = s.term_ended_on||(_school && _school.current_term_end)||'';
   const nextTerm = s.next_term_begins||(_school && _school.next_term_begin)||'';
-  let tables = buildTable(mock||{}, 'MOCK EXAMINATION', 'mock') + buildTable(set1||{}, 'SET 1', 'set1') + buildTable(set2||{}, 'SET 2', 'set2') + buildTable(set3||{}, 'SET 3', 'set3');
+  let tables = buildTable(mock[s.id] || {}, 'MOCK EXAMINATION', 'mock')
+             + buildTable(set1[s.id] || {}, 'SET 1', 'set1')
+             + buildTable(set2[s.id] || {}, 'SET 2', 'set2')
+             + buildTable(set3[s.id] || {}, 'SET 3', 'set3');
 
   return '<div class="rc-page p7"><div class="rc-inner">'+
     buildHeader()+
@@ -1823,16 +1849,16 @@ function buildP7ReportCard(s,subjects,set1,set2,set3,mock,positions,totalInClass
       '<div class="cell w-50"><span class="lbl">CLASS:</span><span class="val">'+esc(cls?cls.name.toUpperCase():'—')+'</span></div>'+
       '<div class="cell w-50"><span class="lbl">TERM:</span><span class="val">'+term+'</span></div>'+
       '<div class="cell w-50"><span class="lbl">YEAR:</span><span class="val">'+year+'</span></div>'+
-      '<div class="cell w-50"><span class="lbl">POSITION:</span><span class="val">'+pos+' OUT OF '+totalInClass+'</span></div>'+
       '<div class="cell w-50"><span class="lbl">DIVISION:</span><span class="val" style="font-weight:900;color:#800080">'+div+'</span></div>'+
     '</div>'+tables+buildScalePrimary()+
     '<div class="rc-lines"><span class="lbl">Conduct:</span><span class="line handwriting" style="min-height:22px">'+esc(s.conduct||'')+'</span><span class="lbl" style="margin-top:8px">Class Teacher\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(ctComment)+'</span><div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div></div>'+
     '<div class="rc-lines"><span class="lbl">Head Teacher\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(htComment)+'</span>'+(dirComment?'<span class="lbl" style="margin-top:6px">Director\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(dirComment)+'</span>':'')+'<div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div></div>'+
-    buildReportDates(termEnd,nextTerm)+buildFooter()+
+    buildPleWish()+
+    ((window._printTables.end && term === 3) ? buildReportDates(termEnd,nextTerm) : '')+
+    buildFooter()+
   '</div></div>';
 }
 
-/* ========== PRINT ========== */
 function printAllReports(){
   const d = window._reportData;
   if(!d||!d.students.length){toast('Nothing to print','bad');return}
@@ -1847,10 +1873,10 @@ function printAllReports(){
   let h='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Report Cards</title><style>'+styles+'</style></head><body>';
   d.students.forEach(s=>{
     h+='<div class="rc-stage">'+(d.isP7
-      ? buildP7ReportCard(s,d.subjects,d.set1Marks,d.set2Marks,d.set3Marks,d.mockMarks,d.positions,d.students.length,d.classes,d.computed[s.id],d.year,d.term)
+      ? buildP7ReportCard(s,d.subjects,d.set1Marks,d.set2Marks,d.set3Marks,d.mockMarks,d.positions,d.students.length,d.classes,d.computed[s.id],d.year,d.term,d.hidePosition)
       : (d.isBaby
           ? buildBabyReportCard(s,d.subjects,d.endMarks,d.midMarks,d.botMarks,d.classes,d.year,d.term)
-          : buildPrimaryReportCard(s,d.subjects,d.endMarks,d.positions,d.students.length,d.classes,d.midMarks,d.botMarks,d.computed[s.id],d.year,d.term)))+'</div>';
+          : buildPrimaryReportCard(s,d.subjects,d.endMarks,d.positions,d.students.length,d.classes,d.midMarks,d.botMarks,d.computed[s.id],d.year,d.term,d.hidePosition)))+'</div>';
   });
   h+='<script>setTimeout(function(){window.print()},700)<\/script></body></html>';
   w.document.write(h);w.document.close();
@@ -1871,7 +1897,6 @@ function showPrintInstructions(){
 }
 window.showPrintInstructions = showPrintInstructions;
 
-/* ========== COMMENTS MODAL ========== */
 function openCommentsModal(){
   const d = window._reportData;
   if(!d || !d.students.length){ toast('Select a class first','bad'); return; }
@@ -1922,7 +1947,6 @@ async function saveStudentComments(){
 }
 window.saveStudentComments = saveStudentComments;
 
-/* ========== EXAMS / CLASSES / SUBJECTS / STAFF / PAYROLL / UNIFORMS / EXPENSES / SETTINGS / PROFILE ========== */
 async function pageExams(root){
   _examsCache=null;const exams=await loadExams();
   const yr=getYear(),tr=getTerm();
