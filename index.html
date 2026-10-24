@@ -134,7 +134,6 @@ h3{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--navy)}
 .rc-head .title-block{flex:1;padding:0 10px}
 .rc-head .title-block h1{font-size:22pt;margin:0 0 2px;text-transform:uppercase;color:#800080;font-weight:bold;font-family:Arial,sans-serif}
 .rc-head .title-block .addr{font-size:10pt;margin:0;font-weight:bold}
-.rc-head .title-block .contact{font-size:10pt;margin:2px 0 0;font-weight:bold;color:#000080}
 .rc-head .title-block .doctype{font-size:13pt;font-weight:bold;letter-spacing:2px;color:#000080;margin-top:6px;text-transform:uppercase;text-decoration:underline}
 .rc-head .photo{width:70px;height:85px;flex-shrink:0;border:1.5px solid #800080}
 .rc-pupil{display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:12px;font-size:11pt;font-weight:bold}
@@ -1360,9 +1359,6 @@ async function setMark(inp){
 }
 window.setMark=setMark;
 
-/* ============================================================
-   NEW REPORTS PAGE — P.7 per-set DIV/AGG, PLE wish, no position P.4–P.7
-   ============================================================ */
 async function pageReports(root){
   clearClassesCache();
   const classes = await loadClasses();
@@ -1378,11 +1374,20 @@ async function pageReports(root){
   const isBaby = isBabyClass(clsName, classObj ? classObj.level : null);
   const hidePosition = hidePositionFor(clsName, isP7);
 
-  const findExamByStage = s => exams.find(e=>Number(e.stage)===s && Number(e.year)===yr && Number(e.term)===tr);
-  const botExam = findExamByStage(1);
-  const midExam = findExamByStage(2);
-  const eotExam = findExamByStage(3);
-  const mockExam = findExamByStage(4);
+  function pickExam(stage, wantP7){
+    const candidates = exams.filter(e => Number(e.stage) === stage && Number(e.year) === yr && Number(e.term) === tr);
+    if(!candidates.length) return null;
+    return candidates.find(e => {
+      const n = (e.name || '').toUpperCase();
+      const isSetLike = /SET\s*\d|MOCK/.test(n);
+      return wantP7 ? isSetLike : !isSetLike;
+    }) || candidates[0];
+  }
+
+  const botExam = pickExam(1, isP7);
+  const midExam = pickExam(2, isP7);
+  const eotExam = pickExam(3, isP7);
+  const mockExam = isP7 ? pickExam(4, true) : null;
 
   const missing = [];
   if(isP7){
@@ -1401,7 +1406,6 @@ async function pageReports(root){
   const examFilter = isP7 ? [botExam,midExam,eotExam,mockExam] : [botExam,midExam,eotExam];
   const allExamIds = examFilter.filter(Boolean).map(e=>e.id);
 
-  // CHUNKED marks fetch
   let marksRows = [];
   if(students.length && allExamIds.length){
     const CHUNK = 25;
@@ -1414,15 +1418,12 @@ async function pageReports(root){
   }
 
   const byExam = {};
-  const uniqueSubjectIds = new Set();
   marksRows.forEach(m=>{
     if(!byExam[m.exam_id]) byExam[m.exam_id] = {};
     if(!byExam[m.exam_id][m.student_id]) byExam[m.exam_id][m.student_id] = {};
     byExam[m.exam_id][m.student_id][m.subject_id] = Number(m.score);
-    uniqueSubjectIds.add(m.subject_id);
   });
 
-  // Build subjects from marks (fixes P.7 not showing)
   const subjectIdsFromMarks = new Set();
   marksRows.forEach(m => subjectIdsFromMarks.add(m.subject_id));
 
@@ -1435,10 +1436,12 @@ async function pageReports(root){
     ids.forEach(id => { if(byId[id]) subjects.push(byId[id]); });
   }
 
-  if(!subjects.length){
+  try{
     const csRows = await api('/rest/v1/class_subjects?school_id=eq.'+_schoolId+'&class_id=eq.'+_marksClass+'&select=subject_id,subjects:subject_id(id,code,name)');
-    subjects = (csRows||[]).map(r => ({subject_id: r.subject_id, code: r.subjects?.code || '', name: r.subjects?.name || ''}));
-  }
+    const csList = (csRows||[]).map(r => ({subject_id: r.subject_id, code: r.subjects?.code || '', name: r.subjects?.name || ''}));
+    const seenIds = new Set(subjects.map(s => s.subject_id));
+    csList.forEach(s => { if(!seenIds.has(s.subject_id)){ subjects.push(s); seenIds.add(s.subject_id); } });
+  }catch(e){}
 
   if(isP7){
     subjects = subjects.filter(sj=>{
@@ -1449,6 +1452,8 @@ async function pageReports(root){
       return true;
     }).slice(0, 4);
   }
+
+  _subjects = subjects;
 
   const botMarks = (botExam && byExam[botExam.id]) || {};
   const midMarks = (midExam && byExam[midExam.id]) || {};
@@ -1478,13 +1483,17 @@ async function pageReports(root){
   });
 
   const ranked = students
-    .map(s => ({ id: s.id, agg: computed[s.id].incomplete ? 999 : (computed[s.id].agg ?? computed[s.id].best7Agg) }))
+    .map(s => {
+      const c = computed[s.id];
+      const agg = isP7 ? c.agg : c.best7Agg;
+      const hasAny = !c.incomplete && c.usedCount > 0;
+      return { id: s.id, agg: hasAny ? agg : 999 };
+    })
     .filter(x => x.agg < 999)
     .sort((a,b) => a.agg - b.agg);
   const positions = {};
   ranked.forEach((x,i) => { positions[x.id] = i+1; });
 
-  // Save division back
   const toSave = [];
   students.forEach(s => {
     const c = computed[s.id];
@@ -1515,10 +1524,8 @@ async function pageReports(root){
     cards = '<div id="rcCardsWrap">'+students.map(s=>{
       const c = computed[s.id] || {};
       const card = isP7
-        ? buildP7ReportCard(s,subjects,set1Marks,set2Marks,set3Marks,mockMarks,positions,students.length,classes,c,yr,tr,hidePosition)
-        : (isBaby
-            ? buildBabyReportCard(s,subjects,endMarks,midMarks,botMarks,classes,yr,tr)
-            : buildPrimaryReportCard(s,subjects,endMarks,positions,students.length,classes,midMarks,botMarks,c,yr,tr,hidePosition));
+        ? buildP7Card(s, _reportData)
+        : (isBaby ? buildBabyCard(s, _reportData) : buildPrimaryCard(s, _reportData));
       const badge = c.incomplete
         ? '<div style="position:absolute;top:10px;right:10px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:700">INCOMPLETE</div>'
         : '<div style="position:absolute;top:10px;right:10px;background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:700">DIV '+(c.division||'—')+'</div>';
@@ -1546,7 +1553,7 @@ async function pageReports(root){
   } else if(isBaby){
     gradeHelp = '<b>Nursery:</b> A (90–100) Excellent · B (80–89) V. Good · C (70–79) Good · D (50–69) Fair · E (0–49) Needs Help.';
   } else {
-    gradeHelp = '<b>Division:</b> Sum of best-7 aggregates of graded subjects. <b>Computer and R.E not counted.</b> I=4–12 · II=13–23 · III=24–29 · IV=30–34 · U=35+.'+(hidePosition?' <b>Position hidden for P.4–P.7.</b>':'');
+    gradeHelp = '<b>Division:</b> Sum of best-7 aggregates of graded subjects. <b>Computer and R.E not counted.</b> I=4–12 · II=13–23 · III=24–29 · IV=30–34 · U=35+.'+(hidePosition?' <b>Position hidden for P.4–P.7.</b>':' <b>Position shown for P.1–P.3.</b>');
   }
 
   root.innerHTML =
@@ -1590,7 +1597,6 @@ async function pageReports(root){
 }
 window.pageReports = pageReports;
 
-/* Release list */
 function renderReleaseList(){
   const box = document.getElementById('releaseList');
   if(!box) return;
@@ -1613,7 +1619,7 @@ function renderReleaseList(){
         ? `<button class="btn sm danger" onclick="toggleApproval('${s.id}', false)">🔒 Lock</button>`
         : `<button class="btn sm ok" onclick="toggleApproval('${s.id}', true)">🔓 Release</button>`;
     }
-    html += `<div class="rel-row"><div class="name"><b>${esc(s.first_name + ' ' + (s.last_name||''))}</b><span>${esc(s.admission_no || '')} · ${balHtml}</span></div><div>${statusBadge}</div><div class="actions">${actionBtn}</div></div>`;
+    html += `<div class="rel-row"><div class="name"><b>${esc(s.first_name + ' ' + (s.last_name||''))}</b><span>${esc(s.admission_no||'')} · ${balHtml}</span></div><div>${statusBadge}</div><div class="actions">${actionBtn}</div></div>`;
   });
   box.innerHTML = html;
 }
@@ -1622,13 +1628,13 @@ window.renderReleaseList = renderReleaseList;
 async function toggleApproval(studentId, approve){
   const btn = event ? event.target : null;
   if(btn){ btn.disabled = true; btn.textContent = 'Updating...'; }
-  try{
-    await api('/rest/v1/students?id=eq.'+studentId, {method:'PATCH', headers:{'Prefer':'return=minimal'}, body: JSON.stringify({report_approved: approve})});
-    const s = (window._reportData.students||[]).find(x=>x.id===studentId);
+  try {
+    await api('/rest/v1/students?id=eq.' + studentId, {method:'PATCH', headers:{'Prefer':'return=minimal'}, body: JSON.stringify({report_approved: approve})});
+    const s = (_reportData.students||[]).find(x => x.id === studentId);
     if(s) s.report_approved = approve;
     toast(approve ? '✅ Report released' : '🔒 Report locked', 'ok');
     renderReleaseList();
-  }catch(e){
+  } catch(e) {
     toast('❌ ' + e.message, 'bad');
     if(btn){ btn.disabled = false; btn.textContent = approve ? '🔓 Release' : '🔒 Lock'; }
   }
@@ -1639,20 +1645,19 @@ async function toggleReportPublish(){
   const d = window._reportData;
   if(!d || !d.currentClass) return;
   const publish = !d.currentClass.report_published;
-  try{
-    await api('/rest/v1/classes?id=eq.'+d.classId, {method:'PATCH', headers:{'Prefer':'return=minimal'}, body: JSON.stringify({report_published: publish})});
+  try {
+    await api('/rest/v1/classes?id=eq.' + d.classId, {method:'PATCH', headers:{'Prefer':'return=minimal'}, body: JSON.stringify({report_published: publish})});
     d.currentClass.report_published = publish;
     toast(publish ? '✅ Reports published' : '🔒 Reports hidden', 'ok');
     clearClassesCache();
     pageReports(document.getElementById('main'));
-  }catch(e){ toast('❌ ' + e.message, 'bad'); }
+  } catch(e) { toast('❌ ' + e.message, 'bad'); }
 }
 window.toggleReportPublish = toggleReportPublish;
 
 function togglePrintTable(key, on){ window._printTables[key]=!!on; pageReports(document.getElementById('main')); }
 window.togglePrintTable = togglePrintTable;
 
-/* ========== REPORT CARD BUILDERS ========== */
 function buildHeader(){
   const logoSrc=_school?(_school.logo_data||_school.logo_url||''):'';
   return '<div class="rc-head">'+
@@ -1687,176 +1692,218 @@ function buildPleWish(){
   return '<div style="text-align:center;margin:14px 0 10px;padding:10px;background:#fdf4ff;border:2px dashed #800080;border-radius:8px;font-size:12pt;font-weight:bold;color:#800080;font-family:\'Comic Sans MS\',cursive">🌟 Wishing you success in your PLE exams! 🌟</div>';
 }
 
-function buildPrimaryReportCard(s,subjects,marks,positions,totalInClass,classes,midMarks,botMarks,divInfo,year,term,hidePosition){
-  midMarks=midMarks||{};botMarks=botMarks||{};
-  const list=classes||_classesCache||[];const cls=list.find(c=>c.id===s.class_id);
-  const per=marks[s.id]||{};const midPer=midMarks[s.id]||{};const botPer=botMarks[s.id]||{};
+function buildPrimaryCard(s, d){
+  const per = d.endMarks[s.id] || {};
+  const midPer = d.midMarks[s.id] || {};
+  const botPer = d.botMarks[s.id] || {};
+  const cls = (_classesCache || []).find(c => c.id === s.class_id);
+
   function buildTable(perObj){
-    let rows='';let grand=0,cnt=0,aggTotal=0;
-    subjects.forEach(sj=>{
-      const v=perObj[sj.subject_id];const sc=(v!=null && !isNaN(v))?Number(v):null;const g=gradePrimary(sc);
+    let rows='', grand=0, cnt=0, aggTotal=0;
+    d.subjects.forEach(sj=>{
+      const v = perObj[sj.subject_id];
+      const sc = (v != null && !isNaN(v)) ? Number(v) : null;
+      const g = gradePrimary(sc);
       const ungraded = isUngradedSubject(sj);
-      if(sc!=null){grand+=sc;cnt++;if(!ungraded && g.aggNum!=null) aggTotal+=g.aggNum;}
-      rows+='<tr><td class="subname">'+esc(sj.name)+'</td><td>100</td><td class="sc">'+(sc!=null?sc:'')+'</td><td class="grade">'+(sc!=null?g.g:'')+'</td><td class="agg">'+(sc!=null && !ungraded?g.agg:'-')+'</td><td></td></tr>';
+      if(sc != null){ grand += sc; cnt++; if(!ungraded && g.aggNum != null) aggTotal += g.aggNum; }
+      rows += `<tr><td class="subname">${esc(sj.name)}</td><td>100</td><td class="sc">${sc!=null?sc:''}</td><td class="grade">${sc!=null?g.g:''}</td><td class="agg">${sc!=null && !ungraded?g.agg:'-'}</td><td></td></tr>`;
     });
-    return {rows,grand,cnt,aggTotal};
+    return { rows, grand, cnt, aggTotal };
   }
-  const botT=buildTable(botPer);const midT=buildTable(midPer);const endT=buildTable(per);
+  const botT = buildTable(botPer);
+  const midT = buildTable(midPer);
+  const endT = buildTable(per);
 
   let div = 'U';
   if(s.division_manual) div = s.division_manual;
-  else if(divInfo && divInfo.usedCount >= 4) div = divInfo.division;
+  else if(d.computed[s.id].usedCount >= 4) div = d.computed[s.id].division;
 
-  const pos = s.position_manual || (divInfo && divInfo.usedCount >= 4 ? (positions[s.id]||'—') : '—');
+  const pos = s.position_manual || (d.positions[s.id] ? String(d.positions[s.id]) : '—');
 
-  let hasAnyMarks = false, grandTotal = 0, count = 0;
-  if(endT.cnt > 0){ hasAnyMarks = true; grandTotal = endT.grand; count = endT.cnt; }
-  else if(midT.cnt > 0){ hasAnyMarks = true; grandTotal = midT.grand; count = midT.cnt; }
-  else if(botT.cnt > 0){ hasAnyMarks = true; grandTotal = botT.grand; count = botT.cnt; }
-
+  let grandTotal = 0, count = 0;
+  if(endT.cnt > 0){ grandTotal = endT.grand; count = endT.cnt; }
+  else if(midT.cnt > 0){ grandTotal = midT.grand; count = midT.cnt; }
+  else if(botT.cnt > 0){ grandTotal = botT.grand; count = botT.cnt; }
   const avg = count > 0 ? (grandTotal / count) : 0;
-  const autoC = generateAutoComments(avg, hasAnyMarks, 'normal');
+  const autoC = generateAutoComments(avg, count > 0, 'normal');
+
   const ctComment = (s.class_teacher_comment && s.class_teacher_comment.trim()) ? s.class_teacher_comment : autoC.ct;
   const htComment = (s.head_teacher_comment && s.head_teacher_comment.trim()) ? s.head_teacher_comment : autoC.ht;
-  const dirComment = s.director_comment||'';
-  const termEnd = s.term_ended_on||(_school && _school.current_term_end)||'';
-  const nextTerm = s.next_term_begins||(_school && _school.next_term_begin)||'';
-  const headers='<thead><tr><th style="text-align:left;padding-left:10px">SUBJECT</th><th style="width:15%">SCORE</th><th style="width:20%">MARKS</th><th style="width:15%">GRADE</th><th style="width:10%">AGG</th><th style="width:15%">INITIALS</th></tr></thead>';
-  let tables='';
-  if(window._printTables.bot)tables+='<div class="rc-section-title">BEGINNING OF TERM PERFORMANCE</div><table class="rc-table">'+headers+'<tbody>'+botT.rows+'<tr><td class="subname">TOTAL</td><td>'+(subjects.length*100)+'</td><td class="sc" style="font-size:12pt">'+botT.grand.toFixed(0)+'</td><td></td><td class="agg" style="font-size:12pt">'+botT.aggTotal+'</td><td></td></tr></tbody></table>';
-  if(window._printTables.mid)tables+='<div class="rc-section-title">MID TERM PERFORMANCE</div><table class="rc-table">'+headers+'<tbody>'+midT.rows+'<tr><td class="subname">TOTAL</td><td>'+(subjects.length*100)+'</td><td class="sc" style="font-size:12pt">'+midT.grand.toFixed(0)+'</td><td></td><td class="agg" style="font-size:12pt">'+midT.aggTotal+'</td><td></td></tr></tbody></table>';
-  if(window._printTables.end)tables+='<div class="rc-section-title">END OF TERM PERFORMANCE</div><table class="rc-table">'+headers+'<tbody>'+endT.rows+'<tr><td class="subname">TOTAL</td><td>'+(subjects.length*100)+'</td><td class="sc" style="font-size:12pt">'+endT.grand.toFixed(0)+'</td><td></td><td class="agg" style="font-size:12pt">'+endT.aggTotal+'</td><td></td></tr></tbody></table>';
+  const dirComment = s.director_comment || '';
+  const termEnd = s.term_ended_on || (_school && _school.current_term_end) || '';
+  const nextTerm = s.next_term_begins || (_school && _school.next_term_begin) || '';
 
-  return '<div class="rc-page"><div class="rc-inner">'+
-    buildHeader()+
-    '<div class="rc-pupil">'+
-      '<div class="cell w-full"><span class="lbl">PUPIL\'S NAME:</span><span class="val">'+esc((s.first_name+' '+(s.last_name||'')).toUpperCase())+'</span></div>'+
-      '<div class="cell w-50"><span class="lbl">CLASS:</span><span class="val">'+esc(cls?cls.name.toUpperCase():'—')+'</span></div>'+
-      '<div class="cell w-50"><span class="lbl">TERM:</span><span class="val">'+term+'</span></div>'+
-      '<div class="cell w-50"><span class="lbl">YEAR:</span><span class="val">'+year+'</span></div>'+
-      (hidePosition ? '' : '<div class="cell w-50"><span class="lbl">POSITION:</span><span class="val">'+pos+' OUT OF '+totalInClass+'</span></div>')+
-      '<div class="cell w-50"><span class="lbl">DIVISION:</span><span class="val" style="font-weight:900;color:#800080">'+div+'</span></div>'+
-    '</div>'+tables+buildScalePrimary()+
-    '<div class="rc-lines"><span class="lbl">Conduct:</span><span class="line handwriting" style="min-height:22px">'+esc(s.conduct||'')+'</span><span class="lbl" style="margin-top:8px">Class Teacher\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(ctComment)+'</span><div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div></div>'+
-    '<div class="rc-lines"><span class="lbl">Head Teacher\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(htComment)+'</span>'+(dirComment?'<span class="lbl" style="margin-top:6px">Director\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(dirComment)+'</span>':'')+'<div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div></div>'+
-    ((window._printTables.end && term === 3) ? buildReportDates(termEnd,nextTerm) : '')+
-    buildFooter()+
-  '</div></div>';
+  const headers = '<thead><tr><th style="text-align:left;padding-left:10px">SUBJECT</th><th style="width:15%">SCORE</th><th style="width:20%">MARKS</th><th style="width:15%">GRADE</th><th style="width:10%">AGG</th><th style="width:15%">INITIALS</th></tr></thead>';
+  let tables = '';
+  if(_printTables.bot) tables += `<div class="rc-section-title">BEGINNING OF TERM PERFORMANCE</div><table class="rc-table">${headers}<tbody>${botT.rows}<tr><td class="subname">TOTAL</td><td>${d.subjects.length*100}</td><td class="sc" style="font-size:12pt">${botT.grand.toFixed(0)}</td><td></td><td class="agg" style="font-size:12pt">${botT.aggTotal}</td><td></td></tr></tbody></table>`;
+  if(_printTables.mid) tables += `<div class="rc-section-title">MID TERM PERFORMANCE</div><table class="rc-table">${headers}<tbody>${midT.rows}<tr><td class="subname">TOTAL</td><td>${d.subjects.length*100}</td><td class="sc" style="font-size:12pt">${midT.grand.toFixed(0)}</td><td></td><td class="agg" style="font-size:12pt">${midT.aggTotal}</td><td></td></tr></tbody></table>`;
+  if(_printTables.end) tables += `<div class="rc-section-title">END OF TERM PERFORMANCE</div><table class="rc-table">${headers}<tbody>${endT.rows}<tr><td class="subname">TOTAL</td><td>${d.subjects.length*100}</td><td class="sc" style="font-size:12pt">${endT.grand.toFixed(0)}</td><td></td><td class="agg" style="font-size:12pt">${endT.aggTotal}</td><td></td></tr></tbody></table>`;
+
+  return `<div class="rc-page"><div class="rc-inner">
+    ${buildHeader()}
+    <div class="rc-pupil">
+      <div class="cell w-full"><span class="lbl">PUPIL'S NAME:</span><span class="val">${esc((s.first_name + ' ' + (s.last_name||'')).toUpperCase())}</span></div>
+      <div class="cell w-50"><span class="lbl">CLASS:</span><span class="val">${esc(cls?cls.name.toUpperCase():'—')}</span></div>
+      <div class="cell w-50"><span class="lbl">TERM:</span><span class="val">${d.term}</span></div>
+      <div class="cell w-50"><span class="lbl">YEAR:</span><span class="val">${d.year}</span></div>
+      ${d.hidePosition ? '' : `<div class="cell w-50"><span class="lbl">POSITION:</span><span class="val">${pos} OUT OF ${d.students.length}</span></div>`}
+      <div class="cell w-50"><span class="lbl">DIVISION:</span><span class="val" style="font-weight:900;color:#800080">${div}</span></div>
+    </div>
+    ${tables}
+    ${buildScalePrimary()}
+    <div class="rc-lines"><span class="lbl">Conduct:</span><span class="line handwriting" style="min-height:22px">${esc(s.conduct||'')}</span><span class="lbl" style="margin-top:8px">Class Teacher's comment:</span><span class="line handwriting" style="min-height:22px">${esc(ctComment)}</span><div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div></div>
+    <div class="rc-lines"><span class="lbl">Head Teacher's comment:</span><span class="line handwriting" style="min-height:22px">${esc(htComment)}</span>${dirComment?`<span class="lbl" style="margin-top:6px">Director's comment:</span><span class="line handwriting" style="min-height:22px">${esc(dirComment)}</span>`:''}<div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div></div>
+    ${(_printTables.end && d.term === 3) ? buildReportDates(termEnd, nextTerm) : ''}
+    ${buildFooter()}
+  </div></div>`;
 }
 
-function buildBabyReportCard(s,subjects,marks,midMarks,botMarks,classes,year,term){
-  midMarks=midMarks||{};botMarks=botMarks||{};
-  const list=classes||_classesCache||[];const cls=list.find(c=>c.id===s.class_id);
-  const per=marks[s.id]||{};const midPer=midMarks[s.id]||{};const botPer=botMarks[s.id]||{};
+function buildBabyCard(s, d){
+  const per = d.endMarks[s.id] || {};
+  const midPer = d.midMarks[s.id] || {};
+  const botPer = d.botMarks[s.id] || {};
+  const cls = (_classesCache || []).find(c => c.id === s.class_id);
   const babySubjects = ['LA 1 (SOCIAL DEVELOPMENT)','LA 2 (ENGLISH)','LA 3 (HEALTH HABITS)','LA 4 (MATHEMATICS)','LA 5 (READING & WRITING)'];
+
+  function findBabySubject(laNum){
+    for(const sj of d.subjects){
+      const n = (sj.name||'').toUpperCase();
+      const c = (sj.code||'').toUpperCase();
+      if(c === 'LA'+laNum) return sj;
+      const m = n.match(/LA[\s\-_.]*0*(\d+)(?![0-9])/);
+      if(m && parseInt(m[1], 10) === laNum) return sj;
+      const mc = c.match(/LA[\s\-_.]*0*(\d+)(?![0-9])/);
+      if(mc && parseInt(mc[1], 10) === laNum) return sj;
+    }
+    return null;
+  }
+
   function buildTable(perObj){
-    let rows='';
+    let rows = '';
     babySubjects.forEach((name, idx) => {
-      const dbSub = subjects[idx];
+      const dbSub = findBabySubject(idx + 1);
       const v = dbSub ? perObj[dbSub.subject_id] : null;
-      const sc = (v!=null && !isNaN(v)) ? Number(v) : null;
+      const sc = (v != null && !isNaN(v)) ? Number(v) : null;
       const g = gradeBaby(sc);
-      rows+='<tr><td class="subname" style="text-align:center">'+esc(name)+'</td><td class="sc" style="font-size:14pt">'+(g.g||'')+'</td><td class="handwriting" style="font-family:\'Comic Sans MS\',cursive;font-size:14pt;text-align:center">'+(g.r||'')+'</td><td></td></tr>';
+      rows += `<tr><td class="subname" style="text-align:center">${esc(name)}</td><td class="sc" style="font-size:14pt">${g.g||''}</td><td class="handwriting" style="font-family:'Comic Sans MS',cursive;font-size:14pt;text-align:center">${g.r||''}</td><td></td></tr>`;
     });
     return { rows };
   }
-  const botT=buildTable(botPer);const midT=buildTable(midPer);const endT=buildTable(per);
+  const botT = buildTable(botPer);
+  const midT = buildTable(midPer);
+  const endT = buildTable(per);
+
   let totalScore = 0, count = 0;
-  subjects.forEach(sj => {
+  d.subjects.forEach(sj => {
     const v = per[sj.subject_id] ?? midPer[sj.subject_id] ?? botPer[sj.subject_id];
     if(v != null && !isNaN(v)){ totalScore += Number(v); count++; }
   });
-  const avg = count > 0 ? totalScore/count : 0;
+  const avg = count > 0 ? totalScore / count : 0;
   const autoC = generateAutoComments(avg, count > 0, 'normal');
   const ctComment = (s.class_teacher_comment && s.class_teacher_comment.trim()) ? s.class_teacher_comment : autoC.ct;
   const htComment = (s.head_teacher_comment && s.head_teacher_comment.trim()) ? s.head_teacher_comment : autoC.ht;
-  const termEnd = s.term_ended_on||(_school && _school.current_term_end)||'';
-  const nextTerm = s.next_term_begins||(_school && _school.next_term_begin)||'';
+  const termEnd = s.term_ended_on || (_school && _school.current_term_end) || '';
+  const nextTerm = s.next_term_begins || (_school && _school.next_term_begin) || '';
   const headers = '<thead><tr><th style="width:40%;text-align:left;padding-left:10px">SUBJECT</th><th style="width:20%">SCORE</th><th style="width:25%">REMARK</th><th style="width:15%">INITIALS</th></tr></thead>';
+
   let tables = '';
-  if(window._printTables.bot) tables += '<div class="rc-section-title">BEGINNING OF TERM PERFORMANCE</div><table class="rc-table">'+headers+'<tbody>'+botT.rows+'</tbody></table>';
-  if(window._printTables.mid) tables += '<div class="rc-section-title">MID TERM PERFORMANCE</div><table class="rc-table">'+headers+'<tbody>'+midT.rows+'</tbody></table>';
-  if(window._printTables.end) tables += '<div class="rc-section-title">END OF TERM PERFORMANCE</div><table class="rc-table">'+headers+'<tbody>'+endT.rows+'</tbody></table>';
-  return '<div class="rc-page"><div class="rc-inner">'+
-    buildHeader()+
-    '<div class="rc-pupil">'+
-      '<div class="cell w-full"><span class="lbl">PUPIL\'S NAME:</span><span class="val">'+esc((s.first_name+' '+(s.last_name||'')).toUpperCase())+'</span></div>'+
-      '<div class="cell w-50"><span class="lbl">CLASS:</span><span class="val">'+esc(cls?cls.name.toUpperCase():'—')+'</span></div>'+
-      '<div class="cell w-50"><span class="lbl">TERM:</span><span class="val">'+term+'</span></div>'+
-      '<div class="cell w-50"><span class="lbl">LIN NO.:</span><span class="val">'+esc(s.lin||'—')+'</span></div>'+
-      '<div class="cell w-50"><span class="lbl">YEAR:</span><span class="val">'+year+'</span></div>'+
-    '</div>'+tables+buildScaleBaby()+
-    '<div class="rc-lines"><span class="lbl">Conduct:</span><span class="line handwriting" style="min-height:22px">'+esc(s.conduct||'')+'</span><span class="lbl" style="margin-top:8px">Class Teacher\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(ctComment)+'</span><div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div></div>'+
-    '<div class="rc-lines"><span class="lbl">Head Teacher\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(htComment)+'</span><div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div></div>'+
-    ((window._printTables.end && term === 3) ? buildReportDates(termEnd,nextTerm) : '')+
-    buildFooter()+
-  '</div></div>';
+  if(_printTables.bot) tables += `<div class="rc-section-title">BEGINNING OF TERM PERFORMANCE</div><table class="rc-table">${headers}<tbody>${botT.rows}</tbody></table>`;
+  if(_printTables.mid) tables += `<div class="rc-section-title">MID TERM PERFORMANCE</div><table class="rc-table">${headers}<tbody>${midT.rows}</tbody></table>`;
+  if(_printTables.end) tables += `<div class="rc-section-title">END OF TERM PERFORMANCE</div><table class="rc-table">${headers}<tbody>${endT.rows}</tbody></table>`;
+
+  return `<div class="rc-page"><div class="rc-inner">
+    ${buildHeader()}
+    <div class="rc-pupil">
+      <div class="cell w-full"><span class="lbl">PUPIL'S NAME:</span><span class="val">${esc((s.first_name + ' ' + (s.last_name||'')).toUpperCase())}</span></div>
+      <div class="cell w-50"><span class="lbl">CLASS:</span><span class="val">${esc(cls?cls.name.toUpperCase():'—')}</span></div>
+      <div class="cell w-50"><span class="lbl">TERM:</span><span class="val">${d.term}</span></div>
+      <div class="cell w-50"><span class="lbl">LIN NO.:</span><span class="val">${esc(s.lin||'—')}</span></div>
+      <div class="cell w-50"><span class="lbl">YEAR:</span><span class="val">${d.year}</span></div>
+    </div>
+    ${tables}
+    ${buildScaleBaby()}
+    <div class="rc-lines"><span class="lbl">Conduct:</span><span class="line handwriting" style="min-height:22px">${esc(s.conduct||'')}</span><span class="lbl" style="margin-top:8px">Class Teacher's comment:</span><span class="line handwriting" style="min-height:22px">${esc(ctComment)}</span><div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div></div>
+    <div class="rc-lines"><span class="lbl">Head Teacher's comment:</span><span class="line handwriting" style="min-height:22px">${esc(htComment)}</span><div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div></div>
+    ${(_printTables.end && d.term === 3) ? buildReportDates(termEnd, nextTerm) : ''}
+    ${buildFooter()}
+  </div></div>`;
 }
 
-function buildP7ReportCard(s,subjects,set1,set2,set3,mock,positions,totalInClass,classes,divInfo,year,term,hidePosition){
-  const list=classes||_classesCache||[];const cls=list.find(c=>c.id===s.class_id);
-  const p7Subjects = subjects.slice(0, 4);
+function buildP7Card(s, d){
+  const cls = (_classesCache || []).find(c => c.id === s.class_id);
+  const c = d.computed[s.id] || {};
+  const p7Subjects = d.subjects.slice(0, 4);
 
   function buildTable(perObj, title, key){
-    if(!window._printTables[key]) return '';
-    let rows='', grand=0, aggTotal=0;
-    p7Subjects.forEach(sj=>{
-      const v=perObj[sj.subject_id];const sc=(v!=null && !isNaN(v))?Number(v):null;const g=gradePrimary(sc);
-      if(sc!=null){grand+=sc;if(g.aggNum!=null) aggTotal+=g.aggNum;}
-      rows+='<tr><td class="subname">'+esc(sj.name)+'</td><td>100</td><td class="sc">'+(sc!=null?sc:'')+'</td><td class="grade">'+(sc!=null?g.g:'')+'</td><td class="agg">'+(sc!=null?g.agg:'-')+'</td><td></td></tr>';
+    if(!_printTables[key]) return '';
+    let rows = '', grand = 0, aggTotal = 0;
+    p7Subjects.forEach(sj => {
+      const v = perObj[sj.subject_id];
+      const sc = (v != null && !isNaN(v)) ? Number(v) : null;
+      const g = gradePrimary(sc);
+      if(sc != null){ grand += sc; if(g.aggNum != null) aggTotal += g.aggNum; }
+      rows += `<tr><td class="subname">${esc(sj.name)}</td><td>100</td><td class="sc">${sc!=null?sc:''}</td><td class="grade">${sc!=null?g.g:''}</td><td class="agg">${sc!=null?g.agg:'-'}</td><td></td></tr>`;
     });
     const setDiv = computeP7Division(perObj, p7Subjects);
     const divDisplay = setDiv.incomplete ? '—' : setDiv.division;
     const aggDisplay = setDiv.incomplete ? '—' : setDiv.agg;
-    const headers='<thead><tr><th style="text-align:left;padding-left:10px">SUBJECT</th><th style="width:15%">SCORE</th><th style="width:20%">MARKS</th><th style="width:15%">GRADE</th><th style="width:10%">AGG</th><th style="width:15%">INITIALS</th></tr></thead>';
-    return '<div class="rc-section-title">'+title+'</div>'+
-      '<table class="rc-table">'+headers+'<tbody>'+
-      rows+
-      '<tr><td class="subname">TOTAL</td><td>'+(p7Subjects.length*100)+'</td><td class="sc" style="font-size:13pt">'+grand.toFixed(0)+'</td><td></td><td class="agg" style="font-size:13pt">'+aggTotal+'</td><td></td></tr>'+
-      '<tr style="background:#fdf4ff"><td class="subname" style="color:#800080">'+title+' — DIV</td><td colspan="2" style="font-weight:900;color:#800080;font-size:12pt">'+divDisplay+'</td><td class="subname" style="color:#800080">AGGREGATE</td><td colspan="2" class="agg" style="font-size:12pt">'+aggDisplay+'</td></tr>'+
-      '</tbody></table>';
+    const headers = '<thead><tr><th style="text-align:left;padding-left:10px">SUBJECT</th><th style="width:15%">SCORE</th><th style="width:20%">MARKS</th><th style="width:15%">GRADE</th><th style="width:10%">AGG</th><th style="width:15%">INITIALS</th></tr></thead>';
+    return `<div class="rc-section-title">${title}</div>
+      <table class="rc-table">${headers}<tbody>
+        ${rows}
+        <tr><td class="subname">TOTAL</td><td>${p7Subjects.length*100}</td><td class="sc" style="font-size:13pt">${grand.toFixed(0)}</td><td></td><td class="agg" style="font-size:13pt">${aggTotal}</td><td></td></tr>
+        <tr style="background:#fdf4ff">
+          <td class="subname" style="color:#800080">${title} — DIV</td>
+          <td colspan="2" style="font-weight:900;color:#800080;font-size:12pt">${divDisplay}</td>
+          <td class="subname" style="color:#800080">AGGREGATE</td>
+          <td colspan="2" class="agg" style="font-size:12pt">${aggDisplay}</td>
+        </tr>
+      </tbody></table>`;
   }
 
   let div = 'U';
   if(s.division_manual) div = s.division_manual;
-  else if(!divInfo.incomplete) div = divInfo.division;
+  else if(!c.incomplete) div = c.division;
 
   let totalScore = 0, count = 0;
-  const activeSet = Object.keys(mock[s.id]||{}).length ? mock[s.id]
-                  : Object.keys(set3[s.id]||{}).length ? set3[s.id]
-                  : Object.keys(set2[s.id]||{}).length ? set2[s.id]
-                  : set1[s.id] || {};
-  p7Subjects.forEach(sj=>{
-    const v=activeSet[sj.subject_id];
-    if(v!=null && !isNaN(v)){ totalScore+=Number(v); count++; }
+  const activeSet = Object.keys(d.mockMarks[s.id]||{}).length ? d.mockMarks[s.id]
+                  : Object.keys(d.set3Marks[s.id]||{}).length ? d.set3Marks[s.id]
+                  : Object.keys(d.set2Marks[s.id]||{}).length ? d.set2Marks[s.id]
+                  : d.set1Marks[s.id] || {};
+  p7Subjects.forEach(sj => {
+    const v = activeSet[sj.subject_id];
+    if(v != null && !isNaN(v)){ totalScore += Number(v); count++; }
   });
-  const avg = count>0 ? totalScore/count : 0;
-  const autoC = generateAutoComments(avg, count>0, 'ple');
+  const avg = count > 0 ? totalScore / count : 0;
+  const autoC = generateAutoComments(avg, count > 0, 'ple');
   const ctComment = (s.class_teacher_comment && s.class_teacher_comment.trim()) ? s.class_teacher_comment : autoC.ct;
   const htComment = (s.head_teacher_comment && s.head_teacher_comment.trim()) ? s.head_teacher_comment : autoC.ht;
-  const dirComment = s.director_comment||'';
-  const termEnd = s.term_ended_on||(_school && _school.current_term_end)||'';
-  const nextTerm = s.next_term_begins||(_school && _school.next_term_begin)||'';
-  let tables = buildTable(mock[s.id] || {}, 'MOCK EXAMINATION', 'mock')
-             + buildTable(set1[s.id] || {}, 'SET 1', 'set1')
-             + buildTable(set2[s.id] || {}, 'SET 2', 'set2')
-             + buildTable(set3[s.id] || {}, 'SET 3', 'set3');
+  const dirComment = s.director_comment || '';
+  const termEnd = s.term_ended_on || (_school && _school.current_term_end) || '';
+  const nextTerm = s.next_term_begins || (_school && _school.next_term_begin) || '';
 
-  return '<div class="rc-page p7"><div class="rc-inner">'+
-    buildHeader()+
-    '<div class="rc-pupil">'+
-      '<div class="cell w-full"><span class="lbl">PUPIL\'S NAME:</span><span class="val">'+esc((s.first_name+' '+(s.last_name||'')).toUpperCase())+'</span></div>'+
-      '<div class="cell w-50"><span class="lbl">CLASS:</span><span class="val">'+esc(cls?cls.name.toUpperCase():'—')+'</span></div>'+
-      '<div class="cell w-50"><span class="lbl">TERM:</span><span class="val">'+term+'</span></div>'+
-      '<div class="cell w-50"><span class="lbl">YEAR:</span><span class="val">'+year+'</span></div>'+
-      '<div class="cell w-50"><span class="lbl">DIVISION:</span><span class="val" style="font-weight:900;color:#800080">'+div+'</span></div>'+
-    '</div>'+tables+buildScalePrimary()+
-    '<div class="rc-lines"><span class="lbl">Conduct:</span><span class="line handwriting" style="min-height:22px">'+esc(s.conduct||'')+'</span><span class="lbl" style="margin-top:8px">Class Teacher\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(ctComment)+'</span><div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div></div>'+
-    '<div class="rc-lines"><span class="lbl">Head Teacher\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(htComment)+'</span>'+(dirComment?'<span class="lbl" style="margin-top:6px">Director\'s comment:</span><span class="line handwriting" style="min-height:22px">'+esc(dirComment)+'</span>':'')+'<div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div></div>'+
-    buildPleWish()+
-    ((window._printTables.end && term === 3) ? buildReportDates(termEnd,nextTerm) : '')+
-    buildFooter()+
-  '</div></div>';
+  let tables = buildTable(d.mockMarks[s.id] || {}, 'MOCK EXAMINATION', 'mock')
+             + buildTable(d.set1Marks[s.id] || {}, 'SET 1', 'set1')
+             + buildTable(d.set2Marks[s.id] || {}, 'SET 2', 'set2')
+             + buildTable(d.set3Marks[s.id] || {}, 'SET 3', 'set3');
+
+  return `<div class="rc-page p7"><div class="rc-inner">
+    ${buildHeader()}
+    <div class="rc-pupil">
+      <div class="cell w-full"><span class="lbl">PUPIL'S NAME:</span><span class="val">${esc((s.first_name + ' ' + (s.last_name||'')).toUpperCase())}</span></div>
+      <div class="cell w-50"><span class="lbl">CLASS:</span><span class="val">${esc(cls?cls.name.toUpperCase():'—')}</span></div>
+      <div class="cell w-50"><span class="lbl">TERM:</span><span class="val">${d.term}</span></div>
+      <div class="cell w-50"><span class="lbl">YEAR:</span><span class="val">${d.year}</span></div>
+      <div class="cell w-50"><span class="lbl">DIVISION:</span><span class="val" style="font-weight:900;color:#800080">${div}</span></div>
+    </div>
+    ${tables}
+    ${buildScalePrimary()}
+    <div class="rc-lines"><span class="lbl">Conduct:</span><span class="line handwriting" style="min-height:22px">${esc(s.conduct||'')}</span><span class="lbl" style="margin-top:8px">Class Teacher's comment:</span><span class="line handwriting" style="min-height:22px">${esc(ctComment)}</span><div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div></div>
+    <div class="rc-lines"><span class="lbl">Head Teacher's comment:</span><span class="line handwriting" style="min-height:22px">${esc(htComment)}</span>${dirComment?`<span class="lbl" style="margin-top:6px">Director's comment:</span><span class="line handwriting" style="min-height:22px">${esc(dirComment)}</span>`:''}<div style="display:flex;justify-content:flex-end;gap:5px;margin-top:4px;font-weight:bold;font-size:10pt"><span>Signature:</span><span class="line handwriting" style="width:150px;display:inline-block;min-height:20px"></span></div></div>
+    ${buildPleWish()}
+    ${(_printTables.end && d.term === 3) ? buildReportDates(termEnd, nextTerm) : ''}
+    ${buildFooter()}
+  </div></div>`;
 }
 
 function printAllReports(){
@@ -1873,10 +1920,8 @@ function printAllReports(){
   let h='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Report Cards</title><style>'+styles+'</style></head><body>';
   d.students.forEach(s=>{
     h+='<div class="rc-stage">'+(d.isP7
-      ? buildP7ReportCard(s,d.subjects,d.set1Marks,d.set2Marks,d.set3Marks,d.mockMarks,d.positions,d.students.length,d.classes,d.computed[s.id],d.year,d.term,d.hidePosition)
-      : (d.isBaby
-          ? buildBabyReportCard(s,d.subjects,d.endMarks,d.midMarks,d.botMarks,d.classes,d.year,d.term)
-          : buildPrimaryReportCard(s,d.subjects,d.endMarks,d.positions,d.students.length,d.classes,d.midMarks,d.botMarks,d.computed[s.id],d.year,d.term,d.hidePosition)))+'</div>';
+      ? buildP7Card(s, d)
+      : (d.isBaby ? buildBabyCard(s, d) : buildPrimaryCard(s, d)))+'</div>';
   });
   h+='<script>setTimeout(function(){window.print()},700)<\/script></body></html>';
   w.document.write(h);w.document.close();
@@ -1938,12 +1983,12 @@ async function saveStudentComments(){
     head_teacher_comment: document.getElementById('c_ht_comment').value.trim() || null,
     director_comment: document.getElementById('c_dir_comment').value.trim() || null
   };
-  try{
-    await api('/rest/v1/students?id=eq.'+id, {method:'PATCH', headers:{'Prefer':'return=minimal'}, body:JSON.stringify(body)});
-    toast('Comments saved ✓','ok');
+  try {
+    await api('/rest/v1/students?id=eq.' + id, {method: 'PATCH', headers: {'Prefer': 'return=minimal'}, body: JSON.stringify(body)});
+    toast('Comments saved ✓', 'ok');
     closeModal();
     pageReports(document.getElementById('main'));
-  }catch(e){ toast('Error: '+e.message,'bad'); }
+  } catch(e) { toast('Error: ' + e.message, 'bad'); }
 }
 window.saveStudentComments = saveStudentComments;
 
