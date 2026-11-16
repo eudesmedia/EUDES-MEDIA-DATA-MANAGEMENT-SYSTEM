@@ -415,11 +415,11 @@ function feesParseRows(rows){
   //  A) Template: Name | Class | STATUS | B/F | Actual | holiday | academics | Funct | holiday | Transport | 1st | 2nd | 3rd | Total | Balance
   //  B) System Fees table: ADM | Name | Class | B/F | This Term Fee | Total Demanded | Paid This Term | Balance
   let col={name:0,cls:1,status:2,bf:3,actual:4,hol1:5,acad:6,funct:7,hol2:8,transp:9,d1:10,d2:11,d3:12,total:13,bal:14};
-  let isFeesTable=false, headerFound=false;
+  let isFeesTable=false, headerFound=false, headerHasSerial=false;
   for(let hi=0;hi<Math.min(rows.length,3);hi++){
     const hdr=(rows[hi]||[]).map(c=>String(c||'').toLowerCase());
     if(hdr.some(c=>c.includes('name'))){
-      headerFound=true;
+      headerFound=true; headerHasSerial=(hdr[0]==='no'||hdr[0]==='no.'||hdr[0]==='#'||hdr[0]==='s/n'||hdr[0]==='serial'||hdr[0]==='sn'||hdr[0].includes('serial'));
       const findIdx=(...words)=>hdr.findIndex(c=>words.some(w=>c.includes(w)));
       col.adm=findIdx('adm','admission'); col.name=findIdx('name'); col.cls=findIdx('class'); col.status=findIdx('status');
       col.bf=findIdx('b/f','balance brought','brought forward');
@@ -442,7 +442,7 @@ function feesParseRows(rows){
     // Serial-number column: sheet starts "1 | Ssemakula Josaiah | P.1 | ..." — first cell is just 1,2,3...
     // Detect it: first cell is a plain number AND second cell looks like a name (has a space)
     const isSerialRow=/^\d+$/.test(firstTrim) && String(r[1]||'').trim().includes(' ');
-    if(isSerialRow && !headerFound){
+    if(isSerialRow && (!headerFound || !headerHasSerial)){
       // FIX: only slice serial when NO header. With a header, col indices already include the serial column,
       // so slicing a data row shifts B/F/Actual/Transport/1st/2nd/3rd left by one and picks WRONG cells.
       r=r.slice(1);
@@ -614,16 +614,22 @@ async function feesApplyUpload(){
     // FIX: NEVER treat >3 payments as duplicate. Manual payments are unlimited - a parent can pay 4,5,10 times.
     // Old code skipped the WHOLE pupil if Fees-upload total already equalled Excel paid total.
     // That hid a B/F / fee update when the total happened to match. Now: still update fees/B/F, only skip adding the deposits again.
-    const alreadyUploaded = (r.paid>0 && priorByPupil[r.match.id]===r.paid);
+    const alreadyUploaded = false; // REPLACE mode: old uploaded deposits deleted above, always insert current ones.
     if(alreadyUploaded){ dupSkipped++; }
     try{
       await api('/rest/v1/students?id=eq.'+r.match.id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(r.isFeesTable?{actual_fee:r.actual,functional_fee:0,transport_fee:0,holiday_fee:0,academics_fee:0,balance_bf:r.bf}:{actual_fee:r.actual,functional_fee:r.funct,transport_fee:r.transp,holiday_fee:r.hol,academics_fee:r.acad,balance_bf:r.bf})});
+      // REPLACE, NOT ADD: delete this pupil's OLD "Fees upload" payments for this year/term, then insert current Excel deposits.
+      // Manual payments have no "Fees upload" in notes, so they are NEVER deleted. Pupils NOT in this upload are NEVER touched.
+      if(!r.isFeesTable){
+        const oldPays=await api('/rest/v1/payments?school_id=eq.'+_schoolId+'&student_id=eq.'+r.match.id+'&year=eq.'+getYear()+'&term=eq.'+getTerm()+'&select=id,notes&limit=5000').catch(()=>[])||[];
+        for(const op of oldPays){ if((op.notes||'').includes('Fees upload')){ await api('/rest/v1/payments?id=eq.'+op.id,{method:'DELETE',headers:{Prefer:'return=minimal'}}).catch(()=>{}); } }
+      }
       const deposits=(r.isFeesTable||alreadyUploaded)?[]:[{amt:r.d1,label:'1st deposit'},{amt:r.d2,label:'2nd deposit'},{amt:r.d3,label:'3rd deposit'}];
       for(const d of deposits){ if(!d.amt) continue;
         // FIX: Apply was pressed 7 times in 5 seconds (7 batches) -> 7 copies of every deposit. Block exact duplicates:
         // same pupil + same label + same amount + same term already exists -> skip, do NOT create again.
         const dupCheck=await api('/rest/v1/payments?school_id=eq.'+_schoolId+'&student_id=eq.'+r.match.id+'&year=eq.'+getYear()+'&term=eq.'+getTerm()+'&amount=eq.'+d.amt+'&select=id,notes').catch(()=>[])||[];
-        if(dupCheck.some(x=>(x.notes||'').includes('Fees upload '+d.label))){ dupSkipped++; continue; }
+        /* REPLACE mode: old Fees-upload rows just deleted, so dupCheck is empty and never blocks a fresh insert. */
         if(d.amt>0 && d.amt<1000){ skipped++; errors.push(r.name+': REFUSED to create a '+d.amt+' '+d.label+' - a real deposit is never under 1,000. This is a mis-parsed tail of a split number (e.g. 150,350 split into 150 + 350). Check that row in Excel and re-paste it.'); continue; }
         // duplicate protection: same pupil + same amount + same batch label already paid this term?
         const existing=await api('/rest/v1/payments?school_id=eq.'+_schoolId+'&student_id=eq.'+r.match.id+'&year=eq.'+getYear()+'&term=eq.'+getTerm()+'&amount=eq.'+d.amt+'&select=id').catch(()=>[]);
